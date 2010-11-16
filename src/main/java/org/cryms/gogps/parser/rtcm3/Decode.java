@@ -26,6 +26,6 @@ package org.cryms.gogps.parser.rtcm3;
  */
 public interface Decode {
 
-	public abstract void decode();
+	public abstract void decode(boolean[] bits);
 
 }

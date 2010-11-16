@@ -22,7 +22,7 @@ package org.cryms.gogps.parser.rtcm3;
 
 import org.cryms.gogps.util.Base64;
 
-public class GPSNetSettings {
+public class ConnectionSettings {
 
 	private String host;
 	private int port;
@@ -32,7 +32,7 @@ public class GPSNetSettings {
 	private String authbase64;
 	private String source;
 
-	public GPSNetSettings(String _host, int _port, String _username,
+	public ConnectionSettings(String _host, int _port, String _username,
 			String _password) {
 		super();
 		host = _host;

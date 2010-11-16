@@ -25,16 +25,14 @@ import org.cryms.gogps.util.Bits;
 public class Decode1007Msg implements Decode {
 
 
-	private int start = 12;
-	AntennaDescriptor antenna;
-	private boolean[] bits;
 
-	public Decode1007Msg(boolean[] _bits) {
-		bits=_bits;
-		antenna = new AntennaDescriptor();
+	public Decode1007Msg() {
+		
 	}
 
-	public void decode() {
+	public void decode(boolean[] bits) {
+		AntennaDescriptor antenna = new AntennaDescriptor();
+		int start = 12;
 		String desc = "";
 		antenna.setStationID(Bits.bitsToInt(Bits.subset(bits, start, 12)));
 		start += 12;
@@ -48,8 +46,8 @@ public class Decode1007Msg implements Decode {
 		antenna.setAntennaDescriptor(desc);
 		antenna.setSetupID(Bits.bitsToInt(Bits.subset(bits, start, 8)));
 		start += 8;
-		System.out.println(antenna);
-		System.out.println(start);
+		//System.out.println(antenna);
+		//System.out.println(start);
 	}
 
 }

@@ -26,12 +26,7 @@ import java.util.Vector;
 
 public class Test {
 
-	private static GPSNetSettings gpsnetDefault;
-	private ArrayList<String> mountpoints;
-	private static RTCMClient net;
-	private static SaveMessage dati;
-	//private static int index = -1;
-
+	
 	public static void main(String[] args) {
 
 		Test test = new Test();
@@ -42,64 +37,23 @@ public class Test {
 		
 		
 		try {
-			if(!test.getSources(args[0],Integer.parseInt(args[1]),args[2],args[3],args.length>4?args[4]:null)){
+			RTCM3Client client = RTCM3Client.getInstance(args[0],Integer.parseInt(args[1]),args[2],args[3],args.length>4?args[4]:null);
+			if(client==null){
 				System.exit(0);
 			}
+			
+			client.start();
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		dati = new SaveMessage(net, test);
-		dati.start();
+
 	}
 
 	public Test() {
 
 	}
 
-	public boolean getSources(String _host, int _port, String _username,
-			String _password, String _mountpoint) throws Exception{
-
-		ArrayList<String> s = new ArrayList<String>();
-		gpsnetDefault = new GPSNetSettings(_host, _port, _username, _password);
-		mountpoints = new ArrayList<String>();
-		net = new RTCMClient(gpsnetDefault);
-		try {
-			s = net.getSources();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new Exception(e);
-		}
-		for (int j = 1; j < s.size(); j++) {
-			if (j % 2 == 0){
-				mountpoints.add(s.get(j));
-			}
-		}
-		if(_mountpoint == null){
-			System.out.println("Available Mountpoints:");
-		}
-		for (int j = 0; j < mountpoints.size(); j++) {
-			if(_mountpoint == null){
-				System.out.print("\t[" + mountpoints.get(j)+"]");
-			}else{
-				System.out.print("\t[" + mountpoints.get(j)+"]["+_mountpoint+"]");
-				if(_mountpoint.equalsIgnoreCase(mountpoints.get(j))){
-					gpsnetDefault.setSource(mountpoints.get(j));
-					System.out.print(" found");
-				}
-			}
-			System.out.println();
-		}
-		if(gpsnetDefault.getSource() == null){
-			System.out.println("Select a valid mountpoint!");
-			return false;
-		}
-		return true;
-	}
-
-	public void reciverStopped() {
-		dati = null;
-	}
 }

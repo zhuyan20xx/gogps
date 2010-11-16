@@ -32,24 +32,19 @@ import org.gogpsproject.Constants;
 
 public class Decode1004Msg implements Decode {
 
-	private boolean[] bits;
-	private int start = 12;
-	//private Header1004 header;
-	//private GpsSatellite satellite;
-
-	public Decode1004Msg(boolean[] _bits) {
-		bits = _bits;
-		//header = new Header1004();
-		//satellite = new GpsSatellite();
+	
+	public Decode1004Msg() {
+		
 	}
 
 	/* (non-Javadoc)
 	 * @see com.crysm.gogps.parser.tes#decode()
 	 */
-	public void decode() {
+	public void decode(boolean[] bits) {
 		
 		long tow = getTOWBase();
 		
+		int start = 12;
 		//header.setStationID(Bits.bitsToInt(Bits.subset(bits, start, 12)));
 		int DF003 = Bits.bitsToInt(Bits.subset(bits, start, 12));
 		start += 12;
@@ -71,6 +66,8 @@ public class Decode1004Msg implements Decode {
 		//System.out.println(header);
 		
 		Observations o = new Observations(new Time(tow+DF004),0);
+		
+		System.out.println(o.getRefTime().getGpsTime());
 		
 		
 		for (int i = 0; i < DF006 /*header.getNumberGPS()*/; i++) {
@@ -146,7 +143,7 @@ public class Decode1004Msg implements Decode {
 	        snr = (DF020 * 0.25);
 	        snr = (snr<=0.0||255.5<=snr)?0.0:snr+0.5;
 			os.setSignalStrength(ObservationSet.L2, (float)snr);
-			
+			o.setGps(i, os);
 		}
 	}
 	

@@ -25,21 +25,13 @@ import org.cryms.gogps.util.Bits;
 
 
 public class Decode1012Msg implements Decode {
-
-	private GlonassHeader glonassh;
-	private GlonassSatellite satellite;
-	private int start = 12;
-	private boolean[] bits;
-
-
-
-	public Decode1012Msg(boolean[] _bits) {
-		bits = _bits;
-		glonassh = new GlonassHeader();
-		satellite = new GlonassSatellite();
+	public Decode1012Msg() {
+		
 	}
-
-	public void decode() {
+	public void decode(boolean[] bits) {
+		int start = 12;
+		GlonassHeader glonassh = new GlonassHeader();
+		GlonassSatellite satellite = new GlonassSatellite();
 		
 		glonassh.setStationid(Bits.bitsToInt(Bits.subset(bits, start, 12))); // 12
 		start += 12;
@@ -55,51 +47,45 @@ public class Decode1012Msg implements Decode {
 		start += 1;
 		glonassh.setSmoothInterval(Bits.bitsToInt(Bits.subset(bits, start, 3))); // 3
 		start += 3;
-		System.out.println(glonassh);
+		//System.out.println(glonassh);
 		for (int i = 0; i < glonassh.getNumberOfSatellites(); i++) {
-			parseSatellite();
+			satellite.setSatID(Bits.bitsToInt(Bits.subset(bits, start, 6)));
+			start += 6;
+			satellite.setL1code(Bits.bitsToInt(Bits.subset(bits, start, 1)));
+			start += 1;
+			satellite.setSatFrequency(Bits.bitsToInt(Bits.subset(bits, start, 5)));
+			start += 5;
+			satellite.setL1pseudorange(Bits.bitsTwoComplement(Bits.subset(bits,
+					start, 25)));
+			start += 25;
+			satellite.setL1phaserange(Bits.bitsToInt(Bits.subset(bits, start, 20)));
+			start += 20;
+			satellite.setL1locktime(Bits.bitsTwoComplement(Bits.subset(bits, start,
+					7)));
+			start += 7;
+			satellite.setL1psedorangemod(Bits
+					.bitsToInt(Bits.subset(bits, start, 7)));
+			start += 7;
+			satellite.setL1CNR(Bits.bitsToInt(Bits.subset(bits, start, 8)));
+			start += 8;
+			satellite.setL2code(Bits.bitsToInt(Bits.subset(bits, start, 2)));
+			start += 2;
+			satellite.setL2l1psedorangeDif(Bits.bitsTwoComplement(Bits.subset(bits,
+					start, 14)));
+			start += 14;
+			satellite.setL2l1phaserangeDif(Bits.bitsTwoComplement(Bits.subset(bits,
+					start, 20)));
+			start += 20;
+			satellite.setL2locktime(Bits.bitsToInt(Bits.subset(bits, start, 7)));
+			start += 7;
+			satellite.setL2CNR(Bits.bitsToInt(Bits.subset(bits, start, 8)));
+			start += 8;
 		}
 	}
 
-	private void parseSatellite() {
-		satellite.setSatID(Bits.bitsToInt(Bits.subset(bits, start, 6)));
-		start += 6;
-		satellite.setL1code(Bits.bitsToInt(Bits.subset(bits, start, 1)));
-		start += 1;
-		satellite.setSatFrequency(Bits.bitsToInt(Bits.subset(bits, start, 5)));
-		start += 5;
-		satellite.setL1pseudorange(Bits.bitsTwoComplement(Bits.subset(bits,
-				start, 25)));
-		start += 25;
-		satellite.setL1phaserange(Bits.bitsToInt(Bits.subset(bits, start, 20)));
-		start += 20;
-		satellite.setL1locktime(Bits.bitsTwoComplement(Bits.subset(bits, start,
-				7)));
-		start += 7;
-		satellite.setL1psedorangemod(Bits
-				.bitsToInt(Bits.subset(bits, start, 7)));
-		start += 7;
-		satellite.setL1CNR(Bits.bitsToInt(Bits.subset(bits, start, 8)));
-		start += 8;
-		satellite.setL2code(Bits.bitsToInt(Bits.subset(bits, start, 2)));
-		start += 2;
-		satellite.setL2l1psedorangeDif(Bits.bitsTwoComplement(Bits.subset(bits,
-				start, 14)));
-		start += 14;
-		satellite.setL2l1phaserangeDif(Bits.bitsTwoComplement(Bits.subset(bits,
-				start, 20)));
-		start += 20;
-		satellite.setL2locktime(Bits.bitsToInt(Bits.subset(bits, start, 7)));
-		start += 7;
-		satellite.setL2CNR(Bits.bitsToInt(Bits.subset(bits, start, 8)));
-		start += 8;
-		System.out.println(satellite);
 
-	}
-
-	@Override
-	public String toString() {
-		return "Decode1012Msg [bits=" + Arrays.toString(bits) + ", glonassh=" + glonassh + ", start=" + start
-				+ "]";
-	}
+//	public String toString() {
+//		return "Decode1012Msg [bits=" + Arrays.toString(bits) + ", glonassh=" + glonassh + ", start=" + start
+//				+ "]";
+//	}
 }

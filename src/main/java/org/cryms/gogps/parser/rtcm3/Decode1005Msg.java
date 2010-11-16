@@ -25,18 +25,17 @@ import org.cryms.gogps.util.Bits;
 public class Decode1005Msg implements Decode {
 
 
-	private boolean[] bits;
-	private int start = 12;
-	private StationaryAntenna stationaryantenne;
 	
-	public Decode1005Msg(boolean[] _bits) {
-		bits = _bits;
-		stationaryantenne = new StationaryAntenna();
+	public Decode1005Msg() {
+		
 	}
 
 
-	public void decode() {
-		System.out.println("Debug : Decode 1005");
+	public void decode(boolean[] bits) {
+		int start = 12;
+		//System.out.println("Debug : Decode 1005");
+		StationaryAntenna stationaryantenne = new StationaryAntenna();
+		
 		stationaryantenne.setStationID(Bits.bitsToInt(Bits.subset(bits, start,
 				12)));
 		start += 12;
@@ -72,8 +71,8 @@ public class Decode1005Msg implements Decode {
 		stationaryantenne.setAntennaRefPointZ(Bits.bitsTwoComplement(Bits
 				.subset(bits, start, 38)));
 		start += 38;
-		System.out.println(stationaryantenne);
-		System.out.println("Debug length: " + start);
+		//System.out.println(stationaryantenne);
+		//System.out.println("Debug length: " + start);
 	}
 
 //	@Override
