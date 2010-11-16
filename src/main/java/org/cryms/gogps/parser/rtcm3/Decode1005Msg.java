@@ -1,0 +1,90 @@
+/*
+ * Copyright (c) 2010, Cryms.com . All Rights Reserved.
+ *
+ * This file is part of goGPS Project (goGPS).
+ *
+ * goGPS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * goGPS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+package org.cryms.gogps.parser.rtcm3;
+
+import org.cryms.gogps.util.Bits;
+
+public class Decode1005Msg implements Decode {
+
+
+	private boolean[] bits;
+	private int start = 12;
+	private StationaryAntenna stationaryantenne;
+	
+	public Decode1005Msg(boolean[] _bits) {
+		bits = _bits;
+		stationaryantenne = new StationaryAntenna();
+	}
+
+
+	public void decode() {
+		System.out.println("Debug : Decode 1005");
+		stationaryantenne.setStationID(Bits.bitsToInt(Bits.subset(bits, start,
+				12)));
+		start += 12;
+		stationaryantenne.setItrl(Bits.bitsToInt(Bits.subset(bits, start, 6)));
+		start += 6;
+		stationaryantenne.setGpsIndicator(Bits.bitsToInt(Bits.subset(bits,
+				start, 1)));
+		start += 1;
+		stationaryantenne.setGlonassIndicator(Bits.bitsToInt(Bits.subset(bits,
+				start, 1)));
+		start += 1;
+		stationaryantenne.setRgalileoIndicator(Bits.bitsToInt(Bits.subset(bits,
+				start, 1)));
+		start += 1;
+		stationaryantenne.setRstationIndicator(Bits.bitsToInt(Bits.subset(bits,
+				start, 1)));
+		start += 1;
+		stationaryantenne.setAntennaRefPointX(Bits.bitsTwoComplement(Bits
+				.subset(bits, start, 38)));
+		start += 38;
+		stationaryantenne.setSreceiverOscillator(Bits.bitsToInt(Bits.subset(
+				bits, start, 1)));
+		start += 1;
+		stationaryantenne.setReserved1(Bits.bitsToInt(Bits.subset(bits, start,
+				1)));
+		start += 1;
+		stationaryantenne.setAntennaRefPointY(Bits.bitsTwoComplement(Bits
+				.subset(bits, start, 38)));
+		start += 38;
+		stationaryantenne.setReserved2(Bits.bitsToInt(Bits.subset(bits, start,
+				2)));
+		start += 2;
+		stationaryantenne.setAntennaRefPointZ(Bits.bitsTwoComplement(Bits
+				.subset(bits, start, 38)));
+		start += 38;
+		System.out.println(stationaryantenne);
+		System.out.println("Debug length: " + start);
+	}
+
+//	@Override
+//	public void run() {
+//		decode();
+//
+//	}
+//
+//	public void start() {
+//		dataThread = new Thread(this);
+//		dataThread.start();
+//	}
+
+}

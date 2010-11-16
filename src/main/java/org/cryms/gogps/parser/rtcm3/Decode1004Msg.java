@@ -1,0 +1,177 @@
+/*
+ * Copyright (c) 2010, Cryms.com . All Rights Reserved.
+ *
+ * This file is part of goGPS Project (goGPS).
+ *
+ * goGPS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * goGPS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+package org.cryms.gogps.parser.rtcm3;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+
+import org.cryms.gogps.util.Bits;
+import org.gogpsproject.ObservationSet;
+import org.gogpsproject.Observations;
+import org.gogpsproject.Time;
+import org.gogpsproject.Constants;
+
+public class Decode1004Msg implements Decode {
+
+	private boolean[] bits;
+	private int start = 12;
+	//private Header1004 header;
+	//private GpsSatellite satellite;
+
+	public Decode1004Msg(boolean[] _bits) {
+		bits = _bits;
+		//header = new Header1004();
+		//satellite = new GpsSatellite();
+	}
+
+	/* (non-Javadoc)
+	 * @see com.crysm.gogps.parser.tes#decode()
+	 */
+	public void decode() {
+		
+		long tow = getTOWBase();
+		
+		//header.setStationID(Bits.bitsToInt(Bits.subset(bits, start, 12)));
+		int DF003 = Bits.bitsToInt(Bits.subset(bits, start, 12));
+		start += 12;
+		//header.setEpochTime(Bits.bitsToInt(Bits.subset(bits, start, 30)));
+		int DF004 = Bits.bitsToInt(Bits.subset(bits, start, 30));
+		start += 30;
+		//header.setGNSSFlag(Bits.bitsToInt(Bits.subset(bits, start, 1)));
+		boolean DF005 = (Bits.bitsToInt(Bits.subset(bits, start, 1))==1);
+		start += 1;
+		//header.setNumberGPS(Bits.bitsToInt(Bits.subset(bits, start, 5)));
+		int DF006 = Bits.bitsToInt(Bits.subset(bits, start, 5));
+		start += 5;
+		//header.setDivergenceSmooth(Bits.bitsToInt(Bits.subset(bits, start, 11)));
+		boolean DF007 = (Bits.bitsToInt(Bits.subset(bits, start, 1))==1);
+		start += 1;
+		//header.setSmouthInterval(Bits.bitsToInt(Bits.subset(bits, start, 3)));
+		int DF008 = Bits.bitsToInt(Bits.subset(bits, start, 3));
+		start += 3;
+		//System.out.println(header);
+		
+		Observations o = new Observations(new Time(tow+DF004),0);
+		
+		
+		for (int i = 0; i < DF006 /*header.getNumberGPS()*/; i++) {
+			int DF009 = Bits.bitsToInt(Bits.subset(bits, start, 6));
+			start += 6;
+			boolean DF010 = (Bits.bitsToInt(Bits.subset(bits, start, 1))==1);
+			start += 1;
+			int DF011 = Bits.bitsTwoComplement(Bits.subset(bits,start, 24));
+			start += 24;
+			int DF012 = Bits.bitsToInt(Bits.subset(bits, start, 20));
+			start += 20;
+			int DF013 = Bits.bitsTwoComplement(Bits.subset(bits, start,7));
+			start += 7;
+			int DF014 = Bits.bitsToInt(Bits.subset(bits, start, 8));
+			start += 8;
+			int DF015 = Bits.bitsToInt(Bits.subset(bits, start, 8));
+			start += 8;
+			int DF016 = Bits.bitsToInt(Bits.subset(bits, start, 2));
+			start += 2;
+			int DF017 = Bits.bitsTwoComplement(Bits.subset(bits,start, 14));
+			start += 14;
+			int DF018 = Bits.bitsTwoComplement(Bits.subset(bits,start, 20));
+			start += 20;
+			int DF019 = Bits.bitsToInt(Bits.subset(bits, start, 7));
+			start += 7;
+			int DF020 = Bits.bitsToInt(Bits.subset(bits, start, 8));
+			start += 8;
+			
+			ObservationSet os = new ObservationSet();
+			os.setSatID(DF009);
+			
+			double DF011d=DF011*0.02+DF014*299792.458;
+	        if (DF012 != 0x80000) {
+	        	if(DF010){
+	        		os.setCodeP(ObservationSet.L1, DF011d);
+	        	}else{
+	        		os.setCodeC(ObservationSet.L1, DF011d);
+	        	}
+	        	double cp1 = DF012*0.0005/Constants.LAMBDA_1;
+//	            cp1=adjcp(rtcm,sat,0,DF012*0.0005/lam[0]);
+//	            static double adjcp(rtcm_t *rtcm, int sat, int freq, double cp)
+//	        	{
+//	        	    if (rtcm->cp[sat-1][freq]==0.0) ;
+//	        	    else if (cp<rtcm->cp[sat-1][freq]-750.0) cp+=1500.0;
+//	        	    else if (cp>rtcm->cp[sat-1][freq]+750.0) cp-=1500.0;
+//	        	    rtcm->cp[sat-1][freq]=cp;
+//	        	    return cp;
+//	        	}
+//	        	rtcm->obs.data[index].L[0]=DF011/lam[0]+cp1;
+	        	
+	        	os.setPhase(ObservationSet.L1, DF011d/Constants.LAMBDA_1+cp1);
+	        }
+			
+			//os.setCoarseAcquisition((DF011 * 0.02) + (DF014 * 299792.458));
+			//os.setPhase(ObservationSet.L1,(os.getCoarseAcquisition() + (DF012*0.0005)) / Constants.LAMBDA_1);
+	        double snr = (DF015 * 0.25);
+	        snr = (snr<=0.0||255.5<=snr)?0.0:snr+0.5;
+			os.setSignalStrength(ObservationSet.L1, (float)snr);
+			
+			if (DF017!=0x2000) {
+	            os.setCodeP(ObservationSet.L2, DF011d+DF017*0.02);
+	        }
+	        if (DF018!=0x80000) {
+	            double cp2=DF018*0.0005/Constants.LAMBDA_2;
+	            
+	            os.setPhase(ObservationSet.L2,DF011d/Constants.LAMBDA_2+cp2);
+	            
+	        }
+	        
+			//os.setPseudorangeCode(ObservationSet.L2, ((DF011 + DF017) * 0.02) + (DF014 * 299792.458));
+			//os.setPhase(ObservationSet.L2,(os.getCoarseAcquisition() + (DF018*0.0005)) / Constants.LAMBDA_2);
+	        
+	        snr = (DF020 * 0.25);
+	        snr = (snr<=0.0||255.5<=snr)?0.0:snr+0.5;
+			os.setSignalStrength(ObservationSet.L2, (float)snr);
+			
+		}
+	}
+	
+	
+	/**
+	 * @return GPS Epoch Time of the beginning of the GPS week, 
+	 * which begins at midnight GMT on Saturday 
+	 * night/Sunday morning, measured in milliseconds. 
+	 * 
+	 * @deprecated week number should come out from RTCM
+	 */
+	private long getTOWBase() {
+		Calendar mbCal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+		mbCal.setTimeInMillis(System.currentTimeMillis());
+
+		Calendar cal = Calendar.getInstance();
+		cal.set(Calendar.YEAR, mbCal.get(Calendar.YEAR));
+		cal.set(Calendar.MONTH, mbCal.get(Calendar.MONTH));
+		cal.set(Calendar.DAY_OF_MONTH, mbCal.get(Calendar.DAY_OF_MONTH));
+		cal.set(Calendar.HOUR_OF_DAY, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY)cal.add(Calendar.DATE, -1);
+
+		return cal.getTimeInMillis();
+	}
+}
