@@ -33,42 +33,42 @@ public class Decode1012Msg implements Decode {
 		GlonassHeader glonassh = new GlonassHeader();
 		GlonassSatellite satellite = new GlonassSatellite();
 		
-		glonassh.setStationid(Bits.bitsToInt(Bits.subset(bits, start, 12))); // 12
+		glonassh.setStationid(Bits.bitsToUInt(Bits.subset(bits, start, 12))); // 12
 		start += 12;
-		glonassh.setEpochTime(Bits.bitsToInt(Bits.subset(bits, start, 27))); // 27
+		glonassh.setEpochTime(Bits.bitsToUInt(Bits.subset(bits, start, 27))); // 27
 		start += 27;
-		glonassh.setFlag(Bits.bitsToInt(Bits.subset(bits, start, 1))); // 1
+		glonassh.setFlag(Bits.bitsToUInt(Bits.subset(bits, start, 1))); // 1
 		start++;
-		glonassh.setNumberOfSatellites(Bits.bitsToInt(Bits.subset(bits, start,
+		glonassh.setNumberOfSatellites(Bits.bitsToUInt(Bits.subset(bits, start,
 				5))); // 5
 		start += 5;
 		glonassh
-				.setSmoothIndicator(Bits.bitsToInt(Bits.subset(bits, start, 1))); // 1
+				.setSmoothIndicator(Bits.bitsToUInt(Bits.subset(bits, start, 1))); // 1
 		start += 1;
-		glonassh.setSmoothInterval(Bits.bitsToInt(Bits.subset(bits, start, 3))); // 3
+		glonassh.setSmoothInterval(Bits.bitsToUInt(Bits.subset(bits, start, 3))); // 3
 		start += 3;
 		//System.out.println(glonassh);
 		for (int i = 0; i < glonassh.getNumberOfSatellites(); i++) {
-			satellite.setSatID(Bits.bitsToInt(Bits.subset(bits, start, 6)));
+			satellite.setSatID(Bits.bitsToUInt(Bits.subset(bits, start, 6)));
 			start += 6;
-			satellite.setL1code(Bits.bitsToInt(Bits.subset(bits, start, 1)));
+			satellite.setL1code(Bits.bitsToUInt(Bits.subset(bits, start, 1)));
 			start += 1;
-			satellite.setSatFrequency(Bits.bitsToInt(Bits.subset(bits, start, 5)));
+			satellite.setSatFrequency(Bits.bitsToUInt(Bits.subset(bits, start, 5)));
 			start += 5;
 			satellite.setL1pseudorange(Bits.bitsTwoComplement(Bits.subset(bits,
 					start, 25)));
 			start += 25;
-			satellite.setL1phaserange(Bits.bitsToInt(Bits.subset(bits, start, 20)));
+			satellite.setL1phaserange(Bits.bitsToUInt(Bits.subset(bits, start, 20)));
 			start += 20;
 			satellite.setL1locktime(Bits.bitsTwoComplement(Bits.subset(bits, start,
 					7)));
 			start += 7;
 			satellite.setL1psedorangemod(Bits
-					.bitsToInt(Bits.subset(bits, start, 7)));
+					.bitsToUInt(Bits.subset(bits, start, 7)));
 			start += 7;
-			satellite.setL1CNR(Bits.bitsToInt(Bits.subset(bits, start, 8)));
+			satellite.setL1CNR(Bits.bitsToUInt(Bits.subset(bits, start, 8)));
 			start += 8;
-			satellite.setL2code(Bits.bitsToInt(Bits.subset(bits, start, 2)));
+			satellite.setL2code(Bits.bitsToUInt(Bits.subset(bits, start, 2)));
 			start += 2;
 			satellite.setL2l1psedorangeDif(Bits.bitsTwoComplement(Bits.subset(bits,
 					start, 14)));
@@ -76,9 +76,9 @@ public class Decode1012Msg implements Decode {
 			satellite.setL2l1phaserangeDif(Bits.bitsTwoComplement(Bits.subset(bits,
 					start, 20)));
 			start += 20;
-			satellite.setL2locktime(Bits.bitsToInt(Bits.subset(bits, start, 7)));
+			satellite.setL2locktime(Bits.bitsToUInt(Bits.subset(bits, start, 7)));
 			start += 7;
-			satellite.setL2CNR(Bits.bitsToInt(Bits.subset(bits, start, 8)));
+			satellite.setL2CNR(Bits.bitsToUInt(Bits.subset(bits, start, 8)));
 			start += 8;
 		}
 	}

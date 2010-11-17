@@ -34,17 +34,17 @@ public class Decode1007Msg implements Decode {
 		AntennaDescriptor antenna = new AntennaDescriptor();
 		int start = 12;
 		String desc = "";
-		antenna.setStationID(Bits.bitsToInt(Bits.subset(bits, start, 12)));
+		antenna.setStationID(Bits.bitsToUInt(Bits.subset(bits, start, 12)));
 		start += 12;
-		antenna.setDecriptorCounterN(Bits.bitsToInt(Bits.subset(bits, start, 8)));
+		antenna.setDecriptorCounterN(Bits.bitsToUInt(Bits.subset(bits, start, 8)));
 		start += 8;
 		for (int i = 0; i < antenna.getDecriptorCounterN(); i++) {
-			char value = (char) Bits.bitsToInt(Bits.subset(bits, start, 8));
+			char value = (char) Bits.bitsToUInt(Bits.subset(bits, start, 8));
 			desc += Character.toString(value);
 			start += 8;
 		}
 		antenna.setAntennaDescriptor(desc);
-		antenna.setSetupID(Bits.bitsToInt(Bits.subset(bits, start, 8)));
+		antenna.setSetupID(Bits.bitsToUInt(Bits.subset(bits, start, 8)));
 		start += 8;
 		//System.out.println(antenna);
 		//System.out.println(start);

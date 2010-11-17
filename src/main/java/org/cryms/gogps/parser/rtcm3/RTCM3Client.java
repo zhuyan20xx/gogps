@@ -432,7 +432,7 @@ public class RTCM3Client implements Runnable {
 							index++;
 						}
 					}
-					messagelength = Bits.bitsToInt(Bits.subset(bits, 6, 10));
+					messagelength = Bits.bitsToUInt(Bits.subset(bits, 6, 10));
 //					System.out.println("Debug message length : "
 //							+ messagelength);
 					header = false;
@@ -442,7 +442,7 @@ public class RTCM3Client implements Runnable {
 
 			if (messagelength > 0) {
 				setBits(in, messagelength);
-				int msgtype = Bits.bitsToInt(Bits.subset(bits, 0, 12));
+				int msgtype = Bits.bitsToUInt(Bits.subset(bits, 0, 12));
 
 				System.out.println("message type : " + msgtype);
 				messagelength = 0;
