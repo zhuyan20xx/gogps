@@ -78,12 +78,10 @@ public class Time {
 	 *            (GPS time in seconds)
 	 * @return UNIX standard time in milliseconds
 	 */
-	private static double gpsToUnixTime(double time, int week) {
+	private static long gpsToUnixTime(long time, int week) {
 		// Shift from GPS time (January 6, 1980 - sec)
 		// to UNIX time (January 1, 1970 - msec)
-		time = (time + (week * Constants.DAYS_IN_WEEK + Constants.UNIX_GPS_DAYS_DIFF)
-				* Constants.SEC_IN_DAY)
-				* Constants.MILLISEC_IN_SEC;
+		time = (time + (week * Constants.DAYS_IN_WEEK + Constants.UNIX_GPS_DAYS_DIFF) * Constants.SEC_IN_DAY) * Constants.MILLISEC_IN_SEC;
 
 		return time;
 	}
@@ -93,21 +91,39 @@ public class Time {
 	 *            (UNIX standard time in milliseconds)
 	 * @return GPS time in seconds
 	 */
-	private static double unixToGpsTime(double time) {
+	private static long unixToGpsTime(long time) {
 		// Shift from UNIX time (January 1, 1970 - msec)
 		// to GPS time (January 6, 1980 - sec)
 		time = time / Constants.MILLISEC_IN_SEC - Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY;
 
 		// Remove integer weeks, to get Time Of Week
-		time = Math.IEEEremainder(time, Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY);
-
+		//time = Math.IEEEremainder(time, Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY);
+		
+		time = time%(Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY);
+		
 		return time;
 	}
 
-	public double getGpsTime(){
+	public long getGpsTime(){
 		return unixToGpsTime(msec);
 	}
+//	
+//	private static double unixToGpsTime(double time) {
+//		// Shift from UNIX time (January 1, 1970 - msec)
+//		// to GPS time (January 6, 1980 - sec)
+//		time = (long)(time / Constants.MILLISEC_IN_SEC) - Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY;
+//
+//		// Remove integer weeks, to get Time Of Week
+//		double dividend  = time;
+//		double divisor = Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY;
+//		time = dividend  - (divisor * round(dividend / divisor));
+//
+//		//time = Math.IEEEremainder(time, Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY);
+//
+//		return time;
+//	}
 	
+
 
 	/**
 	 * @return the msec

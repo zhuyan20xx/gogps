@@ -40,6 +40,9 @@ public class ObservationSet {
 	private float[] signalStrength;	/* C/N0 (signal strength) [dBHz] */
 	private float[] doppler;		/* Doppler value [Hz] */
 	
+	private int qualityInd = -1;	/* Nav Measurements Quality Ind. ublox proprietary? */ 
+	private int lossLockInd = -1;   /* Loss of lock indicator (RINEX definition) */
+	
 	public ObservationSet(){
 		codeC = new double[2];
 		codeC[0] = Double.NaN;
@@ -159,5 +162,33 @@ public class ObservationSet {
 		}else{
 			return super.equals(obj);
 		}
+	}
+
+	/**
+	 * @return the qualityInd
+	 */
+	public int getQualityInd() {
+		return qualityInd;
+	}
+
+	/**
+	 * @param qualityInd the qualityInd to set
+	 */
+	public void setQualityInd(int qualityInd) {
+		this.qualityInd = qualityInd;
+	}
+
+	/**
+	 * @return the lossLockInd
+	 */
+	public int getLossLockInd() {
+		return lossLockInd;
+	}
+
+	/**
+	 * @param lossLockInd the lossLockInd to set
+	 */
+	public void setLossLockInd(int lossLockInd) {
+		this.lossLockInd = lossLockInd;
 	}
 }

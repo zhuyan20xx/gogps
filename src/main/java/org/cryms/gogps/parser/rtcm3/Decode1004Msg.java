@@ -161,13 +161,15 @@ public class Decode1004Msg implements Decode {
 	 * (ie. if referenceTS report Saturday but TOW is little it must select next Sunday, not previous)
 	 */
 	private long getWeekTS(long tow, long referenceTS) {
-		Calendar mbCal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-		mbCal.setTimeInMillis(referenceTS);
+//		Calendar mbCal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+//		mbCal.setTimeInMillis(referenceTS);
 
 		Calendar cal = Calendar.getInstance();
-		cal.set(Calendar.YEAR, mbCal.get(Calendar.YEAR));
-		cal.set(Calendar.MONTH, mbCal.get(Calendar.MONTH));
-		cal.set(Calendar.DAY_OF_MONTH, mbCal.get(Calendar.DAY_OF_MONTH));
+		cal.setTimeZone(TimeZone.getTimeZone("GMT"));
+		cal.setTimeInMillis(referenceTS);
+//		cal.set(Calendar.YEAR, mbCal.get(Calendar.YEAR));
+//		cal.set(Calendar.MONTH, mbCal.get(Calendar.MONTH));
+//		cal.set(Calendar.DAY_OF_MONTH, mbCal.get(Calendar.DAY_OF_MONTH));
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);

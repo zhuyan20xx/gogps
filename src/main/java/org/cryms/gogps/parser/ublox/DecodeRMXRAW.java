@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.cryms.gogps.util.Bits;
 import org.cryms.gogps.util.UnsignedOperation;
@@ -136,7 +137,7 @@ public class DecodeRMXRAW {
 		long gmtTS = getGMTTS(tow, week);
 		Observations o = new Observations(new Time(gmtTS),0);
 
-		//System.out.println(gmtTS+" GPS time "+o.getRefTime().getGpsTime());
+		System.out.println(tow+"  "+o.getRefTime().getGpsTime());
 		
 		
 		for (int k = 0; k < (len - 8) / 24; k++) {
@@ -263,6 +264,7 @@ public class DecodeRMXRAW {
 	
 	private long getGMTTS(int tow, int week) {
 		Calendar c = Calendar.getInstance();
+		c.setTimeZone(TimeZone.getTimeZone("GMT"));
 		c.set(Calendar.YEAR, 1980);
 		c.set(Calendar.MONTH, Calendar.JANUARY);
 		c.set(Calendar.DAY_OF_MONTH, 6);
@@ -272,7 +274,7 @@ public class DecodeRMXRAW {
 		c.set(Calendar.MILLISECOND, 0);
 
 		c.add(Calendar.WEEK_OF_YEAR, week);
-		c.add(Calendar.MILLISECOND, tow/1000*1000);
+		c.add(Calendar.MILLISECOND, (int)(Math.round((double)tow/1000.0)*1000));
 		
 		//SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
 		//System.out.println(sdf.format(c.getTime()));

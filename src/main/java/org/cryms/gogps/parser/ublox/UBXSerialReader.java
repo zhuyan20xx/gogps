@@ -55,7 +55,7 @@ public class UBXSerialReader implements Runnable {
 		t = new Thread(this);
 		t.start();
 		
-		
+		System.out.println("1");
 		String nmea[] = { "GGA", "GLL", "GSA", "GSV", "RMC", "VTG", "GRS",
 				"GST", "ZDA", "GBS", "DTM" };
 		for (int i = 0; i < nmea.length; i++) {
@@ -63,6 +63,7 @@ public class UBXSerialReader implements Runnable {
 			out.write(msgcfg.getByte());
 			out.flush();
 		}
+		System.out.println("2");
 		String pubx[] = { "A", "B", "C", "D" };
 		for (int i = 0; i < pubx.length; i++) {
 			MsgConfiguration msgcfg = new MsgConfiguration("PUBX", pubx[i], 0);
@@ -74,6 +75,7 @@ public class UBXSerialReader implements Runnable {
 		MsgConfiguration msgcfg = new MsgConfiguration("RXM", "RAW", 1);
 		out.write(msgcfg.getByte());
 		out.flush();
+		System.out.println("3");
 	}
 	public void stop(){
 		stop = true;
@@ -88,7 +90,7 @@ public class UBXSerialReader implements Runnable {
 
 				if(in.read() == 0xB5 && in.read() == 0x62){
 					data = in.read();
-					
+					System.out.println(".");
 					//System.out.print("0x" + Integer.toHexString(data) + " ");
 					if (data == 0x02) {
 						data = in.read();

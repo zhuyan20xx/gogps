@@ -159,7 +159,7 @@ public class SerialConnection implements EventListener{
 	 */
 	@Override
 	public void addObservations(Observations o) {
-		System.out.println("# "+o.getGpsSize()+" GPS time "+o.getRefTime().getGpsTime());
+		System.out.println("# "+o.getGpsSize()+" GPS time "+o.getRefTime().getMsec());
 		
 	}
 
