@@ -28,7 +28,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
-public class Ublox {
+public class Test {
 
 	public static int speed = 9600;
 	private static SerialConnection network;
@@ -64,25 +64,29 @@ public class Ublox {
 
 	public static void main(String[] args) {
 
-		network = new SerialConnection(0);
+		network = new SerialConnection();
 		Vector<String> ports = network.getPortList();
 		if (ports.size() > 0) {
-			System.out
-					.println("the following serial ports have been detected:");
+			System.out.println("the following serial ports have been detected:");
 		} else {
-			System.out
-					.println("sorry, no serial ports were found on your computer\n");
+			System.out.println("sorry, no serial ports were found on your computer\n");
 			System.exit(0);
 		}
+		String port = null;
 		for (int i = 0; i < ports.size(); ++i) {
-			System.out.println("    " + Integer.toString(i + 1) + ":  "
-					+ ports.elementAt(i));
+			System.out.println("    " + Integer.toString(i + 1) + ":  "+ ports.elementAt(i));
+			if(args.length>0 && args[0].equalsIgnoreCase(ports.elementAt(i))){
+				port = ports.elementAt(i);
+			}
 		}
-		if (network.connect(ports.elementAt(2), speed)) {
+		if(args.length>2){
+			speed = Integer.parseInt(args[1]);
+		}
+		if (network.connect(port, speed)) {
 			System.out.println();
 		} else {
-			System.out.println("sorry, there was an error connecting\n");
-			System.exit(1);
+			System.out.println("Test <port> (<speed>)");
+			System.exit(0);
 		}
 
 		// // TODO Auto-generated method stub

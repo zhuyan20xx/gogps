@@ -416,7 +416,6 @@ public class MessageType {
 				// return 0;
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return 1;

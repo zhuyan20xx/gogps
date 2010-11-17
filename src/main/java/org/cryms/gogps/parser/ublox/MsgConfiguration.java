@@ -27,10 +27,10 @@ import org.cryms.gogps.util.UnsignedOperation;
 
 public class MsgConfiguration {
 
-	private int header1 = 0xB5;
-	private int header2 = 0x62;
-	private int ID2 = 0x01;
-	private int ID1 = 0x06;
+	public final int uBloxPrefix1 = 0xB5;
+	public final  int uBloxPrefix2 = 0x62;
+	public final  int ID2 = 0x01;
+	public final  int ID1 = 0x06;
 	private int classid;
 	private int msgval;
 	private MessageType msgid;
@@ -51,8 +51,8 @@ public class MsgConfiguration {
 		else
 			rate = 0x00;
 		msg = new Vector<Integer>();
-		msg.add(header1);
-		msg.add(header2);
+		msg.add(uBloxPrefix1);
+		msg.add(uBloxPrefix2);
 		msg.add(ID1);
 		msg.add(ID2);
 		msg.add(length2);

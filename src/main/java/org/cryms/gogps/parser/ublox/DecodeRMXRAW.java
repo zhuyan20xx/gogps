@@ -22,16 +22,21 @@ package org.cryms.gogps.parser.ublox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.cryms.gogps.util.Bits;
 import org.cryms.gogps.util.UnsignedOperation;
+import org.gogpsproject.ObservationSet;
+import org.gogpsproject.Observations;
+import org.gogpsproject.Time;
 
 
-public class GpsDecode {
+public class DecodeRMXRAW {
 	//private boolean[] bits;
 	InputStream in;
-	RawData data = new RawData();
-
+	
 	int[] fdata;
 	int[] fbits;
 	boolean end = true;
@@ -39,21 +44,21 @@ public class GpsDecode {
 	// public gpsDecode(boolean[] _bits){
 	// bits=_bits;
 	// }
-	public GpsDecode(InputStream _in) {
+	public DecodeRMXRAW(InputStream _in) {
 		in = _in;
 	}
 
-	public void decode() throws IOException {
+	public Observations decode() throws IOException {
 		// parse little Endian data
 		boolean[] lengthbits;
 		int[] length = new int[2];
 		int[] data;
 		boolean[] temp = new boolean[8]; // byte
 		int index = 0;
-		System.out.print("\nLength : \n");
+//		System.out.print("\nLength : \n");
 		for (int i = 1; i >= 0; i--) {
 			length[i] = in.read();
-			System.out.print("0x" + Integer.toHexString(length[i]) + " ");
+			//System.out.print("0x" + Integer.toHexString(length[i]) + " ");
 		}
 		lengthbits = new boolean[length.length * 8];
 
@@ -65,16 +70,16 @@ public class GpsDecode {
 			}
 		}
 		int len = Bits.bitsToInt(lengthbits);
-		System.out.println(" %%%%%%%%%% Length : " + len);
+		//System.out.println(" %%%%%%%%%% Length : " + len);
 		data = new int[8];
 		int[] datatmp = new int[8];
-		System.out.print("\n Header ");
+		//System.out.print("\n Header ");
 		for (int i = 0; i < 8; i++) {
 			data[i] = in.read();
 			datatmp[i] = data[i];
-			System.out.print("0x" + Integer.toHexString(data[i]) + " ");
+			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
 		}
-		System.out.println();
+		//System.out.println();
 		boolean[] bits = new boolean[8 * 4];
 		int indice = 0;
 		for (int j = 3; j >= 0; j--) {
@@ -84,8 +89,9 @@ public class GpsDecode {
 				indice++;
 			}
 		}
-		System.out.println("Gps Time of week " + Bits.bitsTwoComplement(bits)
-				+ " ms");
+		int tow = Bits.bitsTwoComplement(bits);
+		//System.out.println("Gps TOW " + tow + " ms");
+		
 		bits = new boolean[8 * 2];
 		indice = 0;
 		for (int j = 5; j >= 4; j--) {
@@ -95,6 +101,9 @@ public class GpsDecode {
 				indice++;
 			}
 		}
+		int week = Bits.bitsTwoComplement(bits);
+		//System.out.println("Week :  " + week );
+		
 		bits = new boolean[8];
 		indice = 0;
 		boolean[] temp1 = Bits.intToBits(data[6], 8);
@@ -102,8 +111,9 @@ public class GpsDecode {
 			bits[indice] = temp1[i];
 			indice++;
 		}
-
-		System.out.println("Numsv :  " + Bits.bitsToInt(bits) + " S ");
+		
+		int numSV = Bits.bitsToInt(bits);
+		//System.out.println("NumSV :  " + numSV + " S ");
 
 		bits = new boolean[8];
 		indice = 0;
@@ -113,19 +123,29 @@ public class GpsDecode {
 			indice++;
 		}
 
-		System.out.println("Res :  " + Bits.bitsToInt(bits) + "  ");
+		//System.out.println("Res :  " + Bits.bitsToInt(bits) + "  ");
 
 		data = new int[len - 8];
 
 		for (int i = 0; i < len - 8; i++) {
 			data[i] = in.read();
-			System.out.print("0x" + Integer.toHexString(data[i]) + " ");
+			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
 		}
-		System.out.println();
+		//System.out.println();
+		
+		long gmtTS = getGMTTS(tow, week);
+		Observations o = new Observations(new Time(gmtTS),0);
 
+		//System.out.println(gmtTS+" GPS time "+o.getRefTime().getGpsTime());
+		
+		
 		for (int k = 0; k < (len - 8) / 24; k++) {
-			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%" + k
-					+ "%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+//			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%" + k
+//					+ "%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+			
+			ObservationSet os = new ObservationSet();
+			
+			
 			int offset = k * 24;
 			bits = new boolean[8 * 8]; // R8
 			indice = 0;
@@ -136,8 +156,9 @@ public class GpsDecode {
 					indice++;
 				}
 			}
-			System.out.println("Carrier phase :  "
-					+ UnsignedOperation.toDouble(Bits.tobytes(bits)) + "  ");
+			os.setPhase(ObservationSet.L1, UnsignedOperation.toDouble(Bits.tobytes(bits)));
+//			System.out.print(k+"\tPhase: "
+//					+ os.getPhase(ObservationSet.L1) + "  ");
 			bits = new boolean[8 * 8]; // R8
 			indice = 0;
 			for (int j = offset + 7 + 8; j >= 8 + offset; j--) {
@@ -147,8 +168,9 @@ public class GpsDecode {
 					indice++;
 				}
 			}
-			System.out.println("Pseudorange :  "
-					+ UnsignedOperation.toDouble(Bits.tobytes(bits)) + "  ");
+			os.setCodeC(ObservationSet.L1, UnsignedOperation.toDouble(Bits.tobytes(bits)));
+//			System.out.print(" Code: "
+//					+ os.getCodeC(ObservationSet.L1) + "  ");
 			bits = new boolean[8 * 4]; // R8
 			indice = 0;
 			for (int j = offset + 7 + 8 + 4; j >= 8 + 8 + offset; j--) {
@@ -158,8 +180,9 @@ public class GpsDecode {
 					indice++;
 				}
 			}
-			System.out.println("Doppler measurement :  "
-					+ UnsignedOperation.toFloat(Bits.tobytes(bits)) + "  ");
+			os.setDoppler(ObservationSet.L1, UnsignedOperation.toFloat(Bits.tobytes(bits)));
+//			System.out.print(" Doppler: "
+//					+ os.getDoppler(ObservationSet.L1) + "  ");
 			bits = new boolean[8];
 			indice = 0;
 			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1], 8);
@@ -167,8 +190,11 @@ public class GpsDecode {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			System.out.println("Space Vehicle Number :  "
-					+ Bits.bitsToInt(bits) + "  ");
+			os.setSatID(Bits.bitsToInt(bits));
+//			System.out.print (" SatID: "
+//					+ os.getSatID() + "  ");
+			
+			
 			bits = new boolean[8];
 			indice = 0;
 			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1], 8);
@@ -176,10 +202,10 @@ public class GpsDecode {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			System.out.println("Space Vehicle Number :  "
-					+ Bits.bitsTwoComplement(bits) + "  ");
-			System.out.println("Nav Measurements Quality:  "
-					+ Bits.bitsToInt(bits) + "  ");
+//			System.out.print("Nav Measurements Quality Ind.: "
+//					+ Bits.bitsTwoComplement(bits) + "  ");
+//			System.out.print(" QI: "
+//					+ Bits.bitsToInt(bits) + "  ");
 			bits = new boolean[8];
 			indice = 0;
 			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1 + 1], 8);
@@ -187,8 +213,10 @@ public class GpsDecode {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			System.out.println("Signal strength C/No. (dbHz) :  "
-					+ Bits.bitsTwoComplement(bits) + "  ");
+			
+			os.setSignalStrength(ObservationSet.L1, Bits.bitsTwoComplement(bits));
+//			System.out.print(" SNR: " // Signal strength C/No. (dbHz)
+//					+ os.getSignalStrength(ObservationSet.L1) + "  ");
 			bits = new boolean[8];
 			indice = 0;
 			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1 + 1 + 1], 8);
@@ -196,11 +224,12 @@ public class GpsDecode {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			System.out.println("Loss of lock indicator (RINEX definition) :  "
-					+ Bits.bitsToInt(bits) + "  ");
+//			System.out.println(" Lock: "//Loss of lock indicator (RINEX definition)
+//					+ Bits.bitsToInt(bits) + "  ");
 			int total = offset + 7 + 8 + 4 + 1 + 1 + 1 + 1;
-			System.out.println("Offset " + total);
+			//System.out.println("Offset " + total);
 
+			o.setGps(k, os);
 		}
 		// / Checksum
 		int CH_A = 0;
@@ -224,9 +253,30 @@ public class GpsDecode {
 		}
 		CH_A = CH_A & 0xFF;
 		CH_B = CH_B & 0xFF;
-		System.out.println("CH_A cal " + Integer.toHexString(CH_A)
-				+ " CH_K packetto " + Integer.toHexString(in.read()));
-		System.out.println("CH_B cal " + Integer.toHexString(CH_B)
-				+ " CH_K packetto " + Integer.toHexString(in.read()));
+//		System.out.println("CH_A cal " + Integer.toHexString(CH_A)
+//				+ " CH_K packetto " + Integer.toHexString(in.read()));
+//		System.out.println("CH_B cal " + Integer.toHexString(CH_B)
+//				+ " CH_K packetto " + Integer.toHexString(in.read()));
+		
+		return o;
+	}
+	
+	private long getGMTTS(int tow, int week) {
+		Calendar c = Calendar.getInstance();
+		c.set(Calendar.YEAR, 1980);
+		c.set(Calendar.MONTH, Calendar.JANUARY);
+		c.set(Calendar.DAY_OF_MONTH, 6);
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
+
+		c.add(Calendar.WEEK_OF_YEAR, week);
+		c.add(Calendar.MILLISECOND, tow/1000*1000);
+		
+		//SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
+		//System.out.println(sdf.format(c.getTime()));
+		
+		return c.getTimeInMillis();
 	}
 }
