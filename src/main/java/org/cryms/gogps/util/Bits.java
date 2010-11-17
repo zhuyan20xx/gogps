@@ -46,7 +46,7 @@ public class Bits {
 
 		
 		int pow2 = 1;
-		for (int i = bits.length; i >= 0; i--) {
+		for (int i = bits.length-1; i >= 0; i--) {
 			if (bits[i]) {
 				result = result + pow2 ;//(int) java.lang.Math.pow(2, (bits.length - i - 1));
 			}
