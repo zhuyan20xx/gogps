@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
