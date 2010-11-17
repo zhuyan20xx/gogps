@@ -30,7 +30,7 @@ public class Decode1007Msg implements Decode {
 		
 	}
 
-	public void decode(boolean[] bits) {
+	public void decode(boolean[] bits, long referenceTS) {
 		AntennaDescriptor antenna = new AntennaDescriptor();
 		int start = 12;
 		String desc = "";

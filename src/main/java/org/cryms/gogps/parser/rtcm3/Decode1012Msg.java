@@ -28,7 +28,7 @@ public class Decode1012Msg implements Decode {
 	public Decode1012Msg() {
 		
 	}
-	public void decode(boolean[] bits) {
+	public void decode(boolean[] bits, long referenceTS) {
 		int start = 12;
 		GlonassHeader glonassh = new GlonassHeader();
 		GlonassSatellite satellite = new GlonassSatellite();

@@ -31,7 +31,7 @@ public class Decode1005Msg implements Decode {
 	}
 
 
-	public void decode(boolean[] bits) {
+	public void decode(boolean[] bits, long referenceTS) {
 		int start = 12;
 		//System.out.println("Debug : Decode 1005");
 		StationaryAntenna stationaryantenne = new StationaryAntenna();

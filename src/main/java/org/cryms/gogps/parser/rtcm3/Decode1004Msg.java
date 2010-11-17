@@ -20,7 +20,9 @@
 
 package org.cryms.gogps.parser.rtcm3;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
@@ -32,17 +34,17 @@ import org.gogpsproject.Constants;
 
 public class Decode1004Msg implements Decode {
 
+	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
 	
-	public Decode1004Msg() {
-		
+	private RTCM3Client client;
+	public Decode1004Msg(RTCM3Client client) {
+		this.client = client;
 	}
 
 	/* (non-Javadoc)
 	 * @see com.crysm.gogps.parser.tes#decode()
 	 */
-	public void decode(boolean[] bits) {
-		
-		long tow = getTOWBase();
+	public void decode(boolean[] bits, long referenceTS) {
 		
 		int start = 12;
 		//header.setStationID(Bits.bitsToInt(Bits.subset(bits, start, 12)));
@@ -64,10 +66,11 @@ public class Decode1004Msg implements Decode {
 		int DF008 = Bits.bitsToInt(Bits.subset(bits, start, 3));
 		start += 3;
 		//System.out.println(header);
+		long weekTS = getWeekTS(DF004, referenceTS);
+		Observations o = new Observations(new Time(weekTS+DF004),0);
 		
-		Observations o = new Observations(new Time(tow+DF004),0);
-		
-		System.out.println(o.getRefTime().getGpsTime());
+		System.out.println(weekTS+"+"+DF004+"="+(weekTS+DF004)+" GPS time "+o.getRefTime().getGpsTime());
+		System.out.println(sdf.format(new Date(weekTS+DF004))+"\n"+sdf.format(new Date(referenceTS)));
 		
 		
 		for (int i = 0; i < DF006 /*header.getNumberGPS()*/; i++) {
@@ -145,19 +148,21 @@ public class Decode1004Msg implements Decode {
 			os.setSignalStrength(ObservationSet.L2, (float)snr);
 			o.setGps(i, os);
 		}
+		
+		client.addObservation(o);
 	}
 	
 	
 	/**
-	 * @return GPS Epoch Time of the beginning of the GPS week, 
+	 * @return GPS Epoch Time of the beginning of the right GPS week, 
 	 * which begins at midnight GMT on Saturday 
 	 * night/Sunday morning, measured in milliseconds. 
-	 * 
-	 * @deprecated week number should come out from RTCM
+	 * referenceTS is the reference timestamp to select rigth week near leap saturday/sunday
+	 * (ie. if referenceTS report Saturday but TOW is little it must select next Sunday, not previous)
 	 */
-	private long getTOWBase() {
+	private long getWeekTS(long tow, long referenceTS) {
 		Calendar mbCal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-		mbCal.setTimeInMillis(System.currentTimeMillis());
+		mbCal.setTimeInMillis(referenceTS);
 
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.YEAR, mbCal.get(Calendar.YEAR));
@@ -167,6 +172,31 @@ public class Decode1004Msg implements Decode {
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
 		cal.set(Calendar.MILLISECOND, 0);
+		
+		// search for right Sunday comparing TOW value and reference date to target right week
+		if(cal.get(Calendar.DAY_OF_WEEK) >= Calendar.FRIDAY){
+			// time ref is friday or saturday, tow should be great
+			
+			if( tow < 2*24*3600*1000 ){
+				// tow is < than Tuesday so real week passed Sunday, go forward
+				while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY) cal.add(Calendar.DATE, 1);
+			}else{
+				// tow is > than Tuesday as expected, go backward
+				while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY) cal.add(Calendar.DATE, -1);
+			}
+		}else{
+			// time ref is Sunday to Thusday 
+			if( tow > 5*24*3600*1000 ){
+				// but if tow is still in past week, bring back one week
+				cal.add(Calendar.DATE, -7);
+			}
+			//  ensure Sunday
+			while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY) cal.add(Calendar.DATE, -1);
+			
+		}
+		
+			
+		
 		while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY)cal.add(Calendar.DATE, -1);
 
 		return cal.getTimeInMillis();

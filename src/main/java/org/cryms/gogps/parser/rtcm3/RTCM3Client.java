@@ -28,11 +28,14 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.cryms.gogps.util.Bits;
+import org.gogpsproject.ObservationSet;
+import org.gogpsproject.Observations;
 
 public class RTCM3Client implements Runnable {
 
@@ -52,6 +55,8 @@ public class RTCM3Client implements Runnable {
 	private boolean[] bits;
 	private boolean[] rollbits;
 	private boolean downloadlength = false;
+	
+	private Vector<Observations> observationsBuffer = null;
 
 
 	public static RTCM3Client getInstance(String _host, int _port, String _username,
@@ -102,7 +107,7 @@ public class RTCM3Client implements Runnable {
 		
 		decodeMap = new HashMap<Integer, Decode>();
 		
-		decodeMap.put(new Integer(1004), new Decode1004Msg());
+		decodeMap.put(new Integer(1004), new Decode1004Msg(this));
 		decodeMap.put(new Integer(1005), new Decode1005Msg());
 		decodeMap.put(new Integer(1007), new Decode1007Msg());
 		decodeMap.put(new Integer(1012), new Decode1012Msg());
@@ -165,7 +170,7 @@ public class RTCM3Client implements Runnable {
 					// We haven't seen any specification of the sourcetable, but
 					// according to what we can see from it it should be correct
 					String s = token.nextToken();
-					while (!s.substring(0, 4).equals("RTCM")) {
+					while (!s.startsWith("RTCM 3")) {
 						sources.add(s);
 						s = token.nextToken();
 					}
@@ -257,6 +262,7 @@ public class RTCM3Client implements Runnable {
 			// when go is changed to false the loop is stopped
 			while (go && state == 0) {
 				int c = in.read();
+				System.out.print((char)c);
 				if (c < 0)
 					break;
 				// tester.write(c);
@@ -276,6 +282,14 @@ public class RTCM3Client implements Runnable {
 				}
 			}
 			if(!go){
+				for(int i=0;i<header.length;i++)
+					System.out.print((char)header[i]);
+				int c = in.read();
+				while(c!=-1){
+					System.out.print((char)c);
+					c = in.read();
+				}
+				System.out.println();
 				System.out.println(settings.getSource()+" invalid header");
 				return;
 			}
@@ -435,7 +449,7 @@ public class RTCM3Client implements Runnable {
 
 				Decode dec = decodeMap.get(new Integer(msgtype));
 				if(dec!=null){
-					dec.decode(bits);
+					dec.decode(bits, System.currentTimeMillis());
 				}else{
 					// missing message parser
 				}
@@ -466,4 +480,11 @@ public class RTCM3Client implements Runnable {
 			}
 		}
 	}
+	
+	public void addObservation(Observations o){
+		if(observationsBuffer == null) observationsBuffer = new Vector<Observations>();
+		observationsBuffer.add(o);
+	}
+	
+	
 }
