@@ -69,7 +69,7 @@ public class DecodeRMXRAW {
 				index++;
 			}
 		}
-		int len = Bits.bitsToInt(lengthbits);
+		int len = Bits.bitsToUInt(lengthbits);
 		//System.out.println(" %%%%%%%%%% Length : " + len);
 		data = new int[8];
 		int[] datatmp = new int[8];
@@ -112,7 +112,7 @@ public class DecodeRMXRAW {
 			indice++;
 		}
 		
-		int numSV = Bits.bitsToInt(bits);
+		int numSV = Bits.bitsToUInt(bits);
 		//System.out.println("NumSV :  " + numSV + " S ");
 
 		bits = new boolean[8];
@@ -123,7 +123,7 @@ public class DecodeRMXRAW {
 			indice++;
 		}
 
-		//System.out.println("Res :  " + Bits.bitsToInt(bits) + "  ");
+		//System.out.println("Res :  " + Bits.bitsToUInt(bits) + "  ");
 
 		data = new int[len - 8];
 
@@ -190,7 +190,7 @@ public class DecodeRMXRAW {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			os.setSatID(Bits.bitsToInt(bits));
+			os.setSatID(Bits.bitsToUInt(bits));
 //			System.out.print (" SatID: "
 //					+ os.getSatID() + "  ");
 			
@@ -205,7 +205,7 @@ public class DecodeRMXRAW {
 //			System.out.print("Nav Measurements Quality Ind.: "
 //					+ Bits.bitsTwoComplement(bits) + "  ");
 //			System.out.print(" QI: "
-//					+ Bits.bitsToInt(bits) + "  ");
+//					+ Bits.bitsToUInt(bits) + "  ");
 			bits = new boolean[8];
 			indice = 0;
 			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1 + 1], 8);
@@ -225,7 +225,7 @@ public class DecodeRMXRAW {
 				indice++;
 			}
 //			System.out.println(" Lock: "//Loss of lock indicator (RINEX definition)
-//					+ Bits.bitsToInt(bits) + "  ");
+//					+ Bits.bitsToUInt(bits) + "  ");
 			int total = offset + 7 + 8 + 4 + 1 + 1 + 1 + 1;
 			//System.out.println("Offset " + total);
 

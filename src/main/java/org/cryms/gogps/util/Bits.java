@@ -21,19 +21,40 @@ package org.cryms.gogps.util;
 
 public class Bits {
 
-	public static int bitsToInt(boolean[] bits) {
+//	public static void main(String args[]){
+//		
+//		System.out.println(bitsToInt(new boolean[]{true,false,true}) + " " + bitsToInt(new boolean[]{true,false,true}));
+//		System.out.println(bitsToInt(new boolean[]{true,false,false}) + " " + bitsToInt(new boolean[]{true,false,false}));
+//		System.out.println(bitsToInt(new boolean[]{false,false,true}) + " " + bitsToInt(new boolean[]{false,false,true}));
+//		
+//	}
+//	public static int bitsToInt(boolean[] bits) {
+//		int result = 0;
+//
+//		for (int i = 0; i < bits.length; i++) {
+//			if (bits[i]) {
+//				result = result
+//						+ (int) java.lang.Math.pow(2, (bits.length - i - 1));
+//			}
+//		}
+//
+//		return result;
+//	}
+	public static int bitsToUInt(boolean[] bits) {
 		int result = 0;
 
-		for (int i = 0; i < bits.length; i++) {
+
+		
+		int pow2 = 1;
+		for (int i = bits.length; i >= 0; i--) {
 			if (bits[i]) {
-				result = result
-						+ (int) java.lang.Math.pow(2, (bits.length - i - 1));
+				result = result + pow2 ;//(int) java.lang.Math.pow(2, (bits.length - i - 1));
 			}
+			pow2 = pow2 * 2;
 		}
 
 		return result;
 	}
-
 	/**
 	 * convert bits to String
 	 * 
@@ -60,7 +81,7 @@ public class Bits {
 
 		if (!bits[0]) {
 			// If the most significant bit are 0 then the integer is positive
-			result = bitsToInt(bits);
+			result = bitsToUInt(bits);
 		} else {
 			// If the most significant bit are 1 then the integer is negative
 			// and the bits must be inverted and added 1 in order to get the
@@ -69,7 +90,7 @@ public class Bits {
 			for (int i = 0; i < bits.length; i++) {
 				b[i] = !bits[i];
 			}
-			result = -(bitsToInt(b) + 1);
+			result = -(bitsToUInt(b) + 1);
 		}
 
 		return result;
@@ -249,7 +270,7 @@ public class Bits {
 		byte[] bytes = new byte[bits.length / 8];
 		int indice = 0;
 		for (int i = 0; i < bits.length / 8; i++) {
-			bytes[i] = (byte) bitsToInt(subset(bits, indice, 8));
+			bytes[i] = (byte) bitsToUInt(subset(bits, indice, 8));
 			indice += 8;
 		}
 		return bytes;

@@ -36,36 +36,36 @@ public class Decode1005Msg implements Decode {
 		//System.out.println("Debug : Decode 1005");
 		StationaryAntenna stationaryantenne = new StationaryAntenna();
 		
-		stationaryantenne.setStationID(Bits.bitsToInt(Bits.subset(bits, start,
+		stationaryantenne.setStationID(Bits.bitsToUInt(Bits.subset(bits, start,
 				12)));
 		start += 12;
-		stationaryantenne.setItrl(Bits.bitsToInt(Bits.subset(bits, start, 6)));
+		stationaryantenne.setItrl(Bits.bitsToUInt(Bits.subset(bits, start, 6)));
 		start += 6;
-		stationaryantenne.setGpsIndicator(Bits.bitsToInt(Bits.subset(bits,
+		stationaryantenne.setGpsIndicator(Bits.bitsToUInt(Bits.subset(bits,
 				start, 1)));
 		start += 1;
-		stationaryantenne.setGlonassIndicator(Bits.bitsToInt(Bits.subset(bits,
+		stationaryantenne.setGlonassIndicator(Bits.bitsToUInt(Bits.subset(bits,
 				start, 1)));
 		start += 1;
-		stationaryantenne.setRgalileoIndicator(Bits.bitsToInt(Bits.subset(bits,
+		stationaryantenne.setRgalileoIndicator(Bits.bitsToUInt(Bits.subset(bits,
 				start, 1)));
 		start += 1;
-		stationaryantenne.setRstationIndicator(Bits.bitsToInt(Bits.subset(bits,
+		stationaryantenne.setRstationIndicator(Bits.bitsToUInt(Bits.subset(bits,
 				start, 1)));
 		start += 1;
 		stationaryantenne.setAntennaRefPointX(Bits.bitsTwoComplement(Bits
 				.subset(bits, start, 38)));
 		start += 38;
-		stationaryantenne.setSreceiverOscillator(Bits.bitsToInt(Bits.subset(
+		stationaryantenne.setSreceiverOscillator(Bits.bitsToUInt(Bits.subset(
 				bits, start, 1)));
 		start += 1;
-		stationaryantenne.setReserved1(Bits.bitsToInt(Bits.subset(bits, start,
+		stationaryantenne.setReserved1(Bits.bitsToUInt(Bits.subset(bits, start,
 				1)));
 		start += 1;
 		stationaryantenne.setAntennaRefPointY(Bits.bitsTwoComplement(Bits
 				.subset(bits, start, 38)));
 		start += 38;
-		stationaryantenne.setReserved2(Bits.bitsToInt(Bits.subset(bits, start,
+		stationaryantenne.setReserved2(Bits.bitsToUInt(Bits.subset(bits, start,
 				2)));
 		start += 2;
 		stationaryantenne.setAntennaRefPointZ(Bits.bitsTwoComplement(Bits
