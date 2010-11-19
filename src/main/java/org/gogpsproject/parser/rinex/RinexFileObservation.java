@@ -18,7 +18,7 @@
  *
  *
  */
-package org.gogpsproject;
+package org.gogpsproject.parser.rinex;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +28,13 @@ import java.io.InputStreamReader;
 import java.text.ParseException;
 
 import org.ejml.data.SimpleMatrix;
+import org.gogpsproject.Coordinates;
+import org.gogpsproject.EphGps;
+import org.gogpsproject.Navigation;
+import org.gogpsproject.ObservationSet;
+import org.gogpsproject.Observations;
+import org.gogpsproject.ObservationsProducer;
+import org.gogpsproject.Time;
 
 /**
  * <p>
@@ -36,16 +43,12 @@ import org.ejml.data.SimpleMatrix;
  * 
  * @author ege, Cryms.com
  */
-public class RinexFiles {
+public class RinexFileObservation implements ObservationsProducer{
 
 	private File fileObs;
-	private File fileNav;
 	private FileInputStream streamObs;
-	private FileInputStream streamNav;
 	private InputStreamReader inStreamObs;
-	private InputStreamReader inStreamNav;
 	private BufferedReader buffStreamObs;
-	private BufferedReader buffStreamNav;
 
 	private int nTypes; /* Number of observation types */
 	private int[] typeOrder; /* Order of observation data */
@@ -65,15 +68,8 @@ public class RinexFiles {
 	private char[] sysOrder;
 	private int[] satOrder;
 
-	// RINEX Read constructors
-	RinexFiles(File fileObs, File fileNav) {
+	public RinexFileObservation(File fileObs) {
 		this.fileObs = fileObs;
-		this.fileNav = fileNav;
-	}
-
-	RinexFiles(File fileObs) {
-		this.fileObs = fileObs;
-		this.fileNav = null;
 	}
 
 	/**
@@ -85,29 +81,20 @@ public class RinexFiles {
 			inStreamObs = new InputStreamReader(streamObs);
 			buffStreamObs = new BufferedReader(inStreamObs);
 
-			if (this.fileNav != null) {
-				streamNav = new FileInputStream(fileNav);
-				inStreamNav = new InputStreamReader(streamNav);
-				buffStreamNav = new BufferedReader(inStreamNav);
-			}
+			
 
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		}
 	}
 
-	public void close() {
+	public void release() {
 		try {
 			streamObs.close();
 			inStreamObs.close();
 			buffStreamObs.close();
 
-			if (this.fileNav != null) {
-				streamNav.close();
-				streamNav.close();
-				buffStreamNav.close();
-			}
-
+			
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		} catch (IOException e2) {
@@ -179,9 +166,9 @@ public class RinexFiles {
 	}
 
 	/**
-	 * Parse one observation epoch
+	 * Parse one observation epoch single/double line
 	 */
-	public void parseEpochObs() {
+	public Observations nextObservations() {
 
 		try {
 			String line = buffStreamObs.readLine();
@@ -298,6 +285,9 @@ public class RinexFiles {
 			// Store event flag
 			//obs.eventFlag = eventFlag;
 
+			parseDataObs();
+			
+			return obs;
 		} catch (ParseException e) {
 			// Skip over unexpected observation lines
 			e.printStackTrace();
@@ -307,12 +297,13 @@ public class RinexFiles {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 
 	/**
 	 * Parse one observation epoch
 	 */
-	public void parseDataObs() {
+	private void parseDataObs() {
 
 		try {
 
@@ -388,9 +379,10 @@ public class RinexFiles {
 							j = j + 16;
 						}
 					}
-				} else if (nTypes > 5)
+				} else if (nTypes > 5){
 					// Skip additional observation line for GLO and SBS
 					line = buffStreamObs.readLine();
+				}
 			}
 
 		} catch (StringIndexOutOfBoundsException e) {
@@ -401,321 +393,32 @@ public class RinexFiles {
 		}
 	}
 
-	/**
-	 * Skip one observation epoch
-	 */
-	public Observations skipDataObs() {
-
-		try {
-			// Loop through observation lines
-			for (int i = 0; i < nSat; i++) {
-
-				// Read line of observations
-				buffStreamObs.readLine();
-
-				if (nTypes > 5) { // ... otherwise, they are on two lines
-
-					// Get second line
-					buffStreamObs.readLine();
-				}
-			}
-
-		} catch (StringIndexOutOfBoundsException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return obs;
-	}
-
-	/**
-	 * 
-	 */
-	public void parseHeaderNav(Navigation navigation) {
-
-		//Navigation.iono = new double[8];
-		String sub;
-
-		try {
-
-			while (buffStreamNav.ready()) {
-
-				try {
-					String line = buffStreamNav.readLine();
-					String typeField = line.substring(60, line.length());
-					typeField = typeField.trim();
-
-					if (typeField.equals("RINEX VERSION / TYPE")) {
-
-						if (!line.substring(20, 21).equals("N")) {
-
-							// Error if navigation file identifier was not found
-							System.err.println("Navigation file identifier is missing in file " + fileNav.toString() + " header");
-						}
-
-					} else if (typeField.equals("ION ALPHA")) {
-
-						sub = line.substring(3, 14).replace('D', 'e');
-						//Navigation.iono[0] = Double.parseDouble(sub.trim());
-						navigation.setIono(0, Double.parseDouble(sub.trim()));
-
-						sub = line.substring(15, 26).replace('D', 'e');
-						//Navigation.iono[1] = Double.parseDouble(sub.trim());
-						navigation.setIono(1, Double.parseDouble(sub.trim()));
-
-						sub = line.substring(27, 38).replace('D', 'e');
-						//Navigation.iono[2] = Double.parseDouble(sub.trim());
-						navigation.setIono(2, Double.parseDouble(sub.trim()));
-
-						sub = line.substring(39, 50).replace('D', 'e');
-						//Navigation.iono[3] = Double.parseDouble(sub.trim());
-						navigation.setIono(3, Double.parseDouble(sub.trim()));
-
-
-					} else if (typeField.equals("ION BETA")) {
-
-						sub = line.substring(3, 14).replace('D', 'e');
-						//Navigation.iono[4] = Double.parseDouble(sub.trim());
-						navigation.setIono(4, Double.parseDouble(sub.trim()));
-
-
-						sub = line.substring(15, 26).replace('D', 'e');
-						//Navigation.iono[5] = Double.parseDouble(sub.trim());
-						navigation.setIono(5, Double.parseDouble(sub.trim()));
-
-
-						sub = line.substring(27, 38).replace('D', 'e');
-						//Navigation.iono[6] = Double.parseDouble(sub.trim());
-						navigation.setIono(6, Double.parseDouble(sub.trim()));
-
-
-						sub = line.substring(39, 50).replace('D', 'e');
-						//Navigation.iono[7] = Double.parseDouble(sub.trim());
-						navigation.setIono(7, Double.parseDouble(sub.trim()));
-
-
-					} else if (typeField.equals("DELTA-UTC: A0,A1,T,W")) {
-
-						sub = line.substring(3, 22).replace('D', 'e');
-						navigation.setA0(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						navigation.setA1(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(41, 50).replace('D', 'e');
-						navigation.setT(Integer.parseInt(sub.trim()));
-
-						sub = line.substring(50, 59).replace('D', 'e');
-						navigation.setW(Integer.parseInt(sub.trim()));
-
-					} else if (typeField.equals("LEAP SECONDS")) {
-
-						sub = line.substring(0, 6).trim().replace('D', 'e');
-						navigation.setLeaps(Integer.parseInt(sub.trim()));
-
-					} else if (typeField.equals("END OF HEADER")) {
-
-						return;
-					}
-				} catch (StringIndexOutOfBoundsException e) {
-					// Skip over blank lines
-				}
-			}
-
-			// Display an error if END OF HEADER was not reached
-			System.err.println("END OF HEADER was not found in file "
-					+ fileNav.toString());
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Read all navigation data
-	 */
-	public void parseDataNav(Navigation navigation) {
-
-		try {
-
-			// Resizable array
-			//Navigation.eph = new ArrayList<EphGps>();
-
-			int j = 0;
-			
-			EphGps eph = null;
-
-			while (buffStreamNav.ready()) {
-
-				String sub;
-				
-				// read 8 lines
-				for (int i = 0; i < 8; i++) {
-
-					String line = buffStreamNav.readLine();
-					int len = line.length();
-					// Skip blank lines
-					while (len == 0) {
-						line = buffStreamNav.readLine();
-						len = line.length();
-					}
-
-					if (i == 0) { // LINE 1
-						
-						//Navigation.eph.get(j).refTime = new Time();
-						
-						eph = new EphGps();
-						//Navigation.eph.add(eph);
-						navigation.addEph(eph);
-						
-						// Get satellite ID
-						sub = line.substring(0, 2).trim();
-						eph.setSatID(Integer.parseInt(sub));
-
-						// Get and format date and time string
-						String dT = line.substring(2, 22);
-						dT = dT.replace("  ", " 0").trim();
-						dT = "20" + dT;
-
-						try {
-							//Time timeEph = new Time(dT);
-							// Convert String to UNIX standard time in
-							// milliseconds
-							//timeEph.msec = Time.dateStringToTime(dT);
-							eph.setRefTime(new Time(dT));
-
-						} catch (ParseException e) {
-							System.err.println("Time parsing failed");
-						}
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setAf0(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setAf1(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setAf2(Double.parseDouble(sub.trim()));
-
-					} else if (i == 1) { // LINE 2
-
-						sub = line.substring(3, 22).replace('D', 'e');
-						double iode = Double.parseDouble(sub.trim());
-						// TODO check double -> int conversion ?
-						eph.setIode((int) iode);
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setCrs(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setDeltaN(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setM0(Double.parseDouble(sub.trim()));
-
-					} else if (i == 2) { // LINE 3
-
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setCuc(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setE(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setCus(Double.parseDouble(sub .trim()));
-
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setRootA(Double.parseDouble(sub.trim()));
-
-					} else if (i == 3) { // LINE 4
-
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setToe(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setCic(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setOmega0(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setCis(Double.parseDouble(sub.trim()));
-
-					} else if (i == 4) { // LINE 5
-
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setI0(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setCrc(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setOmega(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setOmegaDot(Double.parseDouble(sub.trim()));
-
-					} else if (i == 5) { // LINE 6
-
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setiDot(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						double L2Code = Double.parseDouble(sub.trim());
-						eph.setL2Code((int) L2Code);
-
-						sub = line.substring(41, 60).replace('D', 'e');
-						double week = Double.parseDouble(sub.trim());
-						eph.setWeek((int) week);
-
-						sub = line.substring(60, len).replace('D', 'e');
-						double L2Flag = Double.parseDouble(sub.trim());
-						eph.setL2Flag((int) L2Flag);
-
-					} else if (i == 6) { // LINE 7
-
-						sub = line.substring(0, 22).replace('D', 'e');
-						double svAccur = Double.parseDouble(sub.trim());
-						eph.setSvAccur((int) svAccur);
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						double svHealth = Double.parseDouble(sub.trim());
-						eph.setSvHealth((int) svHealth);
-
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setTgd(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(60, len).replace('D', 'e');
-						double iodc = Double.parseDouble(sub.trim());
-						eph.setIodc((int) iodc);
-
-					} else if (i == 7) { // LINE 8
-
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setToc(Double.parseDouble(sub.trim()));
-
-						if (len > 22) {
-							sub = line.substring(22, 41).replace('D', 'e');
-							eph.setFitInt(Double.parseDouble(sub.trim()));
-
-						} else {
-							eph.setFitInt(0);
-						}
-					}
-				}
-
-				// Increment array index
-				j++;
-				// Store the number of ephemerides
-				//Navigation.n = j;
-			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-		}
-	}
+//	/**
+//	 * Skip one observation epoch
+//	 */
+//	public Observations skipDataObs() {
+//
+//		try {
+//			// Loop through observation lines
+//			for (int i = 0; i < nSat; i++) {
+//
+//				// Read line of observations
+//				buffStreamObs.readLine();
+//
+//				if (nTypes > 5) { // ... otherwise, they are on two lines
+//
+//					// Get second line
+//					buffStreamObs.readLine();
+//				}
+//			}
+//
+//		} catch (StringIndexOutOfBoundsException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		return obs;
+//	}
 
 	/**
 	 * Assign observation data according to type order
@@ -899,19 +602,32 @@ public class RinexFiles {
 	/**
 	 * @return the approxPos
 	 */
-	public Coordinates getApproxPos() {
+	public Coordinates getApproxPosition() {
 		return approxPos;
 	}
 
 	/**
 	 * @return the obs
 	 */
-	public Observations getObs() {
+	public Observations getCurrentObservations() {
 		return obs;
 	}
 	
 	public boolean hasMoreObservations() throws IOException{
 		return buffStreamObs.ready();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#init()
+	 */
+	@Override
+	public void init() {
+		// Open file streams
+		open();
+				
+		// Parse RINEX observation headers
+		parseHeaderObs(); /* Header */
+		
 	}
 
 }
