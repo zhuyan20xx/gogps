@@ -55,7 +55,7 @@ public class Observations {
 	public ObservationSet getGpsByID(Integer satID){
 		if(gps == null) return null;
 		for(int i=0;i<gps.size();i++)
-			if(gps.get(i).getSatID()==satID) return gps.get(i);
+			if(gps.get(i)!=null && gps.get(i).getSatID()==satID) return gps.get(i);
 		return null;
 	}
 	public Integer getGpsSatID(int idx){
@@ -114,8 +114,8 @@ public class Observations {
 		if(i==gps.size()){
 			gps.add(os);
 		}else{
-			int c=i;
-			while(c++<=gps.size()) gps.add(null);
+			int c=gps.size();
+			while(c++<=i) gps.add(null);
 			gps.set(i,os);
 		}
 		//gps[i] = os;

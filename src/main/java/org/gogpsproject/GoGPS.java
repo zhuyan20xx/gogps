@@ -41,9 +41,14 @@ public class GoGPS {
 	// static File fileNav = new File("./data/sard0880.10n");
 
 	/* Locarno, Switzerland */
-	static File roverFileObs = new File("./data/locarno1_rover_RINEX.obs");
-	static File masterFileObs = new File("./data/VirA061N.10o");
-	static File fileNav = new File("./data/VirA061N.10n");
+//	static File roverFileObs = new File("./data/locarno1_rover_RINEX.obs");
+//	static File masterFileObs = new File("./data/VirA061N.10o");
+//	static File fileNav = new File("./data/VirA061N.10n");
+
+	/* Manno, Switzerland */
+	static File roverFileObs = new File("./data/1009843592969.obs");
+	static File masterFileObs = new File("./data/VirA323B.10o");
+	static File fileNav = new File("./data/VirA323B.10n");
 
 	/* Osaka, Japan (static) */
 //	static File roverFileObs = new File("./data/COM10_100617_rover.obs");
