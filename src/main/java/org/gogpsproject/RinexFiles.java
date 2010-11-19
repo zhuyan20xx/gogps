@@ -727,12 +727,12 @@ public class RinexFiles {
 			if (typeOrder[k] == 0) { // ** C1 code
 
 				String codeC = line.substring(j, j + 14).trim();
-				o.setCodeC(0,Double.parseDouble(codeC));
+				if(codeC.trim().length()>0)o.setCodeC(0,Double.parseDouble(codeC));
 
 			} else if (typeOrder[k] == 1) { // ** C2 code
 
 				String codeC = line.substring(j, j + 14).trim();
-				o.setCodeC(1,Double.parseDouble(codeC));
+				if(codeC.trim().length()>0)o.setCodeC(1,Double.parseDouble(codeC));
 
 			} else if (typeOrder[k] == 2) { // ** P1 code
 
