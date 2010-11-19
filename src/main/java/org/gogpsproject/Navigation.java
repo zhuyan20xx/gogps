@@ -28,125 +28,66 @@ import java.util.ArrayList;
  * 
  * @author ege, Cryms.com
  */
-public class Navigation {
-	//static int n; /* Number of ephemeris sets */
-	private ArrayList<EphGps> eph; /* GPS broadcast ephemerides */
-	private double[] iono; /* Ionosphere model parameters */
-	private double A0; /* Delta-UTC parameters: A0 */
-	private double A1; /* Delta-UTC parameters: A1 */
-	private double T; /* Delta-UTC parameters: T */
-	private double W; /* Delta-UTC parameters: W */
-	private int leaps; /* Leap seconds */
+public interface Navigation {
+	
 
 	
-	public Navigation(){
-		eph = new ArrayList<EphGps>();
-		iono = new double[8];
-	}
+	
 	/**
 	 * @param time
 	 * @param satID
 	 * @return Reference ephemeris set for given time and satellite
 	 */
-	public EphGps findEph(double time, int satID) {
-
-		double dt = 0;
-		double dtMin = 0;
-		EphGps refEph = null;
-
-		for (int i = 0; i < eph.size(); i++) {
-			// Find ephemeris sets for given satellite
-			if (eph.get(i).getSatID() == satID) {
-				// Compare current time and ephemeris reference time
-				dt = Math.abs(eph.get(i).getRefTime().getGpsTime() - time);
-				// If it's the first round, set the minimum time difference and
-				// select the first ephemeris set candidate
-				if (refEph == null) {
-					dtMin = dt;
-					refEph = eph.get(i);
-					// Check if the current ephemeris set is closer in time than
-					// the previous candidate; if yes, select new candidate
-				} else if (dt < dtMin) {
-					dtMin = dt;
-					refEph = eph.get(i);
-				}
-			}
-		}
-		return refEph;
-	}
+	public EphGps findEph(long time, int satID);
 	
-	public int getEphSize(){
-		return eph.size();
-	}
+	public void init();
+	public void release();
 	
-	public void addEph(EphGps eph){
-		this.eph.add(eph);
-	}
 	
-	public void setIono(int i, double val){
-		this.iono[i] = val;
-	}
-	public double getIono(int i){
-		return iono[i];
-	}
+	//public int getEphSize();
+	
+	//public void addEph(EphGps eph);
+	
+	//public void setIono(int i, double val);
+	public double getIono(int i);
 	/**
 	 * @return the a0
 	 */
-	public double getA0() {
-		return A0;
-	}
+	public double getA0();
 	/**
 	 * @param a0 the a0 to set
 	 */
-	public void setA0(double a0) {
-		A0 = a0;
-	}
+	//public void setA0(double a0);
 	/**
 	 * @return the a1
 	 */
-	public double getA1() {
-		return A1;
-	}
+	public double getA1();
 	/**
 	 * @param a1 the a1 to set
 	 */
-	public void setA1(double a1) {
-		A1 = a1;
-	}
+	//public void setA1(double a1);
 	/**
 	 * @return the t
 	 */
-	public double getT() {
-		return T;
-	}
+	public double getT();
 	/**
 	 * @param t the t to set
 	 */
-	public void setT(double t) {
-		T = t;
-	}
+	//public void setT(double t);
 	/**
 	 * @return the w
 	 */
-	public double getW() {
-		return W;
-	}
+	public double getW();
 	/**
 	 * @param w the w to set
 	 */
-	public void setW(double w) {
-		W = w;
-	}
+	//public void setW(double w);
 	/**
 	 * @return the leaps
 	 */
-	public int getLeaps() {
-		return leaps;
-	}
+	public int getLeaps();
 	/**
 	 * @param leaps the leaps to set
 	 */
-	public void setLeaps(int leaps) {
-		this.leaps = leaps;
-	}
+	//public void setLeaps(int leaps);
 }

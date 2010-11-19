@@ -33,9 +33,9 @@ public class SatellitePosition {
 	private Coordinates coord; /* Satellite coordinates */
 	private double timeCorrection; /* Correction due to satellite clock error */
 	private double range;
-	private double time;
+	private long time;
 
-	public SatellitePosition(double time, int satID, double range) {
+	public SatellitePosition(long time, int satID, double range) {
 		this.time = time;
 		this.satID = satID;
 		this.range = range;
@@ -282,14 +282,14 @@ public class SatellitePosition {
 	/**
 	 * @return the time
 	 */
-	public double getTime() {
+	public long getTime() {
 		return time;
 	}
 
 	/**
 	 * @param time the time to set
 	 */
-	public void setTime(double time) {
+	public void setTime(long time) {
 		this.time = time;
 	}
 }
