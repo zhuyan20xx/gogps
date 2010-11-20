@@ -18,8 +18,6 @@
  *
  */
 package org.cryms.gogps.parser.ublox;
-
-import org.gogpsproject.Observations;
 /**
  * <p>
  * 
@@ -32,8 +30,29 @@ import org.gogpsproject.Observations;
  * @author Lorenzo
  *
  */
-public interface EventListener {
+public class UBXException extends Exception {
 
-	public void streamClosed();
-	public void addObservations(Observations o);
+
+	/**
+	 * @param message
+	 */
+	public UBXException(String message) {
+		super(message);
+	}
+
+	/**
+	 * @param cause
+	 */
+	public UBXException(Throwable cause) {
+		super(cause);
+	}
+
+	/**
+	 * @param message
+	 * @param cause
+	 */
+	public UBXException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 }
