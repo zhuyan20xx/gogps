@@ -24,6 +24,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.text.*;
 
+import org.cryms.gogps.parser.ublox.UBXFileReader;
 import org.gogpsproject.parser.rinex.RinexFileNavigation;
 import org.gogpsproject.parser.rinex.RinexFileObservation;
 
@@ -43,10 +44,10 @@ public class GoGPS {
 	// static File masterFileObs = new File("./data/sard0880.10o");
 	// static File fileNav = new File("./data/sard0880.10n");
 
-	/* Locarno, Switzerland */
-	static File roverFileObs = new File("./data/locarno1_rover_RINEX.obs");
-	static File masterFileObs = new File("./data/VirA061N.10o");
-	static File fileNav = new File("./data/VirA061N.10n");
+//	/* Locarno, Switzerland */
+//	static File roverFileObs = new File("./data/locarno1_rover_RINEX.obs");
+//	static File masterFileObs = new File("./data/VirA061N.10o");
+//	static File fileNav = new File("./data/VirA061N.10n");
 
 	/* Manno, Switzerland */
 //	static File roverFileObs = new File("./data/1009843324860.obs");
@@ -118,43 +119,40 @@ public class GoGPS {
 		// Create a new object for the rover position
 		ReceiverPosition roverPos = new ReceiverPosition(this);
 
-		try {
-			
-			while (roverIn.hasMoreObservations()) { // buffStreamObs.ready()
+		Observations obsR = roverIn.nextObservations();
+		while (obsR!=null) { // buffStreamObs.ready()
 
-				// If there are at least four satellites
-				Observations obs = roverIn.nextObservations();
-				if (obs.getGpsSize() >= 4) { // gps.length
+			// If there are at least four satellites
+			Observations obs = roverIn.nextObservations();
+			if (obs.getGpsSize() >= 4) { // gps.length
 
-					// Compute approximate positioning by Bancroft algorithm
-					roverPos.bancroft(roverIn.getCurrentObservations());
+				// Compute approximate positioning by Bancroft algorithm
+				roverPos.bancroft(roverIn.getCurrentObservations());
 
-					// If an approximate position was computed
-					if (roverPos.getCoord().isValid()) {
+				// If an approximate position was computed
+				if (roverPos.getCoord().isValid()) {
 
-						// Select satellites available for double differences
-						roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
+					// Select satellites available for double differences
+					roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
 
-						// Compute code stand-alone positioning (epoch-by-epoch
-						// solution)
-						roverPos.codeStandalone(roverIn.getCurrentObservations());
+					// Compute code stand-alone positioning (epoch-by-epoch
+					// solution)
+					roverPos.codeStandalone(roverIn.getCurrentObservations());
 
-						try {
-							System.out.println("Code standalone positioning:");
-							System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-							System.out.println("Lon:		" + g.format(roverPos.getCoord().getGeodeticLongitude())); // geod.get(0)
-							System.out.println("Lat:		" + g.format(roverPos.getCoord().getGeodeticLatitude())); // geod.get(1)
-							System.out.println("h:		    " + f.format(roverPos.getCoord().getGeodeticHeight())); // geod.get(2)
-						} catch (NullPointerException e) {
-							System.out.println("Error: rover approximate position not computed");
-						}
-						System.out.println("--------------------");
+					try {
+						System.out.println("Code standalone positioning:");
+						System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
+						System.out.println("Lon:		" + g.format(roverPos.getCoord().getGeodeticLongitude())); // geod.get(0)
+						System.out.println("Lat:		" + g.format(roverPos.getCoord().getGeodeticLatitude())); // geod.get(1)
+						System.out.println("h:		    " + f.format(roverPos.getCoord().getGeodeticHeight())); // geod.get(2)
+					} catch (NullPointerException e) {
+						System.out.println("Error: rover approximate position not computed");
 					}
+					System.out.println("--------------------");
 				}
 			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
+			
+			obsR = roverIn.nextObservations();
 		}
 
 	}
@@ -164,29 +162,29 @@ public class GoGPS {
 		// Create a new object for the rover position
 		ReceiverPosition roverPos = new ReceiverPosition(this);
 
-		try {
-			while (roverIn.hasMoreObservations() //buffStreamObs.ready()
-					&& masterIn.hasMoreObservations()) { // buffStreamObs.ready()
 
-				// Discard master epochs if correspondent rover epochs are
-				// not available
-				Observations obsR = roverIn.nextObservations();
-				Observations obsM = masterIn.nextObservations();
-				long obsRtime = obsR.getRefTime().getGpsTime();
-				while (obsRtime > obsM.getRefTime().getGpsTime()) {
-					obsM = masterIn.nextObservations();
-				}
+		Observations obsR = roverIn.nextObservations();
+		Observations obsM = masterIn.nextObservations();
+		while (obsR != null && obsM != null) {
+			
+			// Discard master epochs if correspondent rover epochs are
+			// not available
+			long obsRtime = obsR.getRefTime().getGpsTime();
+			while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getGpsTime()) {
+				obsM = masterIn.nextObservations();
+			}
 
-				// Discard rover epochs if correspondent master epochs are
-				// not available
-				long obsMtime = obsM.getRefTime().getGpsTime();
-				while (roverIn.getCurrentObservations().getRefTime().getGpsTime() < obsMtime) {
-					obsR = roverIn.nextObservations();
-				}
+			// Discard rover epochs if correspondent master epochs are
+			// not available
+			long obsMtime = obsM.getRefTime().getGpsTime();
+			while (obsM!=null && obsR!=null && roverIn.getCurrentObservations().getRefTime().getGpsTime() < obsMtime) {
+				obsR = roverIn.nextObservations();
+			}
 
 
-				// If there are at least four satellites
-				if (roverIn.getCurrentObservations().getGpsSize() >= 4) {
+			// If there are at least four satellites
+			if (obsM!=null && obsR!=null){
+				if(roverIn.getCurrentObservations().getGpsSize() >= 4) {
 
 					// Compute approximate positioning by Bancroft algorithm
 					roverPos.bancroft(roverIn.getCurrentObservations());
@@ -217,9 +215,9 @@ public class GoGPS {
 					}
 				}
 			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
+			// get next epoch
+			obsR = roverIn.nextObservations();
+			obsM = masterIn.nextObservations();
 		}
 
 	}
@@ -270,21 +268,18 @@ public class GoGPS {
 			timeRead = System.currentTimeMillis() - timeRead;
 			depRead = depRead + timeRead;
 
-			while (roverIn.hasMoreObservations() // buffStreamObs.ready()
-					&& masterIn.hasMoreObservations()) { // buffStreamObs.ready()
+			Observations obsR = roverIn.nextObservations();
+			Observations obsM = masterIn.nextObservations();
+			while (obsR != null && obsM != null) {
 
 				timeRead = System.currentTimeMillis();
 
-				// Parse one observation epoch
-//				roverIn.parseEpochObs();
-//				masterIn.parseEpochObs();
-
 				// Discard master epochs if correspondent rover epochs are
 				// not available
-				Observations obsR = roverIn.nextObservations();
-				Observations obsM = masterIn.nextObservations();
+//				Observations obsR = roverIn.nextObservations();
+//				Observations obsM = masterIn.nextObservations();
 				long obsRtime = obsR.getRefTime().getGpsTime();
-				while (obsRtime > obsM.getRefTime().getGpsTime()) {
+				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getGpsTime()) {
 //					masterIn.skipDataObs();
 //					masterIn.parseEpochObs();
 					obsM = masterIn.nextObservations();
@@ -293,59 +288,60 @@ public class GoGPS {
 				// Discard rover epochs if correspondent master epochs are
 				// not available
 				long obsMtime = obsM.getRefTime().getGpsTime();
-				while (roverIn.getCurrentObservations().getRefTime().getGpsTime() < obsMtime) {
-//					roverIn.skipDataObs();
-//					roverIn.parseEpochObs();
+				while (obsM!=null && obsR!=null && obsR.getRefTime().getGpsTime() < obsMtime) {
 					obsR = roverIn.nextObservations();
 				}
 
-				// Parse one observation dataset
-//				roverIn.parseDataObs();
-//				masterIn.parseDataObs();
-
-				timeRead = System.currentTimeMillis() - timeRead;
-				depRead = depRead + timeRead;
-
-				timeProc = System.currentTimeMillis();
-
-				// If Kalman filter was not initialized and if there are at
-				// least four satellites
-				if (!kalmanInitialized && roverIn.getCurrentObservations().getGpsSize() >= 4) {
-
-					// Compute approximate positioning by Bancroft algorithm
-					roverPos.bancroft(roverIn.getCurrentObservations());
-
-					// If an approximate position was computed
-					if (roverPos.getCoord().isValid()) {
-
-						// Initialize Kalman filter
-						roverPos.kalmanFilterInit(roverIn.getCurrentObservations(), masterIn.getCurrentObservations(), masterIn.getApproxPosition());
-
-						kalmanInitialized = true;
-
+				if(obsM!=null && obsR!=null){
+					timeRead = System.currentTimeMillis() - timeRead;
+					depRead = depRead + timeRead;
+					timeProc = System.currentTimeMillis();
+					
+					// If Kalman filter was not initialized and if there are at
+					// least four satellites
+					if (!kalmanInitialized && obsR.getGpsSize() >= 4) {
+	
+						// Compute approximate positioning by Bancroft algorithm
+						roverPos.bancroft(obsR);
+	
+						// If an approximate position was computed
+						if (roverPos.getCoord().isValid()) {
+	
+							// Initialize Kalman filter
+							roverPos.kalmanFilterInit(obsR, obsM, masterIn.getApproxPosition());
+	
+							kalmanInitialized = true;
+	
+						}
+					} else if (kalmanInitialized) {
+	
+						// Do a Kalman filter loop
+						roverPos.kalmanFilterLoop(obsR,obsM, masterIn.getApproxPosition());
 					}
-				} else if (kalmanInitialized) {
-
-					// Do a Kalman filter loop
-					roverPos.kalmanFilterLoop(roverIn.getCurrentObservations(),masterIn.getCurrentObservations(), masterIn.getApproxPosition());
+	
+					timeProc = System.currentTimeMillis() - timeProc;
+					depProc = depProc + timeProc;
+	
+					try {
+						System.out.println("Positioning by Kalman filter on code and phase double differences:");
+						System.out.println("GPS time: " + obsR.getRefTime().getGpsTime());
+						System.out.println("Lon:      " + g.format(roverPos.getCoord().getGeodeticLongitude()));//geod.get(0)
+						System.out.println("Lat:      " + g.format(roverPos.getCoord().getGeodeticLatitude()));//geod.get(1)
+						System.out.println("h:        " + f.format(roverPos.getCoord().getGeodeticHeight()));//geod.get(2)
+						out.write(g.format(roverPos.getCoord().getGeodeticLongitude()) + "," // geod.get(0)
+								+ g.format(roverPos.getCoord().getGeodeticLatitude()) + "," // geod.get(1)
+								+ f.format(roverPos.getCoord().getGeodeticHeight()) + " \n"); // geod.get(2)
+					} catch (NullPointerException e) {
+						System.out.println("Error: rover position not computed");
+					}
+					System.out.println("--------------------");
+					
+					// get next epoch
+					obsR = roverIn.nextObservations();
+					obsM = masterIn.nextObservations();
 				}
-
-				timeProc = System.currentTimeMillis() - timeProc;
-				depProc = depProc + timeProc;
-
-				try {
-					System.out.println("Positioning by Kalman filter on code and phase double differences:");
-					System.out.println("GPS time: " + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-					System.out.println("Lon:      " + g.format(roverPos.getCoord().getGeodeticLongitude()));//geod.get(0)
-					System.out.println("Lat:      " + g.format(roverPos.getCoord().getGeodeticLatitude()));//geod.get(1)
-					System.out.println("h:        " + f.format(roverPos.getCoord().getGeodeticHeight()));//geod.get(2)
-					out.write(g.format(roverPos.getCoord().getGeodeticLongitude()) + "," // geod.get(0)
-							+ g.format(roverPos.getCoord().getGeodeticLatitude()) + "," // geod.get(1)
-							+ f.format(roverPos.getCoord().getGeodeticHeight()) + " \n"); // geod.get(2)
-				} catch (NullPointerException e) {
-					System.out.println("Error: rover position not computed");
-				}
-				System.out.println("--------------------");
+				
+				
 			}
 			// Write KML footer part
 			// out.write("</coordinates><altitudeMode>absolute</altitudeMode></LineString></Placemark></Folder></kml>");
@@ -373,32 +369,39 @@ public class GoGPS {
 	 */
 	public static void main(String[] args) {
 
-		// Get current time
-		long start = System.currentTimeMillis();
-
-		ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
-		ObservationsProducer masterIn = new RinexFileObservation(masterFileObs);
-		Navigation navigationIn = new RinexFileNavigation(fileNav);
-		
-		roverIn.init();
-		masterIn.init();
-		navigationIn.init();
-		
-		GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
-		// goGPS.runCodeStandalone();
-		// goGPS.runCodeDoubleDifferences();
-		goGPS.runKalmanFilter();
-
-		roverIn.release();
-		masterIn.release();
-		navigationIn.release();
-
-		// Get and display elapsed time
-		int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
-		int elapsedTimeMillisec = (int) ((System.currentTimeMillis() - start) - elapsedTimeSec * 1000);
-		System.out.println("\nElapsed time (read + proc + display + write): "
-				+ elapsedTimeSec + " seconds " + elapsedTimeMillisec
-				+ " milliseconds.");
+		try{
+			// Get current time
+			long start = System.currentTimeMillis();
+			
+			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
+			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
+			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
+			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
+			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
+			Navigation navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
+			
+			roverIn.init();
+			masterIn.init();
+			navigationIn.init();
+			
+			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
+			// goGPS.runCodeStandalone();
+			// goGPS.runCodeDoubleDifferences();
+			goGPS.runKalmanFilter();
+	
+			roverIn.release();
+			masterIn.release();
+			navigationIn.release();
+	
+			// Get and display elapsed time
+			int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
+			int elapsedTimeMillisec = (int) ((System.currentTimeMillis() - start) - elapsedTimeSec * 1000);
+			System.out.println("\nElapsed time (read + proc + display + write): "
+					+ elapsedTimeSec + " seconds " + elapsedTimeMillisec
+					+ " milliseconds.");
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**

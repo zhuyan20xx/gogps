@@ -75,26 +75,29 @@ public class RinexFileObservation implements ObservationsProducer{
 	/**
 	 *
 	 */
-	public void open() {
-		try {
-			streamObs = new FileInputStream(fileObs);
-			inStreamObs = new InputStreamReader(streamObs);
-			buffStreamObs = new BufferedReader(inStreamObs);
-
-			
-
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
+	public void open() throws FileNotFoundException{
+		streamObs = new FileInputStream(fileObs);
+		inStreamObs = new InputStreamReader(streamObs);
+		buffStreamObs = new BufferedReader(inStreamObs);
 	}
 
 	public void release() {
 		try {
 			streamObs.close();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e2) {
+			e2.printStackTrace();
+		}
+		try {
 			inStreamObs.close();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e2) {
+			e2.printStackTrace();
+		}
+		try {
 			buffStreamObs.close();
-
-			
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		} catch (IOException e2) {
@@ -169,8 +172,9 @@ public class RinexFileObservation implements ObservationsProducer{
 	 * Parse one observation epoch single/double line
 	 */
 	public Observations nextObservations() {
-
+		
 		try {
+			if(!hasMoreObservations()) return null;
 			String line = buffStreamObs.readLine();
 			int len = line.length();
 
@@ -621,7 +625,7 @@ public class RinexFileObservation implements ObservationsProducer{
 	 * @see org.gogpsproject.ObservationsProducer#init()
 	 */
 	@Override
-	public void init() {
+	public void init() throws Exception {
 		// Open file streams
 		open();
 				

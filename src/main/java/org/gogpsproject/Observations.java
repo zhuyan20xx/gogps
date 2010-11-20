@@ -47,7 +47,7 @@ public class Observations {
 	}
 	
 	public int getGpsSize(){
-		return gps.size();
+		return gps==null?-1:gps.size();
 	}
 	public ObservationSet getGpsByIdx(int idx){
 		return gps.get(idx);

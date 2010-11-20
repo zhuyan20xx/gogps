@@ -34,9 +34,9 @@ import java.io.IOException;
  */
 public interface ObservationsProducer {
 
-	public void init();
+	public void init() throws Exception;
 	public void release();
-	public boolean hasMoreObservations() throws IOException;
+	//public boolean hasMoreObservations() throws IOException;
 	public Observations getCurrentObservations();
 	public Observations nextObservations();
 	public Coordinates getApproxPosition();
