@@ -49,35 +49,31 @@ public class DecodeRMXRAW {
 		in = _in;
 	}
 
-	public Observations decode() throws IOException {
+	public Observations decode() throws IOException,UBXException {
 		// parse little Endian data
-		boolean[] lengthbits;
+
 		int[] length = new int[2];
 		int[] data;
-		boolean[] temp = new boolean[8]; // byte
-		int index = 0;
-//		System.out.print("\nLength : \n");
-		for (int i = 1; i >= 0; i--) {
-			length[i] = in.read();
-			//System.out.print("0x" + Integer.toHexString(length[i]) + " ");
-		}
-		lengthbits = new boolean[length.length * 8];
 
-		for (int i = 0; i < length.length; i++) {
-			temp = Bits.intToBits(length[i], 8);
-			for (int j = 0; j < temp.length; j++) {
-				lengthbits[index] = temp[j];
-				index++;
-			}
-		}
-		int len = Bits.bitsToUInt(lengthbits);
-		//System.out.println(" %%%%%%%%%% Length : " + len);
+		length[1] = in.read();
+		length[0] = in.read();
+		
+		int CH_A = 0;
+		int CH_B = 0;
+		CH_A += 0x02;CH_B += CH_A;
+
+		CH_A += 0x10;CH_B += CH_A;
+		CH_A += length[1];CH_B += CH_A;
+		CH_A += length[0];CH_B += CH_A;
+		
+		int len = length[0]*256+length[1];
+		//System.out.println(" %%%%%%%%%% Length : " + len+" "+(length[0]*255+length[1]));
 		data = new int[8];
-		int[] datatmp = new int[8];
+		//int[] datatmp = new int[len];
 		//System.out.print("\n Header ");
 		for (int i = 0; i < 8; i++) {
 			data[i] = in.read();
-			datatmp[i] = data[i];
+			CH_A += data[i];CH_B += CH_A;
 			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
 		}
 		//System.out.println();
@@ -130,6 +126,7 @@ public class DecodeRMXRAW {
 
 		for (int i = 0; i < len - 8; i++) {
 			data[i] = in.read();
+			CH_A += data[i];CH_B += CH_A;
 			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
 		}
 		//System.out.println();
@@ -137,12 +134,10 @@ public class DecodeRMXRAW {
 		long gmtTS = getGMTTS(tow, week);
 		Observations o = new Observations(new Time(gmtTS),0);
 
-		System.out.println(tow+"  "+o.getRefTime().getGpsTime());
+		//System.out.println(tow+"  "+o.getRefTime().getGpsTime());
 		
 		
 		for (int k = 0; k < (len - 8) / 24; k++) {
-//			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%" + k
-//					+ "%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 			
 			ObservationSet os = new ObservationSet();
 			
@@ -233,27 +228,12 @@ public class DecodeRMXRAW {
 			o.setGps(k, os);
 		}
 		// / Checksum
-		int CH_A = 0;
-		int CH_B = 0;
-		CH_A += 0x02;
-		CH_B += CH_A;
-
-		CH_A += 0x10;
-		CH_B += CH_A;
-		CH_A += length[0];
-		CH_B += CH_A;
-		CH_A += length[1];
-		CH_B += CH_A;
-		for (int l = datatmp.length - 1; l >= 0; l--) {
-			CH_A += datatmp[l];
-			CH_B += CH_A;
-		}
-		for (int l = len - 8 - 1; l >= 0; l--) {
-			CH_A += data[l];
-			CH_B += CH_A;
-		}
+		
+		
 		CH_A = CH_A & 0xFF;
 		CH_B = CH_B & 0xFF;
+		if(CH_A != in.read() && CH_B!=in.read())
+			throw new UBXException("Wrong message checksum");
 //		System.out.println("CH_A cal " + Integer.toHexString(CH_A)
 //				+ " CH_K packetto " + Integer.toHexString(in.read()));
 //		System.out.println("CH_B cal " + Integer.toHexString(CH_B)

@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.gogpsproject.Observations;
 /**
  * <p>
  * 
@@ -32,10 +31,6 @@ import org.gogpsproject.Observations;
  * @author Lorenzo Patocchi cryms.com
  */
 
-/**
- * @author Lorenzo
- *
- */
 public class UBXSerialReader implements Runnable {
 
 	private InputStream in;
@@ -43,12 +38,14 @@ public class UBXSerialReader implements Runnable {
 	//private boolean end = false;
 	private Thread t = null;
 	private boolean stop = false;
-	private EventListener eventListener;
+	private UBXEventListener eventListener;
+	private UBXReader reader;
 	
-	public UBXSerialReader(InputStream in,OutputStream out,EventListener el) {
+	public UBXSerialReader(InputStream in,OutputStream out,UBXEventListener el) {
 		this.in = in;
 		this.out = out;
-		eventListener = el;
+		this.eventListener = el;
+		this.reader = new UBXReader(in, el);
 	}
 
 	public void start()  throws IOException{
@@ -87,29 +84,23 @@ public class UBXSerialReader implements Runnable {
 		try {
 			//System.out.println();
 			while (!stop) {
-
-				if(in.read() == 0xB5 && in.read() == 0x62){
-					data = in.read();
-					System.out.println(".");
-					//System.out.print("0x" + Integer.toHexString(data) + " ");
-					if (data == 0x02) {
+				if(in.available()>0){
+					try{
 						data = in.read();
-						//System.out.print("0x" + Integer.toHexString(data) + " ");
-						if (data == 0x10) {
-							// RMX-RAW
-							DecodeRMXRAW decodegps = new DecodeRMXRAW(in);
-							Observations o = decodegps.decode();
-							eventListener.addObservations(o);
+						if(data == 0xB5){
+							reader.readMessagge();
+						}else{
+							//no warning, may be NMEA
+							//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 						}
-					}else 
-					if (data == 0x0B) {
-						data = in.read();
-						if (data == 0x31) {
-							// AID-EPH
-	//						DecodeRMXRAW decodegps = new DecodeRMXRAW(in);
-	//						decodegps.decode();
-						}
+					}catch(UBXException ubxe){
+						ubxe.printStackTrace();
 					}
+				}else{
+					// no bytes to read, wait a while
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {}
 				}
 			}
 		} catch (IOException e) {

@@ -34,20 +34,14 @@ import java.util.Vector;
 
 import org.gogpsproject.Observations;
 
-public class SerialConnection implements EventListener{
-
-
+public class SerialConnection implements UBXEventListener{
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private boolean connected = false;
-	//private Thread reader;
+
 	@SuppressWarnings("restriction")
 	private SerialPort serialPort;
-	//private boolean end = false;
-//	private int divider;
-	//private int[] tempBytes;
-//	int numTempBytes = 0, numTotBytes = 0;
-	//private int id;
+
 	private UBXSerialReader ubxReader;
 
 	public SerialConnection() {
@@ -55,9 +49,6 @@ public class SerialConnection implements EventListener{
 
 	}
 
-	public boolean connect(String portName) {
-		return connect(portName, 9600);
-	}
 
 	@SuppressWarnings("restriction")
 	public boolean connect(String portName, int speed) {
@@ -171,19 +162,5 @@ public class SerialConnection implements EventListener{
 		disconnect();
 	}
 
-//	public boolean writeSerial(String message) {
-//		boolean success = false;
-//		if (isConnected()) {
-//			try {
-//				outputStream.write(message.getBytes());
-//				success = true;
-//			} catch (IOException e) {
-//				disconnect();
-//			}
-//		} else {
-//			System.out.println("Debug : " + id + " No port is connected.");
-//		}
-//		return success;
-//	}
 
 }
