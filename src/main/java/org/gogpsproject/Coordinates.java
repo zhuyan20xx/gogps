@@ -149,6 +149,7 @@ public class Coordinates {
 
 
 	public void setXYZ(double x, double y, double z){
+		if(this.ecef==null) this.ecef = new SimpleMatrix(3, 1);
 		this.ecef.set(0, 0, x);
 		this.ecef.set(1, 0, y);
 		this.ecef.set(2, 0, z);
