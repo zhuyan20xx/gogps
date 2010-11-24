@@ -23,14 +23,14 @@ package org.gogpsproject;
 import org.ejml.data.SimpleMatrix;
 /**
  * <p>
- * Class for 
+ * Class for
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
 public class TopocentricCoordinates {
 
-	SimpleMatrix topocentric; /* Azimuth (az), elevation (el), distance (d) */
+	private SimpleMatrix topocentric; /* Azimuth (az), elevation (el), distance (d) */
 
 	/**
 	 * @param origin
@@ -39,16 +39,18 @@ public class TopocentricCoordinates {
 
 		this.topocentric = new SimpleMatrix(3, 1);
 
-		// Build rotation matrix from global to local reference systems
-		SimpleMatrix R = globalToLocalMatrix(origin);
+//		// Build rotation matrix from global to local reference systems
+//		SimpleMatrix R = globalToLocalMatrix(origin);
+//
+//		// Compute local vector from origin to this object coordinates
+//		//SimpleMatrix enu = R.mult(target.ecef.minus(origin.ecef));
+//		SimpleMatrix enu = R.mult(target.minusXYZ(origin));
 
-		// Compute local vector from origin to this object coordinates
-		//SimpleMatrix enu = R.mult(target.ecef.minus(origin.ecef));
-		SimpleMatrix enu = R.mult(target.minus(origin));
+		origin.computeLocal(target);
 
-		double E = enu.get(0);
-		double N = enu.get(1);
-		double U = enu.get(2);
+		double E = origin.getE();//enu.get(0);
+		double N = origin.getN();//enu.get(1);
+		double U = origin.getU();//enu.get(2);
 
 		// Compute horizontal distance from origin to this object
 		double hDist = Math.sqrt(Math.pow(E, 2) + Math.pow(N, 2));
@@ -76,34 +78,44 @@ public class TopocentricCoordinates {
 				+ Math.pow(U, 2)));
 	}
 
-	/**
-	 * @param origin
-	 * @return Rotation matrix from global to local reference systems
-	 */
-	private SimpleMatrix globalToLocalMatrix(Coordinates origin) {
-
-		double lam = Math.toRadians(origin.getGeodeticLongitude());
-		double phi = Math.toRadians(origin.getGeodeticLatitude());
-
-		double cosLam = Math.cos(lam);
-		double cosPhi = Math.cos(phi);
-		double sinLam = Math.sin(lam);
-		double sinPhi = Math.sin(phi);
-
-		double[][] data = new double[3][3];
-		data[0][0] = -sinLam;
-		data[0][1] = cosLam;
-		data[0][2] = 0;
-		data[1][0] = -sinPhi * cosLam;
-		data[1][1] = -sinPhi * sinLam;
-		data[1][2] = cosPhi;
-		data[2][0] = cosPhi * cosLam;
-		data[2][1] = cosPhi * sinLam;
-		data[2][2] = sinPhi;
-
-		SimpleMatrix R = new SimpleMatrix(data);
-
-		return R;
+	public double getAzimuth(){
+		return topocentric.get(0);
 	}
+	public double getElevation(){
+		return topocentric.get(1);
+	}
+	public double getDistance(){
+		return topocentric.get(2);
+	}
+
+//	/**
+//	 * @param origin
+//	 * @return Rotation matrix from global to local reference systems
+//	 */
+//	private SimpleMatrix globalToLocalMatrix(Coordinates origin) {
+//
+//		double lam = Math.toRadians(origin.getGeodeticLongitude());
+//		double phi = Math.toRadians(origin.getGeodeticLatitude());
+//
+//		double cosLam = Math.cos(lam);
+//		double cosPhi = Math.cos(phi);
+//		double sinLam = Math.sin(lam);
+//		double sinPhi = Math.sin(phi);
+//
+//		double[][] data = new double[3][3];
+//		data[0][0] = -sinLam;
+//		data[0][1] = cosLam;
+//		data[0][2] = 0;
+//		data[1][0] = -sinPhi * cosLam;
+//		data[1][1] = -sinPhi * sinLam;
+//		data[1][2] = cosPhi;
+//		data[2][0] = cosPhi * cosLam;
+//		data[2][1] = cosPhi * sinLam;
+//		data[2][2] = sinPhi;
+//
+//		SimpleMatrix R = new SimpleMatrix(data);
+//
+//		return R;
+//	}
 
 }

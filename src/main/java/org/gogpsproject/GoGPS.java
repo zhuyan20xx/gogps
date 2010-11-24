@@ -30,7 +30,7 @@ import org.gogpsproject.parser.rinex.RinexFileObservation;
 
 /**
  * @author ege, Cryms.com
- * 
+ *
  */
 public class GoGPS {
 
@@ -78,7 +78,6 @@ public class GoGPS {
 	private boolean dualFreq = false;
 
 	// Elevation cutoff
-	private double cutoff = 15;
 
 	// Weighting strategy
 	// 0 = same weight for all observations
@@ -89,11 +88,16 @@ public class GoGPS {
 	public final static int WEIGHT_SAT_ELEVATION = 1;
 	public final static int WEIGHT_SIGNAL_TO_NOISE_RATIO = 2;
 	public final static int WEIGHT_COMBINED_ELEVATION_SNR = 3;
-	
+
 	private int weights = WEIGHT_SIGNAL_TO_NOISE_RATIO;
 
+	public final static int DYN_MODEL_STATIC = 1;
+	public final static int DYN_MODEL_CONST_SPEED = 2;
+	public final static int DYN_MODEL_CONST_ACCELLERATION = 3;
+
+
 	// Kalman filter parameters
-	private int order = 2;
+	private int dynamicModel = DYN_MODEL_CONST_SPEED;
 	private double stDevInit = 3;
 	private double stDevX = 0.3;
 	private double stDevY = 0.3;
@@ -101,21 +105,22 @@ public class GoGPS {
 	private double stDevCode = 3;
 	private double stDevPhase = 0.03;
 	private double stDevN = 10;
-	private int minNumSat = 4;
+	private int minNumSat = 2;
 	private double alpha = 3;
-	
-	private Navigation navigation;
+	private double cutoff = 15;
+
+	private NavigationProducer navigation;
 	private ObservationsProducer roverIn;
 	private ObservationsProducer masterIn;
-	
-	public GoGPS(Navigation navigation, ObservationsProducer roverIn, ObservationsProducer masterIn){
+
+	public GoGPS(NavigationProducer navigation, ObservationsProducer roverIn, ObservationsProducer masterIn){
 		this.navigation = navigation;
 		this.roverIn = roverIn;
 		this.masterIn = masterIn;
 	}
 
 	public void runCodeStandalone() {
-		
+
 		// Create a new object for the rover position
 		ReceiverPosition roverPos = new ReceiverPosition(this);
 
@@ -130,7 +135,7 @@ public class GoGPS {
 				roverPos.bancroft(roverIn.getCurrentObservations());
 
 				// If an approximate position was computed
-				if (roverPos.getCoord().isValid()) {
+				if (roverPos.getCoord().isValidXYZ()) {
 
 					// Select satellites available for double differences
 					roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
@@ -151,7 +156,7 @@ public class GoGPS {
 					System.out.println("--------------------");
 				}
 			}
-			
+
 			obsR = roverIn.nextObservations();
 		}
 
@@ -166,7 +171,7 @@ public class GoGPS {
 		Observations obsR = roverIn.nextObservations();
 		Observations obsM = masterIn.nextObservations();
 		while (obsR != null && obsM != null) {
-			
+
 			// Discard master epochs if correspondent rover epochs are
 			// not available
 			long obsRtime = obsR.getRefTime().getGpsTime();
@@ -190,7 +195,7 @@ public class GoGPS {
 					roverPos.bancroft(roverIn.getCurrentObservations());
 
 					// If an approximate position was computed
-					if (roverPos.getCoord().isValid()) {
+					if (roverPos.getCoord().isValidXYZ()) {
 
 						// Select satellites available for double differences
 						roverPos.selectSatellitesDoubleDiff(roverIn.getCurrentObservations(),
@@ -255,7 +260,7 @@ public class GoGPS {
 //							+ "<Placemark><name>Raw Data</name><description>by Daisuke Yoshida, Tezukayama Gakuin University, JAPAN</description>"
 //							+ "<styleUrl>#line</styleUrl><altitudeMode>relativeToGround</altitudeMode><LineString><coordinates>");
 			String timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
-			
+
 			out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
 				"<Document xmlns:kml=\"http://earth.google.com/kml/2.1\">"+
 				"  <Style id=\"SMExport_3_ff0000e6_fffefefe\"><LineStyle><color>ff0000e6</color><width>3</width></LineStyle><PolyStyle><color>fffefefe</color></PolyStyle></Style>"+
@@ -299,26 +304,26 @@ public class GoGPS {
 					timeRead = System.currentTimeMillis() - timeRead;
 					depRead = depRead + timeRead;
 					timeProc = System.currentTimeMillis();
-					
+
 					// If Kalman filter was not initialized and if there are at
 					// least four satellites
 					boolean valid = true;
 					if (!kalmanInitialized && obsR.getGpsSize() >= 4) {
-	
+
 						// Compute approximate positioning by Bancroft algorithm
 						roverPos.bancroft(obsR);
-	
+
 						// If an approximate position was computed
-						if (roverPos.getCoord().isValid()) {
-	
+						if (roverPos.getCoord().isValidXYZ()) {
+
 							// Initialize Kalman filter
 							roverPos.kalmanFilterInit(obsR, obsM, masterIn.getApproxPosition());
-	
+
 							kalmanInitialized = true;
-	
+
 						}
 					} else if (kalmanInitialized) {
-	
+
 						// Do a Kalman filter loop
 						try{
 							roverPos.kalmanFilterLoop(obsR,obsM, masterIn.getApproxPosition());
@@ -327,28 +332,28 @@ public class GoGPS {
 							valid = false;
 						}
 					}
-	
+
 					timeProc = System.currentTimeMillis() - timeProc;
 					depProc = depProc + timeProc;
-	
+
 					if(valid){
 						try {
 							String lon = g.format(roverPos.getCoord().getGeodeticLongitude());
 							String lat = g.format(roverPos.getCoord().getGeodeticLatitude());
 							String h = f.format(roverPos.getCoord().getGeodeticHeight());
-							
+
 							out.write(lon + "," // geod.get(0)
 									+ lat + "," // geod.get(1)
 									+ h + " \n"); // geod.get(2)
-							if(c%1==0){
+							if(c%10==0){
 								String t = timeKML.format(new Date(obsR.getRefTime().getMsec()));
-								
+
 								//System.out.println("Positioning by Kalman filter on code and phase double differences:");
 								System.out.print("T:" + t);
 								System.out.print(" Lon:" + lon);//geod.get(0)
 								System.out.print(" Lat:" + lat);//geod.get(1)
 								System.out.println(" H:" + h);//geod.get(2)
-								
+
 								timeline += "\n";
 								timeline += "<Placemark>"+
 						        "<TimeStamp>"+
@@ -356,8 +361,8 @@ public class GoGPS {
 						        "</TimeStamp>"+
 						        "<styleUrl>#dot-icon</styleUrl>"+
 						        "<Point>"+
-						        "<coordinates>"+lon + "," 
-								+ lat + "," 
+						        "<coordinates>"+lon + ","
+								+ lat + ","
 								+ h + "</coordinates>"+
 						        "</Point>"+
 						        "</Placemark>";
@@ -367,15 +372,15 @@ public class GoGPS {
 						}
 					}
 					//System.out.println("--------------------");
-					
+
 					// get next epoch
 					obsR = roverIn.nextObservations();
 					obsM = masterIn.nextObservations();
-					
+
 					c++;
 				}
-				
-				
+
+
 			}
 			// Write KML footer part
 			// out.write("</coordinates><altitudeMode>absolute</altitudeMode></LineString></Placemark></Folder></kml>");
@@ -406,32 +411,37 @@ public class GoGPS {
 		try{
 			// Get current time
 			long start = System.currentTimeMillis();
-			
+			/* Como */
+//			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/perim2.08o"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
+//			Navigation navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
+
+
 			/* Faido */
 			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
 			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
 			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
 			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
 			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
-			Navigation navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
-			
+			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
+
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/manno-21.11.2010.ubx"));
 //			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirManno-21-11-2010.10o"));
 //			Navigation navigationIn = new RinexFileNavigation(new File("./data/VirManno-21-11-2010.10n"));
-			
+
 			roverIn.init();
 			masterIn.init();
 			navigationIn.init();
-			
+
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
 			// goGPS.runCodeStandalone();
 			// goGPS.runCodeDoubleDifferences();
 			goGPS.runKalmanFilter();
-	
+
 			roverIn.release();
 			masterIn.release();
 			navigationIn.release();
-	
+
 			// Get and display elapsed time
 			int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
 			int elapsedTimeMillisec = (int) ((System.currentTimeMillis() - start) - elapsedTimeSec * 1000);
@@ -489,14 +499,14 @@ public class GoGPS {
 	 * @return the order
 	 */
 	public int getOrder() {
-		return order;
+		return dynamicModel;
 	}
 
 	/**
 	 * @param order the order to set
 	 */
 	public void setOrder(int order) {
-		this.order = order;
+		this.dynamicModel = order;
 	}
 
 	/**
@@ -628,14 +638,14 @@ public class GoGPS {
 	/**
 	 * @return the navigation
 	 */
-	public Navigation getNavigation() {
+	public NavigationProducer getNavigation() {
 		return navigation;
 	}
 
 	/**
 	 * @param navigation the navigation to set
 	 */
-	public void setNavigation(Navigation navigation) {
+	public void setNavigation(NavigationProducer navigation) {
 		this.navigation = navigation;
 	}
 

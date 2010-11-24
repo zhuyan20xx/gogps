@@ -105,7 +105,7 @@ public class Atmosphere {
 	 * @param time
 	 * @return ionosphere correction value by Klobuchar model
 	 */
-	static double computeIonosphereCorrection(Navigation navigation,
+	static double computeIonosphereCorrection(NavigationProducer navigation,
 			Coordinates coord, double azimuth, double elevation, double time) {
 
 		double ionoCorr = 0;

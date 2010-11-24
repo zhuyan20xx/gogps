@@ -28,24 +28,27 @@ import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 
+import org.gogpsproject.Constants;
+import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
-import org.gogpsproject.Navigation;
+import org.gogpsproject.NavigationProducer;
+import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.Time;
 
 /**
  * <p>
  * Class for parsing RINEX files
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
-public class RinexFileNavigation implements Navigation{
+public class RinexFileNavigation implements NavigationProducer{
 
 	private File fileNav;
 	private FileInputStream streamNav;
 	private InputStreamReader inStreamNav;
 	private BufferedReader buffStreamNav;
-	
+
 	private ArrayList<EphGps> eph; /* GPS broadcast ephemerides */
 	private double[] iono; /* Ionosphere model parameters */
 	private double A0; /* Delta-UTC parameters: A0 */
@@ -53,7 +56,7 @@ public class RinexFileNavigation implements Navigation{
 	private double T; /* Delta-UTC parameters: T */
 	private double W; /* Delta-UTC parameters: W */
 	private int leaps; /* Leap seconds */
-	
+
 
 	// RINEX Read constructors
 	public RinexFileNavigation(File fileNav) {
@@ -80,7 +83,7 @@ public class RinexFileNavigation implements Navigation{
 	 */
 	@Override
 	public void release() {
-		
+
 	}
 
 	/**
@@ -88,11 +91,11 @@ public class RinexFileNavigation implements Navigation{
 	 */
 	public void open() {
 		try {
-		
+
 			streamNav = new FileInputStream(fileNav);
 			inStreamNav = new InputStreamReader(streamNav);
 			buffStreamNav = new BufferedReader(inStreamNav);
-		
+
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		}
@@ -100,7 +103,7 @@ public class RinexFileNavigation implements Navigation{
 
 	public void close() {
 		try {
-		
+
 			streamNav.close();
 			streamNav.close();
 			buffStreamNav.close();
@@ -113,7 +116,7 @@ public class RinexFileNavigation implements Navigation{
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public void parseHeaderNav() {
 
@@ -226,13 +229,13 @@ public class RinexFileNavigation implements Navigation{
 			//Navigation.eph = new ArrayList<EphGps>();
 
 			int j = 0;
-			
+
 			EphGps eph = null;
 
 			while (buffStreamNav.ready()) {
 
 				String sub;
-				
+
 				// read 8 lines
 				for (int i = 0; i < 8; i++) {
 
@@ -245,13 +248,13 @@ public class RinexFileNavigation implements Navigation{
 					}
 
 					if (i == 0) { // LINE 1
-						
+
 						//Navigation.eph.get(j).refTime = new Time();
-						
+
 						eph = new EphGps();
 						//Navigation.eph.add(eph);
 						addEph(eph);
-						
+
 						// Get satellite ID
 						sub = line.substring(0, 2).trim();
 						eph.setSatID(Integer.parseInt(sub));
@@ -401,7 +404,7 @@ public class RinexFileNavigation implements Navigation{
 		}
 	}
 
-	
+
 	/**
 	 * @param time
 	 * @param satID
@@ -433,15 +436,15 @@ public class RinexFileNavigation implements Navigation{
 		}
 		return refEph;
 	}
-	
+
 	public int getEphSize(){
 		return eph.size();
 	}
-	
+
 	public void addEph(EphGps eph){
 		this.eph.add(eph);
 	}
-	
+
 	public void setIono(int i, double val){
 		this.iono[i] = val;
 	}
@@ -507,6 +510,19 @@ public class RinexFileNavigation implements Navigation{
 	 */
 	public void setLeaps(int leaps) {
 		this.leaps = leaps;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
+	 */
+	@Override
+	public SatellitePosition getGpsSatPosition(long time, int satID, double range) {
+		EphGps eph = findEph(time, satID);
+
+		if (eph != null) {
+			return new SatellitePosition(eph, time, satID, range);
+		}
+		return null;
 	}
 
 }
