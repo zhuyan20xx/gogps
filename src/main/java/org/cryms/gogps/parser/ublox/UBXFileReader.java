@@ -33,7 +33,7 @@ import org.gogpsproject.ObservationsProducer;
  * <p>
  * Read an UBX File
  * </p>
- * 
+ *
  * @author Lorenzo Patocchi cryms.com
  */
 
@@ -43,7 +43,7 @@ public class UBXFileReader implements ObservationsProducer {
 	private UBXReader reader;
 	private File file;
 	private Observations obs = null;
-	
+
 	public UBXFileReader(File file) {
 		this.file = file;
 	}
@@ -53,8 +53,8 @@ public class UBXFileReader implements ObservationsProducer {
 	 */
 	@Override
 	public Coordinates getApproxPosition() {
-		Coordinates coord = new Coordinates(new SimpleMatrix(3, 1));
-		coord.setXYZ(0.0, 0.0, 0.0 );
+		Coordinates coord = Coordinates.globalXYZInstance(0.0, 0.0, 0.0); //new Coordinates(new SimpleMatrix(3, 1));
+		//coord.setXYZ(0.0, 0.0, 0.0 );
 		coord.computeGeodetic();
 		return coord;
 	}
@@ -80,7 +80,7 @@ public class UBXFileReader implements ObservationsProducer {
 	@Override
 	public void init() throws Exception {
 		this.in = new FileInputStream(file);
-		
+
 		this.reader = new UBXReader(in, null);
 	}
 

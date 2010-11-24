@@ -25,22 +25,44 @@ import org.ejml.data.SimpleMatrix;
  * <p>
  * Satellite position class
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
-public class SatellitePosition {
+public class SatellitePosition extends Coordinates{
 	private int satID; /* Satellite ID number */
-	private Coordinates coord; /* Satellite coordinates */
+	//private Coordinates coord; /* Satellite coordinates */
 	private double timeCorrection; /* Correction due to satellite clock error */
 	private double range;
 	private long time;
 
-	public SatellitePosition(long time, int satID, double range) {
+	public SatellitePosition(EphGps eph, long time, int satID, double range) {
+		super();
+
 		this.time = time;
 		this.satID = satID;
 		this.range = range;
+
+		this.computePositionGps(eph);
 	}
 
+//	/**
+//	 * @param time
+//	 *            (GPS time in seconds)
+//	 * @param satID
+//	 * @param range
+//	 * @param approxPos
+//	 */
+//	private void computePositionGps(NavigationProducer navigation) {
+//
+//		//this.coord = new Coordinates();
+//
+//		// Find reference ephemerides (given satID and time)
+//		EphGps eph = navigation.findEph(this.time, this.satID);
+//
+//		if (eph != null) {
+//			computePositionGps(eph);
+//		}
+//	}
 	/**
 	 * @param time
 	 *            (GPS time in seconds)
@@ -48,55 +70,53 @@ public class SatellitePosition {
 	 * @param range
 	 * @param approxPos
 	 */
-	public void computePositionGps(Navigation navigation) {
+	private void computePositionGps(EphGps eph) {
 
-		//this.coord = new Coordinates();
 
-		// Find reference ephemerides (given satID and time)
-		EphGps eph = navigation.findEph(this.time, this.satID);
 
-		if (eph != null) {
+		// Compute clock correction
+		double tGPS = clockCorrection(eph);
 
-			// Compute clock correction
-			double tGPS = clockCorrection(eph);
+		// Compute eccentric anomaly
+		double Ek = eccAnomaly(tGPS, eph);
 
-			// Compute eccentric anomaly
-			double Ek = eccAnomaly(tGPS, eph);
+		// Semi-major axis
+		double A = eph.getRootA() * eph.getRootA();
 
-			// Semi-major axis
-			double A = eph.getRootA() * eph.getRootA();
+		// Time from the ephemerides reference epoch
+		double tk = checkGpsTime(tGPS - eph.getToe());
 
-			// Time from the ephemerides reference epoch
-			double tk = checkGpsTime(tGPS - eph.getToe());
+		// Position computation
+		double fk = Math.atan2(Math.sqrt(1 - Math.pow(eph.getE(), 2))
+				* Math.sin(Ek), Math.cos(Ek) - eph.getE());
+		double phi = fk + eph.getOmega();
+		phi = Math.IEEEremainder(phi, 2 * Math.PI);
+		double u = phi + eph.getCuc() * Math.cos(2 * phi) + eph.getCus()
+				* Math.sin(2 * phi);
+		double r = A * (1 - eph.getE() * Math.cos(Ek)) + eph.getCrc()
+				* Math.cos(2 * phi) + eph.getCrs() * Math.sin(2 * phi);
+		double ik = eph.getI0() + eph.getiDot() * tk + eph.getCic() * Math.cos(2 * phi)
+				+ eph.getCis() * Math.sin(2 * phi);
+		double Omega = eph.getOmega0()
+				+ (eph.getOmegaDot() - Constants.EARTH_ANGULAR_VELOCITY) * tk
+				- Constants.EARTH_ANGULAR_VELOCITY * eph.getToe();
+		Omega = Math.IEEEremainder(Omega + 2 * Math.PI, 2 * Math.PI);
+		double x1 = Math.cos(u) * r;
+		double y1 = Math.sin(u) * r;
 
-			// Position computation
-			double fk = Math.atan2(Math.sqrt(1 - Math.pow(eph.getE(), 2))
-					* Math.sin(Ek), Math.cos(Ek) - eph.getE());
-			double phi = fk + eph.getOmega();
-			phi = Math.IEEEremainder(phi, 2 * Math.PI);
-			double u = phi + eph.getCuc() * Math.cos(2 * phi) + eph.getCus()
-					* Math.sin(2 * phi);
-			double r = A * (1 - eph.getE() * Math.cos(Ek)) + eph.getCrc()
-					* Math.cos(2 * phi) + eph.getCrs() * Math.sin(2 * phi);
-			double ik = eph.getI0() + eph.getiDot() * tk + eph.getCic() * Math.cos(2 * phi)
-					+ eph.getCis() * Math.sin(2 * phi);
-			double Omega = eph.getOmega0()
-					+ (eph.getOmegaDot() - Constants.EARTH_ANGULAR_VELOCITY) * tk
-					- Constants.EARTH_ANGULAR_VELOCITY * eph.getToe();
-			Omega = Math.IEEEremainder(Omega + 2 * Math.PI, 2 * Math.PI);
-			double x1 = Math.cos(u) * r;
-			double y1 = Math.sin(u) * r;
+		// Coordinates
+//			double[][] data = new double[3][1];
+//			data[0][0] = x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega);
+//			data[1][0] = x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega);
+//			data[2][0] = y1 * Math.sin(ik);
 
-			// Coordinates
-			double[][] data = new double[3][1];
-			data[0][0] = x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega);
-			data[1][0] = x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega);
-			data[2][0] = y1 * Math.sin(ik);
+		// Fill in the satellite position matrix
+		//this.coord.ecef = new SimpleMatrix(data);
+		//this.coord = Coordinates.globalXYZInstance(new SimpleMatrix(data));
+		this.setXYZ(x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
+				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
+				y1 * Math.sin(ik));
 
-			// Fill in the satellite position matrix
-			//this.coord.ecef = new SimpleMatrix(data);
-			this.coord = new Coordinates(new SimpleMatrix(data));
-		}
 	}
 
 	/**
@@ -106,7 +126,7 @@ public class SatellitePosition {
 
 		// Computation of signal travel time
 		//SimpleMatrix diff = this.coord.ecef.minus(approxPos.ecef);
-		SimpleMatrix diff = this.coord.minus(approxPos);
+		SimpleMatrix diff = this.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
 		double rho2 = Math.pow(diff.get(0), 2) + Math.pow(diff.get(1), 2)
 				+ Math.pow(diff.get(2), 2);
 		double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
@@ -129,7 +149,8 @@ public class SatellitePosition {
 
 		// Apply rotation
 		//this.coord.ecef = R.mult(this.coord.ecef);
-		this.coord.setSMMult(R);// = R.mult(this.coord.ecef);
+		//this.coord.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
+		this.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
 
 	}
 
@@ -206,14 +227,14 @@ public class SatellitePosition {
 		return Ek;
 
 	}
-	
+
 	/**
 	 * @param time
 	 *            (Uncorrected GPS time)
 	 * @return GPS time accounting for beginning or end of week crossover
 	 */
 	private static double checkGpsTime(double time) {
-		
+
 		// Account for beginning or end of week crossover
 		if (time > Constants.SEC_IN_HALF_WEEK) {
 			time = time - 2 * Constants.SEC_IN_HALF_WEEK;
@@ -240,16 +261,16 @@ public class SatellitePosition {
 	/**
 	 * @return the coord
 	 */
-	public Coordinates getCoord() {
-		return coord;
-	}
+//	public Coordinates getCoord() {
+//		return coord;
+//	}
 
 	/**
 	 * @param coord the coord to set
 	 */
-	public void setCoord(Coordinates coord) {
-		this.coord = coord;
-	}
+//	public void setCoord(Coordinates coord) {
+//		this.coord = coord;
+//	}
 
 	/**
 	 * @return the timeCorrection

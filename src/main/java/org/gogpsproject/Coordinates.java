@@ -25,7 +25,7 @@ import org.ejml.data.SimpleMatrix;
  * <p>
  * Coordinate and reference system tools
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
 public class Coordinates {
@@ -35,17 +35,34 @@ public class Coordinates {
 	private SimpleMatrix geod = null; /* Longitude (lam), latitude (phi), height (h) */
 
 	// Local systems (require to specify an origin)
-	//private SimpleMatrix enu; /* Local coordinates (East, North, Up) */
+	private SimpleMatrix enu; /* Local coordinates (East, North, Up) */
 
-	public Coordinates(SimpleMatrix sm){
-		this.ecef = sm.copy();
+	protected Coordinates(){
+
 	}
-	
-	public SimpleMatrix minus(Coordinates coord){
+
+	public static Coordinates globalXYZInstance(double x, double y, double z){
+		Coordinates c = new Coordinates();
+		c.ecef = new SimpleMatrix(3, 1);
+		c.setXYZ(x, y, z);
+		return c;
+	}
+//	public static Coordinates globalXYZInstance(SimpleMatrix ecef){
+//		Coordinates c = new Coordinates();
+//		c.ecef = ecef.copy();
+//		return c;
+//	}
+	public static Coordinates globalENUInstance(SimpleMatrix ecef){
+		Coordinates c = new Coordinates();
+		c.enu = ecef.copy();
+		return c;
+	}
+
+	public SimpleMatrix minusXYZ(Coordinates coord){
 		return this.ecef.minus(coord.ecef);
 	}
 	/**
-	 * 
+	 *
 	 */
 	public void computeGeodetic() {
 		double X = this.ecef.get(0);
@@ -79,7 +96,20 @@ public class Coordinates {
 		this.geod.set(1, 0, Math.toDegrees(phiGeod));
 		this.geod.set(2, 0, h);
 	}
-	
+
+	/**
+	 * @param origin
+	 * @return Rotation matrix from global to local reference systems
+	 */
+	public void computeLocal(Coordinates target) {
+		if(this.geod==null) computeGeodetic();
+
+		SimpleMatrix R = globalToLocalMatrix(this);
+
+		enu = R.mult(target.minusXYZ(this));
+
+	}
+
 	public double getGeodeticLongitude(){
 		if(this.geod==null) computeGeodetic();
 		return this.geod.get(0);
@@ -101,19 +131,66 @@ public class Coordinates {
 	public double getZ(){
 		return ecef.get(2);
 	}
+
+	public void setENU(double e, double n, double u){
+		this.enu.set(0, 0, e);
+		this.enu.set(1, 0, n);
+		this.enu.set(2, 0, u);
+	}
+	public double getE(){
+		return enu.get(0);
+	}
+	public double getN(){
+		return enu.get(1);
+	}
+	public double getU(){
+		return enu.get(2);
+	}
+
+
 	public void setXYZ(double x, double y, double z){
 		this.ecef.set(0, 0, x);
 		this.ecef.set(1, 0, y);
 		this.ecef.set(2, 0, z);
 	}
-	public void setPlus(SimpleMatrix sm){
+	public void setPlusXYZ(SimpleMatrix sm){
 		this.ecef.set(ecef.plus(sm));
 	}
-	public void setSMMult(SimpleMatrix sm){
+	public void setSMMultXYZ(SimpleMatrix sm){
 		this.ecef = sm.mult(this.ecef);
 	}
-	
-	public boolean isValid(){
+
+	public boolean isValidXYZ(){
 		return this.ecef != null;
+	}
+
+	/**
+	 * @param origin
+	 * @return Rotation matrix from global to local reference systems
+	 */
+	public static SimpleMatrix globalToLocalMatrix(Coordinates origin) {
+
+		double lam = Math.toRadians(origin.getGeodeticLongitude());
+		double phi = Math.toRadians(origin.getGeodeticLatitude());
+
+		double cosLam = Math.cos(lam);
+		double cosPhi = Math.cos(phi);
+		double sinLam = Math.sin(lam);
+		double sinPhi = Math.sin(phi);
+
+		double[][] data = new double[3][3];
+		data[0][0] = -sinLam;
+		data[0][1] = cosLam;
+		data[0][2] = 0;
+		data[1][0] = -sinPhi * cosLam;
+		data[1][1] = -sinPhi * sinLam;
+		data[1][2] = cosPhi;
+		data[2][0] = cosPhi * cosLam;
+		data[2][1] = cosPhi * sinLam;
+		data[2][2] = sinPhi;
+
+		SimpleMatrix R = new SimpleMatrix(data);
+
+		return R;
 	}
 }

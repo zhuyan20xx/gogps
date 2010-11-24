@@ -30,7 +30,7 @@ import java.text.ParseException;
 import org.ejml.data.SimpleMatrix;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
-import org.gogpsproject.Navigation;
+import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
@@ -40,7 +40,7 @@ import org.gogpsproject.Time;
  * <p>
  * Class for parsing RINEX files
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
 public class RinexFileObservation implements ObservationsProducer{
@@ -172,7 +172,7 @@ public class RinexFileObservation implements ObservationsProducer{
 	 * Parse one observation epoch single/double line
 	 */
 	public Observations nextObservations() {
-		
+
 		try {
 			if(!hasMoreObservations()) return null;
 			String line = buffStreamObs.readLine();
@@ -181,7 +181,7 @@ public class RinexFileObservation implements ObservationsProducer{
 			// Parse date and time
 			String dateStr = "20" + line.substring(1, 22);
 
-			
+
 			// Parse event flag
 			String eFlag = line.substring(28, 30).trim();
 			int eventFlag = Integer.parseInt(eFlag);
@@ -290,7 +290,7 @@ public class RinexFileObservation implements ObservationsProducer{
 			//obs.eventFlag = eventFlag;
 
 			parseDataObs();
-			
+
 			return obs;
 		} catch (ParseException e) {
 			// Skip over unexpected observation lines
@@ -312,7 +312,7 @@ public class RinexFileObservation implements ObservationsProducer{
 		try {
 
 			//obs.init(nGps, nGlo, nSbs);
-			
+
 			// Arrays to store satellite list for each system
 //			obs.gpsSat = new ArrayList<Integer>(nGps);
 //			obs.gloSat = new ArrayList<Integer>(nGlo);
@@ -569,7 +569,7 @@ public class RinexFileObservation implements ObservationsProducer{
 	private void parseApproxPos(String line) {
 
 		// Allocate the vector that stores the approximate position (X, Y, Z)
-		approxPos = new Coordinates(new SimpleMatrix(3, 1));
+		//approxPos = Coordinates.globalXYZInstance(new SimpleMatrix(3, 1));
 //		approxPos.ecef = new SimpleMatrix(3, 1);
 
 		// Read approximate position coordinates
@@ -579,8 +579,8 @@ public class RinexFileObservation implements ObservationsProducer{
 //				.doubleValue());
 //		approxPos.ecef.set(2, 0, Double.valueOf(line.substring(28, 42).trim())
 //				.doubleValue());
-//		
-		approxPos.setXYZ(Double.valueOf(line.substring(0, 14).trim()), Double.valueOf(line.substring(14, 28).trim()), Double.valueOf(line.substring(28, 42).trim()) );
+//
+		approxPos = Coordinates.globalXYZInstance(Double.valueOf(line.substring(0, 14).trim()), Double.valueOf(line.substring(14, 28).trim()), Double.valueOf(line.substring(28, 42).trim()) );
 
 		// Convert the approximate position to geodetic coordinates
 		approxPos.computeGeodetic();
@@ -616,7 +616,7 @@ public class RinexFileObservation implements ObservationsProducer{
 	public Observations getCurrentObservations() {
 		return obs;
 	}
-	
+
 	public boolean hasMoreObservations() throws IOException{
 		return buffStreamObs.ready();
 	}
@@ -628,10 +628,10 @@ public class RinexFileObservation implements ObservationsProducer{
 	public void init() throws Exception {
 		// Open file streams
 		open();
-				
+
 		// Parse RINEX observation headers
 		parseHeaderObs(); /* Header */
-		
+
 	}
 
 }
