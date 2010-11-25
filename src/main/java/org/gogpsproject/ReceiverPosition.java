@@ -626,9 +626,9 @@ public class ReceiverPosition {
 
 		// Model error covariance matrix
 		Cvv.zero();
-		Cvv.set(i1, i1, Math.pow(goGPS.getStDevX(), 2));
-		Cvv.set(i2, i2, Math.pow(goGPS.getStDevY(), 2));
-		Cvv.set(i3, i3, Math.pow(goGPS.getStDevZ(), 2));
+		Cvv.set(i1, i1, Math.pow(goGPS.getStDevE(), 2));
+		Cvv.set(i2, i2, Math.pow(goGPS.getStDevN(), 2));
+		Cvv.set(i3, i3, Math.pow(goGPS.getStDevU(), 2));
 
 		// Improve approximate position accuracy by applying
 		// twice code double differences
@@ -714,11 +714,33 @@ public class ReceiverPosition {
 
 			// Re-initialization of the model error covariance matrix
 			Cvv.zero();
+
+			// Set variances only if dynamic model is not static
 			if (o1 != 1) {
-				// Set variances only if dynamic model is not static
-				Cvv.set(i1, i1, Math.pow(goGPS.getStDevX(), 2));
-				Cvv.set(i2, i2, Math.pow(goGPS.getStDevY(), 2));
-				Cvv.set(i3, i3, Math.pow(goGPS.getStDevZ(), 2));
+				// Allocate and build rotation matrix
+				SimpleMatrix R = new SimpleMatrix(3, 3);
+				R = Coordinates.rotationMatrix(this.coord);
+
+				// Build 3x3 diagonal matrix with variances
+				double[][] data = new double[3][3];
+				data[0][0] = Math.pow(goGPS.getStDevE(), 2);
+				data[0][1] = 0;
+				data[0][2] = 0;
+				data[1][0] = 0;
+				data[1][1] = Math.pow(goGPS.getStDevN(), 2);
+				data[1][2] = 0;
+				data[2][0] = 0;
+				data[2][1] = 0;
+				data[2][2] = Math.pow(goGPS.getStDevU(), 2);
+				SimpleMatrix diagonal = new SimpleMatrix(data);
+
+				// Propagate local variances to global variances
+				diagonal = R.transpose().mult(diagonal).mult(R);
+
+				// Set global variances in the model error covariance matrix
+				Cvv.set(i1, i1, diagonal.get(0, 0));
+				Cvv.set(i2, i2, diagonal.get(1, 1));
+				Cvv.set(i3, i3, diagonal.get(2, 2));
 			}
 
 			// Set linearization point (approximate coordinates by KF
@@ -1364,7 +1386,7 @@ public class ReceiverPosition {
 				// Store the variance of the estimated ambiguity
 				Cvv.set(i3 + pos[satIndex].getSatID(), i3
 						+ pos[satIndex].getSatID(), Math.pow(
-						goGPS.getStDevN(), 2));
+						goGPS.getStDevAmbiguity(), 2));
 			}
 		}
 	}
