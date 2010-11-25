@@ -99,12 +99,12 @@ public class GoGPS {
 	// Kalman filter parameters
 	private int dynamicModel = DYN_MODEL_CONST_SPEED;
 	private double stDevInit = 3;
-	private double stDevX = 0.3;
-	private double stDevY = 0.3;
-	private double stDevZ = 0.3;
+	private double stDevE = 0.5;
+	private double stDevN = 0.5;
+	private double stDevU = 0.1;
 	private double stDevCode = 3;
 	private double stDevPhase = 0.03;
-	private double stDevN = 10;
+	private double stDevAmbiguity = 10;
 	private int minNumSat = 2;
 	private double alpha = 3;
 	private double cutoff = 15;
@@ -414,7 +414,7 @@ public class GoGPS {
 			/* Como */
 //			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/perim2.08o"));
 //			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
-//			Navigation navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
+//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
 
 
 			/* Faido */
@@ -524,45 +524,45 @@ public class GoGPS {
 	}
 
 	/**
-	 * @return the stDevX
+	 * @return the stDevE
 	 */
-	public double getStDevX() {
-		return stDevX;
+	public double getStDevE() {
+		return stDevE;
 	}
 
 	/**
-	 * @param stDevX the stDevX to set
+	 * @param stDevE the stDevE to set
 	 */
-	public void setStDevX(double stDevX) {
-		this.stDevX = stDevX;
+	public void setStDevE(double stDevE) {
+		this.stDevE = stDevE;
 	}
 
 	/**
-	 * @return the stDevY
+	 * @return the stDevN
 	 */
-	public double getStDevY() {
-		return stDevY;
+	public double getStDevN() {
+		return stDevN;
 	}
 
 	/**
-	 * @param stDevY the stDevY to set
+	 * @param stDevN the stDevN to set
 	 */
-	public void setStDevY(double stDevY) {
-		this.stDevY = stDevY;
+	public void setStDevN(double stDevN) {
+		this.stDevN = stDevN;
 	}
 
 	/**
-	 * @return the stDevZ
+	 * @return the stDevU
 	 */
-	public double getStDevZ() {
-		return stDevZ;
+	public double getStDevU() {
+		return stDevU;
 	}
 
 	/**
-	 * @param stDevZ the stDevZ to set
+	 * @param stDevU the stDevU to set
 	 */
-	public void setStDevZ(double stDevZ) {
-		this.stDevZ = stDevZ;
+	public void setStDevU(double stDevU) {
+		this.stDevU = stDevU;
 	}
 
 	/**
@@ -594,17 +594,17 @@ public class GoGPS {
 	}
 
 	/**
-	 * @return the stDevN
+	 * @return the stDevAmbiguity
 	 */
-	public double getStDevN() {
-		return stDevN;
+	public double getStDevAmbiguity() {
+		return stDevAmbiguity;
 	}
 
 	/**
-	 * @param stDevN the stDevN to set
+	 * @param stDevAmbiguity the stDevAmbiguity to set
 	 */
-	public void setStDevN(double stDevN) {
-		this.stDevN = stDevN;
+	public void setStDevAmbiguity(double stDevAmbiguity) {
+		this.stDevAmbiguity = stDevAmbiguity;
 	}
 
 	/**
