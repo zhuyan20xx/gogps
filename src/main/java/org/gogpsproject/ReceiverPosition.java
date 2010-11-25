@@ -722,17 +722,11 @@ public class ReceiverPosition {
 				R = Coordinates.rotationMatrix(this.coord);
 
 				// Build 3x3 diagonal matrix with variances
-				double[][] data = new double[3][3];
-				data[0][0] = Math.pow(goGPS.getStDevE(), 2);
-				data[0][1] = 0;
-				data[0][2] = 0;
-				data[1][0] = 0;
-				data[1][1] = Math.pow(goGPS.getStDevN(), 2);
-				data[1][2] = 0;
-				data[2][0] = 0;
-				data[2][1] = 0;
-				data[2][2] = Math.pow(goGPS.getStDevU(), 2);
-				SimpleMatrix diagonal = new SimpleMatrix(data);
+				SimpleMatrix diagonal = new SimpleMatrix(3, 3);
+				diagonal.zero();
+				diagonal.set(0, 0, Math.pow(goGPS.getStDevE(), 2));
+				diagonal.set(1, 1, Math.pow(goGPS.getStDevN(), 2));
+				diagonal.set(2, 2, Math.pow(goGPS.getStDevU(), 2));
 
 				// Propagate local variances to global variances
 				diagonal = R.transpose().mult(diagonal).mult(R);
