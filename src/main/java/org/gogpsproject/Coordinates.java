@@ -99,12 +99,12 @@ public class Coordinates {
 
 	/**
 	 * @param origin
-	 * @return Rotation matrix from global to local reference systems
+	 * @return Local (ENU) coordinates
 	 */
 	public void computeLocal(Coordinates target) {
 		if(this.geod==null) computeGeodetic();
 
-		SimpleMatrix R = globalToLocalMatrix(this);
+		SimpleMatrix R = rotationMatrix(this);
 
 		enu = R.mult(target.minusXYZ(this));
 
@@ -167,9 +167,9 @@ public class Coordinates {
 
 	/**
 	 * @param origin
-	 * @return Rotation matrix from global to local reference systems
+	 * @return Rotation matrix used to switch from global to local reference systems (and vice-versa)
 	 */
-	public static SimpleMatrix globalToLocalMatrix(Coordinates origin) {
+	public static SimpleMatrix rotationMatrix(Coordinates origin) {
 
 		double lam = Math.toRadians(origin.getGeodeticLongitude());
 		double phi = Math.toRadians(origin.getGeodeticLatitude());
