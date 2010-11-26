@@ -102,7 +102,8 @@ public class GoGPS {
 	private double stDevE = 0.5;
 	private double stDevN = 0.5;
 	private double stDevU = 0.1;
-	private double stDevCode = 3;
+	private double stDevCodeC = 3;
+	private double[] stDevCodeP;
 	private double stDevPhase = 0.03;
 	private double stDevAmbiguity = 10;
 	private int minNumSat = 2;
@@ -114,6 +115,11 @@ public class GoGPS {
 	private ObservationsProducer masterIn;
 
 	public GoGPS(NavigationProducer navigation, ObservationsProducer roverIn, ObservationsProducer masterIn){
+		
+		stDevCodeP = new double[2];
+		stDevCodeP[0] = 0.6;
+		stDevCodeP[1] = 0.4;
+		
 		this.navigation = navigation;
 		this.roverIn = roverIn;
 		this.masterIn = masterIn;
@@ -564,19 +570,45 @@ public class GoGPS {
 	public void setStDevU(double stDevU) {
 		this.stDevU = stDevU;
 	}
-
+	
 	/**
+	 * @param roverObsSet the rover observation set
+	 * @param masterObsSet the master observation set
+	 * @param i the selected GPS frequency 
 	 * @return the stDevCode
 	 */
-	public double getStDevCode() {
-		return stDevCode;
+	public double getStDevCode(ObservationSet roverObsSet, ObservationSet masterObsSet, int i) {
+		return (roverObsSet.isPseudorangeP(i) & masterObsSet.isPseudorangeP(i))?stDevCodeP[i]:stDevCodeC;
 	}
 
 	/**
-	 * @param stDevCode the stDevCode to set
+	 * @return the stDevCodeC
 	 */
-	public void setStDevCode(double stDevCode) {
-		this.stDevCode = stDevCode;
+	public double getStDevCodeC() {
+		return stDevCodeC;
+	}
+
+	/**
+	 * @param stDevCodeC the stDevCodeC to set
+	 */
+	public void setStDevCodeC(double stDevCodeC) {
+		this.stDevCodeC = stDevCodeC;
+	}
+	
+	/**
+	 * @param i the selected GPS frequency
+	 * @return the stDevCodeP
+	 */
+	public double getStDevCodeP(int i) {
+		return stDevCodeP[i];
+	}
+
+	/**
+	 * @param stDevCodeP the stDevCodeP to set
+	 * @param i the selected GPS frequency
+	 */
+	public void setStDevCodeP(double stDevCodeP, int i) {
+		this.stDevCodeP[i] = stDevCodeP;
 	}
 
 	/**

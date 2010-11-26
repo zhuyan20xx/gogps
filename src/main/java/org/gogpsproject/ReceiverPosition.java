@@ -1021,7 +1021,7 @@ public class ReceiverPosition {
 			for (int j = 0; j < nSatAvail + nSatAvailPhase; j++) {
 
 				if (i < nSatAvail && j < nSatAvail)
-					Cnn.set(i, j, Math.pow(goGPS.getStDevCode(), 2)
+					Cnn.set(i, j, Math.pow(goGPS.getStDevCode(roverObs.getGpsByIdx(pivot), masterOrdered[pivot], goGPS.getFreq()), 2)
 							* (roverPivotWeight + masterPivotWeight));
 				else if (i >= nSatAvail && j >= nSatAvail)
 					Cnn.set(i, j, Math.pow(goGPS.getStDevPhase(), 2)
@@ -1086,7 +1086,7 @@ public class ReceiverPosition {
 				double masterSatWeight = computeWeight(masterElevation,
 						masterOrdered[i].getSignalStrength(goGPS.getFreq()));
 				double CnnBase = Cnn.get(k, k);
-				Cnn.set(k, k, CnnBase + Math.pow(goGPS.getStDevCode(), 2)
+				Cnn.set(k, k, CnnBase + Math.pow(goGPS.getStDevCode(roverObs.getGpsByIdx(i), masterOrdered[i], goGPS.getFreq()), 2)
 						* (roverSatWeight + masterSatWeight));
 
 				if (satAvailPhase.contains(pos[i].getSatID())) {
@@ -1269,7 +1269,7 @@ public class ReceiverPosition {
 				// Store the variance of the estimated ambiguity
 				Cee.set(i3 + pos[i].getSatID(), i3
 						+ pos[i].getSatID(), 4
-						* Math.pow(goGPS.getStDevCode(), 2) / Math.pow(lambda, 2));
+						* Math.pow(goGPS.getStDevCode(roverObs.getGpsByIdx(i), masterOrdered[i], goGPS.getFreq()), 2) / Math.pow(lambda, 2));
 			}
 		}
 	}
@@ -1361,7 +1361,7 @@ public class ReceiverPosition {
 			// Store the variance of the estimated ambiguity
 			Cvv.set(i3 + pos[satIndex].getSatID(), i3
 					+ pos[satIndex].getSatID(), 4
-					* Math.pow(goGPS.getStDevCode(), 2) / Math.pow(lambda, 2));
+					* Math.pow(goGPS.getStDevCode(roverObs.getGpsByIdx(satIndex), masterOrdered[satIndex], goGPS.getFreq()), 2) / Math.pow(lambda, 2));
 		} else {
 
 			// Ambiguity predicted by Kalman filter

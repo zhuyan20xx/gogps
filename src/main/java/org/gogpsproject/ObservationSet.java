@@ -72,7 +72,7 @@ public class ObservationSet {
 	}
 
 	/**
-	 * @return the c
+	 * @return the pseudorange
 	 */
 	public double getPseudorange(int i) {
 		return Double.isNaN(codeP[i])?codeC[i]:codeP[i];
