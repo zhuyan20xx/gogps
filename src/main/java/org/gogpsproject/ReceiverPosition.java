@@ -1369,7 +1369,7 @@ public class ReceiverPosition {
 					+ pos[satIndex].getSatID());
 
 			if (satIndex != pivotIndex
-					&& Math.abs(kalmanAmbiguity - estimAmbiguity) > goGPS.getAlpha()) {
+					&& Math.abs(kalmanAmbiguity - estimAmbiguity) > goGPS.getCycleSlipThreshold()) {
 
 				System.out.println("Cycle slip");
 
