@@ -107,7 +107,7 @@ public class GoGPS {
 	private double stDevPhase = 0.03;
 	private double stDevAmbiguity = 10;
 	private int minNumSat = 2;
-	private double alpha = 3;
+	private double cycleSlipThreshold = 3;
 	private double cutoff = 15;
 
 	private NavigationProducer navigation;
@@ -654,17 +654,17 @@ public class GoGPS {
 	}
 
 	/**
-	 * @return the alpha
+	 * @return the cycle slip threshold
 	 */
-	public double getAlpha() {
-		return alpha;
+	public double getCycleSlipThreshold() {
+		return cycleSlipThreshold;
 	}
 
 	/**
-	 * @param alpha the alpha to set
+	 * @param csThreshold the cycle slip threshold to set
 	 */
-	public void setAlpha(double alpha) {
-		this.alpha = alpha;
+	public void setCycleSlipThreshold(double csThreshold) {
+		this.cycleSlipThreshold = csThreshold;
 	}
 
 	/**
