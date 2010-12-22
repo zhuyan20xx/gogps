@@ -25,7 +25,7 @@ import java.util.ArrayList;
  * <p>
  * Observations class
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
 public class Observations {
@@ -34,18 +34,18 @@ public class Observations {
 //	private ArrayList<Integer> gpsSat; /* Ordered list of visible GPS satellites IDs */
 //	private ArrayList<Integer> gloSat; /* Ordered list of visible GLONASS satellites IDs */
 //	private ArrayList<Integer> sbsSat; /* Ordered list of visible SBAS satellites IDs */
-	
-	// TODO 
+
+	// TODO
 	private ArrayList<ObservationSet> gps; /* GPS observations */
 	private ArrayList<ObservationSet> glo; /* GLONASS observations */
 	private ArrayList<ObservationSet> sbs; /* SBAS observations */
-	
-	
+
+
 	public Observations(Time time, int flag){
 		this.refTime = time;
 		this.eventFlag = flag;
 	}
-	
+
 	public int getGpsSize(){
 		return gps==null?-1:gps.size();
 	}
@@ -64,7 +64,7 @@ public class Observations {
 	public boolean containsGpsSatID(Integer id){
 		return getGpsByID(id) != null;
 	}
-	
+
 
 	/**
 	 * @return the refTime
@@ -85,7 +85,21 @@ public class Observations {
 	 * 0: OK
 	 * 1: power failure between previous and current epoch
 	 * >1: Special event
-	 * @return the eventFlag 
+	 *  2: start moving antenna
+     *  3: new site occupation
+     *  (end of kinem. data)
+     * (at least MARKER NAME record
+     * follows)
+     * 4: header information follows
+     * 5: external event (epoch is significant)
+     * 6: cycle slip records follow
+     * to optionally report detected
+     * and repaired cycle slips
+     * (same format as OBSERVATIONS
+     * records; slip instead of observation;
+     * LLI and signal strength blank)
+     *
+	 * @return the eventFlag
 	 */
 	public int getEventFlag() {
 		return eventFlag;
@@ -97,7 +111,7 @@ public class Observations {
 	public void setEventFlag(int eventFlag) {
 		this.eventFlag = eventFlag;
 	}
-	
+
 //	public void init(int nGps, int nGlo, int nSbs){
 //		gpsSat = new ArrayList<Integer>(nGps);
 //		gloSat = new ArrayList<Integer>(nGlo);
@@ -108,7 +122,7 @@ public class Observations {
 //		if (nGlo > 0) glo = new ObservationSet[nGlo];
 //		if (nSbs > 0) sbs = new ObservationSet[nSbs];
 //	}
-	
+
 	public void setGps(int i, ObservationSet os ){
 		if(gps==null) gps = new ArrayList<ObservationSet>(i+1);
 		if(i==gps.size()){
