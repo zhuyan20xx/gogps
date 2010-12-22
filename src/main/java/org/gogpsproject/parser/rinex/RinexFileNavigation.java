@@ -240,154 +240,160 @@ public class RinexFileNavigation implements NavigationProducer{
 				for (int i = 0; i < 8; i++) {
 
 					String line = buffStreamNav.readLine();
-					int len = line.length();
-					// Skip blank lines
-					while (len == 0) {
-						line = buffStreamNav.readLine();
-						len = line.length();
-					}
 
-					if (i == 0) { // LINE 1
+					try {
 
-						//Navigation.eph.get(j).refTime = new Time();
+						int len = line.length();
 
-						eph = new EphGps();
-						//Navigation.eph.add(eph);
-						addEph(eph);
+						if (len != 0) {
 
-						// Get satellite ID
-						sub = line.substring(0, 2).trim();
-						eph.setSatID(Integer.parseInt(sub));
+							if (i == 0) { // LINE 1
 
-						// Get and format date and time string
-						String dT = line.substring(2, 22);
-						dT = dT.replace("  ", " 0").trim();
-						dT = "20" + dT;
+								//Navigation.eph.get(j).refTime = new Time();
 
-						try {
-							//Time timeEph = new Time(dT);
-							// Convert String to UNIX standard time in
-							// milliseconds
-							//timeEph.msec = Time.dateStringToTime(dT);
-							eph.setRefTime(new Time(dT));
+								eph = new EphGps();
+								//Navigation.eph.add(eph);
+								addEph(eph);
 
-						} catch (ParseException e) {
-							System.err.println("Time parsing failed");
-						}
+								// Get satellite ID
+								sub = line.substring(0, 2).trim();
+								eph.setSatID(Integer.parseInt(sub));
 
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setAf0(Double.parseDouble(sub.trim()));
+								// Get and format date and time string
+								String dT = line.substring(2, 22);
+								dT = dT.replace("  ", " 0").trim();
+								dT = "20" + dT;
 
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setAf1(Double.parseDouble(sub.trim()));
+								try {
+									//Time timeEph = new Time(dT);
+									// Convert String to UNIX standard time in
+									// milliseconds
+									//timeEph.msec = Time.dateStringToTime(dT);
+									eph.setRefTime(new Time(dT));
 
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setAf2(Double.parseDouble(sub.trim()));
+								} catch (ParseException e) {
+									System.err.println("Time parsing failed");
+								}
 
-					} else if (i == 1) { // LINE 2
+								sub = line.substring(22, 41).replace('D', 'e');
+								eph.setAf0(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(3, 22).replace('D', 'e');
-						double iode = Double.parseDouble(sub.trim());
-						// TODO check double -> int conversion ?
-						eph.setIode((int) iode);
+								sub = line.substring(41, 60).replace('D', 'e');
+								eph.setAf1(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setCrs(Double.parseDouble(sub.trim()));
+								sub = line.substring(60, len).replace('D', 'e');
+								eph.setAf2(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setDeltaN(Double.parseDouble(sub.trim()));
+							} else if (i == 1) { // LINE 2
 
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setM0(Double.parseDouble(sub.trim()));
+								sub = line.substring(3, 22).replace('D', 'e');
+								double iode = Double.parseDouble(sub.trim());
+								// TODO check double -> int conversion ?
+								eph.setIode((int) iode);
 
-					} else if (i == 2) { // LINE 3
+								sub = line.substring(22, 41).replace('D', 'e');
+								eph.setCrs(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setCuc(Double.parseDouble(sub.trim()));
+								sub = line.substring(41, 60).replace('D', 'e');
+								eph.setDeltaN(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setE(Double.parseDouble(sub.trim()));
+								sub = line.substring(60, len).replace('D', 'e');
+								eph.setM0(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setCus(Double.parseDouble(sub .trim()));
+							} else if (i == 2) { // LINE 3
 
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setRootA(Double.parseDouble(sub.trim()));
+								sub = line.substring(0, 22).replace('D', 'e');
+								eph.setCuc(Double.parseDouble(sub.trim()));
 
-					} else if (i == 3) { // LINE 4
+								sub = line.substring(22, 41).replace('D', 'e');
+								eph.setE(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setToe(Double.parseDouble(sub.trim()));
+								sub = line.substring(41, 60).replace('D', 'e');
+								eph.setCus(Double.parseDouble(sub .trim()));
 
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setCic(Double.parseDouble(sub.trim()));
+								sub = line.substring(60, len).replace('D', 'e');
+								eph.setRootA(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setOmega0(Double.parseDouble(sub.trim()));
+							} else if (i == 3) { // LINE 4
 
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setCis(Double.parseDouble(sub.trim()));
+								sub = line.substring(0, 22).replace('D', 'e');
+								eph.setToe(Double.parseDouble(sub.trim()));
 
-					} else if (i == 4) { // LINE 5
+								sub = line.substring(22, 41).replace('D', 'e');
+								eph.setCic(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setI0(Double.parseDouble(sub.trim()));
+								sub = line.substring(41, 60).replace('D', 'e');
+								eph.setOmega0(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(22, 41).replace('D', 'e');
-						eph.setCrc(Double.parseDouble(sub.trim()));
+								sub = line.substring(60, len).replace('D', 'e');
+								eph.setCis(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setOmega(Double.parseDouble(sub.trim()));
+							} else if (i == 4) { // LINE 5
 
-						sub = line.substring(60, len).replace('D', 'e');
-						eph.setOmegaDot(Double.parseDouble(sub.trim()));
+								sub = line.substring(0, 22).replace('D', 'e');
+								eph.setI0(Double.parseDouble(sub.trim()));
 
-					} else if (i == 5) { // LINE 6
+								sub = line.substring(22, 41).replace('D', 'e');
+								eph.setCrc(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setiDot(Double.parseDouble(sub.trim()));
+								sub = line.substring(41, 60).replace('D', 'e');
+								eph.setOmega(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(22, 41).replace('D', 'e');
-						double L2Code = Double.parseDouble(sub.trim());
-						eph.setL2Code((int) L2Code);
+								sub = line.substring(60, len).replace('D', 'e');
+								eph.setOmegaDot(Double.parseDouble(sub.trim()));
 
-						sub = line.substring(41, 60).replace('D', 'e');
-						double week = Double.parseDouble(sub.trim());
-						eph.setWeek((int) week);
+							} else if (i == 5) { // LINE 6
 
-						sub = line.substring(60, len).replace('D', 'e');
-						double L2Flag = Double.parseDouble(sub.trim());
-						eph.setL2Flag((int) L2Flag);
+								sub = line.substring(0, 22).replace('D', 'e');
+								eph.setiDot(Double.parseDouble(sub.trim()));
 
-					} else if (i == 6) { // LINE 7
+								sub = line.substring(22, 41).replace('D', 'e');
+								double L2Code = Double.parseDouble(sub.trim());
+								eph.setL2Code((int) L2Code);
 
-						sub = line.substring(0, 22).replace('D', 'e');
-						double svAccur = Double.parseDouble(sub.trim());
-						eph.setSvAccur((int) svAccur);
+								sub = line.substring(41, 60).replace('D', 'e');
+								double week = Double.parseDouble(sub.trim());
+								eph.setWeek((int) week);
 
-						sub = line.substring(22, 41).replace('D', 'e');
-						double svHealth = Double.parseDouble(sub.trim());
-						eph.setSvHealth((int) svHealth);
+								sub = line.substring(60, len).replace('D', 'e');
+								double L2Flag = Double.parseDouble(sub.trim());
+								eph.setL2Flag((int) L2Flag);
 
-						sub = line.substring(41, 60).replace('D', 'e');
-						eph.setTgd(Double.parseDouble(sub.trim()));
+							} else if (i == 6) { // LINE 7
 
-						sub = line.substring(60, len).replace('D', 'e');
-						double iodc = Double.parseDouble(sub.trim());
-						eph.setIodc((int) iodc);
+								sub = line.substring(0, 22).replace('D', 'e');
+								double svAccur = Double.parseDouble(sub.trim());
+								eph.setSvAccur((int) svAccur);
 
-					} else if (i == 7) { // LINE 8
+								sub = line.substring(22, 41).replace('D', 'e');
+								double svHealth = Double.parseDouble(sub.trim());
+								eph.setSvHealth((int) svHealth);
 
-						sub = line.substring(0, 22).replace('D', 'e');
-						eph.setToc(Double.parseDouble(sub.trim()));
+								sub = line.substring(41, 60).replace('D', 'e');
+								eph.setTgd(Double.parseDouble(sub.trim()));
 
-						if (len > 22) {
-							sub = line.substring(22, 41).replace('D', 'e');
-							eph.setFitInt(Double.parseDouble(sub.trim()));
+								sub = line.substring(60, len).replace('D', 'e');
+								double iodc = Double.parseDouble(sub.trim());
+								eph.setIodc((int) iodc);
 
+							} else if (i == 7) { // LINE 8
+
+								sub = line.substring(0, 22).replace('D', 'e');
+								eph.setToc(Double.parseDouble(sub.trim()));
+
+								if (len > 22) {
+									sub = line.substring(22, 41).replace('D', 'e');
+									eph.setFitInt(Double.parseDouble(sub.trim()));
+
+								} else {
+									eph.setFitInt(0);
+								}
+							}
 						} else {
-							eph.setFitInt(0);
+							i--;
 						}
+					} catch (NullPointerException e) {
+						// Skip over blank lines
 					}
 				}
 
