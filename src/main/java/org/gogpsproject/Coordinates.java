@@ -31,7 +31,7 @@ import org.ejml.data.SimpleMatrix;
 public class Coordinates {
 
 	// Global systems
-	private SimpleMatrix ecef = null;; /* Earth-Centered, Earth-Fixed (X, Y, Z) */
+	private SimpleMatrix ecef = null; /* Earth-Centered, Earth-Fixed (X, Y, Z) */
 	private SimpleMatrix geod = null; /* Longitude (lam), latitude (phi), height (h) */
 
 	// Local systems (require to specify an origin)
@@ -162,7 +162,7 @@ public class Coordinates {
 	}
 
 	public boolean isValidXYZ(){
-		return this.ecef != null;
+		return (this.ecef != null & this.ecef.elementSum() != 0);
 	}
 
 	/**
