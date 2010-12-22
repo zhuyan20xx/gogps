@@ -374,7 +374,7 @@ public class GoGPS {
 						        "</Placemark>";
 							}
 						} catch (NullPointerException e) {
-							System.out.println("Error: rover position not computed");
+							System.out.println("Rover position not computed");
 						}
 					}
 					//System.out.println("--------------------");
@@ -422,14 +422,21 @@ public class GoGPS {
 //			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
 //			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
 
+			
+			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100617_025543.ubx"));
+			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs2.10o"));
+			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs2.10n"));
+//			static File roverFileObs = new File("./data/COM10_100617_rover.obs");
+//			static File masterFileObs = new File("./data/vrs2.10o");
+//			static File fileNav = new File("./data/vrs2.10n");
 
 			/* Faido */
 			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
 			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
 			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
-			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
-			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
-			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
+//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
+//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
 
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/manno-21.11.2010.ubx"));
 //			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirManno-21-11-2010.10o"));
