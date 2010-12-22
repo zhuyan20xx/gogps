@@ -37,7 +37,7 @@ import org.gogpsproject.Time;
 public class DecodeRMXRAW {
 	//private boolean[] bits;
 	InputStream in;
-	
+
 	int[] fdata;
 	int[] fbits;
 	boolean end = true;
@@ -57,7 +57,7 @@ public class DecodeRMXRAW {
 
 		length[1] = in.read();
 		length[0] = in.read();
-		
+
 		int CH_A = 0;
 		int CH_B = 0;
 		CH_A += 0x02;CH_B += CH_A;
@@ -65,7 +65,7 @@ public class DecodeRMXRAW {
 		CH_A += 0x10;CH_B += CH_A;
 		CH_A += length[1];CH_B += CH_A;
 		CH_A += length[0];CH_B += CH_A;
-		
+
 		int len = length[0]*256+length[1];
 		//System.out.println(" %%%%%%%%%% Length : " + len+" "+(length[0]*255+length[1]));
 		data = new int[8];
@@ -88,7 +88,7 @@ public class DecodeRMXRAW {
 		}
 		int tow = Bits.bitsTwoComplement(bits);
 		//System.out.println("Gps TOW " + tow + " ms");
-		
+
 		bits = new boolean[8 * 2];
 		indice = 0;
 		for (int j = 5; j >= 4; j--) {
@@ -100,7 +100,7 @@ public class DecodeRMXRAW {
 		}
 		int week = Bits.bitsTwoComplement(bits);
 		//System.out.println("Week :  " + week );
-		
+
 		bits = new boolean[8];
 		indice = 0;
 		boolean[] temp1 = Bits.intToBits(data[6], 8);
@@ -108,7 +108,7 @@ public class DecodeRMXRAW {
 			bits[indice] = temp1[i];
 			indice++;
 		}
-		
+
 		int numSV = Bits.bitsToUInt(bits);
 		//System.out.println("NumSV :  " + numSV + " S ");
 
@@ -130,18 +130,18 @@ public class DecodeRMXRAW {
 			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
 		}
 		//System.out.println();
-		
+
 		long gmtTS = getGMTTS(tow, week);
 		Observations o = new Observations(new Time(gmtTS),0);
 
 		//System.out.println(tow+"  "+o.getRefTime().getGpsTime());
-		
-		
+
+
 		for (int k = 0; k < (len - 8) / 24; k++) {
-			
+
 			ObservationSet os = new ObservationSet();
-			
-			
+
+
 			int offset = k * 24;
 			bits = new boolean[8 * 8]; // R8
 			indice = 0;
@@ -189,8 +189,8 @@ public class DecodeRMXRAW {
 			os.setSatID(Bits.bitsToUInt(bits));
 //			System.out.print (" SatID: "
 //					+ os.getSatID() + "  ");
-			
-			
+
+
 			bits = new boolean[8];
 			indice = 0;
 			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1], 8);
@@ -198,6 +198,7 @@ public class DecodeRMXRAW {
 				bits[indice] = temp1[i];
 				indice++;
 			}
+			os.setQualityInd(ObservationSet.L1, Bits.bitsTwoComplement(bits));
 //			System.out.print("Nav Measurements Quality Ind.: "
 //					+ Bits.bitsTwoComplement(bits) + "  ");
 //			System.out.print(" QI: "
@@ -209,7 +210,7 @@ public class DecodeRMXRAW {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			
+
 			os.setSignalStrength(ObservationSet.L1, Bits.bitsTwoComplement(bits));
 //			System.out.print(" SNR: " // Signal strength C/No. (dbHz)
 //					+ os.getSignalStrength(ObservationSet.L1) + "  ");
@@ -220,6 +221,7 @@ public class DecodeRMXRAW {
 				bits[indice] = temp1[i];
 				indice++;
 			}
+			os.setLossLockInd(ObservationSet.L1, Bits.bitsToUInt(bits));
 //			System.out.println(" Lock: "//Loss of lock indicator (RINEX definition)
 //					+ Bits.bitsToUInt(bits) + "  ");
 			int total = offset + 7 + 8 + 4 + 1 + 1 + 1 + 1;
@@ -228,8 +230,8 @@ public class DecodeRMXRAW {
 			o.setGps(k, os);
 		}
 		// / Checksum
-		
-		
+
+
 		CH_A = CH_A & 0xFF;
 		CH_B = CH_B & 0xFF;
 		if(CH_A != in.read() && CH_B!=in.read())
@@ -238,10 +240,10 @@ public class DecodeRMXRAW {
 //				+ " CH_K packetto " + Integer.toHexString(in.read()));
 //		System.out.println("CH_B cal " + Integer.toHexString(CH_B)
 //				+ " CH_K packetto " + Integer.toHexString(in.read()));
-		
+
 		return o;
 	}
-	
+
 	private long getGMTTS(int tow, int week) {
 		Calendar c = Calendar.getInstance();
 		c.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -255,10 +257,10 @@ public class DecodeRMXRAW {
 
 		c.add(Calendar.WEEK_OF_YEAR, week);
 		c.add(Calendar.MILLISECOND, (int)(Math.round((double)tow/1000.0)*1000));
-		
+
 		//SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
 		//System.out.println(sdf.format(c.getTime()));
-		
+
 		return c.getTimeInMillis();
 	}
 }
