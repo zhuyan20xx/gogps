@@ -91,13 +91,12 @@ public class GoGPS {
 
 	private int weights = WEIGHT_SIGNAL_TO_NOISE_RATIO;
 
+
 	public final static int DYN_MODEL_STATIC = 1;
 	public final static int DYN_MODEL_CONST_SPEED = 2;
 	public final static int DYN_MODEL_CONST_ACCELLERATION = 3;
-
-
 	// Kalman filter parameters
-	private int dynamicModel = DYN_MODEL_CONST_SPEED;
+	private int dynamicModel = DYN_MODEL_STATIC;
 	private double stDevInit = 3;
 	private double stDevE = 0.5;
 	private double stDevN = 0.5;
@@ -113,6 +112,61 @@ public class GoGPS {
 	private NavigationProducer navigation;
 	private ObservationsProducer roverIn;
 	private ObservationsProducer masterIn;
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+
+		try{
+			// Get current time
+			long start = System.currentTimeMillis();
+			/* Como */
+//			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/perim2.08o"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
+//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
+
+			/* Como, Italy (static) */
+			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/como_pillar_rover.obs"));
+			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/como_pillar_master.10o"));
+			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/como_pillar_rover.nav"));
+
+
+			/* Faido */
+			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
+			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
+			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
+//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
+//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
+
+//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/manno-21.11.2010.ubx"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirManno-21-11-2010.10o"));
+//			Navigation navigationIn = new RinexFileNavigation(new File("./data/VirManno-21-11-2010.10n"));
+
+			roverIn.init();
+			masterIn.init();
+			navigationIn.init();
+
+			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
+			// goGPS.runCodeStandalone();
+			// goGPS.runCodeDoubleDifferences();
+			goGPS.runKalmanFilter();
+
+			roverIn.release();
+			masterIn.release();
+			navigationIn.release();
+
+			// Get and display elapsed time
+			int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
+			int elapsedTimeMillisec = (int) ((System.currentTimeMillis() - start) - elapsedTimeSec * 1000);
+			System.out.println("\nElapsed time (read + proc + display + write): "
+					+ elapsedTimeSec + " seconds " + elapsedTimeMillisec
+					+ " milliseconds.");
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 
 	public GoGPS(NavigationProducer navigation, ObservationsProducer roverIn, ObservationsProducer masterIn){
 		
@@ -409,59 +463,6 @@ public class GoGPS {
 
 	}
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-
-		try{
-			// Get current time
-			long start = System.currentTimeMillis();
-			/* Como */
-//			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/perim2.08o"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
-
-			
-//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100617_025543.ubx"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs2.10o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs2.10n"));
-
-			/* Faido */
-			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
-			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
-			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
-			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
-			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
-			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
-
-//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/manno-21.11.2010.ubx"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirManno-21-11-2010.10o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirManno-21-11-2010.10n"));
-
-			roverIn.init();
-			masterIn.init();
-			navigationIn.init();
-
-			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
-			// goGPS.runCodeStandalone();
-			// goGPS.runCodeDoubleDifferences();
-			goGPS.runKalmanFilter();
-
-			roverIn.release();
-			masterIn.release();
-			navigationIn.release();
-
-			// Get and display elapsed time
-			int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
-			int elapsedTimeMillisec = (int) ((System.currentTimeMillis() - start) - elapsedTimeSec * 1000);
-			System.out.println("\nElapsed time (read + proc + display + write): "
-					+ elapsedTimeSec + " seconds " + elapsedTimeMillisec
-					+ " milliseconds.");
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * @return the freq

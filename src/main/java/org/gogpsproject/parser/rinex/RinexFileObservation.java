@@ -455,10 +455,22 @@ public class RinexFileObservation implements ObservationsProducer{
 				}
 			} else if (typeOrder[k] == 4) { // ** L1 phase
 
-				String phaseL = line.substring(j, j + 14).trim();
+				String phaseL = line.substring(j, j + 14);
+				phaseL = phaseL.trim();
 				try {
 					if (phaseL.length() != 0) {
 						o.setPhase(0,Double.parseDouble(phaseL));
+						try{
+							// Loss of Lock
+							int lli = Integer.parseInt(line.substring(j+14, j + 15));
+							o.setLossLockInd(0,lli);
+						}catch(Exception ignore){}
+						try{
+							// Signal Strenght
+							int ss = Integer.parseInt(line.substring(j+15, j + 16));
+
+						}catch(Exception ignore){}
+
 					}
 				} catch (NumberFormatException e) {
 				}
@@ -468,6 +480,17 @@ public class RinexFileObservation implements ObservationsProducer{
 				try {
 					if (phaseL.length() != 0) {
 						o.setPhase(1,Double.parseDouble(phaseL));
+
+						try{
+							// Loss of Lock
+							int lli = Integer.parseInt(line.substring(j+14, j + 15));
+							o.setLossLockInd(1,lli);
+						}catch(Exception ignore){}
+						try{
+							// Signal Strenght
+							int ss = Integer.parseInt(line.substring(j+15, j + 16));
+
+						}catch(Exception ignore){}
 					}
 				} catch (NumberFormatException e) {
 				}
