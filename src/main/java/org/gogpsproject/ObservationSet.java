@@ -23,15 +23,15 @@ package org.gogpsproject;
  * <p>
  * Set of observations for one epoch and one satellite
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
 public class ObservationSet {
-	
+
 	public final static int L1 = 0;
 	public final static int L2 = 1;
-	
-	
+
+
 	private int satID;	/* Satellite number */
 	/* Array of [L1,L2] */
 	private double[] codeC;			/* C Coarse/Acquisition (C/A) code [m] */
@@ -39,19 +39,19 @@ public class ObservationSet {
 	private double[] phase;			/* L Carrier Phase [cycle] */
 	private float[] signalStrength;	/* C/N0 (signal strength) [dBHz] */
 	private float[] doppler;		/* Doppler value [Hz] */
-	
-	private int qualityInd = -1;	/* Nav Measurements Quality Ind. ublox proprietary? */ 
-	private int lossLockInd = -1;   /* Loss of lock indicator (RINEX definition) */
-	
+
+	private int[] qualityInd = {-1,-1};	/* Nav Measurements Quality Ind. ublox proprietary? */
+	private int[] lossLockInd = {-1,-1};   /* Loss of lock indicator (RINEX definition) */
+
 	public ObservationSet(){
 		codeC = new double[2];
 		codeC[0] = Double.NaN;
 		codeC[1] = Double.NaN;
-		
+
 		codeP = new double[2];
 		codeP[0] = Double.NaN;
 		codeP[1] = Double.NaN;
-		
+
 		phase = new double[2];
 		signalStrength = new float[2];
 		doppler = new float[2];
@@ -72,16 +72,16 @@ public class ObservationSet {
 	}
 
 	/**
-	 * @return the pseudorange
+	 * @return the c
 	 */
 	public double getPseudorange(int i) {
 		return Double.isNaN(codeP[i])?codeC[i]:codeP[i];
 	}
-	
+
 	public boolean isPseudorangeP(int i){
 		return !Double.isNaN(codeP[i]);
 	}
-	
+
 	/**
 	 * @return the c
 	 */
@@ -167,28 +167,43 @@ public class ObservationSet {
 	/**
 	 * @return the qualityInd
 	 */
-	public int getQualityInd() {
-		return qualityInd;
+	public int getQualityInd(int i) {
+		return qualityInd[i];
 	}
 
 	/**
 	 * @param qualityInd the qualityInd to set
 	 */
-	public void setQualityInd(int qualityInd) {
-		this.qualityInd = qualityInd;
+	public void setQualityInd(int i,int qualityInd) {
+		this.qualityInd[i] = qualityInd;
 	}
 
 	/**
 	 * @return the lossLockInd
 	 */
-	public int getLossLockInd() {
-		return lossLockInd;
+	public int getLossLockInd(int i) {
+		return lossLockInd[i];
 	}
 
 	/**
 	 * @param lossLockInd the lossLockInd to set
 	 */
-	public void setLossLockInd(int lossLockInd) {
-		this.lossLockInd = lossLockInd;
+	public void setLossLockInd(int i,int lossLockInd) {
+		this.lossLockInd[i] = lossLockInd;
 	}
+
+	public boolean isLocked(int i){
+		return lossLockInd[i] == 0;
+	}
+	public boolean isCycleSlip(int i){
+		return lossLockInd[i]>0 && ((lossLockInd[i]&0x1) == 0x1);
+	}
+	public boolean isHalfWavelength(int i){
+		return lossLockInd[i]>0 && ((lossLockInd[i]&0x2) == 0x2);
+	}
+	public boolean isUnderAntispoof(int i){
+		return lossLockInd[i]>0 && ((lossLockInd[i]&0x4) == 0x4);
+	}
+
+
 }

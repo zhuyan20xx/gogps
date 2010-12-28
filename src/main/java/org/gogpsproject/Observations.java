@@ -85,6 +85,20 @@ public class Observations {
 	 * 0: OK
 	 * 1: power failure between previous and current epoch
 	 * >1: Special event
+	 *  2: start moving antenna
+     *  3: new site occupation
+     *  (end of kinem. data)
+     * (at least MARKER NAME record
+     * follows)
+     * 4: header information follows
+     * 5: external event (epoch is significant)
+     * 6: cycle slip records follow
+     * to optionally report detected
+     * and repaired cycle slips
+     * (same format as OBSERVATIONS
+     * records; slip instead of observation;
+     * LLI and signal strength blank)
+     *
 	 * @return the eventFlag 
 	 */
 	public int getEventFlag() {
