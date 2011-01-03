@@ -94,7 +94,7 @@ public class GoGPS {
 
 	public final static int DYN_MODEL_STATIC = 1;
 	public final static int DYN_MODEL_CONST_SPEED = 2;
-	public final static int DYN_MODEL_CONST_ACCELLERATION = 3;
+	public final static int DYN_MODEL_CONST_ACCELERATION = 3;
 	// Kalman filter parameters
 	private int dynamicModel = DYN_MODEL_STATIC;
 	private double stDevInit = 3;
@@ -127,10 +127,18 @@ public class GoGPS {
 //			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
 
 			/* Como, Italy (static) */
-			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/como_pillar_rover.obs"));
-			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/como_pillar_master.10o"));
-			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/como_pillar_rover.nav"));
-
+//			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/como_pillar_rover.obs"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/como_pillar_master.10o"));
+//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/como_pillar_rover.nav"));
+			
+			/* Osaka, Japan (static) */
+			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100608_024314.ubx"));
+			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs.10o"));
+			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs.10n"));
+			
+//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100617_025543.ubx"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs2.10o"));
+//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs2.10n"));
 
 			/* Faido */
 			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
@@ -396,7 +404,7 @@ public class GoGPS {
 					timeProc = System.currentTimeMillis() - timeProc;
 					depProc = depProc + timeProc;
 
-					if(valid){
+					if(kalmanInitialized & valid){
 						try {
 							String lon = g.format(roverPos.getCoord().getGeodeticLongitude());
 							String lat = g.format(roverPos.getCoord().getGeodeticLatitude());
