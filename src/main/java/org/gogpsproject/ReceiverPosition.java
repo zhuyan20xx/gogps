@@ -76,7 +76,8 @@ public class ReceiverPosition {
 	 */
 	public void bancroft(Observations obs) {
 
-		this.coord = null;//Coordinates.globalXYZInstance(new SimpleMatrix(3, 1));
+		//this.coord = null;
+		this.coord = Coordinates.globalXYZInstance(0.0, 0.0, 0.0);
 
 		double travelTime = 0;
 		double angle;
