@@ -128,7 +128,8 @@ public class ReceiverPosition {
 			// Compute clock-corrected satellite position
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
+			double obsPseudorange = obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obsPseudorange);
 
 			try {
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
@@ -139,7 +140,7 @@ public class ReceiverPosition {
 				dataB[i][0] = pos[i].getX();
 				dataB[i][1] = pos[i].getY();
 				dataB[i][2] = pos[i].getZ();
-				dataB[i][3] = pos[i].getRange() + Constants.SPEED_OF_LIGHT * pos[i].getTimeCorrection();
+				dataB[i][3] = obsPseudorange /*pos[i].getRange()*/ + Constants.SPEED_OF_LIGHT * pos[i].getTimeCorrection();
 			} catch (NullPointerException u) {
 				// System.out.println("Error: satellite positions not computed");
 				return;

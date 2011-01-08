@@ -32,17 +32,27 @@ public class SatellitePosition extends Coordinates{
 	private int satID; /* Satellite ID number */
 	//private Coordinates coord; /* Satellite coordinates */
 	private double timeCorrection; /* Correction due to satellite clock error */
-	private double range;
+	//private double range;
 	private long time;
 
-	public SatellitePosition(EphGps eph, long time, int satID, double range) {
+	public SatellitePosition(EphGps eph, long time, int satID, double obsPseudorange) {
 		super();
 
 		this.time = time;
 		this.satID = satID;
-		this.range = range;
+		//this.range = range;
 
-		this.computePositionGps(eph);
+		this.computePositionGps(eph, obsPseudorange);
+	}
+
+	public SatellitePosition(long time, int satID, double x, double y, double z) {
+		super();
+
+		this.time = time;
+		this.satID = satID;
+		//this.range = range;
+
+		this.setXYZ(x, y, z);
 	}
 
 //	/**
@@ -70,12 +80,12 @@ public class SatellitePosition extends Coordinates{
 	 * @param range
 	 * @param approxPos
 	 */
-	private void computePositionGps(EphGps eph) {
+	private void computePositionGps(EphGps eph, double obsPseudorange) {
 
 
 
 		// Compute clock correction
-		double tGPS = clockCorrection(eph);
+		double tGPS = clockCorrection(eph, obsPseudorange);
 
 		// Compute eccentric anomaly
 		double Ek = eccAnomaly(tGPS, eph);
@@ -158,10 +168,10 @@ public class SatellitePosition extends Coordinates{
 	 * @param eph
 	 * @return Clock-corrected GPS time
 	 */
-	private double clockCorrection(EphGps eph) {
+	private double clockCorrection(EphGps eph, double obsPseudorange) {
 
 		// Remove signal travel time from observation time
-		double tRaw = (this.time - this.range / Constants.SPEED_OF_LIGHT);
+		double tRaw = (this.time - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 
 		// Compute eccentric anomaly
 		double Ek = eccAnomaly(tRaw, eph);
@@ -286,19 +296,19 @@ public class SatellitePosition extends Coordinates{
 		this.timeCorrection = timeCorrection;
 	}
 
-	/**
-	 * @return the range
-	 */
-	public double getRange() {
-		return range;
-	}
+//	/**
+//	 * @return the range
+//	 */
+//	public double getRange() {
+//		return range;
+//	}
 
-	/**
-	 * @param range the range to set
-	 */
-	public void setRange(double range) {
-		this.range = range;
-	}
+//	/**
+//	 * @param range the range to set
+//	 */
+//	public void setRange(double range) {
+//		this.range = range;
+//	}
 
 	/**
 	 * @return the time

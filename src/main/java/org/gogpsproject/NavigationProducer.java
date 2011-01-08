@@ -37,24 +37,24 @@ public interface NavigationProducer {
 	public void release();
 
 	public double getIono(int i);
-	/**
-	 * @return the a0
-	 */
-	public double getA0();
-	/**
-	 * @return the a1
-	 */
-	public double getA1();
-	/**
-	 * @return the t
-	 */
-	public double getT();
-	/**
-	 * @return the w
-	 */
-	public double getW();
-	/**
-	 * @return the leaps
-	 */
-	public int getLeaps();
+//	/**
+//	 * @return the a0
+//	 */
+//	public double getA0();
+//	/**
+//	 * @return the a1
+//	 */
+//	public double getA1();
+//	/**
+//	 * @return the t
+//	 */
+//	public double getT();
+//	/**
+//	 * @return the w
+//	 */
+//	public double getW();
+//	/**
+//	 * @return the leaps
+//	 */
+//	public int getLeaps();
 }
