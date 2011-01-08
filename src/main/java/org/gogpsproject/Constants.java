@@ -23,7 +23,7 @@ package org.gogpsproject;
  * <p>
  * Constants
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
 public class Constants {
@@ -46,12 +46,12 @@ public class Constants {
 			(1 - WGS84_FLATTENING), 2));
 
 	// Time-related values
-	public static final int DAYS_IN_WEEK = 7;
-	public static final int SEC_IN_DAY = 86400;
-	public static final int MILLISEC_IN_SEC = 1000;
-	public static final int SEC_IN_HALF_WEEK = 302400;
+	public static final long DAYS_IN_WEEK = 7L;
+	public static final long SEC_IN_DAY = 86400L;
+	public static final long MILLISEC_IN_SEC = 1000L;
+	public static final long SEC_IN_HALF_WEEK = 302400L;
 	// Days difference between UNIX time and GPS time
-	public static final int UNIX_GPS_DAYS_DIFF = 3657;
+	public static final long UNIX_GPS_DAYS_DIFF = 3657L;
 
 	// Standard atmosphere - Berg, 1948 (Bernese)
 	public static final double STANDARD_PRESSURE = 1013.25;

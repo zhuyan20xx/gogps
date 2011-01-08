@@ -28,8 +28,6 @@ import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.ArrayList;
 
-import org.gogpsproject.Constants;
-import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.SatellitePosition;
