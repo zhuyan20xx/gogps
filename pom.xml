@@ -26,6 +26,18 @@
 			<scope>system</scope>
 			<systemPath>${basedir}/lib/ejml-0.14.jar</systemPath>
 		</dependency>
+		<dependency>
+			<groupId>commons-net</groupId>
+			<artifactId>commons-net</artifactId>
+			<version>2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>HTTPClient</groupId>
+			<artifactId>HTTPClient</artifactId>
+			<version>0.3-3</version>
+		</dependency>
+
+
 
 	</dependencies>
 
