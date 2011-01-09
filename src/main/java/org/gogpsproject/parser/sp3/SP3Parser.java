@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 /**
  * <p>
@@ -34,7 +35,9 @@ import java.io.InputStreamReader;
  */
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.SatellitePosition;
@@ -44,11 +47,11 @@ import org.gogpsproject.Time;
  * @author Lorenzo
  *
  */
-public class SP3FileParser implements NavigationProducer{
+public class SP3Parser implements NavigationProducer{
 	private File fileSP3;
-	private FileInputStream streamSP3;
-	private InputStreamReader inStreamSP3;
-	private BufferedReader buffStreamSP3;
+	private FileInputStream fileInputStream;
+	private InputStreamReader inputStreamReader;
+	private BufferedReader bufferedReader;
 
 	private int gpsWeek=0;
 	private int secondsOfWeek=0;
@@ -67,17 +70,28 @@ public class SP3FileParser implements NavigationProducer{
 	private double posStDevBase;
 	private double clockStDevBase;
 
+	public static void main(String[] args){
+		File f = new File("./data/igu15231_00.sp3");
+		SP3Parser sp3fp = new SP3Parser(f);
+		sp3fp.init();
+	}
 
 	// RINEX Read constructors
-	public SP3FileParser(File fileSP3) {
+	public SP3Parser(File fileSP3) {
 		this.fileSP3 = fileSP3;
+	}
+
+	// RINEX Read constructors
+	public SP3Parser(InputStream is) {
+		this.inputStreamReader = new InputStreamReader(is);
 	}
 
 
 	public void init() {
 		open();
-		parseHeader();
-		parseData();
+		if(parseHeader()){
+			parseData();
+		}
 		close();
 
 		//System.out.println("Found "+epocs.size()+" epocs");
@@ -89,9 +103,9 @@ public class SP3FileParser implements NavigationProducer{
 	 */
 	public void open() {
 		try {
-			streamSP3 = new FileInputStream(fileSP3);
-			inStreamSP3 = new InputStreamReader(streamSP3);
-			buffStreamSP3 = new BufferedReader(inStreamSP3);
+			if(fileSP3!=null) fileInputStream = new FileInputStream(fileSP3);
+			if(fileInputStream!=null) inputStreamReader = new InputStreamReader(fileInputStream);
+			if(inputStreamReader!=null) bufferedReader = new BufferedReader(inputStreamReader);
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		}
@@ -99,9 +113,9 @@ public class SP3FileParser implements NavigationProducer{
 
 	public void close() {
 		try {
-			streamSP3.close();
-			inStreamSP3.close();
-			buffStreamSP3.close();
+			if(fileInputStream!=null) fileInputStream.close();
+			if(inputStreamReader!=null) inputStreamReader.close();
+			if(bufferedReader!=null) bufferedReader.close();
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		} catch (IOException e2) {
@@ -123,10 +137,11 @@ public class SP3FileParser implements NavigationProducer{
 		try {
 			int nline=0;
 			int nsat=0;
-			while (buffStreamSP3.ready()) {
+			while (bufferedReader.ready()) {
 
 				try {
-					String line = buffStreamSP3.readLine();
+					String line = bufferedReader.readLine();
+					System.out.println(line);
 					nline++;
 
 					if(nline == 22){
@@ -138,7 +153,7 @@ public class SP3FileParser implements NavigationProducer{
 							String typeField = line.substring(1,2);
 							typeField = typeField.trim();
 							if(!typeField.equals("c")){
-								System.err.println("SP3c file identifier is missing in file " + streamSP3.toString() + " header");
+								System.err.println("SP3c file identifier is missing in file " + fileInputStream.toString() + " header");
 								return false;
 							}
 							int year = Integer.parseInt(line.substring(3,7).trim());
@@ -210,6 +225,8 @@ public class SP3FileParser implements NavigationProducer{
 	public void parseData() {
 
 		try {
+			Calendar c = Calendar.getInstance();
+			c.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 			epocs = new ArrayList<HashMap<String,SatellitePosition>>();
 			epocTimestamps = new ArrayList<Time>();
@@ -217,10 +234,10 @@ public class SP3FileParser implements NavigationProducer{
 			HashMap<String,SatellitePosition> epoc = null;
 			Time ts = null;
 
-			while (buffStreamSP3.ready()) {
+			while (bufferedReader.ready()) {
 
 				try {
-					String line = buffStreamSP3.readLine();
+					String line = bufferedReader.readLine();
 					//System.out.println(line);
 					if(line == null || line.toUpperCase().startsWith("EOF")){
 						return;
@@ -233,9 +250,9 @@ public class SP3FileParser implements NavigationProducer{
 						int mm = Integer.parseInt(line.substring(17,19).trim());
 						double ss = Double.parseDouble(line.substring(20,31).trim());
 
-						Calendar c = Calendar.getInstance();
+
 						c.set(Calendar.YEAR, year);
-						c.set(Calendar.MONTH, month);
+						c.set(Calendar.MONTH, month-1);
 						c.set(Calendar.DAY_OF_MONTH, day);
 						c.set(Calendar.HOUR_OF_DAY, hh);
 						c.set(Calendar.MINUTE, mm);
@@ -252,6 +269,7 @@ public class SP3FileParser implements NavigationProducer{
 					}else
 					if(epoc != null && line.charAt(0) == 'P'){
 						String satid = line.substring(1,4).trim();
+						satid = satid.replace(' ', '0');
 						double x = Double.parseDouble(line.substring(4, 18).trim())*1000.0;
 						double y = Double.parseDouble(line.substring(18, 32).trim())*1000.0;
 						double z = Double.parseDouble(line.substring(32, 46).trim())*1000.0;
@@ -279,10 +297,14 @@ public class SP3FileParser implements NavigationProducer{
 						boolean orbitPredFlag = line.length()>79 && line.charAt(79) == 'P';
 
 
-						SatellitePosition sp = new SatellitePosition(ts.getMsec(), Integer.parseInt(satid.substring(1)), x, y, z);
+						SatellitePosition sp = new SatellitePosition(ts.getMsec(), Integer.parseInt(satid.substring(1).trim()), x, y, z);
 						sp.setTimeCorrection(clock);
+						sp.setPredicted(orbitPredFlag||clockPredFlag);
+						sp.setManeuver(maneuverFlag);
 						// TODO map all the values
+						epoc.put(satid, sp);
 
+						//System.out.println(""+satid+" "+(new Date(sp.getTime())));
 					}
 
 
@@ -303,9 +325,7 @@ public class SP3FileParser implements NavigationProducer{
 	 */
 	@Override
 	public SatellitePosition getGpsSatPosition(long time, int satID, double range) {
-		if(epocTimestamps.size()>0 &&
-				epocTimestamps.get(0).getMsec() <= time &&
-				time < epocTimestamps.get(epocTimestamps.size()-1).getMsec()+epochInterval){
+		if(isTimestampInEpocsRange(time)){
 			for(int i=0;i<epocTimestamps.size();i++){
 				if(epocTimestamps.get(i).getMsec()<=time && time < epocTimestamps.get(i).getMsec()+epochInterval){
 					return epocs.get(i).get("G"+(satID<10?"0":"")+satID);
@@ -315,6 +335,11 @@ public class SP3FileParser implements NavigationProducer{
 		return null;
 	}
 
+	public boolean isTimestampInEpocsRange(long time){
+		return epocTimestamps.size()>0 &&
+				epocTimestamps.get(0).getMsec() <= time &&
+				time < epocTimestamps.get(epocTimestamps.size()-1).getMsec()+epochInterval;
+	}
 
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.NavigationProducer#getIono(int)
@@ -325,9 +350,92 @@ public class SP3FileParser implements NavigationProducer{
 		return 0;
 	}
 
-	public static void main(String[] args){
-		File f = new File("./data/igu15231_00.sp3");
-		SP3FileParser sp3fp = new SP3FileParser(f);
-		sp3fp.init();
+
+
+	/**
+	 * @return the gpsWeek
+	 */
+	public int getGpsWeek() {
+		return gpsWeek;
+	}
+
+
+	/**
+	 * @return the secondsOfWeek
+	 */
+	public int getSecondsOfWeek() {
+		return secondsOfWeek;
+	}
+
+
+	/**
+	 * @return the epochInterval
+	 */
+	public int getEpochInterval() {
+		return epochInterval;
+	}
+
+
+	/**
+	 * @return the nepocs
+	 */
+	public int getNumEpocs() {
+		return nepocs;
+	}
+
+
+	/**
+	 * @return the numSats
+	 */
+	public int getNumSats() {
+		return numSats;
+	}
+
+
+	/**
+	 * @return the coordSys
+	 */
+	public String getCoordSys() {
+		return coordSys;
+	}
+
+
+	/**
+	 * @return the orbitType
+	 */
+	public String getOrbitType() {
+		return orbitType;
+	}
+
+
+	/**
+	 * @return the agency
+	 */
+	public String getAgency() {
+		return agency;
+	}
+
+
+	/**
+	 * @return the accuracy
+	 */
+	public HashMap<String, Long> getAccuracy() {
+		return accuracy;
+	}
+
+
+	/**
+	 * @return the posStDevBase
+	 */
+	public double getPosStDevBase() {
+		return posStDevBase;
+	}
+
+
+	/**
+	 * @return the clockStDevBase
+	 */
+	public double getClockStDevBase() {
+		return clockStDevBase;
 	}
 }
