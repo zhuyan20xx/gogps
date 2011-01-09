@@ -79,7 +79,7 @@ public class SP3Navigation implements NavigationProducer {
 		sp3n.init();
 		SatellitePosition sp = sp3n.getGpsSatPosition(c.getTimeInMillis(), 2, 0);
 		if(sp!=null){
-			System.out.println("found "+(new Date(sp.getTime()))+" "+(sp.isPredicted()?" predicted":""));
+			System.out.println("found "+(new Date(sp.getUtcTime()))+" "+(sp.isPredicted()?" predicted":""));
 		}else{
 			System.out.println("Epoch not found "+(new Date(c.getTimeInMillis())));
 		}
@@ -99,14 +99,15 @@ public class SP3Navigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long time, int satID, double range) {
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range) {
 
 		SP3Parser sp3p = null;
-		long reqTime = time;
+		long reqTime = utcTime;
 
 		while(sp3p==null){
 			// found none, retrieve from urltemplate
 			Time t = new Time(reqTime);
+			System.out.println("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
 
 			String url = urltemplate.replaceAll("\\$\\{wwww\\}", (new DecimalFormat("0000")).format(t.getGpsWeek()));
 			url = url.replaceAll("\\$\\{d\\}", (new DecimalFormat("0")).format(t.getGpsWeekDay()));
@@ -130,8 +131,8 @@ public class SP3Navigation implements NavigationProducer {
 					if(sp3p != null){
 						pool.put(url, sp3p);
 						// file exist, look for epoch
-						if(sp3p.isTimestampInEpocsRange(time)){
-							return sp3p.getGpsSatPosition(time, satID, range);
+						if(sp3p.isTimestampInEpocsRange(utcTime)){
+							return sp3p.getGpsSatPosition(utcTime, satID, range);
 						}else{
 							return null;
 						}

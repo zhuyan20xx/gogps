@@ -129,7 +129,7 @@ public class ReceiverPosition {
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
 			double obsPseudorange = obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obsPseudorange);
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec() /*getGpsTime()*/, obs.getGpsSatID(i), obsPseudorange);
 
 			try {
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
@@ -398,6 +398,7 @@ public class ReceiverPosition {
 		// observations by 1
 		nObsAvail--;
 
+		System.out.println(nObsAvail+" "+nUnknowns);
 		// Least squares design matrix
 		A = new SimpleMatrix(nObsAvail, nUnknowns);
 
@@ -819,7 +820,7 @@ public class ReceiverPosition {
 			// Compute clock-corrected satellite position
 			//pos[i].computePositionGps(navigation);
 
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getGpsTime(),
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
 					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 			// Apply Earth rotation correction to satellite positions
@@ -895,7 +896,7 @@ public class ReceiverPosition {
 			// Compute clock-corrected satellite position
 			//pos[i].computePositionGps(navigation);
 
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getGpsTime(),
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
 					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 			// Apply Earth rotation correction to satellite positions

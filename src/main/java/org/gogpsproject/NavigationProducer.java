@@ -31,7 +31,7 @@ package org.gogpsproject;
 public interface NavigationProducer {
 
 
-	public SatellitePosition getGpsSatPosition(long time, int satID, double range);
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range);
 
 	public void init();
 	public void release();

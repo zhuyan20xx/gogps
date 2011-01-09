@@ -27,6 +27,7 @@ import java.text.*;
 import org.cryms.gogps.parser.ublox.UBXFileReader;
 import org.gogpsproject.parser.rinex.RinexFileNavigation;
 import org.gogpsproject.parser.rinex.RinexFileObservation;
+import org.gogpsproject.parser.sp3.SP3Navigation;
 
 /**
  * @author ege, Cryms.com
@@ -130,12 +131,12 @@ public class GoGPS {
 //			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/como_pillar_rover.obs"));
 //			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/como_pillar_master.10o"));
 //			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/como_pillar_rover.nav"));
-			
+
 			/* Osaka, Japan (static) */
-			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100608_024314.ubx"));
-			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs.10o"));
-			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs.10n"));
-			
+//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100608_024314.ubx"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs.10o"));
+//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs.10n"));
+
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100617_025543.ubx"));
 //			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs2.10o"));
 //			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs2.10n"));
@@ -143,10 +144,11 @@ public class GoGPS {
 			/* Faido */
 			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
 			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
-			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
+			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
+			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
+			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
+//			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_ULTRARAPID);
 
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/manno-21.11.2010.ubx"));
 //			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirManno-21-11-2010.10o"));
@@ -177,11 +179,11 @@ public class GoGPS {
 	}
 
 	public GoGPS(NavigationProducer navigation, ObservationsProducer roverIn, ObservationsProducer masterIn){
-		
+
 		stDevCodeP = new double[2];
 		stDevCodeP[0] = 0.6;
 		stDevCodeP[1] = 0.4;
-		
+
 		this.navigation = navigation;
 		this.roverIn = roverIn;
 		this.masterIn = masterIn;
@@ -583,11 +585,11 @@ public class GoGPS {
 	public void setStDevU(double stDevU) {
 		this.stDevU = stDevU;
 	}
-	
+
 	/**
 	 * @param roverObsSet the rover observation set
 	 * @param masterObsSet the master observation set
-	 * @param i the selected GPS frequency 
+	 * @param i the selected GPS frequency
 	 * @return the stDevCode
 	 */
 	public double getStDevCode(ObservationSet roverObsSet, ObservationSet masterObsSet, int i) {
@@ -607,7 +609,7 @@ public class GoGPS {
 	public void setStDevCodeC(double stDevCodeC) {
 		this.stDevCodeC = stDevCodeC;
 	}
-	
+
 	/**
 	 * @param i the selected GPS frequency
 	 * @return the stDevCodeP

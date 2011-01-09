@@ -410,21 +410,23 @@ public class RinexFileNavigation implements NavigationProducer{
 
 
 	/**
-	 * @param time
+	 * @param utcTime
 	 * @param satID
 	 * @return Reference ephemeris set for given time and satellite
 	 */
-	public EphGps findEph(long time, int satID) {
+	public EphGps findEph(long utcTime, int satID) {
 
 		long dt = 0;
 		long dtMin = 0;
 		EphGps refEph = null;
 
+		long gpsTime = (new Time(utcTime)).getGpsTime();
+
 		for (int i = 0; i < eph.size(); i++) {
 			// Find ephemeris sets for given satellite
 			if (eph.get(i).getSatID() == satID) {
 				// Compare current time and ephemeris reference time
-				dt = Math.abs(eph.get(i).getRefTime().getGpsTime() - time);
+				dt = Math.abs(eph.get(i).getRefTime().getGpsTime() - gpsTime);
 				// If it's the first round, set the minimum time difference and
 				// select the first ephemeris set candidate
 				if (refEph == null) {
@@ -520,11 +522,11 @@ public class RinexFileNavigation implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long time, int satID, double range) {
-		EphGps eph = findEph(time, satID);
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range) {
+		EphGps eph = findEph(utcTime, satID);
 
 		if (eph != null) {
-			return new SatellitePosition(eph, time, satID, range);
+			return new SatellitePosition(eph, utcTime, satID, range);
 		}
 		return null;
 	}

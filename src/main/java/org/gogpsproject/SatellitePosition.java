@@ -33,24 +33,24 @@ public class SatellitePosition extends Coordinates{
 	//private Coordinates coord; /* Satellite coordinates */
 	private double timeCorrection; /* Correction due to satellite clock error */
 	//private double range;
-	private long time;
+	private long utcTime;
 	private boolean predicted;
 	private boolean maneuver;
 
-	public SatellitePosition(EphGps eph, long time, int satID, double obsPseudorange) {
+	public SatellitePosition(EphGps eph, long utcTime, int satID, double obsPseudorange) {
 		super();
 
-		this.time = time;
+		this.utcTime = utcTime;
 		this.satID = satID;
 		//this.range = range;
 
 		this.computePositionGps(eph, obsPseudorange);
 	}
 
-	public SatellitePosition(long time, int satID, double x, double y, double z) {
+	public SatellitePosition(long utcTime, int satID, double x, double y, double z) {
 		super();
 
-		this.time = time;
+		this.utcTime = utcTime;
 		this.satID = satID;
 		//this.range = range;
 
@@ -172,8 +172,9 @@ public class SatellitePosition extends Coordinates{
 	 */
 	private double clockCorrection(EphGps eph, double obsPseudorange) {
 
+		long gpsTime = (new Time(utcTime)).getGpsTime();
 		// Remove signal travel time from observation time
-		double tRaw = (this.time - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
+		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 
 		// Compute eccentric anomaly
 		double Ek = eccAnomaly(tRaw, eph);
@@ -315,16 +316,16 @@ public class SatellitePosition extends Coordinates{
 	/**
 	 * @return the time
 	 */
-	public long getTime() {
-		return time;
+	public long getUtcTime() {
+		return utcTime;
 	}
 
-	/**
-	 * @param time the time to set
-	 */
-	public void setTime(long time) {
-		this.time = time;
-	}
+//	/**
+//	 * @param time the time to set
+//	 */
+//	public void setTime(long time) {
+//		this.time = time;
+//	}
 
 	/**
 	 * @param predicted the predicted to set
