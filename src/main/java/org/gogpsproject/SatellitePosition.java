@@ -34,6 +34,8 @@ public class SatellitePosition extends Coordinates{
 	private double timeCorrection; /* Correction due to satellite clock error */
 	//private double range;
 	private long time;
+	private boolean predicted;
+	private boolean maneuver;
 
 	public SatellitePosition(EphGps eph, long time, int satID, double obsPseudorange) {
 		super();
@@ -322,5 +324,33 @@ public class SatellitePosition extends Coordinates{
 	 */
 	public void setTime(long time) {
 		this.time = time;
+	}
+
+	/**
+	 * @param predicted the predicted to set
+	 */
+	public void setPredicted(boolean predicted) {
+		this.predicted = predicted;
+	}
+
+	/**
+	 * @return the predicted
+	 */
+	public boolean isPredicted() {
+		return predicted;
+	}
+
+	/**
+	 * @param maneuver the maneuver to set
+	 */
+	public void setManeuver(boolean maneuver) {
+		this.maneuver = maneuver;
+	}
+
+	/**
+	 * @return the maneuver
+	 */
+	public boolean isManeuver() {
+		return maneuver;
 	}
 }

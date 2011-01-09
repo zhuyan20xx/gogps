@@ -48,6 +48,7 @@ public class Constants {
 	// Time-related values
 	public static final long DAYS_IN_WEEK = 7L;
 	public static final long SEC_IN_DAY = 86400L;
+	public static final long SEC_IN_HOUR = 3600L;
 	public static final long MILLISEC_IN_SEC = 1000L;
 	public static final long SEC_IN_HALF_WEEK = 302400L;
 	// Days difference between UNIX time and GPS time

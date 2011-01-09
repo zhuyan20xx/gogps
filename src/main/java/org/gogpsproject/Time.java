@@ -101,41 +101,28 @@ public class Time {
 		// Shift from UNIX time (January 1, 1970 - msec)
 		// to GPS time (January 6, 1980 - sec)
 		time = time / Constants.MILLISEC_IN_SEC - Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY;
-
-		// Remove integer weeks, to get Time Of Week
-		//time = Math.IEEEremainder(time, Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY);
-
 		time = time%(Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY);
-
 		return time;
 	}
 
 	public int getGpsWeek(){
-
-
 		// Shift from UNIX time (January 1, 1970 - msec)
 		// to GPS time (January 6, 1980 - sec)
 		long time = msec / Constants.MILLISEC_IN_SEC - Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY;
-
-
 		return (int)(time/(Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY));
-
-
 	}
 	public int getGpsWeekSec(){
-
-
 		// Shift from UNIX time (January 1, 1970 - msec)
 		// to GPS time (January 6, 1980 - sec)
 		long time = msec / Constants.MILLISEC_IN_SEC - Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY;
-
 		return (int)(time%(Constants.DAYS_IN_WEEK * Constants.SEC_IN_DAY));
-
 	}
 	public int getGpsWeekDay(){
-
 		return (int)(getGpsWeekSec()/Constants.SEC_IN_DAY);
-
+	}
+	public int getGpsHourInDay(){
+		long time = msec / Constants.MILLISEC_IN_SEC - Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY;
+		return (int)((time%(Constants.SEC_IN_DAY))/Constants.SEC_IN_HOUR);
 	}
 
 	public long getGpsTime(){
