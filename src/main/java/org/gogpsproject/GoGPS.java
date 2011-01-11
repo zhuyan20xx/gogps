@@ -97,7 +97,7 @@ public class GoGPS {
 	public final static int DYN_MODEL_CONST_SPEED = 2;
 	public final static int DYN_MODEL_CONST_ACCELERATION = 3;
 	// Kalman filter parameters
-	private int dynamicModel = DYN_MODEL_STATIC;
+	private int dynamicModel = DYN_MODEL_CONST_SPEED;
 	private double stDevInit = 3;
 	private double stDevE = 0.5;
 	private double stDevN = 0.5;
@@ -123,9 +123,10 @@ public class GoGPS {
 			// Get current time
 			long start = System.currentTimeMillis();
 			/* Como */
-//			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/perim2.08o"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
+			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/perim2.08o"));
+			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
 //			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
+			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_ULTRARAPID);
 
 			/* Como, Italy (static) */
 //			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/como_pillar_rover.obs"));
@@ -143,11 +144,11 @@ public class GoGPS {
 
 			/* Faido */
 			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
-			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
-			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
+//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
+//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
-			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
-			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
+//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
+//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
 //			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_ULTRARAPID);
 
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/manno-21.11.2010.ubx"));
@@ -205,7 +206,7 @@ public class GoGPS {
 				roverPos.bancroft(roverIn.getCurrentObservations());
 
 				// If an approximate position was computed
-				if (roverPos.getCoord().isValidXYZ()) {
+				if (roverPos.isValidXYZ()) {
 
 					// Select satellites available for double differences
 					roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
@@ -217,9 +218,9 @@ public class GoGPS {
 					try {
 						System.out.println("Code standalone positioning:");
 						System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-						System.out.println("Lon:		" + g.format(roverPos.getCoord().getGeodeticLongitude())); // geod.get(0)
-						System.out.println("Lat:		" + g.format(roverPos.getCoord().getGeodeticLatitude())); // geod.get(1)
-						System.out.println("h:		    " + f.format(roverPos.getCoord().getGeodeticHeight())); // geod.get(2)
+						System.out.println("Lon:		" + g.format(roverPos.getGeodeticLongitude())); // geod.get(0)
+						System.out.println("Lat:		" + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
+						System.out.println("h:		    " + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
 					} catch (NullPointerException e) {
 						System.out.println("Error: rover approximate position not computed");
 					}
@@ -265,7 +266,7 @@ public class GoGPS {
 					roverPos.bancroft(roverIn.getCurrentObservations());
 
 					// If an approximate position was computed
-					if (roverPos.getCoord().isValidXYZ()) {
+					if (roverPos.isValidXYZ()) {
 
 						// Select satellites available for double differences
 						roverPos.selectSatellitesDoubleDiff(roverIn.getCurrentObservations(),
@@ -279,9 +280,9 @@ public class GoGPS {
 						try {
 							System.out.println("Code double difference positioning:");
 							System.out.println("GPS time: " + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-							System.out.println("Lon:      " + g.format(roverPos.getCoord().getGeodeticLongitude()));//geod.get(0)
-							System.out.println("Lat:      " + g.format(roverPos.getCoord().getGeodeticLatitude())); // geod.get(1)
-							System.out.println("h:        " + f.format(roverPos.getCoord().getGeodeticHeight())); // geod.get(2)
+							System.out.println("Lon:      " + g.format(roverPos.getGeodeticLongitude()));//geod.get(0)
+							System.out.println("Lat:      " + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
+							System.out.println("h:        " + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
 						} catch (NullPointerException e) {
 							System.out.println("Error: rover approximate position not computed");
 						}
@@ -384,7 +385,7 @@ public class GoGPS {
 						roverPos.bancroft(obsR);
 
 						// If an approximate position was computed
-						if (roverPos.getCoord().isValidXYZ()) {
+						if (roverPos.isValidXYZ()) {
 
 							// Initialize Kalman filter
 							roverPos.kalmanFilterInit(obsR, obsM, masterIn.getApproxPosition());
@@ -408,9 +409,9 @@ public class GoGPS {
 
 					if(kalmanInitialized & valid){
 						try {
-							String lon = g.format(roverPos.getCoord().getGeodeticLongitude());
-							String lat = g.format(roverPos.getCoord().getGeodeticLatitude());
-							String h = f.format(roverPos.getCoord().getGeodeticHeight());
+							String lon = g.format(roverPos.getGeodeticLongitude());
+							String lat = g.format(roverPos.getGeodeticLatitude());
+							String h = f.format(roverPos.getGeodeticHeight());
 
 							out.write(lon + "," // geod.get(0)
 									+ lat + "," // geod.get(1)

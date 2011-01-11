@@ -30,8 +30,7 @@ import org.ejml.data.SimpleMatrix;
  */
 public class SatellitePosition extends Coordinates{
 	private int satID; /* Satellite ID number */
-	//private Coordinates coord; /* Satellite coordinates */
-	private double timeCorrection; /* Correction due to satellite clock error */
+	private double timeCorrection; /* Correction due to satellite clock error in seconds*/
 	//private double range;
 	private long utcTime;
 	private boolean predicted;
@@ -52,7 +51,6 @@ public class SatellitePosition extends Coordinates{
 
 		this.utcTime = utcTime;
 		this.satID = satID;
-		//this.range = range;
 
 		this.setXYZ(x, y, z);
 	}
@@ -353,5 +351,9 @@ public class SatellitePosition extends Coordinates{
 	 */
 	public boolean isManeuver() {
 		return maneuver;
+	}
+
+	public String toString(){
+		return "X:"+this.getX()+" Y:"+this.getY()+" Z:"+getZ()+" clkCorr:"+getTimeCorrection();
 	}
 }
