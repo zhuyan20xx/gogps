@@ -131,7 +131,7 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
 			double obsPseudorange = obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec() /*getGpsTime()*/, obs.getGpsSatID(i), obsPseudorange, this);
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec() /*getGpsTime()*/, obs.getGpsSatID(i), obsPseudorange, null /* originally this call do not perform earthRotationCorrection, otherwise set 'this' instead 'null'*/);
 
 			try {
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
