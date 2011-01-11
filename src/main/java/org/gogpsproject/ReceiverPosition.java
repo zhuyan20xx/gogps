@@ -131,7 +131,7 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
 			double obsPseudorange = obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec() /*getGpsTime()*/, obs.getGpsSatID(i), obsPseudorange);
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec() /*getGpsTime()*/, obs.getGpsSatID(i), obsPseudorange, this);
 
 			try {
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
@@ -294,7 +294,7 @@ public class ReceiverPosition extends Coordinates{
 
 				// Compute receiver-satellite approximate pseudorange
 				//SimpleMatrix diff = this.coord.ecef.minus(pos[i].getCoord().ecef);
-				SimpleMatrix diff = this.minusXYZ(pos[i]/*.getCoord()*/);
+				SimpleMatrix diff = this.minusXYZ(pos[i]);
 				double appRange = Math.sqrt(Math.pow(diff.get(0), 2)
 						+ Math.pow(diff.get(1), 2) + Math.pow(diff.get(2), 2));
 
@@ -429,7 +429,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Computation of rover-pivot approximate pseudoranges
 		//SimpleMatrix diffRoverPivot = this.coord.ecef.minus(pos[pivot].getCoord().ecef);
-		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivot]/*.getCoord()*/);
+		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivot]);
 		double roverPivotAppRange = Math.sqrt(Math
 				.pow(diffRoverPivot.get(0), 2)
 				+ Math.pow(diffRoverPivot.get(1), 2)
@@ -437,7 +437,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Computation of master-pivot approximate pseudoranges
 		//SimpleMatrix diff = masterPos.ecef.minus(pos[pivot]].getCoord().ecef);
-		SimpleMatrix diff = masterPos.minusXYZ(pos[pivot]/*.getCoord()*/);
+		SimpleMatrix diff = masterPos.minusXYZ(pos[pivot]);
 		double masterPivotAppRange = Math.sqrt(Math.pow(diff.get(0), 2)
 				+ Math.pow(diff.get(1), 2) + Math.pow(diff.get(2), 2));
 
@@ -480,14 +480,14 @@ public class ReceiverPosition extends Coordinates{
 
 				// Compute rover-satellite approximate pseudorange
 				//SimpleMatrix diffRoverSat = this.coord.ecef.minus(pos[i].getCoord().ecef);
-				SimpleMatrix diffRoverSat = this.minusXYZ(pos[i]/*.getCoord()*/);
+				SimpleMatrix diffRoverSat = this.minusXYZ(pos[i]);
 				double roverSatAppRange = Math.sqrt(Math.pow(diffRoverSat.get(0), 2)
 						+ Math.pow(diffRoverSat.get(1), 2)
 						+ Math.pow(diffRoverSat.get(2), 2));
 
 				// Compute master-satellite approximate pseudorange
-				//diff = masterPos.ecef.minus(pos[i]/*.getCoord()*/.ecef);
-				diff = masterPos.minusXYZ(pos[i]/*.getCoord()*/);
+				//diff = masterPos.ecef.minus(pos[i].ecef);
+				diff = masterPos.minusXYZ(pos[i]);
 				double masterSatAppRange = Math.sqrt(Math.pow(diff.get(0), 2)
 						+ Math.pow(diff.get(1), 2) + Math.pow(diff.get(2), 2));
 
@@ -573,12 +573,12 @@ public class ReceiverPosition extends Coordinates{
 				/ (nObsAvail - nUnknowns);
 
 		// Covariance matrix of the estimation error
-		if (nObsAvail > nUnknowns)
+		if (nObsAvail > nUnknowns){
 			this.covariance = A.transpose().mult(Q.invert()).mult(A).invert()
 					.scale(varianceEstim);
-		else
+		}else{
 			this.covariance = null;
-
+		}
 		// Compute positioning in geodetic coordinates
 		this.computeGeodetic();
 	}
@@ -820,14 +820,14 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(navigation);
 
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
-					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
+					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this);
 
-			// Apply Earth rotation correction to satellite positions
-			pos[i].earthRotationCorrection(this);
+			// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
+			// pos[i].earthRotationCorrection(this);
 
 			// Compute azimuth, elevation and distance for each satellite
 			roverTopo[i] = new TopocentricCoordinates();
-			roverTopo[i].computeTopocentric(this, pos[i]/*.getCoord()*/);
+			roverTopo[i].computeTopocentric(this, pos[i]);
 
 			// Check if satellite elevation is higher than cutoff
 			if (roverTopo[i].getElevation() > cutoff) {
@@ -896,22 +896,22 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(navigation);
 
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
-					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
+					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this);
 
-			// Apply Earth rotation correction to satellite positions
-			pos[i].earthRotationCorrection(this);
+			// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
+			// pos[i].earthRotationCorrection(this);
 
-			System.out.println(roverObs.getGpsSatID(i)+" "+pos[i]);
+			System.out.println("ts2:"+roverObs.getRefTime().getMsec()+" sat:"+ roverObs.getGpsSatID(i)+" pos: "+pos[i]);
 
 			// Compute azimuth, elevation and distance for each satellite from
 			// rover
 			roverTopo[i] = new TopocentricCoordinates();
-			roverTopo[i].computeTopocentric(this, pos[i]/*.getCoord()*/);
+			roverTopo[i].computeTopocentric(this, pos[i]);
 
 			// Compute azimuth, elevation and distance for each satellite from
 			// master
 			masterTopo[i] = new TopocentricCoordinates();
-			masterTopo[i].computeTopocentric(masterPos, pos[i]/*.getCoord()*/);
+			masterTopo[i].computeTopocentric(masterPos, pos[i]);
 
 			// Check if satellite is available for double differences, after
 			// cutoff
@@ -998,7 +998,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Computation of rover-pivot approximate pseudoranges
 		//SimpleMatrix diffRoverPivot = this.coord.ecef.minus(pos[pivot].getCoord().ecef);
-		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivot]/*.getCoord()*/);
+		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivot]);
 		double roverPivotAppRange = Math.sqrt(Math
 				.pow(diffRoverPivot.get(0), 2)
 				+ Math.pow(diffRoverPivot.get(1), 2)
@@ -1006,7 +1006,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Computation of master-pivot approximate pseudoranges
 		//SimpleMatrix diff = masterPos.ecef.minus(pos[pivot].getCoord().ecef);
-		SimpleMatrix diff = masterPos.minusXYZ(pos[pivot]/*.getCoord()*/);
+		SimpleMatrix diff = masterPos.minusXYZ(pos[pivot]);
 		double masterPivotAppRange = Math.sqrt(Math.pow(diff.get(0), 2)
 				+ Math.pow(diff.get(1), 2) + Math.pow(diff.get(2), 2));
 
@@ -1040,16 +1040,16 @@ public class ReceiverPosition extends Coordinates{
 					&& i != pivot) {
 
 				// Compute rover-satellite approximate pseudorange
-				//SimpleMatrix diffRoverSat = this.coord.ecef.minus(pos[i]/*.getCoord()*/.ecef);
-				SimpleMatrix diffRoverSat = this.minusXYZ(pos[i]/*.getCoord()*/);
+				//SimpleMatrix diffRoverSat = this.coord.ecef.minus(pos[i].ecef);
+				SimpleMatrix diffRoverSat = this.minusXYZ(pos[i]);
 				double roverSatAppRange = Math.sqrt(Math.pow(diffRoverSat
 						.get(0), 2)
 						+ Math.pow(diffRoverSat.get(1), 2)
 						+ Math.pow(diffRoverSat.get(2), 2));
 
 				// Compute master-satellite approximate pseudorange
-				//diff = masterPos.ecef.minus(pos[i]/*.getCoord()*/.ecef);
-				diff = masterPos.minusXYZ(pos[i]/*.getCoord()*/);
+				//diff = masterPos.ecef.minus(pos[i].ecef);
+				diff = masterPos.minusXYZ(pos[i]);
 				double masterSatAppRange = Math.sqrt(Math.pow(diff.get(0), 2)
 						+ Math.pow(diff.get(1), 2) + Math.pow(diff.get(2), 2));
 
@@ -1290,7 +1290,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Computation of rover-pivot approximate pseudoranges
 		//SimpleMatrix diffRoverPivot = this.coord.ecef.minus(pos[pivotIndex].getCoord().ecef);
-		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivotIndex]/*.getCoord()*/);
+		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivotIndex]);
 		double roverPivotAppRange = Math.sqrt(Math
 				.pow(diffRoverPivot.get(0), 2)
 				+ Math.pow(diffRoverPivot.get(1), 2)
@@ -1298,7 +1298,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Computation of master-pivot approximate pseudoranges
 		//SimpleMatrix diff = masterPos.ecef.minus(pos[pivotIndex].getCoord().ecef);
-		SimpleMatrix diff = masterPos.minusXYZ(pos[pivotIndex]/*.getCoord()*/);
+		SimpleMatrix diff = masterPos.minusXYZ(pos[pivotIndex]);
 		double masterPivotAppRange = Math.sqrt(Math.pow(diff.get(0), 2)
 				+ Math.pow(diff.get(1), 2) + Math.pow(diff.get(2), 2));
 
@@ -1330,14 +1330,14 @@ public class ReceiverPosition extends Coordinates{
 
 		// Compute rover-satellite approximate pseudorange
 		//SimpleMatrix diffRoverSat = this.coord.ecef.minus(pos[satIndex].getCoord().ecef);
-		SimpleMatrix diffRoverSat = this.minusXYZ(pos[satIndex]/*.getCoord()*/);
+		SimpleMatrix diffRoverSat = this.minusXYZ(pos[satIndex]);
 		roverSatCodeAppRange = Math.sqrt(Math.pow(diffRoverSat.get(0), 2)
 				+ Math.pow(diffRoverSat.get(1), 2)
 				+ Math.pow(diffRoverSat.get(2), 2));
 
 		// Compute master-satellite approximate pseudorange
 		//diff = masterPos.ecef.minus(pos[satIndex].getCoord().ecef);
-		diff = masterPos.minusXYZ(pos[satIndex]/*.getCoord()*/);
+		diff = masterPos.minusXYZ(pos[satIndex]);
 		masterSatCodeAppRange = Math.sqrt(Math.pow(diff.get(0), 2)
 				+ Math.pow(diff.get(1), 2) + Math.pow(diff.get(2), 2));
 
