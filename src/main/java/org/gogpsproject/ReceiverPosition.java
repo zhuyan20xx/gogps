@@ -29,7 +29,7 @@ import org.ejml.data.SimpleMatrix;
  *
  * @author ege, Cryms.com
  */
-public class ReceiverPosition {
+public class ReceiverPosition extends Coordinates{
 
 	/* Satellites */
 	private double cutoff; /* Elevation cutoff */
@@ -39,7 +39,7 @@ public class ReceiverPosition {
 	private SatellitePosition[] pos; /* Absolute position of all visible satellites (ECEF) */
 
 
-	private Coordinates coord; /* Receiver coordinates */
+	//private Coordinates coord; /* Receiver coordinates */
 	private SimpleMatrix covariance; /* Covariance matrix of the estimation error */
 	private double dt; /* Clock error */
 
@@ -68,7 +68,9 @@ public class ReceiverPosition {
 	private GoGPS goGPS;
 
 	public ReceiverPosition(GoGPS goGPS){
+		super();
 		this.goGPS = goGPS;
+		this.setXYZ(0.0, 0.0, 0.0);
 	}
 
 	/**
@@ -77,7 +79,7 @@ public class ReceiverPosition {
 	public void bancroft(Observations obs) {
 
 		//this.coord = null;
-		this.coord = Coordinates.globalXYZInstance(0.0, 0.0, 0.0);
+		//this.coord = Coordinates.globalXYZInstance(0.0, 0.0, 0.0);
 
 		double travelTime = 0;
 		double angle;
@@ -134,9 +136,6 @@ public class ReceiverPosition {
 			try {
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
 				// range)
-//				dataB[i][0] = pos[i].getCoord().getX();
-//				dataB[i][1] = pos[i].getCoord().getY();
-//				dataB[i][2] = pos[i].getCoord().getZ();
 				dataB[i][0] = pos[i].getX();
 				dataB[i][1] = pos[i].getY();
 				dataB[i][2] = pos[i].getZ();
@@ -165,9 +164,9 @@ public class ReceiverPosition {
 					travelTime = Constants.GPS_APPROX_TRAVEL_TIME;
 				} else {
 					double z = B.get(i, 2);
-					rho = Math.pow((x - this.coord.getX()), 2)
-							+ Math.pow((y - this.coord.getY()), 2)
-							+ Math.pow((z - this.coord.getZ()), 2);
+					rho = Math.pow((x - this.getX()), 2)
+							+ Math.pow((y - this.getY()), 2)
+							+ Math.pow((z - this.getZ()), 2);
 					travelTime = Math.sqrt(rho) / Constants.SPEED_OF_LIGHT;
 				}
 				angle = travelTime * Constants.EARTH_ANGULAR_VELOCITY;
@@ -218,20 +217,20 @@ public class ReceiverPosition {
 			if (Math.abs(omc[0]) > Math.abs(omc[1])) {
 				//this.coord.ecef = possiblePosB.extractMatrix(0, 2, 0, 0); // new SimpleMatrix(
 				SimpleMatrix sm = possiblePosB.extractMatrix(0, 2, 0, 0);
-				this.coord = Coordinates.globalXYZInstance(sm.get(0),sm.get(1),sm.get(2));
+				this.setXYZ(sm.get(0),sm.get(1),sm.get(2));
 				// Clock offset
 				this.dt = possiblePosB.get(3, 0) / Constants.SPEED_OF_LIGHT * 1e9;
 			} else {
 				//this.coord.ecef = possiblePosA.extractMatrix(0, 2, 0, 0); // new SimpleMatrix(
 				SimpleMatrix sm = possiblePosA.extractMatrix(0, 2, 0, 0);
-				this.coord = Coordinates.globalXYZInstance(sm.get(0),sm.get(1),sm.get(2));
+				this.setXYZ(sm.get(0),sm.get(1),sm.get(2));
 				// Clock offset
 				this.dt = possiblePosA.get(3, 0) / Constants.SPEED_OF_LIGHT * 1e9;
 			}
 		}
 
 		// Compute Bancroft's positioning in geodetic coordinates
-		this.coord.computeGeodetic();
+		this.computeGeodetic();
 	}
 
 	/**
@@ -295,7 +294,7 @@ public class ReceiverPosition {
 
 				// Compute receiver-satellite approximate pseudorange
 				//SimpleMatrix diff = this.coord.ecef.minus(pos[i].getCoord().ecef);
-				SimpleMatrix diff = this.coord.minusXYZ(pos[i]/*.getCoord()*/);
+				SimpleMatrix diff = this.minusXYZ(pos[i]/*.getCoord()*/);
 				double appRange = Math.sqrt(Math.pow(diff.get(0), 2)
 						+ Math.pow(diff.get(1), 2) + Math.pow(diff.get(2), 2));
 
@@ -313,13 +312,13 @@ public class ReceiverPosition {
 
 				// Correct approximate pseudorange for troposphere
 				double elevation = roverTopo[i].getElevation();
-				double height = this.coord.getGeodeticHeight();//geod.get(2);
+				double height = this.getGeodeticHeight();//geod.get(2);
 				double roverSatelliteTropoCorr = Atmosphere.computeTroposphereCorrection(elevation, height);
 
 				// Correct approximate pseudorange for ionosphere
 				double azimuth = roverTopo[i].getAzimuth();
 				double roverSatelliteIonoCorr = Atmosphere
-						.computeIonosphereCorrection(navigation,this.coord, azimuth, elevation, roverObs.getRefTime().getGpsTime());
+						.computeIonosphereCorrection(navigation,this, azimuth, elevation, roverObs.getRefTime().getGpsTime());
 
 				// Fill in troposphere and ionosphere double differenced
 				// corrections
@@ -347,7 +346,7 @@ public class ReceiverPosition {
 
 		// Receiver position
 		//this.coord.ecef.set(this.coord.ecef.plus(x.extractMatrix(0, 2, 0, 0)));
-		this.coord.setPlusXYZ(x.extractMatrix(0, 2, 0, 0));
+		this.setPlusXYZ(x.extractMatrix(0, 2, 0, 0));
 
 		// Estimation of the variance of the observation error
 		vEstim = y0.minus(A.mult(x).plus(b));
@@ -363,7 +362,7 @@ public class ReceiverPosition {
 			this.covariance = null;
 
 		// Compute positioning in geodetic coordinates
-		this.coord.computeGeodetic();
+		this.computeGeodetic();
 
 	}
 
@@ -430,7 +429,7 @@ public class ReceiverPosition {
 
 		// Computation of rover-pivot approximate pseudoranges
 		//SimpleMatrix diffRoverPivot = this.coord.ecef.minus(pos[pivot].getCoord().ecef);
-		SimpleMatrix diffRoverPivot = this.coord.minusXYZ(pos[pivot]/*.getCoord()*/);
+		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivot]/*.getCoord()*/);
 		double roverPivotAppRange = Math.sqrt(Math
 				.pow(diffRoverPivot.get(0), 2)
 				+ Math.pow(diffRoverPivot.get(1), 2)
@@ -444,7 +443,7 @@ public class ReceiverPosition {
 
 		// Computation of rover-pivot troposphere correction
 		double roverElevation = roverTopo[pivot].getElevation();
-		double roverHeight = this.coord.getGeodeticHeight();//geod.get(2);
+		double roverHeight = this.getGeodeticHeight();//geod.get(2);
 		double roverPivotTropoCorr = Atmosphere.computeTroposphereCorrection(
 				roverElevation, roverHeight);
 
@@ -457,7 +456,7 @@ public class ReceiverPosition {
 		// Computation of rover-pivot ionosphere correction
 		double roverAzimuth = roverTopo[pivot].getAzimuth();
 		double roverPivotIonoCorr = Atmosphere.computeIonosphereCorrection(
-				navigation, this.coord, roverAzimuth, roverElevation, roverObs.getRefTime().getGpsTime());
+				navigation, this, roverAzimuth, roverElevation, roverObs.getRefTime().getGpsTime());
 
 		// Computation of master-pivot ionosphere correction
 		double masterAzimuth = masterTopo[pivot].getAzimuth();
@@ -481,7 +480,7 @@ public class ReceiverPosition {
 
 				// Compute rover-satellite approximate pseudorange
 				//SimpleMatrix diffRoverSat = this.coord.ecef.minus(pos[i].getCoord().ecef);
-				SimpleMatrix diffRoverSat = this.coord.minusXYZ(pos[i]/*.getCoord()*/);
+				SimpleMatrix diffRoverSat = this.minusXYZ(pos[i]/*.getCoord()*/);
 				double roverSatAppRange = Math.sqrt(Math.pow(diffRoverSat.get(0), 2)
 						+ Math.pow(diffRoverSat.get(1), 2)
 						+ Math.pow(diffRoverSat.get(2), 2));
@@ -512,7 +511,7 @@ public class ReceiverPosition {
 
 				// Computation of rover-satellite troposphere correction
 				roverElevation = roverTopo[i].getElevation();
-				roverHeight = this.coord.getGeodeticHeight();//geod.get(2);
+				roverHeight = this.getGeodeticHeight();//geod.get(2);
 				double roverSatTropoCorr = Atmosphere
 						.computeTroposphereCorrection(roverElevation,
 								roverHeight);
@@ -528,7 +527,7 @@ public class ReceiverPosition {
 				roverAzimuth = roverTopo[i].getAzimuth();
 				double roverSatIonoCorr = Atmosphere
 						.computeIonosphereCorrection(navigation,
-								this.coord, roverAzimuth, roverElevation, roverObs.getRefTime().getGpsTime());
+								this, roverAzimuth, roverElevation, roverObs.getRefTime().getGpsTime());
 
 				// Computation of master-satellite ionosphere correction
 				masterAzimuth = masterTopo[i].getAzimuth();
@@ -565,7 +564,7 @@ public class ReceiverPosition {
 
 		// Receiver position
 		//this.coord.ecef.set(this.coord.ecef.plus(x));
-		this.coord.setPlusXYZ(x);
+		this.setPlusXYZ(x);
 
 		// Estimation of the variance of the observation error
 		vEstim = y0.minus(A.mult(x).plus(b));
@@ -581,7 +580,7 @@ public class ReceiverPosition {
 			this.covariance = null;
 
 		// Compute positioning in geodetic coordinates
-		this.coord.computeGeodetic();
+		this.computeGeodetic();
 	}
 
 	/**
@@ -652,9 +651,9 @@ public class ReceiverPosition {
 		estimateAmbiguitiesObserv(roverObs, masterObs);
 
 		// Initial state
-		KFstate.set(0, 0, this.coord.getX());
-		KFstate.set(i1 + 1, 0, this.coord.getY());
-		KFstate.set(i2 + 1, 0, this.coord.getZ());
+		KFstate.set(0, 0, this.getX());
+		KFstate.set(i1 + 1, 0, this.getY());
+		KFstate.set(i2 + 1, 0, this.getZ());
 
 		// Prediction
 		KFprediction = T.mult(KFstate);
@@ -722,7 +721,7 @@ public class ReceiverPosition {
 			if (o1 != 1) {
 				// Allocate and build rotation matrix
 				SimpleMatrix R = new SimpleMatrix(3, 3);
-				R = Coordinates.rotationMatrix(this.coord);
+				R = Coordinates.rotationMatrix(this);
 
 				// Build 3x3 diagonal matrix with variances
 				SimpleMatrix diagonal = new SimpleMatrix(3, 3);
@@ -742,7 +741,7 @@ public class ReceiverPosition {
 
 			// Set linearization point (approximate coordinates by KF
 			// prediction at previous step)
-			this.coord.setXYZ(KFprediction.get(0), KFprediction.get(i1 + 1), KFprediction.get(i2 + 1));
+			this.setXYZ(KFprediction.get(0), KFprediction.get(i1 + 1), KFprediction.get(i2 + 1));
 //			this.coord.ecef.set(0, 0, KFprediction.get(0));
 //			this.coord.ecef.set(1, 0, KFprediction.get(i1 + 1));
 //			this.coord.ecef.set(2, 0, KFprediction.get(i2 + 1));
@@ -774,13 +773,13 @@ public class ReceiverPosition {
 		}
 
 		// Set receiver position to current state estimate
-		this.coord.setXYZ(KFstate.get(0), KFstate.get(i1 + 1), KFstate.get(i2 + 1));
+		this.setXYZ(KFstate.get(0), KFstate.get(i1 + 1), KFstate.get(i2 + 1));
 //		this.coord.ecef.set(0, 0, KFstate.get(0));
 //		this.coord.ecef.set(1, 0, KFstate.get(i1 + 1));
 //		this.coord.ecef.set(2, 0, KFstate.get(i2 + 1));
 
 		// Compute positioning in geodetic coordinates
-		this.coord.computeGeodetic();
+		this.computeGeodetic();
 	}
 
 	/**
@@ -824,11 +823,11 @@ public class ReceiverPosition {
 					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 			// Apply Earth rotation correction to satellite positions
-			pos[i].earthRotationCorrection(this.coord);
+			pos[i].earthRotationCorrection(this);
 
 			// Compute azimuth, elevation and distance for each satellite
 			roverTopo[i] = new TopocentricCoordinates();
-			roverTopo[i].computeTopocentric(this.coord, pos[i]/*.getCoord()*/);
+			roverTopo[i].computeTopocentric(this, pos[i]/*.getCoord()*/);
 
 			// Check if satellite elevation is higher than cutoff
 			if (roverTopo[i].getElevation() > cutoff) {
@@ -900,12 +899,14 @@ public class ReceiverPosition {
 					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 			// Apply Earth rotation correction to satellite positions
-			pos[i].earthRotationCorrection(this.coord);
+			pos[i].earthRotationCorrection(this);
+
+			System.out.println(roverObs.getGpsSatID(i)+" "+pos[i]);
 
 			// Compute azimuth, elevation and distance for each satellite from
 			// rover
 			roverTopo[i] = new TopocentricCoordinates();
-			roverTopo[i].computeTopocentric(this.coord, pos[i]/*.getCoord()*/);
+			roverTopo[i].computeTopocentric(this, pos[i]/*.getCoord()*/);
 
 			// Compute azimuth, elevation and distance for each satellite from
 			// master
@@ -946,10 +947,11 @@ public class ReceiverPosition {
 		}
 
 		// Select best pivot satellite
-		if (pivotPhase != -1)
+		if (pivotPhase != -1){
 			pivot = pivotPhase;
-		else
+		}else{
 			pivot = pivotCode;
+		}
 	}
 
 	/**
@@ -996,7 +998,7 @@ public class ReceiverPosition {
 
 		// Computation of rover-pivot approximate pseudoranges
 		//SimpleMatrix diffRoverPivot = this.coord.ecef.minus(pos[pivot].getCoord().ecef);
-		SimpleMatrix diffRoverPivot = this.coord.minusXYZ(pos[pivot]/*.getCoord()*/);
+		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivot]/*.getCoord()*/);
 		double roverPivotAppRange = Math.sqrt(Math
 				.pow(diffRoverPivot.get(0), 2)
 				+ Math.pow(diffRoverPivot.get(1), 2)
@@ -1039,7 +1041,7 @@ public class ReceiverPosition {
 
 				// Compute rover-satellite approximate pseudorange
 				//SimpleMatrix diffRoverSat = this.coord.ecef.minus(pos[i]/*.getCoord()*/.ecef);
-				SimpleMatrix diffRoverSat = this.coord.minusXYZ(pos[i]/*.getCoord()*/);
+				SimpleMatrix diffRoverSat = this.minusXYZ(pos[i]/*.getCoord()*/);
 				double roverSatAppRange = Math.sqrt(Math.pow(diffRoverSat
 						.get(0), 2)
 						+ Math.pow(diffRoverSat.get(1), 2)
@@ -1079,9 +1081,9 @@ public class ReceiverPosition {
 				H.set(k, i2 + 1, alphaZ);
 
 				// Fill in one element of the observation vector (for code)
-				y0.set(k, 0, ddcObs - ddcApp + alphaX * this.coord.getX()
-						+ alphaY * this.coord.getY() + alphaZ
-						* this.coord.getZ());
+				y0.set(k, 0, ddcObs - ddcApp + alphaX * this.getX()
+						+ alphaY * this.getY() + alphaZ
+						* this.getZ());
 
 				// Fill in the observation error covariance matrix (for code)
 				double roverSatWeight = computeWeight(roverElevation,
@@ -1102,9 +1104,9 @@ public class ReceiverPosition {
 
 					// Fill in one element of the observation vector (for phase)
 					y0.set(nObsAvail + p, 0, ddpObs - ddcApp + alphaX
-							* this.coord.getX() + alphaY
-							* this.coord.getY() + alphaZ
-							* this.coord.getZ());
+							* this.getX() + alphaY
+							* this.getY() + alphaZ
+							* this.getZ());
 
 					// Fill in the observation error covariance matrix (for
 					// phase)
@@ -1288,7 +1290,7 @@ public class ReceiverPosition {
 
 		// Computation of rover-pivot approximate pseudoranges
 		//SimpleMatrix diffRoverPivot = this.coord.ecef.minus(pos[pivotIndex].getCoord().ecef);
-		SimpleMatrix diffRoverPivot = this.coord.minusXYZ(pos[pivotIndex]/*.getCoord()*/);
+		SimpleMatrix diffRoverPivot = this.minusXYZ(pos[pivotIndex]/*.getCoord()*/);
 		double roverPivotAppRange = Math.sqrt(Math
 				.pow(diffRoverPivot.get(0), 2)
 				+ Math.pow(diffRoverPivot.get(1), 2)
@@ -1328,7 +1330,7 @@ public class ReceiverPosition {
 
 		// Compute rover-satellite approximate pseudorange
 		//SimpleMatrix diffRoverSat = this.coord.ecef.minus(pos[satIndex].getCoord().ecef);
-		SimpleMatrix diffRoverSat = this.coord.minusXYZ(pos[satIndex]/*.getCoord()*/);
+		SimpleMatrix diffRoverSat = this.minusXYZ(pos[satIndex]/*.getCoord()*/);
 		roverSatCodeAppRange = Math.sqrt(Math.pow(diffRoverSat.get(0), 2)
 				+ Math.pow(diffRoverSat.get(1), 2)
 				+ Math.pow(diffRoverSat.get(2), 2));
@@ -1452,19 +1454,19 @@ public class ReceiverPosition {
 		return prod;
 	}
 
-	/**
-	 * @return the coord
-	 */
-	public Coordinates getCoord() {
-		return coord;
-	}
-
-	/**
-	 * @param coord the coord to set
-	 */
-	public void setCoord(Coordinates coord) {
-		this.coord = coord;
-	}
+//	/**
+//	 * @return the coord
+//	 */
+//	public Coordinates getCoord() {
+//		return coord;
+//	}
+//
+//	/**
+//	 * @param coord the coord to set
+//	 */
+//	public void setCoord(Coordinates coord) {
+//		this.coord = coord;
+//	}
 
 	/**
 	 * @return the covariance

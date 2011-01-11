@@ -38,12 +38,14 @@ public class Coordinates {
 	private SimpleMatrix enu; /* Local coordinates (East, North, Up) */
 
 	protected Coordinates(){
-
+		ecef = new SimpleMatrix(3, 1);
+		geod = new SimpleMatrix(3, 1);
+		enu = new SimpleMatrix(3, 1);
 	}
 
 	public static Coordinates globalXYZInstance(double x, double y, double z){
 		Coordinates c = new Coordinates();
-		c.ecef = new SimpleMatrix(3, 1);
+		//c.ecef = new SimpleMatrix(3, 1);
 		c.setXYZ(x, y, z);
 		return c;
 	}
@@ -69,7 +71,7 @@ public class Coordinates {
 		double Y = this.ecef.get(1);
 		double Z = this.ecef.get(2);
 
-		this.geod = new SimpleMatrix(3, 1);
+		//this.geod = new SimpleMatrix(3, 1);
 
 		double a = Constants.WGS84_SEMI_MAJOR_AXIS;
 		double e = Constants.WGS84_ECCENTRICITY;
@@ -149,7 +151,7 @@ public class Coordinates {
 
 
 	public void setXYZ(double x, double y, double z){
-		if(this.ecef==null) this.ecef = new SimpleMatrix(3, 1);
+		//if(this.ecef==null) this.ecef = new SimpleMatrix(3, 1);
 		this.ecef.set(0, 0, x);
 		this.ecef.set(1, 0, y);
 		this.ecef.set(2, 0, z);
