@@ -55,7 +55,7 @@ public class UBXReader {
 					data = in.read(); // ID
 					if (data == 0x10) {
 						// RMX-RAW
-						DecodeRMXRAW decodegps = new DecodeRMXRAW(in);
+						DecodeRXMRAW decodegps = new DecodeRXMRAW(in);
 						
 						Observations o = decodegps.decode();
 						if(eventListener!=null) eventListener.addObservations(o);

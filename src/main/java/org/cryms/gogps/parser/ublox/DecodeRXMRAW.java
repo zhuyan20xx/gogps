@@ -34,7 +34,7 @@ import org.gogpsproject.Observations;
 import org.gogpsproject.Time;
 
 
-public class DecodeRMXRAW {
+public class DecodeRXMRAW {
 	//private boolean[] bits;
 	InputStream in;
 
@@ -45,7 +45,7 @@ public class DecodeRMXRAW {
 	// public gpsDecode(boolean[] _bits){
 	// bits=_bits;
 	// }
-	public DecodeRMXRAW(InputStream _in) {
+	public DecodeRXMRAW(InputStream _in) {
 		in = _in;
 	}
 
