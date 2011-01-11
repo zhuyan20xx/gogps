@@ -34,6 +34,7 @@ import java.util.TimeZone;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
+import org.gogpsproject.Coordinates;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Time;
 import org.gogpsproject.SatellitePosition;
@@ -79,7 +80,7 @@ public class SP3Navigation implements NavigationProducer {
 
 		SP3Navigation sp3n = new SP3Navigation(IGN_FR_ULTRARAPID);
 		sp3n.init();
-		SatellitePosition sp = sp3n.getGpsSatPosition(c.getTimeInMillis(), 2, 0);
+		SatellitePosition sp = sp3n.getGpsSatPosition(c.getTimeInMillis(), 2, 0, null);
 		if(sp!=null){
 			System.out.println("found "+(new Date(sp.getUtcTime()))+" "+(sp.isPredicted()?" predicted":""));
 		}else{
@@ -101,7 +102,7 @@ public class SP3Navigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range) {
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, Coordinates receiverPosition) {
 
 		SP3Parser sp3p = null;
 		long reqTime = utcTime;
@@ -135,7 +136,7 @@ public class SP3Navigation implements NavigationProducer {
 						pool.put(url, sp3p);
 						// file exist, look for epoch
 						if(sp3p.isTimestampInEpocsRange(utcTime)){
-							return sp3p.getGpsSatPosition(utcTime, satID, range);
+							return sp3p.getGpsSatPosition(utcTime, satID, range, receiverPosition);
 						}else{
 							return null;
 						}

@@ -42,6 +42,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.TimeZone;
 
+import org.gogpsproject.Coordinates;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.Time;
@@ -366,7 +367,7 @@ public class SP3Parser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long time, int satID, double range) {
+	public SatellitePosition getGpsSatPosition(long time, int satID, double range, Coordinates receiverPosition) {
 		if(isTimestampInEpocsRange(time)){
 			for(int i=0;i<epocTimestamps.size();i++){
 				if(epocTimestamps.get(i).getMsec()<=time && time < epocTimestamps.get(i).getMsec()+epochInterval){

@@ -97,7 +97,7 @@ public class GoGPS {
 	public final static int DYN_MODEL_CONST_SPEED = 2;
 	public final static int DYN_MODEL_CONST_ACCELERATION = 3;
 	// Kalman filter parameters
-	private int dynamicModel = DYN_MODEL_CONST_SPEED;
+	private int dynamicModel = DYN_MODEL_CONST_ACCELERATION;
 	private double stDevInit = 3;
 	private double stDevE = 0.5;
 	private double stDevN = 0.5;
@@ -126,7 +126,7 @@ public class GoGPS {
 			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/perim2.08o"));
 			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
 //			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
-			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_ULTRARAPID);
+			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_FINAL);
 
 			/* Como, Italy (static) */
 //			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/como_pillar_rover.obs"));
