@@ -111,4 +111,12 @@ public class SatellitePosition extends Coordinates{
 	public String toString(){
 		return "X:"+this.getX()+" Y:"+this.getY()+" Z:"+getZ()+" clkCorr:"+getTimeCorrection();
 	}
+
+	public Object clone(){
+		SatellitePosition sp = new SatellitePosition(this.utcTime,this.satID,this.getX(),this.getY(),this.getZ());
+		sp.maneuver = this.maneuver;
+		sp.predicted = this.predicted;
+		sp.timeCorrection = this.timeCorrection;
+		return sp;
+	}
 }

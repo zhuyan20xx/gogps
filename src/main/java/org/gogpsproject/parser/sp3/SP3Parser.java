@@ -42,7 +42,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.TimeZone;
 
+import org.ejml.data.SimpleMatrix;
+import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
+import org.gogpsproject.EphGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.Time;
@@ -367,15 +370,71 @@ public class SP3Parser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long time, int satID, double range, Coordinates receiverPosition) {
-		if(isTimestampInEpocsRange(time)){
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double obsPseudorange, Coordinates receiverPosition) {
+		if(isTimestampInEpocsRange(utcTime)){
 			for(int i=0;i<epocTimestamps.size();i++){
-				if(epocTimestamps.get(i).getMsec()<=time && time < epocTimestamps.get(i).getMsec()+epochInterval){
-					return epocs.get(i).get("G"+(satID<10?"0":"")+satID);
+				if(epocTimestamps.get(i).getMsec()<=utcTime && utcTime < epocTimestamps.get(i).getMsec()+epochInterval){
+					SatellitePosition sp = (SatellitePosition) epocs.get(i).get("G"+(satID<10?"0":"")+satID).clone();
+					double tGPS = getClockCorrection(utcTime, sp.getTimeCorrection(), obsPseudorange);
+
+					if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
+
+					return sp;
 				}
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * @param eph
+	 * @return Clock-corrected GPS time
+	 */
+	private double getClockCorrection(long utcTime, double timeCorrection, double obsPseudorange) {
+
+		long gpsTime = (new Time(utcTime)).getGpsTime();
+		// Remove signal travel time from observation time
+		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
+
+		double tGPS = tRaw - timeCorrection;
+
+		return tGPS;
+
+	}
+
+	/**
+	 * @param traveltime
+	 */
+	public void earthRotationCorrection(Coordinates approxPos, Coordinates satelitePosition) {
+
+		// Computation of signal travel time
+		//SimpleMatrix diff = this.coord.ecef.minus(approxPos.ecef);
+		SimpleMatrix diff = satelitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
+		double rho2 = Math.pow(diff.get(0), 2) + Math.pow(diff.get(1), 2)
+				+ Math.pow(diff.get(2), 2);
+		double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
+
+		// Compute rotation angle
+		double omegatau = Constants.EARTH_ANGULAR_VELOCITY * traveltime;
+
+		// Rotation matrix
+		double[][] data = new double[3][3];
+		data[0][0] = Math.cos(omegatau);
+		data[0][1] = Math.sin(omegatau);
+		data[0][2] = 0;
+		data[1][0] = -Math.sin(omegatau);
+		data[1][1] = Math.cos(omegatau);
+		data[1][2] = 0;
+		data[2][0] = 0;
+		data[2][1] = 0;
+		data[2][2] = 1;
+		SimpleMatrix R = new SimpleMatrix(data);
+
+		// Apply rotation
+		//this.coord.ecef = R.mult(this.coord.ecef);
+		//this.coord.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
+		satelitePosition.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
+
 	}
 
 	public boolean isTimestampInEpocsRange(long time){
