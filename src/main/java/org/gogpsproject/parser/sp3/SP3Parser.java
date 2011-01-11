@@ -20,12 +20,15 @@
 package org.gogpsproject.parser.sp3;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 /**
  * <p>
  * This file parses SP3c satellite positioning files
@@ -44,14 +47,20 @@ import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.Time;
 
 /**
- * @author Lorenzo
+ * @author Lorenzo Patocchi
  *
  */
 public class SP3Parser implements NavigationProducer{
+
+	public static String newline = System.getProperty("line.separator");
+
 	private File fileSP3;
 	private FileInputStream fileInputStream;
 	private InputStreamReader inputStreamReader;
 	private BufferedReader bufferedReader;
+
+	private FileOutputStream cacheOutputStream;
+	private OutputStreamWriter cacheStreamWriter;
 
 	private int gpsWeek=0;
 	private int secondsOfWeek=0;
@@ -82,8 +91,19 @@ public class SP3Parser implements NavigationProducer{
 	}
 
 	// RINEX Read constructors
-	public SP3Parser(InputStream is) {
+	public SP3Parser(InputStream is, File cache) {
 		this.inputStreamReader = new InputStreamReader(is);
+		if(cache!=null){
+			File path = cache.getParentFile();
+			if(!path.exists()) path.mkdirs();
+			try {
+				cacheOutputStream = new FileOutputStream(cache);
+				cacheStreamWriter = new OutputStreamWriter(cacheOutputStream);
+			} catch (FileNotFoundException e) {
+				System.err.println("Exception writing "+cache);
+				e.printStackTrace();
+			}
+		}
 	}
 
 
@@ -113,6 +133,20 @@ public class SP3Parser implements NavigationProducer{
 
 	public void close() {
 		try {
+			if(cacheStreamWriter!=null){
+				cacheStreamWriter.flush();
+				cacheStreamWriter.close();
+			}
+			if(cacheOutputStream!=null){
+				cacheOutputStream.flush();
+				cacheOutputStream.close();
+			}
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e2) {
+			e2.printStackTrace();
+		}
+		try {
 			if(fileInputStream!=null) fileInputStream.close();
 			if(inputStreamReader!=null) inputStreamReader.close();
 			if(bufferedReader!=null) bufferedReader.close();
@@ -141,7 +175,11 @@ public class SP3Parser implements NavigationProducer{
 
 				try {
 					String line = bufferedReader.readLine();
-					System.out.println(line);
+					if(cacheStreamWriter!=null){
+						cacheStreamWriter.write(line);
+						cacheStreamWriter.write(newline);
+					}
+					//System.out.println(line);
 					nline++;
 
 					if(nline == 22){
@@ -238,6 +276,10 @@ public class SP3Parser implements NavigationProducer{
 
 				try {
 					String line = bufferedReader.readLine();
+					if(cacheStreamWriter!=null){
+						cacheStreamWriter.write(line);
+						cacheStreamWriter.write(newline);
+					}
 					//System.out.println(line);
 					if(line == null || line.toUpperCase().startsWith("EOF")){
 						return;
@@ -270,10 +312,10 @@ public class SP3Parser implements NavigationProducer{
 					if(epoc != null && line.charAt(0) == 'P'){
 						String satid = line.substring(1,4).trim();
 						satid = satid.replace(' ', '0');
-						double x = Double.parseDouble(line.substring(4, 18).trim())*1000.0;
-						double y = Double.parseDouble(line.substring(18, 32).trim())*1000.0;
-						double z = Double.parseDouble(line.substring(32, 46).trim())*1000.0;
-						double clock = Double.parseDouble(line.substring(46, 60).trim());
+						double x = Double.parseDouble(line.substring(4, 18).trim())*1000.0;  // transform to meter
+						double y = Double.parseDouble(line.substring(18, 32).trim())*1000.0; // transform to meter
+						double z = Double.parseDouble(line.substring(32, 46).trim())*1000.0; // transform to meter
+						double clock = Double.parseDouble(line.substring(46, 60).trim())/1000000.0; // transform to seconds
 
 						int xStDev = -1;
 						int yStDev = -1;

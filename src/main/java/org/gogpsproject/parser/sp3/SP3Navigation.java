@@ -19,6 +19,7 @@
  */
 package org.gogpsproject.parser.sp3;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +48,7 @@ public class SP3Navigation implements NavigationProducer {
 	public final static String IGN_FR_RAPID = "ftp://igs.ensg.ign.fr/pub/igs/products/${wwww}/igr${wwww}${d}.sp3.Z";
 	public final static String IGN_FR_FINAL = "ftp://igs.ensg.ign.fr/pub/igs/products/${wwww}/igs${wwww}${d}.sp3.Z";
 
+	public String SP3_CACHE = "./sp3-cache";
 	/**
 	 * @param args
 	 */
@@ -107,7 +109,7 @@ public class SP3Navigation implements NavigationProducer {
 		while(sp3p==null){
 			// found none, retrieve from urltemplate
 			Time t = new Time(reqTime);
-			System.out.println("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
+			//System.out.print("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
 
 			String url = urltemplate.replaceAll("\\$\\{wwww\\}", (new DecimalFormat("0000")).format(t.getGpsWeek()));
 			url = url.replaceAll("\\$\\{d\\}", (new DecimalFormat("0")).format(t.getGpsWeekDay()));
@@ -118,14 +120,15 @@ public class SP3Navigation implements NavigationProducer {
 			if(18<=hh4&&hh4<24) hh4=18;
 			url = url.replaceAll("\\$\\{hh4\\}", (new DecimalFormat("00")).format(hh4));
 
-			System.out.println(url);
 
 
 			if(url.startsWith("ftp://")){
 				try {
 					if(pool.containsKey(url)){
+						//System.out.println(url+" from memory cache.");
 						sp3p = pool.get(url);
 					}else{
+
 						sp3p = getFromFTP(url);
 					}
 					if(sp3p != null){
@@ -159,66 +162,79 @@ public class SP3Navigation implements NavigationProducer {
 
 	private SP3Parser getFromFTP(String url) throws IOException{
 		SP3Parser sp3p = null;
-		FTPClient ftp = new FTPClient();
 
-		try {
-			int reply;
-			System.out.println("URL: "+url);
-			url = url.substring("ftp://".length());
-			String server = url.substring(0, url.indexOf('/'));
-			String remoteFile = url.substring(url.indexOf('/'));
-			String remotePath = remoteFile.substring(0,remoteFile.lastIndexOf('/'));
-			remoteFile = remoteFile.substring(remoteFile.lastIndexOf('/')+1);
+		String filename = url.replaceAll("[ ,/:]", "_");
+		if(filename.endsWith(".Z")) filename = filename.substring(0, filename.length()-2);
+		File sp3f = new File(SP3_CACHE,filename);
+
+		if(!sp3f.exists()){
+			System.out.println(url+" from the net.");
+			FTPClient ftp = new FTPClient();
+
+			try {
+				int reply;
+				System.out.println("URL: "+url);
+				url = url.substring("ftp://".length());
+				String server = url.substring(0, url.indexOf('/'));
+				String remoteFile = url.substring(url.indexOf('/'));
+				String remotePath = remoteFile.substring(0,remoteFile.lastIndexOf('/'));
+				remoteFile = remoteFile.substring(remoteFile.lastIndexOf('/')+1);
 
 
-			ftp.connect(server);
-			ftp.login("anonymous", "info@eriadne.org");
+				ftp.connect(server);
+				ftp.login("anonymous", "info@eriadne.org");
 
-			System.out.print(ftp.getReplyString());
+				System.out.print(ftp.getReplyString());
 
-			// After connection attempt, you should check the reply code to
-			// verify
-			// success.
-			reply = ftp.getReplyCode();
+				// After connection attempt, you should check the reply code to
+				// verify
+				// success.
+				reply = ftp.getReplyCode();
 
-			if (!FTPReply.isPositiveCompletion(reply)) {
-				ftp.disconnect();
-				System.err.println("FTP server refused connection.");
-				return null;
-			}
-
-			System.out.println("cwd to "+remotePath+" "+ftp.changeWorkingDirectory(remotePath));
-			System.out.println(ftp.getReplyString());
-			ftp.setFileType(FTP.BINARY_FILE_TYPE);
-			System.out.println(ftp.getReplyString());
-
-			System.out.println("open "+remoteFile);
-			InputStream is = ftp.retrieveFileStream(remoteFile);
-			InputStream uis = is;
-			System.out.println(ftp.getReplyString());
-			if(ftp.getReplyString().startsWith("550")){
-				throw new FileNotFoundException();
-			}
-
-			if(remoteFile.endsWith(".Z")){
-				uis = new UncompressInputStream(is);
-			}
-
-			sp3p = new SP3Parser(uis);
-			sp3p.init();
-			is.close();
-
-			ftp.completePendingCommand();
-
-			ftp.logout();
-		} finally {
-			if (ftp.isConnected()) {
-				try {
+				if (!FTPReply.isPositiveCompletion(reply)) {
 					ftp.disconnect();
-				} catch (IOException ioe) {
-					// do nothing
+					System.err.println("FTP server refused connection.");
+					return null;
+				}
+
+				System.out.println("cwd to "+remotePath+" "+ftp.changeWorkingDirectory(remotePath));
+				System.out.println(ftp.getReplyString());
+				ftp.setFileType(FTP.BINARY_FILE_TYPE);
+				System.out.println(ftp.getReplyString());
+
+				System.out.println("open "+remoteFile);
+				InputStream is = ftp.retrieveFileStream(remoteFile);
+				InputStream uis = is;
+				System.out.println(ftp.getReplyString());
+				if(ftp.getReplyString().startsWith("550")){
+					throw new FileNotFoundException();
+				}
+
+				if(remoteFile.endsWith(".Z")){
+					uis = new UncompressInputStream(is);
+				}
+
+				sp3p = new SP3Parser(uis,sp3f);
+				sp3p.init();
+				is.close();
+
+
+				ftp.completePendingCommand();
+
+				ftp.logout();
+			} finally {
+				if (ftp.isConnected()) {
+					try {
+						ftp.disconnect();
+					} catch (IOException ioe) {
+						// do nothing
+					}
 				}
 			}
+		}else{
+			System.out.println(url+" from cache file "+sp3f);
+			sp3p = new SP3Parser(sp3f);
+			sp3p.init();
 		}
 		return sp3p;
 	}
@@ -228,7 +244,8 @@ public class SP3Navigation implements NavigationProducer {
 	 */
 	@Override
 	public double getIono(int i) {
-		return 0;
+		double iono[]={1.5832E-8, -1.4901E-8, -1.1921E-7, 1.1921E-7, 122880.0, -180220.0, -131070.0, 786430.0};
+		return 0;//iono[i];
 	}
 
 	/* (non-Javadoc)
