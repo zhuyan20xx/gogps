@@ -530,7 +530,7 @@ public class RinexFileNavigation implements NavigationProducer{
 
 		if (eph != null) {
 			SatellitePosition sp = computePositionGps(utcTime,satID, eph, range);
-			earthRotationCorrection(receiverPosition, sp);
+			if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, utcTime, satID, range);
 		}
 		return null;
