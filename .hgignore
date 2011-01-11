@@ -13,3 +13,5 @@ syntax: regexp
 ^\.reverse\.properties$
 syntax: regexp
 ^test$
+syntax: regexp
+^sp3-cache$
