@@ -20,6 +20,7 @@
  */
 package org.gogpsproject;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
@@ -39,20 +40,30 @@ public class Time {
 	private long msec; /* time in milliseconds since January 1, 1970 (UNIX standard) */
 	private double fraction; /* fraction of millisecond */
 
+	private Calendar gc = null;
+
+	{
+		gc = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"));
+	}
+
 	public Time(long msec){
+		this.gc.setTimeInMillis(msec);
 		this.msec = msec;
 		this.fraction = Double.NaN;
 	}
 	public Time(long msec, double fraction){
 		this.msec = msec;
+		this.gc.setTimeInMillis(msec);
 		this.fraction = fraction;
 	}
 	public Time(String dateStr) throws ParseException{
 		this.msec = dateStringToTime(dateStr);
+		this.gc.setTimeInMillis(this.msec);
 		this.fraction = Double.NaN;
 	}
 	public Time(int gpsWeek, int weekSec){
 		this.msec = (Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY + gpsWeek*7L*24L*3600L + weekSec) * 1000L;
+		this.gc.setTimeInMillis(this.msec);
 	}
 	/**
 	 * @param dateStr
@@ -123,6 +134,50 @@ public class Time {
 	public int getGpsHourInDay(){
 		long time = msec / Constants.MILLISEC_IN_SEC - Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY;
 		return (int)((time%(Constants.SEC_IN_DAY))/Constants.SEC_IN_HOUR);
+	}
+	public int getYear(){
+		return gc.get(Calendar.YEAR);
+	}
+	public int getYear2c(){
+		return gc.get(Calendar.YEAR)-2000;
+	}
+	public int getDayOfYear(){
+		return gc.get(Calendar.DAY_OF_YEAR);
+	}
+	public String getHourOfDayLetter(){
+		char c = (char)('a'+getGpsHourInDay());
+		return ""+c;
+	}
+
+	/*
+	 * Locating IGS data, products, and format definitions	Key to directory and file name variables
+	 * d	day of week (0-6)
+	 * ssss	4-character IGS site ID or 4-character LEO ID
+	 * yyyy	4-digit year
+	 * yy	2-digit year
+	 * wwww	4-digit GPS week
+	 * ww	2-digit week of year(01-53)
+	 * ddd	day of year (1-366)
+	 * hh	2-digit hour of day (00-23)
+	 * h	single letter for hour of day (a-x = 0-23)
+	 * mm	minutes within hour
+	 *
+	 */
+	public String formatTemplate(String template){
+		String tmpl = template.replaceAll("\\$\\{wwww\\}", (new DecimalFormat("0000")).format(this.getGpsWeek()));
+		tmpl = tmpl.replaceAll("\\$\\{d\\}", (new DecimalFormat("0")).format(this.getGpsWeekDay()));
+		tmpl = tmpl.replaceAll("\\$\\{ddd\\}", (new DecimalFormat("000")).format(this.getDayOfYear()));
+		tmpl = tmpl.replaceAll("\\$\\{yy\\}", (new DecimalFormat("00")).format(this.getYear2c()));
+		tmpl = tmpl.replaceAll("\\$\\{yyyy\\}", (new DecimalFormat("0000")).format(this.getYear()));
+		int hh4 = this.getGpsHourInDay();
+		tmpl = tmpl.replaceAll("\\$\\{hh\\}", (new DecimalFormat("00")).format(hh4));
+		if(0<=hh4&&hh4<6) hh4=0;
+		if(6<=hh4&&hh4<12) hh4=6;
+		if(12<=hh4&&hh4<18) hh4=12;
+		if(18<=hh4&&hh4<24) hh4=18;
+		tmpl = tmpl.replaceAll("\\$\\{hh4\\}", (new DecimalFormat("00")).format(hh4));
+		tmpl = tmpl.replaceAll("\\$\\{h\\}", this.getHourOfDayLetter());
+		return tmpl;
 	}
 
 	public long getGpsTime(){

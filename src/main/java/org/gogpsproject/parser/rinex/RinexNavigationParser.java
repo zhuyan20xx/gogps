@@ -23,8 +23,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.util.ArrayList;
 
@@ -43,15 +46,20 @@ import org.gogpsproject.Time;
  *
  * @author ege, Cryms.com
  */
-public class RinexFileNavigation implements NavigationProducer{
+public class RinexNavigationParser implements NavigationProducer{
 
 	private File fileNav;
 	private FileInputStream streamNav;
 	private InputStreamReader inStreamNav;
 	private BufferedReader buffStreamNav;
 
-	private ArrayList<EphGps> eph; /* GPS broadcast ephemerides */
-	private double[] iono; /* Ionosphere model parameters */
+	private FileOutputStream cacheOutputStream;
+	private OutputStreamWriter cacheStreamWriter;
+
+	public static String newline = System.getProperty("line.separator");
+
+	private ArrayList<EphGps> eph = new ArrayList<EphGps>(); /* GPS broadcast ephemerides */
+	private double[] iono = new double[8]; /* Ionosphere model parameters */
 	private double A0; /* Delta-UTC parameters: A0 */
 	private double A1; /* Delta-UTC parameters: A1 */
 	private double T; /* Delta-UTC parameters: T */
@@ -60,10 +68,24 @@ public class RinexFileNavigation implements NavigationProducer{
 
 
 	// RINEX Read constructors
-	public RinexFileNavigation(File fileNav) {
+	public RinexNavigationParser(File fileNav) {
 		this.fileNav = fileNav;
-		eph = new ArrayList<EphGps>();
-		iono = new double[8];
+	}
+
+	// RINEX Read constructors
+	public RinexNavigationParser(InputStream is, File cache) {
+		this.inStreamNav = new InputStreamReader(is);
+		if(cache!=null){
+			File path = cache.getParentFile();
+			if(!path.exists()) path.mkdirs();
+			try {
+				cacheOutputStream = new FileOutputStream(cache);
+				cacheStreamWriter = new OutputStreamWriter(cacheOutputStream);
+			} catch (FileNotFoundException e) {
+				System.err.println("Exception writing "+cache);
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/* (non-Javadoc)
@@ -72,8 +94,9 @@ public class RinexFileNavigation implements NavigationProducer{
 	@Override
 	public void init() {
 		open();
-		parseHeaderNav();
-		parseDataNav();
+		if(parseHeaderNav()){
+			parseDataNav();
+		}
 		close();
 	}
 
@@ -93,9 +116,9 @@ public class RinexFileNavigation implements NavigationProducer{
 	public void open() {
 		try {
 
-			streamNav = new FileInputStream(fileNav);
-			inStreamNav = new InputStreamReader(streamNav);
-			buffStreamNav = new BufferedReader(inStreamNav);
+			if(fileNav!=null) streamNav = new FileInputStream(fileNav);
+			if(streamNav!=null) inStreamNav = new InputStreamReader(streamNav);
+			if(inStreamNav!=null) buffStreamNav = new BufferedReader(inStreamNav);
 
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
@@ -104,10 +127,25 @@ public class RinexFileNavigation implements NavigationProducer{
 
 	public void close() {
 		try {
+			if(cacheStreamWriter!=null){
+				cacheStreamWriter.flush();
+				cacheStreamWriter.close();
+			}
+			if(cacheOutputStream!=null){
+				cacheOutputStream.flush();
+				cacheOutputStream.close();
+			}
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e2) {
+			e2.printStackTrace();
+		}
+		try {
 
-			streamNav.close();
-			streamNav.close();
-			buffStreamNav.close();
+			if(buffStreamNav!=null) buffStreamNav.close();
+			if(inStreamNav!=null) inStreamNav.close();
+			if(streamNav!=null) streamNav.close();
+
 
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
@@ -119,7 +157,7 @@ public class RinexFileNavigation implements NavigationProducer{
 	/**
 	 *
 	 */
-	public void parseHeaderNav() {
+	public boolean parseHeaderNav() {
 
 		//Navigation.iono = new double[8];
 		String sub;
@@ -130,6 +168,11 @@ public class RinexFileNavigation implements NavigationProducer{
 
 				try {
 					String line = buffStreamNav.readLine();
+					if(cacheStreamWriter!=null){
+						cacheStreamWriter.write(line);
+						cacheStreamWriter.write(newline);
+					}
+
 					String typeField = line.substring(60, line.length());
 					typeField = typeField.trim();
 
@@ -139,6 +182,7 @@ public class RinexFileNavigation implements NavigationProducer{
 
 							// Error if navigation file identifier was not found
 							System.err.println("Navigation file identifier is missing in file " + fileNav.toString() + " header");
+							return false;
 						}
 
 					} else if (typeField.equals("ION ALPHA")) {
@@ -203,7 +247,7 @@ public class RinexFileNavigation implements NavigationProducer{
 
 					} else if (typeField.equals("END OF HEADER")) {
 
-						return;
+						return true;
 					}
 				} catch (StringIndexOutOfBoundsException e) {
 					// Skip over blank lines
@@ -217,6 +261,7 @@ public class RinexFileNavigation implements NavigationProducer{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return false;
 	}
 
 	/**
@@ -241,6 +286,10 @@ public class RinexFileNavigation implements NavigationProducer{
 				for (int i = 0; i < 8; i++) {
 
 					String line = buffStreamNav.readLine();
+					if(cacheStreamWriter!=null){
+						cacheStreamWriter.write(line);
+						cacheStreamWriter.write(newline);
+					}
 
 					try {
 
@@ -423,13 +472,13 @@ public class RinexFileNavigation implements NavigationProducer{
 		long dtMin = 0;
 		EphGps refEph = null;
 
-		long gpsTime = (new Time(utcTime)).getGpsTime();
+		//long gpsTime = (new Time(utcTime)).getGpsTime();
 
 		for (int i = 0; i < eph.size(); i++) {
 			// Find ephemeris sets for given satellite
 			if (eph.get(i).getSatID() == satID) {
 				// Compare current time and ephemeris reference time
-				dt = Math.abs(eph.get(i).getRefTime().getGpsTime() - gpsTime);
+				dt = Math.abs(eph.get(i).getRefTime().getMsec() - utcTime /*getGpsTime() - gpsTime*/);
 				// If it's the first round, set the minimum time difference and
 				// select the first ephemeris set candidate
 				if (refEph == null) {
@@ -457,7 +506,7 @@ public class RinexFileNavigation implements NavigationProducer{
 	public void setIono(int i, double val){
 		this.iono[i] = val;
 	}
-	public double getIono(int i){
+	public double getIono(long utcTime, int i){
 		return iono[i];
 	}
 	/**
@@ -520,6 +569,13 @@ public class RinexFileNavigation implements NavigationProducer{
 	public void setLeaps(int leaps) {
 		this.leaps = leaps;
 	}
+
+	public boolean isTimestampInEpocsRange(long utcTime){
+		return eph.size()>0 &&
+		eph.get(0).getRefTime().getMsec() <= utcTime &&
+		utcTime <= eph.get(eph.size()-1).getRefTime().getMsec()/* missing interval +epochInterval*/;
+	}
+
 
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)

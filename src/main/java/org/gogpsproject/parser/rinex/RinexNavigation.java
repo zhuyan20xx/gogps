@@ -17,7 +17,7 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.gogpsproject.parser.sp3;
+package org.gogpsproject.parser.rinex;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,13 +44,13 @@ import org.gogpsproject.SatellitePosition;
  * @author Lorenzo
  *
  */
-public class SP3Navigation implements NavigationProducer {
+public class RinexNavigation implements NavigationProducer {
 
-	public final static String IGN_FR_ULTRARAPID = "ftp://igs.ensg.ign.fr/pub/igs/products/${wwww}/igu${wwww}${d}_${hh4}.sp3.Z";
-	public final static String IGN_FR_RAPID = "ftp://igs.ensg.ign.fr/pub/igs/products/${wwww}/igr${wwww}${d}.sp3.Z";
-	public final static String IGN_FR_FINAL = "ftp://igs.ensg.ign.fr/pub/igs/products/${wwww}/igs${wwww}${d}.sp3.Z";
+	public final static String GARNER_NAVIGATION_AUTO = "ftp://garner.ucsd.edu/pub/nav/${yyyy}/${ddd}/auto${ddd}0.${yy}n.Z";
+	public final static String GARNER_NAVIGATION_ZIM2 = "ftp://garner.ucsd.edu/pub/nav/${yyyy}/${ddd}/zim2${ddd}0.${yy}n.Z";
+	public final static String IGN_NAVIGATION_HOURLY_ZIM2 = "ftp://igs.ensg.ign.fr/pub/igs/data/hourly/${yyyy}/${ddd}/zim2${ddd}${h}.${yy}n.Z";
 
-	public String SP3_CACHE = "./sp3-cache";
+	public String RNP_CACHE = "./rnp-cache";
 	/**
 	 * @param args
 	 */
@@ -59,13 +59,13 @@ public class SP3Navigation implements NavigationProducer {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
 		Calendar c = Calendar.getInstance();
-//		c.set(Calendar.YEAR, 2011);
-//		c.set(Calendar.MONTH, 0);
-//		c.set(Calendar.DAY_OF_MONTH, 9);
-//		c.set(Calendar.HOUR_OF_DAY, 1);
-//		c.set(Calendar.MINUTE, 0);
-//		c.set(Calendar.SECOND, 0);
-//		c.set(Calendar.MILLISECOND, 0);
+		c.set(Calendar.YEAR, 2011);
+		c.set(Calendar.MONTH, 0);
+		c.set(Calendar.DAY_OF_MONTH, 9);
+		c.set(Calendar.HOUR_OF_DAY, 1);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
 		c.setTimeZone(new SimpleTimeZone(0,""));
 
 		Time t = new Time(c.getTimeInMillis());
@@ -75,28 +75,26 @@ public class SP3Navigation implements NavigationProducer {
 		System.out.println("week sec: "+t.getGpsWeekSec());
 		System.out.println("week day: "+t.getGpsWeekDay());
 		System.out.println("week hour in day: "+t.getGpsHourInDay());
-		System.out.println("year: "+t.getYear()+" "+t.getYear2c());
-		System.out.println("day of year: "+t.getDayOfYear());
 
 
 		System.out.println("ts2: "+(new Time(t.getGpsWeek(),t.getGpsWeekSec())).getMsec());
 
-//		SP3Navigation sp3n = new SP3Navigation(IGN_FR_ULTRARAPID);
-//		sp3n.init();
-//		SatellitePosition sp = sp3n.getGpsSatPosition(c.getTimeInMillis(), 2, 0, null);
-//		if(sp!=null){
-//			System.out.println("found "+(new Date(sp.getUtcTime()))+" "+(sp.isPredicted()?" predicted":""));
-//		}else{
-//			System.out.println("Epoch not found "+(new Date(c.getTimeInMillis())));
-//		}
+		RinexNavigation rn = new RinexNavigation(IGN_NAVIGATION_HOURLY_ZIM2);
+		rn.init();
+		SatellitePosition sp = rn.getGpsSatPosition(c.getTimeInMillis(), 2, 0, null);
+		if(sp!=null){
+			System.out.println("found "+(new Date(sp.getUtcTime()))+" "+(sp.isPredicted()?" predicted":""));
+		}else{
+			System.out.println("Epoch not found "+(new Date(c.getTimeInMillis())));
+		}
 
 
 	}
 
 	private String urltemplate;
-	private HashMap<String,SP3Parser> pool = new HashMap<String,SP3Parser>();
+	private HashMap<String,RinexNavigationParser> pool = new HashMap<String,RinexNavigationParser>();
 
-	public SP3Navigation(String urltemplate){
+	public RinexNavigation(String urltemplate){
 		this.urltemplate = urltemplate;
 
 	}
@@ -107,42 +105,40 @@ public class SP3Navigation implements NavigationProducer {
 	@Override
 	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, Coordinates receiverPosition) {
 
-		SP3Parser sp3p = null;
+		RinexNavigationParser rnp = getRNPByTimestamp(utcTime);
+		if(rnp!=null){
+			if(rnp.isTimestampInEpocsRange(utcTime)){
+				return rnp.getGpsSatPosition(utcTime, satID, range, receiverPosition);
+			}else{
+				return null;
+			}
+		}
+
+		return null;
+	}
+	private RinexNavigationParser getRNPByTimestamp(long utcTime) {
+
+		RinexNavigationParser rnp = null;
 		long reqTime = utcTime;
 
-		while(sp3p==null){
+		while(rnp==null){
 			// found none, retrieve from urltemplate
 			Time t = new Time(reqTime);
 			//System.out.print("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
 
-			String url = urltemplate.replaceAll("\\$\\{wwww\\}", (new DecimalFormat("0000")).format(t.getGpsWeek()));
-			url = url.replaceAll("\\$\\{d\\}", (new DecimalFormat("0")).format(t.getGpsWeekDay()));
-			int hh4 = t.getGpsHourInDay();
-			if(0<=hh4&&hh4<6) hh4=0;
-			if(6<=hh4&&hh4<12) hh4=6;
-			if(12<=hh4&&hh4<18) hh4=12;
-			if(18<=hh4&&hh4<24) hh4=18;
-			url = url.replaceAll("\\$\\{hh4\\}", (new DecimalFormat("00")).format(hh4));
-
-
+			String url = t.formatTemplate(urltemplate);
 
 			if(url.startsWith("ftp://")){
 				try {
 					if(pool.containsKey(url)){
 						//System.out.println(url+" from memory cache.");
-						sp3p = pool.get(url);
+						rnp = pool.get(url);
 					}else{
-
-						sp3p = getFromFTP(url);
+						rnp = getFromFTP(url);
 					}
-					if(sp3p != null){
-						pool.put(url, sp3p);
-						// file exist, look for epoch
-						if(sp3p.isTimestampInEpocsRange(utcTime)){
-							return sp3p.getGpsSatPosition(utcTime, satID, range, receiverPosition);
-						}else{
-							return null;
-						}
+					if(rnp != null){
+						pool.put(url, rnp);
+						return rnp;
 					}else{
 						try {
 							Thread.sleep(1000*10);
@@ -163,13 +159,12 @@ public class SP3Navigation implements NavigationProducer {
 
 		return null;
 	}
-
-	private SP3Parser getFromFTP(String url) throws IOException{
-		SP3Parser sp3p = null;
+	private RinexNavigationParser getFromFTP(String url) throws IOException{
+		RinexNavigationParser rnp = null;
 
 		String filename = url.replaceAll("[ ,/:]", "_");
 		if(filename.endsWith(".Z")) filename = filename.substring(0, filename.length()-2);
-		File sp3f = new File(SP3_CACHE,filename);
+		File sp3f = new File(RNP_CACHE,filename);
 
 		if(!sp3f.exists()){
 			System.out.println(url+" from the net.");
@@ -218,8 +213,8 @@ public class SP3Navigation implements NavigationProducer {
 					uis = new UncompressInputStream(is);
 				}
 
-				sp3p = new SP3Parser(uis,sp3f);
-				sp3p.init();
+				rnp = new RinexNavigationParser(uis,sp3f);
+				rnp.init();
 				is.close();
 
 
@@ -237,10 +232,10 @@ public class SP3Navigation implements NavigationProducer {
 			}
 		}else{
 			System.out.println(url+" from cache file "+sp3f);
-			sp3p = new SP3Parser(sp3f);
-			sp3p.init();
+			rnp = new RinexNavigationParser(sp3f);
+			rnp.init();
 		}
-		return sp3p;
+		return rnp;
 	}
 
 	/* (non-Javadoc)
@@ -248,8 +243,9 @@ public class SP3Navigation implements NavigationProducer {
 	 */
 	@Override
 	public double getIono(long utcTime, int i) {
-		double iono[]={1.5832E-8, -1.4901E-8, -1.1921E-7, 1.1921E-7, 122880.0, -180220.0, -131070.0, 786430.0};
-		return 0;//iono[i];
+		RinexNavigationParser rnp = getRNPByTimestamp(utcTime);
+		if(rnp!=null) return rnp.getIono(utcTime, i);
+		return 0;
 	}
 
 	/* (non-Javadoc)

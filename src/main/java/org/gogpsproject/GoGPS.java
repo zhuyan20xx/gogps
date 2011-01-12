@@ -25,8 +25,9 @@ import java.util.*;
 import java.text.*;
 
 import org.cryms.gogps.parser.ublox.UBXFileReader;
-import org.gogpsproject.parser.rinex.RinexFileNavigation;
-import org.gogpsproject.parser.rinex.RinexFileObservation;
+import org.gogpsproject.parser.rinex.RinexNavigation;
+import org.gogpsproject.parser.rinex.RinexNavigationParser;
+import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.sp3.SP3Navigation;
 
 /**
@@ -62,10 +63,6 @@ public class GoGPS {
 //	static File masterFileObs = new File("./data/vrs2.10o");
 //	static File fileNav = new File("./data/vrs2.10n");
 
-	/* Como, Italy (static) */
-	// static File roverFileObs = new File("./data/como_pillar_rover.obs");
-	// static File masterFileObs = new File("./data/como_pillar_master.10o");
-	// static File fileNav = new File("./data/como_pillar_rover.nav");
 
 	private static DecimalFormat f = new DecimalFormat("0.000");
 	private static DecimalFormat g = new DecimalFormat("0.00000000");
@@ -97,7 +94,7 @@ public class GoGPS {
 	public final static int DYN_MODEL_CONST_SPEED = 2;
 	public final static int DYN_MODEL_CONST_ACCELERATION = 3;
 	// Kalman filter parameters
-	private int dynamicModel = DYN_MODEL_CONST_ACCELERATION;
+	private int dynamicModel = DYN_MODEL_CONST_SPEED;
 	private double stDevInit = 3;
 	private double stDevE = 0.5;
 	private double stDevN = 0.5;
@@ -123,37 +120,38 @@ public class GoGPS {
 			// Get current time
 			long start = System.currentTimeMillis();
 			/* Como */
-			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/perim2.08o"));
-			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/COMO1190.08o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/COMO1190.08n"));
-			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_FINAL);
+			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/perim2.08o"));
+			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/COMO1190.08o"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/COMO1190.08n"));
+//			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_FINAL);
+			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Como, Italy (static) */
-//			ObservationsProducer roverIn = new RinexFileObservation(new File("./data/como_pillar_rover.obs"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/como_pillar_master.10o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/como_pillar_rover.nav"));
+//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/como_pillar_rover.obs"));
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/como_pillar_master.10o"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/como_pillar_rover.nav"));
 
 			/* Osaka, Japan (static) */
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100608_024314.ubx"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs.10o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs.10n"));
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/vrs.10o"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs.10n"));
 
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100617_025543.ubx"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/vrs2.10o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/vrs2.10n"));
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/vrs2.10o"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs2.10n"));
 
 			/* Faido */
-			//ObservationsProducer roverIn = new RinexFileObservation(roverFileObs);
+			//ObservationsProducer roverIn = new RinexObservationParser(roverFileObs);
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirFaido19112010b.10o"));
-//			NavigationProducer navigationIn = new RinexFileNavigation(new File("./data/VirFaido19112010b.10n"));
-//			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_ULTRARAPID);
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirFaido19112010b.10o"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirFaido19112010b.10n"));
+//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/manno-21.11.2010.ubx"));
-//			ObservationsProducer masterIn = new RinexFileObservation(new File("./data/VirManno-21-11-2010.10o"));
-//			Navigation navigationIn = new RinexFileNavigation(new File("./data/VirManno-21-11-2010.10n"));
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirManno-21-11-2010.10o"));
+//			Navigation navigationIn = new RinexNavigationParser(new File("./data/VirManno-21-11-2010.10n"));
 
 			roverIn.init();
 			masterIn.init();

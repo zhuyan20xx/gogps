@@ -318,7 +318,7 @@ public class ReceiverPosition extends Coordinates{
 				// Correct approximate pseudorange for ionosphere
 				double azimuth = roverTopo[i].getAzimuth();
 				double roverSatelliteIonoCorr = Atmosphere
-						.computeIonosphereCorrection(navigation,this, azimuth, elevation, roverObs.getRefTime().getGpsTime());
+						.computeIonosphereCorrection(navigation,this, azimuth, elevation, roverObs.getRefTime());
 
 				// Fill in troposphere and ionosphere double differenced
 				// corrections
@@ -456,13 +456,13 @@ public class ReceiverPosition extends Coordinates{
 		// Computation of rover-pivot ionosphere correction
 		double roverAzimuth = roverTopo[pivot].getAzimuth();
 		double roverPivotIonoCorr = Atmosphere.computeIonosphereCorrection(
-				navigation, this, roverAzimuth, roverElevation, roverObs.getRefTime().getGpsTime());
+				navigation, this, roverAzimuth, roverElevation, roverObs.getRefTime());
 
 		// Computation of master-pivot ionosphere correction
 		double masterAzimuth = masterTopo[pivot].getAzimuth();
 		double masterPivotIonoCorr = Atmosphere.computeIonosphereCorrection(
 				navigation, masterPos, masterAzimuth, masterElevation,
-				roverObs.getRefTime().getGpsTime());
+				roverObs.getRefTime());
 
 		// Compute rover-pivot and master-pivot weights
 		double roverPivotWeight = computeWeight(roverElevation,
@@ -527,13 +527,13 @@ public class ReceiverPosition extends Coordinates{
 				roverAzimuth = roverTopo[i].getAzimuth();
 				double roverSatIonoCorr = Atmosphere
 						.computeIonosphereCorrection(navigation,
-								this, roverAzimuth, roverElevation, roverObs.getRefTime().getGpsTime());
+								this, roverAzimuth, roverElevation, roverObs.getRefTime());
 
 				// Computation of master-satellite ionosphere correction
 				masterAzimuth = masterTopo[i].getAzimuth();
 				double masterSatIonoCorr = Atmosphere
 						.computeIonosphereCorrection(navigation,
-								masterPos, masterAzimuth, masterElevation, roverObs.getRefTime().getGpsTime());
+								masterPos, masterAzimuth, masterElevation, roverObs.getRefTime());
 
 				// Fill in troposphere and ionosphere double differenced
 				// corrections

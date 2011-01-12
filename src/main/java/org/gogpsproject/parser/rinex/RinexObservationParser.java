@@ -43,7 +43,7 @@ import org.gogpsproject.Time;
  *
  * @author ege, Cryms.com
  */
-public class RinexFileObservation implements ObservationsProducer{
+public class RinexObservationParser implements ObservationsProducer{
 
 	private File fileObs;
 	private FileInputStream streamObs;
@@ -68,7 +68,7 @@ public class RinexFileObservation implements ObservationsProducer{
 	private char[] sysOrder;
 	private int[] satOrder;
 
-	public RinexFileObservation(File fileObs) {
+	public RinexObservationParser(File fileObs) {
 		this.fileObs = fileObs;
 	}
 
