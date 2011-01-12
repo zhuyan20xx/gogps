@@ -548,7 +548,7 @@ public class RinexFileNavigation implements NavigationProducer{
 		double timeCorrection = getTimeCorrection(utcTime, eph, obsPseudorange);
 
 		// Compute clock correction
-		double tGPS = getClockCorrection(utcTime, eph, obsPseudorange);
+		double tGPS = getClockCorrection(utcTime, timeCorrection, obsPseudorange);
 
 		// Compute eccentric anomaly
 		double Ek = eccAnomaly(tGPS, eph);
@@ -653,30 +653,19 @@ public class RinexFileNavigation implements NavigationProducer{
 	 * @param eph
 	 * @return Clock-corrected GPS time
 	 */
-	private double getClockCorrection(long utcTime, EphGps eph, double obsPseudorange) {
+	private double getClockCorrection(long utcTime, double timeCorrection, double obsPseudorange) {
 
 		long gpsTime = (new Time(utcTime)).getGpsTime();
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 
-		// Compute eccentric anomaly
-		double Ek = eccAnomaly(tRaw, eph);
-
-		// Relativistic correction term computation
-		double dtr = Constants.RELATIVISTIC_ERROR_CONSTANT * eph.getE() * eph.getRootA() * Math.sin(Ek);
-
-		// Clock error correction
-		double dt = checkGpsTime(tRaw - eph.getToc());
-		double timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
-		double tGPS = tRaw - timeCorrection;
-		dt = checkGpsTime(tGPS - eph.getToc());
-		timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
-		tGPS = tRaw - timeCorrection;
-
-		return tGPS;
-
+		return tRaw - timeCorrection;
 	}
 
+	/**
+	 * @param eph
+	 * @return Satellite clock error
+	 */
 	private double getTimeCorrection(long utcTime, EphGps eph, double obsPseudorange){
 		long gpsTime = (new Time(utcTime)).getGpsTime();
 		// Remove signal travel time from observation time
@@ -688,9 +677,14 @@ public class RinexFileNavigation implements NavigationProducer{
 		// Relativistic correction term computation
 		double dtr = Constants.RELATIVISTIC_ERROR_CONSTANT * eph.getE() * eph.getRootA() * Math.sin(Ek);
 
-		// Clock error correction
+		// Clock error computation
 		double dt = checkGpsTime(tRaw - eph.getToc());
-		return (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
+		double timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
+		double tGPS = tRaw - timeCorrection;
+		dt = checkGpsTime(tGPS - eph.getToc());
+		timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
+
+		return timeCorrection;
 	}
 
 	/**
