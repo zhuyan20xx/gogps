@@ -22,7 +22,7 @@ package org.gogpsproject;
  * <p>
  * Atmospheric correction class
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
 public class Atmosphere {
@@ -106,18 +106,18 @@ public class Atmosphere {
 	 * @return ionosphere correction value by Klobuchar model
 	 */
 	static double computeIonosphereCorrection(NavigationProducer navigation,
-			Coordinates coord, double azimuth, double elevation, double time) {
+			Coordinates coord, double azimuth, double elevation, Time time) {
 
 		double ionoCorr = 0;
 
-		double a0 = navigation.getIono(0);
-		double a1 = navigation.getIono(1);
-		double a2 = navigation.getIono(2);
-		double a3 = navigation.getIono(3);
-		double b0 = navigation.getIono(4);
-		double b1 = navigation.getIono(5);
-		double b2 = navigation.getIono(6);
-		double b3 = navigation.getIono(7);
+		double a0 = navigation.getIono(time.getMsec(),0);
+		double a1 = navigation.getIono(time.getMsec(),1);
+		double a2 = navigation.getIono(time.getMsec(),2);
+		double a3 = navigation.getIono(time.getMsec(),3);
+		double b0 = navigation.getIono(time.getMsec(),4);
+		double b1 = navigation.getIono(time.getMsec(),5);
+		double b2 = navigation.getIono(time.getMsec(),6);
+		double b3 = navigation.getIono(time.getMsec(),7);
 
 		elevation = Math.abs(elevation);
 
@@ -140,7 +140,7 @@ public class Atmosphere {
 		double lambda = lon + (psi * Math.sin(azimuth * Math.PI))
 				/ Math.cos(phi * Math.PI);
 		double ro = phi + 0.064 * Math.cos((lambda - 1.617) * Math.PI);
-		double t = lambda * 43200 + time;
+		double t = lambda * 43200 + time.getGpsTime();
 		while (t >= 86400)
 			t = t - 86400;
 		while (t < 0)

@@ -36,7 +36,7 @@ public interface NavigationProducer {
 	public void init();
 	public void release();
 
-	public double getIono(int i);
+	public double getIono(long utcTime, int i);
 //	/**
 //	 * @return the a0
 //	 */

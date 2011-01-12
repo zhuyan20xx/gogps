@@ -151,9 +151,9 @@ public class SP3Parser implements NavigationProducer{
 			e2.printStackTrace();
 		}
 		try {
-			if(fileInputStream!=null) fileInputStream.close();
-			if(inputStreamReader!=null) inputStreamReader.close();
 			if(bufferedReader!=null) bufferedReader.close();
+			if(inputStreamReader!=null) inputStreamReader.close();
+			if(fileInputStream!=null) fileInputStream.close();
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 		} catch (IOException e2) {
@@ -447,7 +447,7 @@ public class SP3Parser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getIono(int)
 	 */
 	@Override
-	public double getIono(int i) {
+	public double getIono(long utcTime, int i) {
 
 		return 0;
 	}
