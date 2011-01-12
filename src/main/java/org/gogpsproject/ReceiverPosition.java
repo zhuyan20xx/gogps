@@ -397,7 +397,7 @@ public class ReceiverPosition extends Coordinates{
 		// observations by 1
 		nObsAvail--;
 
-		System.out.println(nObsAvail+" "+nUnknowns);
+		//System.out.println(nObsAvail+" "+nUnknowns);
 		// Least squares design matrix
 		A = new SimpleMatrix(nObsAvail, nUnknowns);
 
@@ -901,7 +901,7 @@ public class ReceiverPosition extends Coordinates{
 			// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
 			// pos[i].earthRotationCorrection(this);
 
-			System.out.println("ts2:"+roverObs.getRefTime().getMsec()+" sat:"+ roverObs.getGpsSatID(i)+" pos: "+pos[i]);
+			//System.out.println("ts2:"+roverObs.getRefTime().getMsec()+" sat:"+ roverObs.getGpsSatID(i)+" pos: "+pos[i]);
 
 			// Compute azimuth, elevation and distance for each satellite from
 			// rover

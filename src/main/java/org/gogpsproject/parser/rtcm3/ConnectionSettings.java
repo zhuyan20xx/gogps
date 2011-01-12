@@ -18,9 +18,9 @@
  *
  */
 
-package org.cryms.gogps.parser.rtcm3;
+package org.gogpsproject.parser.rtcm3;
 
-import org.cryms.gogps.util.Base64;
+import org.gogpsproject.util.Base64;
 
 public class ConnectionSettings {
 

@@ -18,9 +18,9 @@
  *
  */
 
-package org.cryms.gogps.parser.rtcm3;
+package org.gogpsproject.parser.rtcm3;
 
-import org.cryms.gogps.util.Bits;
+import org.gogpsproject.util.Bits;
 
 public class Decode1005Msg implements Decode {
 

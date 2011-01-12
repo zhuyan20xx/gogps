@@ -18,11 +18,11 @@
  *
  */
 
-package org.cryms.gogps.parser.ublox;
+package org.gogpsproject.parser.ublox;
 
 import java.util.Vector;
 
-import org.cryms.gogps.util.UnsignedOperation;
+import org.gogpsproject.util.UnsignedOperation;
 
 
 public class MsgConfiguration {

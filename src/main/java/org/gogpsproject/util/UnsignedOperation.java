@@ -18,7 +18,7 @@
  *
  */
 
-package org.cryms.gogps.util;
+package org.gogpsproject.util;
 
 public class UnsignedOperation {
 	public static final int SIZEOF_LONG = Long.SIZE / Byte.SIZE;
