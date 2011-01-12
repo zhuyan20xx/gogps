@@ -34,11 +34,11 @@ import java.util.TimeZone;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
-import org.cryms.gogps.util.UncompressInputStream;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Time;
 import org.gogpsproject.SatellitePosition;
+import org.gogpsproject.util.UncompressInputStream;
 
 /**
  * @author Lorenzo

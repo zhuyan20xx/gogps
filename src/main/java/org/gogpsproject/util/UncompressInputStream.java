@@ -1,5 +1,5 @@
 
-package org.cryms.gogps.util;
+package org.gogpsproject.util;
 /*
  * @(#)UncompressInputStream.java			0.3-3 06/05/2001
  *

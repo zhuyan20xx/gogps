@@ -18,7 +18,7 @@
  *
  */
 
-package org.cryms.gogps.parser.rtcm3;
+package org.gogpsproject.parser.rtcm3;
 public class AntennaDescriptor {
 
 	private int stationID;

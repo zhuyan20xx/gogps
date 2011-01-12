@@ -18,7 +18,7 @@
  *
  */
 
-package org.cryms.gogps.parser.rtcm3;
+package org.gogpsproject.parser.rtcm3;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -26,11 +26,11 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-import org.cryms.gogps.util.Bits;
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.Time;
 import org.gogpsproject.Constants;
+import org.gogpsproject.util.Bits;
 
 public class Decode1004Msg implements Decode {
 

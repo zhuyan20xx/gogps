@@ -17,7 +17,7 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.cryms.gogps.parser.ublox;
+package org.gogpsproject.parser.ublox;
 
 import java.io.IOException;
 import java.io.InputStream;

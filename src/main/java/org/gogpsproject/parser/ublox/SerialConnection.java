@@ -18,7 +18,7 @@
  *
  */
 
-package org.cryms.gogps.parser.ublox;
+package org.gogpsproject.parser.ublox;
 
 import gnu.io.CommPortIdentifier;
 import gnu.io.NoSuchPortException;

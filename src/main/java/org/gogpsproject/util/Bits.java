@@ -17,7 +17,7 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.cryms.gogps.util;
+package org.gogpsproject.util;
 
 public class Bits {
 

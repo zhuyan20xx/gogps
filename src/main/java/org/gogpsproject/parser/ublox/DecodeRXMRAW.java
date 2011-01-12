@@ -18,7 +18,7 @@
  *
  */
 
-package org.cryms.gogps.parser.ublox;
+package org.gogpsproject.parser.ublox;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,11 +27,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import org.cryms.gogps.util.Bits;
-import org.cryms.gogps.util.UnsignedOperation;
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.Time;
+import org.gogpsproject.util.Bits;
+import org.gogpsproject.util.UnsignedOperation;
 
 
 public class DecodeRXMRAW {

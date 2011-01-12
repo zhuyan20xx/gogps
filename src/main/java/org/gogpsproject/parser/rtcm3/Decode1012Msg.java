@@ -18,10 +18,10 @@
  *
  */
 
-package org.cryms.gogps.parser.rtcm3;
+package org.gogpsproject.parser.rtcm3;
 import java.util.Arrays;
 
-import org.cryms.gogps.util.Bits;
+import org.gogpsproject.util.Bits;
 
 
 public class Decode1012Msg implements Decode {

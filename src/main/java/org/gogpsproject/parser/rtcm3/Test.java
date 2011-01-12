@@ -18,14 +18,42 @@
  *
  */
 
-package org.cryms.gogps.parser.rtcm3;
+package org.gogpsproject.parser.rtcm3;
 
-/**
- * @author Mohamed
- *
- */
-public interface Decode {
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Vector;
 
-	public abstract void decode(boolean[] bits, long referenceTS);
+public class Test {
+
+	
+	public static void main(String[] args) {
+
+		Test test = new Test();
+		if (args.length < 4) {
+			System.out.println("Test [host] [port] [user] [pass] ([mountpoint])");
+			System.exit(0);
+		}
+		
+		
+		try {
+			RTCM3Client client = RTCM3Client.getInstance(args[0],Integer.parseInt(args[1]),args[2],args[3],args.length>4?args[4]:null);
+			if(client==null){
+				System.exit(0);
+			}
+			
+			client.start();
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+
+	}
+
+	public Test() {
+
+	}
 
 }

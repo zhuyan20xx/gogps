@@ -18,7 +18,7 @@
  *
  */
 
-package org.cryms.gogps.parser.rtcm3;
+package org.gogpsproject.parser.rtcm3;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,9 +33,9 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import org.cryms.gogps.util.Bits;
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
+import org.gogpsproject.util.Bits;
 
 public class RTCM3Client implements Runnable {
 
