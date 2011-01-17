@@ -43,6 +43,8 @@ import org.gogpsproject.util.UncompressInputStream;
 /**
  * @author Lorenzo
  *
+ * This class retrieve RINEX file on-demand from known server structures
+ *
  */
 public class RinexNavigation implements NavigationProducer {
 
@@ -50,6 +52,7 @@ public class RinexNavigation implements NavigationProducer {
 	public final static String GARNER_NAVIGATION_ZIM2 = "ftp://garner.ucsd.edu/pub/nav/${yyyy}/${ddd}/zim2${ddd}0.${yy}n.Z";
 	public final static String IGN_NAVIGATION_HOURLY_ZIM2 = "ftp://igs.ensg.ign.fr/pub/igs/data/hourly/${yyyy}/${ddd}/zim2${ddd}${h}.${yy}n.Z";
 
+	/** Folder containing downloaded files */
 	public String RNP_CACHE = "./rnp-cache";
 	/**
 	 * @param args
@@ -91,9 +94,15 @@ public class RinexNavigation implements NavigationProducer {
 
 	}
 
+	/** Template string where to retrieve files on the net */
 	private String urltemplate;
 	private HashMap<String,RinexNavigationParser> pool = new HashMap<String,RinexNavigationParser>();
 
+	/**
+	 * Instantiates a new RINEX navigation retriever and parser.
+	 *
+	 * @param urltemplate the template URL where to get the files on the net.
+	 */
 	public RinexNavigation(String urltemplate){
 		this.urltemplate = urltemplate;
 
