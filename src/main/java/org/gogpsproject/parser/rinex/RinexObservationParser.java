@@ -38,7 +38,7 @@ import org.gogpsproject.Time;
 
 /**
  * <p>
- * Class for parsing RINEX files
+ * Class for parsing RINEX observation files
  * </p>
  *
  * @author ege, Cryms.com
