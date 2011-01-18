@@ -673,11 +673,11 @@ public class RinexNavigationParser implements NavigationProducer{
 	/**
 	 * @param traveltime
 	 */
-	public void earthRotationCorrection(Coordinates approxPos, Coordinates satelitePosition) {
+	public void earthRotationCorrection(Coordinates approxPos, Coordinates satellitePosition) {
 
 		// Computation of signal travel time
 		//SimpleMatrix diff = this.coord.ecef.minus(approxPos.ecef);
-		SimpleMatrix diff = satelitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
+		SimpleMatrix diff = satellitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
 		double rho2 = Math.pow(diff.get(0), 2) + Math.pow(diff.get(1), 2)
 				+ Math.pow(diff.get(2), 2);
 		double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
@@ -701,7 +701,7 @@ public class RinexNavigationParser implements NavigationProducer{
 		// Apply rotation
 		//this.coord.ecef = R.mult(this.coord.ecef);
 		//this.coord.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
-		satelitePosition.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
+		satellitePosition.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
 
 	}
 
