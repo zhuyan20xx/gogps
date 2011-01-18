@@ -131,7 +131,7 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
 			double obsPseudorange = obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec() /*getGpsTime()*/, obs.getGpsSatID(i), obsPseudorange, null /* originally this call do not perform earthRotationCorrection, otherwise set 'this' instead 'null'*/);
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec() /*getGpsTime()*/, obs.getGpsSatID(i), obsPseudorange);
 
 			try {
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
@@ -820,7 +820,7 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(navigation);
 
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
-					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this);
+					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 			// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
 			// pos[i].earthRotationCorrection(this);
@@ -896,7 +896,7 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(navigation);
 
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
-					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this);
+					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 			// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
 			// pos[i].earthRotationCorrection(this);

@@ -581,7 +581,7 @@ public class RinexNavigationParser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, Coordinates receiverPosition) {
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range) {
 		EphGps eph = findEph(utcTime, satID);
 
 		if (eph != null) {
