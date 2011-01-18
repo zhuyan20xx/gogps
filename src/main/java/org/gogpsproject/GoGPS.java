@@ -208,8 +208,7 @@ public class GoGPS {
 		while (obsR!=null) { // buffStreamObs.ready()
 
 			// If there are at least four satellites
-			Observations obs = roverIn.nextObservations();
-			if (obs.getGpsSize() >= 4) { // gps.length
+			if (roverIn.getCurrentObservations().getGpsSize() >= 4) { // gps.length
 
 				// Compute approximate positioning by Bancroft algorithm
 				roverPos.bancroft(roverIn.getCurrentObservations());
@@ -229,7 +228,7 @@ public class GoGPS {
 						System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
 						System.out.println("Lon:		" + g.format(roverPos.getGeodeticLongitude())); // geod.get(0)
 						System.out.println("Lat:		" + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
-						System.out.println("h:		    " + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
+						System.out.println("h:		" + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
 					} catch (NullPointerException e) {
 						System.out.println("Error: rover approximate position not computed");
 					}
