@@ -586,7 +586,7 @@ public class RinexNavigationParser implements NavigationProducer{
 
 		if (eph != null) {
 			SatellitePosition sp = computePositionGps(utcTime,satID, eph, range);
-			if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
+			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, utcTime, satID, range);
 		}
 		return null;
@@ -603,8 +603,8 @@ public class RinexNavigationParser implements NavigationProducer{
 
 		double timeCorrection = getTimeCorrection(utcTime, eph, obsPseudorange);
 
-		// Compute clock correction
-		double tGPS = getClockCorrection(utcTime, timeCorrection, obsPseudorange);
+		// Compute clock corrected transmission time
+		double tGPS = getClockCorrectedTransmissionTime(utcTime, timeCorrection, obsPseudorange);
 
 		// Compute eccentric anomaly
 		double Ek = eccAnomaly(tGPS, eph);
@@ -646,6 +646,9 @@ public class RinexNavigationParser implements NavigationProducer{
 				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
 				y1 * Math.sin(ik));
 		sp.setTimeCorrection(timeCorrection);
+		
+		// Apply the correction due to the Earth rotation during signal travel time
+		earthRotationCorrection(utcTime, tGPS, sp);
 
 		return sp;
 //		this.setXYZ(x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
@@ -673,14 +676,15 @@ public class RinexNavigationParser implements NavigationProducer{
 	/**
 	 * @param traveltime
 	 */
-	public void earthRotationCorrection(Coordinates approxPos, Coordinates satellitePosition) {
+	public void earthRotationCorrection(long utcTime, double transmissionTime, Coordinates satellitePosition) {
 
 		// Computation of signal travel time
-		//SimpleMatrix diff = this.coord.ecef.minus(approxPos.ecef);
-		SimpleMatrix diff = satellitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
-		double rho2 = Math.pow(diff.get(0), 2) + Math.pow(diff.get(1), 2)
-				+ Math.pow(diff.get(2), 2);
-		double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
+		// SimpleMatrix diff = satellitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
+		// double rho2 = Math.pow(diff.get(0), 2) + Math.pow(diff.get(1), 2)
+		// 		+ Math.pow(diff.get(2), 2);
+		// double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
+		long receptionTime = (new Time(utcTime)).getGpsTime();
+		double traveltime = receptionTime - transmissionTime;
 
 		// Compute rotation angle
 		double omegatau = Constants.EARTH_ANGULAR_VELOCITY * traveltime;
@@ -707,9 +711,9 @@ public class RinexNavigationParser implements NavigationProducer{
 
 	/**
 	 * @param eph
-	 * @return Clock-corrected GPS time
+	 * @return Clock-corrected GPS transmission time
 	 */
-	private double getClockCorrection(long utcTime, double timeCorrection, double obsPseudorange) {
+	private double getClockCorrectedTransmissionTime(long utcTime, double timeCorrection, double obsPseudorange) {
 
 		long gpsTime = (new Time(utcTime)).getGpsTime();
 		// Remove signal travel time from observation time
