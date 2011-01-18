@@ -21,53 +21,118 @@
 package org.gogpsproject.parser.ublox;
 
 public class MessageType {
-	public enum ack {
-		ACK, NAK;
-	}
+	public final static int CLASS_NAV = 0;
+	public final static int CLASS_RXM = 1;
+	public final static int CLASS_INF = 2;
+	public final static int CLASS_ACK = 3;
+	public final static int CLASS_CFG = 4;
+	public final static int CLASS_UPD = 5;
+	public final static int CLASS_MON = 6;
+	public final static int CLASS_AID = 7;
+	public final static int CLASS_TIM = 8;
+	public final static int CLASS_NMEA = 9;
+	public final static int CLASS_PUBX = 10;
 
-	public enum aid {
-		REQ, DATA, INI, HUI, ALM, EPH;
-	}
+	public final static int ACK_ACK = 11;
+	public final static int ACK_NAK = 12;
 
-	public enum cfg {
-		PRT, USB, MSG, NMEA, RATE, CFG, TP, NAV2, DAT, INF, RST, RXM, ANT, FXN, SBAS, LIC, TM, TM2, TMODE, EKF;
-	}
 
-	public enum inf {
-		ERROR, WARNING, NOTICE, TEST, DEBUG, USER;
-	}
+	public final static int AID_REQ = 13;
+	public final static int AID_DATA = 14;
+	public final static int AID_INI = 15;
+	public final static int AID_HUI = 16;
+	public final static int AID_ALM = 17;
+	public final static int AID_EPH = 18;
 
-	public enum mon {
-		SCHD, IO, MSGPP, RXBUF, TXBUF, HW, IPC, USB, VER, EXCEPT;
-	}
+	public final static int CFG_PRT = 19;
+	public final static int CFG_USB = 20;
+	public final static int CFG_MSG = 21;
+	public final static int CFG_NMEA = 22;
+	public final static int CFG_RATE = 23;
+	public final static int CFG_CFG = 24;
+	public final static int CFG_TP = 25;
+	public final static int CFG_NAV2 = 26;
+	public final static int CFG_DAT = 27;
+	public final static int CFG_INF = 28;
+	public final static int CFG_RST = 29;
+	public final static int CFG_RXM = 30;
+	public final static int CFG_ANT = 31;
+	public final static int CFG_FXN = 32;
+	public final static int CFG_SBAS = 33;
+	public final static int CFG_LIC = 34;
+	public final static int CFG_TM = 35;
+	public final static int CFG_TM2 = 36;
+	public final static int CFG_TMODE = 37;
+	public final static int CFG_EKF = 38;
 
-	public enum msgclass {
-		NAV, RXM, INF, ACK, CFG, UPD, MON, AID, TIM, NMEA, PUBX;
-	}
+	public final static int INF_ERROR = 39;
+	public final static int INF_WARNING = 40;
+	public final static int INF_NOTICE = 41;
+	public final static int INF_TEST = 42;
+	public final static int INF_DEBUG = 43;
+	public final static int INF_USER = 44;
 
-	public enum nav {
-		POSECEF, POSLLH, POSUTM, DOP, STATUS, SOL, VELECEF, VELNED, TIMEGPS, TIMEUTC, CLOCK, SVINFO, DGPS, SBAS, EKFSTATUS;
-	}
+	public final static int MON_SCHD = 45;
+	public final static int MON_IO = 46;
+	public final static int MON_MSGPP = 47;
+	public final static int MON_RXBUF = 48;
+	public final static int MON_TXBUF = 49;
+	public final static int MON_HW = 50;
+	public final static int MON_IPC = 51;
+	public final static int MON_USB = 52;
+	public final static int MON_VER = 53;
+	public final static int MON_EXCEPT = 54;
 
-	public enum nmea {
-		GGA, GLL, GSA, GSV, RMC, VTG, GRS, GST, ZDA, GBS, DTM;
-	}
+	public final static int NAV_POSECEF = 55;
+	public final static int NAV_POSLLH = 56;
+	public final static int NAV_POSUTM = 57;
+	public final static int NAV_DOP = 58;
+	public final static int NAV_STATUS = 59;
+	public final static int NAV_SOL = 60;
+	public final static int NAV_VELECEF = 61;
+	public final static int NAV_VELNED = 62;
+	public final static int NAV_TIMEGPS = 63;
+	public final static int NAV_TIMEUTC = 64;
+	public final static int NAV_CLOCK = 65;
+	public final static int NAV_SVINFO = 66;
+	public final static int NAV_DGPS = 67;
+	public final static int NAV_SBAS = 68;
+	public final static int NAV_EKFSTATUS = 69;
 
-	public enum pubx {
-		A, B, C, D;
-	}
+	public final static int NMEA_GGA = 70;
+	public final static int NMEA_GLL = 71;
+	public final static int NMEA_GSA = 72;
+	public final static int NMEA_GSV = 73;
+	public final static int NMEA_RMC = 74;
+	public final static int NMEA_VTG = 75;
+	public final static int NMEA_GRS = 76;
+	public final static int NMEA_GST = 77;
+	public final static int NMEA_ZDA = 78;
+	public final static int NMEA_GBS = 79;
+	public final static int NMEA_DTM = 80;
 
-	public enum rxm {
-		RAW, SVSI, SFRB, ALM, EPH, POSREQ;
-	}
+	public final static int PUBX_A = 81;
+	public final static int PUBX_B = 82;
+	public final static int PUBX_C = 83;
+	public final static int PUBX_D = 84;
 
-	public enum tim {
-		TM, TM2, TP, SVIN;
-	}
+	public final static int RXM_RAW = 85;
+	public final static int RXM_SVSI = 86;
+	public final static int RXM_SFRB = 87;
+	public final static int RXM_ALM = 88;
+	public final static int RXM_EPH = 89;
+	public final static int RXM_POSREQ = 90;
+	public final static int RXM_PMREQ = 98;
 
-	public enum upd {
-		DOWNL, UPLOAD, EXEC, MEMCPY;
-	}
+	public final static int TIM_TM = 90;
+	public final static int TIM_TM2 = 91;
+	public final static int TIM_TP = 92;
+	public final static int TIM_SVIN = 93;
+
+	public final static int UPD_DOWNL = 94;
+	public final static int UPD_UPLOAD = 95;
+	public final static int UPD_EXEC = 96;
+	public final static int UPD_MEMCPY = 97;
 
 	private static int classOut = 0;
 
@@ -81,8 +146,8 @@ public class MessageType {
 		MessageType.idOut = idOut;
 	}
 
-	public MessageType(String _mclass, String _msgtype) {
-		getMsg(_mclass, _msgtype);
+	public MessageType(int mclass, int msgtype) {
+		getMsg(mclass, msgtype);
 	}
 
 	public int getClassOut() {
@@ -93,323 +158,326 @@ public class MessageType {
 		return idOut;
 	}
 
-	private int getMsg(String mclass, String msgtype) {
+	private int getMsg(int mclass, int msgtype) {
 		try {
-			switch (msgclass.valueOf(mclass)) {
+			switch (mclass) {
 
-			case NAV:
+			case CLASS_NAV:
 				setClassOut(0x01);
-				switch (nav.valueOf(msgtype)) {
-				case POSECEF:
+				switch (msgtype) {
+				case NAV_POSECEF:
 					setIdOut(0x01);
 					return 0;
-				case POSLLH:
+				case NAV_POSLLH:
 					setIdOut(0x02);
 					return 0;
-				case POSUTM:
+				case NAV_POSUTM:
 					setIdOut(0x08);
 					return 0;
-				case DOP:
+				case NAV_DOP:
 					setIdOut(0x04);
 					return 0;
-				case STATUS:
+				case NAV_STATUS:
 					setIdOut(0x03);
 					return 0;
-				case SOL:
+				case NAV_SOL:
 					setIdOut(0x06);
 					return 0;
-				case VELECEF:
+				case NAV_VELECEF:
 					setIdOut(0x11);
 					return 0;
-				case VELNED:
+				case NAV_VELNED:
 					setIdOut(0x12);
 					return 0;
-				case TIMEGPS:
+				case NAV_TIMEGPS:
 					setIdOut(0x20);
 					return 0;
-				case TIMEUTC:
+				case NAV_TIMEUTC:
 					setIdOut(0x21);
 					return 0;
-				case CLOCK:
+				case NAV_CLOCK:
 					setIdOut(0x22);
 					return 0;
-				case SVINFO:
+				case NAV_SVINFO:
 					setIdOut(0x30);
 					return 0;
-				case DGPS:
+				case NAV_DGPS:
 					setIdOut(0x31);
 					return 0;
-				case SBAS:
+				case NAV_SBAS:
 					setIdOut(0x32);
 					return 0;
-				case EKFSTATUS:
+				case NAV_EKFSTATUS:
 					setIdOut(0x40);
 					return 0;
 				}
 
-			case RXM:
+			case CLASS_RXM:
 				setClassOut(0x02);
-				switch (rxm.valueOf(msgtype)) {
-				case RAW:
-					setIdOut(0x10);
-					return 0;
-				case SVSI:
-					setIdOut(0x20);
-					return 0;
-				case SFRB:
-					setIdOut(0x11);
-					return 0;
-				case ALM:
-					setIdOut(0x30);
-					return 0;
-				case EPH:
-					setIdOut(0x31);
-					return 0;
-				case POSREQ:
-					setIdOut(0x40);
-					return 0;
+				switch (msgtype) {
+					case RXM_RAW:
+						setIdOut(0x10);
+						return 0;
+					case RXM_SVSI:
+						setIdOut(0x20);
+						return 0;
+					case RXM_SFRB:
+						setIdOut(0x11);
+						return 0;
+					case RXM_ALM:
+						setIdOut(0x30);
+						return 0;
+					case RXM_EPH:
+						setIdOut(0x31);
+						return 0;
+					case RXM_POSREQ:
+						setIdOut(0x40);
+						return 0;
+					case RXM_PMREQ:
+						setIdOut(0x41);
+						return 0;
 				}
 
-			case INF:
+			case CLASS_INF:
 				setClassOut(0x04);
-				switch (inf.valueOf(msgtype)) {
-				case ERROR:
+				switch (msgtype) {
+				case INF_ERROR:
 					setIdOut(0x00);
 					return 0;
-				case WARNING:
+				case INF_WARNING:
 					setIdOut(0x01);
 					return 0;
-				case NOTICE:
+				case INF_NOTICE:
 					setIdOut(0x02);
 					return 0;
-				case TEST:
+				case INF_TEST:
 					setIdOut(0x03);
 					return 0;
-				case DEBUG:
+				case INF_DEBUG:
 					setIdOut(0x04);
 					return 0;
-				case USER:
+				case INF_USER:
 					setIdOut(0x07);
 					return 0;
 				}
-			case ACK:
+			case CLASS_ACK:
 				setClassOut(0x05);
-				switch (ack.valueOf(msgtype)) {
-				case ACK:
+				switch (msgtype) {
+				case ACK_ACK:
 					setIdOut(0x01);
 					return 0;
-				case NAK:
+				case ACK_NAK:
 					setIdOut(0x00);
 					return 0;
 				}
 
-			case CFG:
+			case CLASS_CFG:
 				setClassOut(06);
-				switch (cfg.valueOf(msgtype)) {
-				case PRT:
+				switch (msgtype) {
+				case CFG_PRT:
 					setIdOut(0x00);
 					return 0;
-				case USB:
+				case CFG_USB:
 					setIdOut(0x1B);
 					return 0;
-				case MSG:
+				case CFG_MSG:
 					setIdOut(0x01);
 					return 0;
-				case NMEA:
+				case CFG_NMEA:
 					setIdOut(0x17);
 					return 0;
-				case RATE:
+				case CFG_RATE:
 					setIdOut(0x08);
 					return 0;
-				case CFG:
+				case CFG_CFG:
 					setIdOut(0x09);
 					return 0;
-				case TP:
+				case CFG_TP:
 					setIdOut(0x07);
 					return 0;
-				case NAV2:
+				case CFG_NAV2:
 					setIdOut(0x1A);
 					return 0;
-				case DAT:
+				case CFG_DAT:
 					setIdOut(0x06);
 					return 0;
-				case INF:
+				case CFG_INF:
 					setIdOut(0x02);
 					return 0;
-				case RST:
+				case CFG_RST:
 					setIdOut(0x04);
 					return 0;
-				case RXM:
+				case CFG_RXM:
 					setIdOut(0x11);
 					return 0;
-				case ANT:
+				case CFG_ANT:
 					setIdOut(0x13);
 					return 0;
-				case FXN:
+				case CFG_FXN:
 					setIdOut(0x0E);
 					return 0;
-				case SBAS:
+				case CFG_SBAS:
 					setIdOut(0x16);
 					return 0;
-				case LIC:
+				case CFG_LIC:
 					setIdOut(0x80);
 					return 0;
-				case TM:
+				case CFG_TM:
 					setIdOut(0x10);
 					return 0;
-				case TM2:
+				case CFG_TM2:
 					setIdOut(0x19);
 					return 0;
-				case TMODE:
+				case CFG_TMODE:
 					setIdOut(0x1D);
 					return 0;
-				case EKF:
+				case CFG_EKF:
 					setIdOut(0x12);
 					return 0;
 				}
 
-			case UPD:
+			case CLASS_UPD:
 				setClassOut(0x09);
-				switch (upd.valueOf(msgtype)) {
-				case DOWNL:
+				switch (msgtype) {
+				case UPD_DOWNL:
 					setIdOut(0x01);
 					return 0;
-				case UPLOAD:
+				case UPD_UPLOAD:
 					setIdOut(0x02);
 					return 0;
-				case EXEC:
+				case UPD_EXEC:
 					setIdOut(0x03);
 					return 0;
-				case MEMCPY:
+				case UPD_MEMCPY:
 					setIdOut(0x04);
 					return 0;
 				}
 
-			case MON:
+			case CLASS_MON:
 				setClassOut(0x0A);
-				switch (mon.valueOf(msgtype)) {
-				case SCHD:
+				switch (msgtype) {
+				case MON_SCHD:
 					setIdOut(0x01);
 					return 0;
-				case IO:
+				case MON_IO:
 					setIdOut(0x02);
 					return 0;
-				case MSGPP:
+				case MON_MSGPP:
 					setIdOut(0x06);
 					return 0;
-				case RXBUF:
+				case MON_RXBUF:
 					setIdOut(0x07);
 					return 0;
-				case TXBUF:
+				case MON_TXBUF:
 					setIdOut(0x08);
 					return 0;
-				case HW:
+				case MON_HW:
 					setIdOut(0x09);
 					return 0;
-				case IPC:
+				case MON_IPC:
 					setIdOut(0x03);
 					return 0;
-				case USB:
+				case MON_USB:
 					setIdOut(0x0A);
 					return 0;
-				case VER:
+				case MON_VER:
 					setIdOut(0x04);
 					return 0;
-				case EXCEPT:
+				case MON_EXCEPT:
 					setIdOut(0x05);
 					return 0;
 				}
 
-			case AID:
+			case CLASS_AID:
 				setClassOut(0x0B);
-				switch (aid.valueOf(msgtype)) {
-				case REQ:
+				switch (msgtype) {
+				case AID_REQ:
 					setIdOut(0x00);
 					return 0;
-				case DATA:
+				case AID_DATA:
 					setIdOut(0x10);
 					return 0;
-				case INI:
+				case AID_INI:
 					setIdOut(0x01);
 					return 0;
-				case HUI:
+				case AID_HUI:
 					setIdOut(0x02);
 					return 0;
-				case ALM:
+				case AID_ALM:
 					setIdOut(0x30);
 					return 0;
-				case EPH:
+				case AID_EPH:
 					setIdOut(0x31);
 					return 0;
 				}
 
-			case TIM:
+			case CLASS_TIM:
 				setClassOut(0x0D);
-				switch (tim.valueOf(msgtype)) {
-				case TM:
+				switch (msgtype) {
+				case TIM_TM:
 					setIdOut(0x02);
 					return 0;
-				case TM2:
+				case TIM_TM2:
 					setIdOut(0x03);
 					return 0;
-				case TP:
+				case TIM_TP:
 					setIdOut(0x01);
 					return 0;
-				case SVIN:
+				case TIM_SVIN:
 					setIdOut(0x04);
 					return 0;
 				}
-			case NMEA:
+			case CLASS_NMEA:
 				setClassOut(0xF0);
-				switch (nmea.valueOf(msgtype)) {
-				case GGA:
+				switch (msgtype) {
+				case NMEA_GGA:
 					setIdOut(0x00);
 					return 0;
-				case GLL:
+				case NMEA_GLL:
 					setIdOut(0x01);
 					return 0;
-				case GSA:
+				case NMEA_GSA:
 					setIdOut(0x02);
 					return 0;
-				case GSV:
+				case NMEA_GSV:
 					setIdOut(0x03);
 					return 0;
-				case RMC:
+				case NMEA_RMC:
 					setIdOut(0x04);
 					return 0;
-				case VTG:
+				case NMEA_VTG:
 					setIdOut(0x05);
 					return 0;
-				case GRS:
+				case NMEA_GRS:
 					setIdOut(0x06);
 					return 0;
-				case GST:
+				case NMEA_GST:
 					setIdOut(0x07);
 					return 0;
-				case ZDA:
+				case NMEA_ZDA:
 					setIdOut(0x08);
 					return 0;
-				case GBS:
+				case NMEA_GBS:
 					setIdOut(0x09);
 					return 0;
-				case DTM:
+				case NMEA_DTM:
 					setIdOut(0x0A);
 					return 0;
 				}
 
-			case PUBX:
+			case CLASS_PUBX:
 				setClassOut(0xF1);
-				switch (pubx.valueOf(msgtype)) {
-				case A:
+				switch (msgtype) {
+				case PUBX_A:
 					setIdOut(0x00);
 					return 0;
-				case B:
+				case PUBX_B:
 					setIdOut(0x01);
 					return 0;
-				case C:
+				case PUBX_C:
 					setIdOut(0x03);
 					return 0;
-				case D:
+				case PUBX_D:
 					setIdOut(0x04);
 					return 0;
 				}

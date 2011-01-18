@@ -46,6 +46,7 @@ import org.ejml.data.SimpleMatrix;
 import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
+import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.Time;
@@ -445,9 +446,8 @@ public class SP3Parser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getIono(int)
 	 */
 	@Override
-	public double getIono(long utcTime, int i) {
-
-		return 0;
+	public IonoGps getIono(long utcTime) {
+		return null;
 	}
 
 

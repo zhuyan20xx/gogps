@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Lorenzo Patocchi. All Rights Reserved.
+ * Copyright (c) 2011, Lorenzo Patocchi. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -19,19 +19,10 @@
  */
 package org.gogpsproject;
 
-import java.io.IOException;
-
-
 /**
  * @author Lorenzo
  *
  */
-public interface ObservationsProducer {
+public interface PositionConsumer {
 
-	public void init() throws Exception;
-	public void release();
-	//public boolean hasMoreObservations() throws IOException;
-	public Observations getCurrentObservations();
-	public Observations nextObservations();
-	public Coordinates getApproxPosition();
 }

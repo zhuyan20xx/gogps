@@ -313,11 +313,11 @@ public class ReceiverPosition extends Coordinates{
 				// Correct approximate pseudorange for troposphere
 				double elevation = roverTopo[i].getElevation();
 				double height = this.getGeodeticHeight();//geod.get(2);
-				double roverSatelliteTropoCorr = Atmosphere.computeTroposphereCorrection(elevation, height);
+				double roverSatelliteTropoCorr = ComputingToolbox.computeTroposphereCorrection(elevation, height);
 
 				// Correct approximate pseudorange for ionosphere
 				double azimuth = roverTopo[i].getAzimuth();
-				double roverSatelliteIonoCorr = Atmosphere
+				double roverSatelliteIonoCorr = ComputingToolbox
 						.computeIonosphereCorrection(navigation,this, azimuth, elevation, roverObs.getRefTime());
 
 				// Fill in troposphere and ionosphere double differenced
@@ -444,23 +444,23 @@ public class ReceiverPosition extends Coordinates{
 		// Computation of rover-pivot troposphere correction
 		double roverElevation = roverTopo[pivot].getElevation();
 		double roverHeight = this.getGeodeticHeight();//geod.get(2);
-		double roverPivotTropoCorr = Atmosphere.computeTroposphereCorrection(
+		double roverPivotTropoCorr = ComputingToolbox.computeTroposphereCorrection(
 				roverElevation, roverHeight);
 
 		// Computation of master-pivot troposphere correction
 		double masterElevation = masterTopo[pivot].getElevation();
 		double masterHeight = masterPos.getGeodeticHeight();//geod.get(2);
-		double masterPivotTropoCorr = Atmosphere.computeTroposphereCorrection(
+		double masterPivotTropoCorr = ComputingToolbox.computeTroposphereCorrection(
 				masterElevation, masterHeight);
 
 		// Computation of rover-pivot ionosphere correction
 		double roverAzimuth = roverTopo[pivot].getAzimuth();
-		double roverPivotIonoCorr = Atmosphere.computeIonosphereCorrection(
+		double roverPivotIonoCorr = ComputingToolbox.computeIonosphereCorrection(
 				navigation, this, roverAzimuth, roverElevation, roverObs.getRefTime());
 
 		// Computation of master-pivot ionosphere correction
 		double masterAzimuth = masterTopo[pivot].getAzimuth();
-		double masterPivotIonoCorr = Atmosphere.computeIonosphereCorrection(
+		double masterPivotIonoCorr = ComputingToolbox.computeIonosphereCorrection(
 				navigation, masterPos, masterAzimuth, masterElevation,
 				roverObs.getRefTime());
 
@@ -512,26 +512,26 @@ public class ReceiverPosition extends Coordinates{
 				// Computation of rover-satellite troposphere correction
 				roverElevation = roverTopo[i].getElevation();
 				roverHeight = this.getGeodeticHeight();//geod.get(2);
-				double roverSatTropoCorr = Atmosphere
+				double roverSatTropoCorr = ComputingToolbox
 						.computeTroposphereCorrection(roverElevation,
 								roverHeight);
 
 				// Computation of master-satellite troposphere correction
 				masterElevation = masterTopo[i].getElevation();
 				masterHeight = masterPos.getGeodeticHeight();//geod.get(2);
-				double masterSatTropoCorr = Atmosphere
+				double masterSatTropoCorr = ComputingToolbox
 						.computeTroposphereCorrection(masterElevation,
 								masterHeight);
 
 				// Computation of rover-satellite ionosphere correction
 				roverAzimuth = roverTopo[i].getAzimuth();
-				double roverSatIonoCorr = Atmosphere
+				double roverSatIonoCorr = ComputingToolbox
 						.computeIonosphereCorrection(navigation,
 								this, roverAzimuth, roverElevation, roverObs.getRefTime());
 
 				// Computation of master-satellite ionosphere correction
 				masterAzimuth = masterTopo[i].getAzimuth();
-				double masterSatIonoCorr = Atmosphere
+				double masterSatIonoCorr = ComputingToolbox
 						.computeIonosphereCorrection(navigation,
 								masterPos, masterAzimuth, masterElevation, roverObs.getRefTime());
 

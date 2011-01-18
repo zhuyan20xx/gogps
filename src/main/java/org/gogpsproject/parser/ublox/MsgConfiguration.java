@@ -29,47 +29,63 @@ public class MsgConfiguration {
 
 	public final int uBloxPrefix1 = 0xB5;
 	public final  int uBloxPrefix2 = 0x62;
-	public final  int ID2 = 0x01;
-	public final  int ID1 = 0x06;
 	private int classid;
 	private int msgval;
 	private MessageType msgid;
-	private int length1 = 0;
-	private int length2 = 3;
-	private int rate;
+
+	//private int rate;
 	private int CK_A;
 	private int CK_B;
 	private Vector<Integer> msg;
 
-	public MsgConfiguration(String classtype, String msgtype, int _mode) {
+	public MsgConfiguration(int classtype, int msgtype, boolean enable) {
 		msgid = new MessageType(classtype, msgtype);
 		classid = msgid.getClassOut();
 		msgval = msgid.getIdOut();
 		// System.out.println("ID 1 >>:" + ID1 + "ID 2 >>:" + ID2);
-		if (_mode == 1)
-			rate = 0x01;
-		else
-			rate = 0x00;
-		msg = new Vector<Integer>();
-		msg.add(uBloxPrefix1);
-		msg.add(uBloxPrefix2);
-		msg.add(ID1);
-		msg.add(ID2);
-		msg.add(length2);
-		msg.add(length1);
-		msg.add(classid);
-		msg.add(msgval);
-		msg.add(rate);
+		msg = new Vector();
+		msg.addElement(new Integer(uBloxPrefix1));
+		msg.addElement(new Integer(uBloxPrefix2));
+		msg.addElement(new Integer(0x06)); // CFG
+		msg.addElement(new Integer(0x01)); // MSG
+		msg.addElement(new Integer(3)); // lenght low
+		msg.addElement(new Integer(0)); // lenght hi
+		msg.addElement(new Integer(classid));
+		msg.addElement(new Integer(msgval));
+		msg.addElement(new Integer(enable?0x01:0x00));
 		checkSum();
-		msg.add(CK_A);
-		msg.add(CK_B);
+		msg.addElement(new Integer(CK_A));
+		msg.addElement(new Integer(CK_B));
+	}
+	public MsgConfiguration(int classtype, int msgtype, int smsg[]) {
+		msgid = new MessageType(classtype, msgtype);
+		classid = msgid.getClassOut();
+		msgval = msgid.getIdOut();
+		// System.out.println("ID 1 >>:" + ID1 + "ID 2 >>:" + ID2);
+
+		msg = new Vector();
+		msg.addElement(new Integer(uBloxPrefix1));
+		msg.addElement(new Integer(uBloxPrefix2));
+		msg.addElement(new Integer(classid));
+		msg.addElement(new Integer(msgval));
+		int length1 = (smsg.length)/0xff;
+		int length2 = (smsg.length)&0xff;
+		msg.addElement(new Integer(length2));
+		msg.addElement(new Integer(length1));
+		for(int i=0;i<smsg.length;i++){
+			msg.addElement(new Integer(smsg[i]));
+		}
+		checkSum();
+		msg.addElement(new Integer(CK_A));
+		msg.addElement(new Integer(CK_B));
+
 	}
 
 	private void checkSum() {
 		CK_A = 0;
 		CK_B = 0;
 		for (int i = 2; i < msg.size(); i++) {
-			CK_A = CK_A + (Integer) msg.elementAt(i);
+			CK_A = CK_A + ((Integer) msg.elementAt(i)).intValue();
 			CK_B = CK_B + CK_A;
 
 		}
@@ -80,7 +96,7 @@ public class MsgConfiguration {
 	public byte[] getByte() {
 		byte[] bytes = new byte[msg.size()];
 		for (int i = 0; i < msg.size(); i++) {
-			bytes[i] = UnsignedOperation.unsignedIntToByte(msg.elementAt(i));
+			bytes[i] = UnsignedOperation.unsignedIntToByte(((Integer)msg.elementAt(i)).intValue());
 		}
 		return bytes;
 	}

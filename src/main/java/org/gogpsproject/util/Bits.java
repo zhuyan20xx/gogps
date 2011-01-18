@@ -22,11 +22,11 @@ package org.gogpsproject.util;
 public class Bits {
 
 //	public static void main(String args[]){
-//		
+//
 //		System.out.println(bitsToInt(new boolean[]{true,false,true}) + " " + bitsToInt(new boolean[]{true,false,true}));
 //		System.out.println(bitsToInt(new boolean[]{true,false,false}) + " " + bitsToInt(new boolean[]{true,false,false}));
 //		System.out.println(bitsToInt(new boolean[]{false,false,true}) + " " + bitsToInt(new boolean[]{false,false,true}));
-//		
+//
 //	}
 //	public static int bitsToInt(boolean[] bits) {
 //		int result = 0;
@@ -44,8 +44,23 @@ public class Bits {
 		int result = 0;
 
 
-		
+
 		int pow2 = 1;
+		for (int i = bits.length-1; i >= 0; i--) {
+			if (bits[i]) {
+				result = result + pow2 ;//(int) java.lang.Math.pow(2, (bits.length - i - 1));
+			}
+			pow2 = pow2 * 2;
+		}
+
+		return result;
+	}
+	public static long bitsToULong(boolean[] bits) {
+		long result = 0;
+
+
+
+		long pow2 = 1;
 		for (int i = bits.length-1; i >= 0; i--) {
 			if (bits[i]) {
 				result = result + pow2 ;//(int) java.lang.Math.pow(2, (bits.length - i - 1));
@@ -57,10 +72,10 @@ public class Bits {
 	}
 	/**
 	 * convert bits to String
-	 * 
+	 *
 	 * @param b
 	 *            byte to convert
-	 * 
+	 *
 	 * @return String of 0's and 1's
 	 */
 	public static String bitsToStr(boolean[] b) {
@@ -98,7 +113,7 @@ public class Bits {
 
 	/**
 	 * convert a integer (byte) to a bit String
-	 * 
+	 *
 	 * @param b
 	 *            integer to convert, only the first byte are used
 	 */
@@ -108,12 +123,12 @@ public class Bits {
 
 	/**
 	 * compares two bit arrays for idendeical length and bits
-	 * 
+	 *
 	 * @param b1
 	 *            bit array to compare
 	 * @param b2
 	 *            bit array to compare
-	 * 
+	 *
 	 * @return <code>true</code> if the bit arrays are identical,
 	 *         <code>false</code> otherwise
 	 */
@@ -133,7 +148,7 @@ public class Bits {
 
 	/**
 	 * concatinates two bit arrays into one new
-	 * 
+	 *
 	 * @param b1
 	 *            the first bit array. Data from here are the first in the new
 	 *            array
@@ -155,7 +170,7 @@ public class Bits {
 
 	/**
 	 * copies an entire bit array into a new bit array
-	 * 
+	 *
 	 * @param b
 	 *            the bit array to copy
 	 */
@@ -164,9 +179,30 @@ public class Bits {
 		return subset(b, 0, b.length);
 	}
 
+
+	/**
+	 * convert a byte to bits
+	 *
+	 * @param in
+	 *            byte to convert
+	 * @param length
+	 *            how many bits to use, must be between 1 and 32
+	 */
+
+	public static boolean[] byteToBits(byte b, int length) {
+		int in = getUInt(b);
+		boolean[] result = new boolean[length];
+		for (int i = 0; i < length; i++) {
+			result[length - 1 - i] = (in % 2 == 1);
+			in = in / 2;
+		}
+		return result;
+	}
+
+
 	/**
 	 * convert a integer to bits
-	 * 
+	 *
 	 * @param in
 	 *            integer to convert
 	 * @param length
@@ -184,7 +220,7 @@ public class Bits {
 
 	/**
 	 * convert a byte (given as an integer) to bits with all bits turned
-	 * 
+	 *
 	 * @param in
 	 *            integer to convert, only the first byte are used
 	 */
@@ -207,14 +243,14 @@ public class Bits {
 
 	/**
 	 * copies a subset from a bit array into a new bit array
-	 * 
+	 *
 	 * @param b
 	 *            bit arrray to copy from
 	 * @param start
 	 *            the index to start from
 	 * @param length
 	 *            the length of the subset
-	 * 
+	 *
 	 * @throws ArrayIndexOutOfBoundsException
 	 *             if subset succseeds the original arrays length (not
 	 *             decleraed)
@@ -276,4 +312,79 @@ public class Bits {
 		return bytes;
 	}
 
+	public static int getUInt(byte b){
+		return b>=0?b:256+b;
+	}
+
+	public static double byteToIEEE754Double(byte l[]){
+		long bits = 0;
+		for(int i=l.length-1;i>=0;i--){
+			bits = bits << 8;
+			bits = bits | getUInt(l[i]);
+		}
+		return Double.longBitsToDouble(bits);
+	}
+	public static float byteToIEEE754Float(byte l[]){
+		int bits = 0;
+		for(int i=l.length-1;i>=0;i--){
+			bits = bits << 8;
+			bits = bits | getUInt(l[i]);
+		}
+		return Float.intBitsToFloat(bits);
+	}
+	public static long byteToLong(byte l[]){
+		long bits = 0;
+		for(int i=l.length-1;i>=0;i--){
+			bits = bits << 8;
+			bits = bits | getUInt(l[i]);
+		}
+
+		return bits;
+	}
+	public static int byteToInt(byte l[]){
+		int bits = 0;
+		for(int i=l.length-1;i>=0;i--){
+			bits = bits << 8;
+			bits = bits | getUInt(l[i]);
+		}
+
+		return bits;
+	}
+
+	/**
+     * Convert a specified number of bytes from a byte array into a readable hex string.
+     *
+     * @param byteArray the array of data.
+     * @param length the number of bytes of data to include int he string.
+     *
+     * @return the string representation of the byte array.
+     */
+    public static String toHexString(byte[] byteArray, int length)
+    {
+        StringBuffer buffer = new StringBuffer();
+        for(int i = 0; i < length; i++)
+        {
+            buffer.append(toHex(byteArray[i]));
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * Convert a byte into a readable hex string.
+     *
+     * @param b the data to convert into a string.
+     *
+     * @return a string representation of the byte in hex.
+     */
+    public static String toHex(byte b)
+    {
+        Integer I = new Integer((b << 24) >>> 24);
+        int i = I.intValue();
+
+        if (i < (byte)16)
+        {
+            return "0" + Integer.toString(i,16).toUpperCase();
+        }
+        return Integer.toString(i,16).toUpperCase();
+    }
 }
