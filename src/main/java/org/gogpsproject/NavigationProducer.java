@@ -33,10 +33,10 @@ public interface NavigationProducer {
 
 	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range);
 
-	public void init();
+	public void init() throws Exception;
 	public void release();
 
-	public double getIono(long utcTime, int i);
+	public IonoGps getIono(long utcTime);
 //	/**
 //	 * @return the a0
 //	 */

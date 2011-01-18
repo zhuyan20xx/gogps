@@ -32,6 +32,8 @@ import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import org.gogpsproject.EphGps;
+import org.gogpsproject.IonoGps;
 import org.gogpsproject.Observations;
 
 public class SerialConnection implements UBXEventListener{
@@ -71,11 +73,11 @@ public class SerialConnection implements UBXEventListener{
 
 				ubxReader = new UBXSerialReader(inputStream,outputStream, this);
 				ubxReader.start();
-				
+
 				connected = true;
 				System.out.println("Connection on " + portName + " established");
 				conn = true;
-				
+
 			}
 		} catch (NoSuchPortException e) {
 			System.out.println("The connection could not be made");
@@ -97,7 +99,7 @@ public class SerialConnection implements UBXEventListener{
 
 	public boolean disconnect() {
 		boolean disconn = true;
-		
+
 		ubxReader.stop();
 		//end = true;
 //		try {
@@ -151,7 +153,7 @@ public class SerialConnection implements UBXEventListener{
 	@Override
 	public void addObservations(Observations o) {
 		System.out.println("# "+o.getGpsSize()+" GPS time "+o.getRefTime().getMsec());
-		
+
 	}
 
 	/* (non-Javadoc)
@@ -160,6 +162,26 @@ public class SerialConnection implements UBXEventListener{
 	@Override
 	public void streamClosed() {
 		disconnect();
+	}
+
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.parser.ublox.UBXEventListener#addEphemeris(org.gogpsproject.EphGps)
+	 */
+	@Override
+	public void addEphemeris(EphGps eph) {
+		// TODO Auto-generated method stub
+
+	}
+
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.parser.ublox.UBXEventListener#addIonospheric(double[])
+	 */
+	@Override
+	public void addIonospheric(IonoGps iono) {
+		// TODO Auto-generated method stub
+
 	}
 
 

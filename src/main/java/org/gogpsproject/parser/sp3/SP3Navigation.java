@@ -35,6 +35,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.gogpsproject.Coordinates;
+import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Time;
 import org.gogpsproject.SatellitePosition;
@@ -247,9 +248,8 @@ public class SP3Navigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getIono(int)
 	 */
 	@Override
-	public double getIono(long utcTime, int i) {
-		double iono[]={1.5832E-8, -1.4901E-8, -1.1921E-7, 1.1921E-7, 122880.0, -180220.0, -131070.0, 786430.0};
-		return 0;//iono[i];
+	public IonoGps getIono(long utcTime) {
+		return null;//iono[i];
 	}
 
 	/* (non-Javadoc)

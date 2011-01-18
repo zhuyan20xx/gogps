@@ -25,9 +25,9 @@ import java.io.OutputStream;
 
 /**
  * <p>
- * 
+ *
  * </p>
- * 
+ *
  * @author Lorenzo Patocchi cryms.com
  */
 
@@ -40,7 +40,7 @@ public class UBXSerialReader implements Runnable {
 	private boolean stop = false;
 	private UBXEventListener eventListener;
 	private UBXReader reader;
-	
+
 	public UBXSerialReader(InputStream in,OutputStream out,UBXEventListener el) {
 		this.in = in;
 		this.out = out;
@@ -51,27 +51,34 @@ public class UBXSerialReader implements Runnable {
 	public void start()  throws IOException{
 		t = new Thread(this);
 		t.start();
-		
+
 		System.out.println("1");
-		String nmea[] = { "GGA", "GLL", "GSA", "GSV", "RMC", "VTG", "GRS",
-				"GST", "ZDA", "GBS", "DTM" };
+		int nmea[] = { MessageType.NMEA_GGA, MessageType.NMEA_GLL, MessageType.NMEA_GSA, MessageType.NMEA_GSV, MessageType.NMEA_RMC, MessageType.NMEA_VTG, MessageType.NMEA_GRS,
+				MessageType.NMEA_GST, MessageType.NMEA_ZDA, MessageType.NMEA_GBS, MessageType.NMEA_DTM };
 		for (int i = 0; i < nmea.length; i++) {
-			MsgConfiguration msgcfg = new MsgConfiguration("NMEA", nmea[i], 0);
+			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_NMEA, nmea[i], false);
 			out.write(msgcfg.getByte());
 			out.flush();
 		}
 		System.out.println("2");
-		String pubx[] = { "A", "B", "C", "D" };
+		int pubx[] = { MessageType.PUBX_A, MessageType.PUBX_B, MessageType.PUBX_C, MessageType.PUBX_D };
 		for (int i = 0; i < pubx.length; i++) {
-			MsgConfiguration msgcfg = new MsgConfiguration("PUBX", pubx[i], 0);
+			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_PUBX, pubx[i], false);
 			out.write(msgcfg.getByte());
 			out.flush();
 		}
 		// outputStream.write(clear.getBytes());
 		// outputStream.flush();
-		MsgConfiguration msgcfg = new MsgConfiguration("RXM", "RAW", 1);
+		MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_RXM, MessageType.RXM_RAW, true);
 		out.write(msgcfg.getByte());
 		out.flush();
+		msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, true);
+		out.write(msgcfg.getByte());
+		out.flush();
+		msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, true);
+		out.write(msgcfg.getByte());
+		out.flush();
+
 		System.out.println("3");
 	}
 	public void stop(){
@@ -80,8 +87,21 @@ public class UBXSerialReader implements Runnable {
 	public void run() {
 
 		int data = 0;
+		long aidEphTS = System.currentTimeMillis();
+		long aidHuiTS = System.currentTimeMillis();
+
 
 		try {
+			int msg[] = {};
+			System.out.println("Poll AID HUI");
+			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
+			out.write(msgcfg.getByte());
+			out.flush();
+			System.out.println("Poll AID EPH");
+			msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
+			out.write(msgcfg.getByte());
+			out.flush();
+
 			//System.out.println();
 			while (!stop) {
 				if(in.available()>0){
@@ -101,6 +121,21 @@ public class UBXSerialReader implements Runnable {
 					try {
 						Thread.sleep(10);
 					} catch (InterruptedException e) {}
+				}
+				long curTS = System.currentTimeMillis();
+				if(curTS-aidEphTS > 10*1000){
+					System.out.println("Poll AID EPH");
+					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
+					out.write(msgcfg.getByte());
+					out.flush();
+					aidEphTS = curTS;
+				}
+				if(curTS-aidHuiTS > 60*1000){
+					System.out.println("Poll AID HUI");
+					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
+					out.write(msgcfg.getByte());
+					out.flush();
+					aidHuiTS = curTS;
 				}
 			}
 		} catch (IOException e) {

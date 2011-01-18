@@ -19,12 +19,14 @@
  */
 package org.gogpsproject.parser.ublox;
 
+import org.gogpsproject.EphGps;
+import org.gogpsproject.IonoGps;
 import org.gogpsproject.Observations;
 /**
  * <p>
- * 
+ *
  * </p>
- * 
+ *
  * @author Lorenzo Patocchi cryms.com
  */
 
@@ -36,4 +38,7 @@ public interface UBXEventListener {
 
 	public void streamClosed();
 	public void addObservations(Observations o);
+	public void addIonospheric(IonoGps iono);
+	public void addEphemeris(EphGps eph);
+
 }

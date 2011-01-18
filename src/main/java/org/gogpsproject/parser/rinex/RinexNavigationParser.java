@@ -32,9 +32,11 @@ import java.text.ParseException;
 import java.util.ArrayList;
 
 import org.ejml.data.SimpleMatrix;
+import org.gogpsproject.ComputingToolbox;
 import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
+import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.Time;
@@ -59,12 +61,13 @@ public class RinexNavigationParser implements NavigationProducer{
 	public static String newline = System.getProperty("line.separator");
 
 	private ArrayList<EphGps> eph = new ArrayList<EphGps>(); /* GPS broadcast ephemerides */
-	private double[] iono = new double[8]; /* Ionosphere model parameters */
-	private double A0; /* Delta-UTC parameters: A0 */
-	private double A1; /* Delta-UTC parameters: A1 */
-	private double T; /* Delta-UTC parameters: T */
-	private double W; /* Delta-UTC parameters: W */
-	private int leaps; /* Leap seconds */
+	//private double[] iono = new double[8]; /* Ionosphere model parameters */
+	private IonoGps iono = null; /* Ionosphere model parameters */
+//	private double A0; /* Delta-UTC parameters: A0 */
+//	private double A1; /* Delta-UTC parameters: A1 */
+//	private double T; /* Delta-UTC parameters: T */
+//	private double W; /* Delta-UTC parameters: W */
+//	private int leaps; /* Leap seconds */
 
 
 	// RINEX Read constructors
@@ -187,63 +190,82 @@ public class RinexNavigationParser implements NavigationProducer{
 
 					} else if (typeField.equals("ION ALPHA")) {
 
+						float a[] = new float[4];
 						sub = line.substring(3, 14).replace('D', 'e');
 						//Navigation.iono[0] = Double.parseDouble(sub.trim());
-						setIono(0, Double.parseDouble(sub.trim()));
+						a[0] = Float.parseFloat(sub.trim());
 
 						sub = line.substring(15, 26).replace('D', 'e');
 						//Navigation.iono[1] = Double.parseDouble(sub.trim());
-						setIono(1, Double.parseDouble(sub.trim()));
+						a[1] = Float.parseFloat(sub.trim());
 
 						sub = line.substring(27, 38).replace('D', 'e');
 						//Navigation.iono[2] = Double.parseDouble(sub.trim());
-						setIono(2, Double.parseDouble(sub.trim()));
+						a[2] = Float.parseFloat(sub.trim());
 
 						sub = line.substring(39, 50).replace('D', 'e');
 						//Navigation.iono[3] = Double.parseDouble(sub.trim());
-						setIono(3, Double.parseDouble(sub.trim()));
+						a[3] = Float.parseFloat(sub.trim());
 
+						if(iono==null) iono = new IonoGps();
+						iono.setAlpha(a);
 
 					} else if (typeField.equals("ION BETA")) {
 
+						float b[] = new float[4];
+
 						sub = line.substring(3, 14).replace('D', 'e');
 						//Navigation.iono[4] = Double.parseDouble(sub.trim());
-						setIono(4, Double.parseDouble(sub.trim()));
+						//setIono(4, Double.parseDouble(sub.trim()));
+						b[0] = Float.parseFloat(sub.trim());
 
 
 						sub = line.substring(15, 26).replace('D', 'e');
 						//Navigation.iono[5] = Double.parseDouble(sub.trim());
-						setIono(5, Double.parseDouble(sub.trim()));
-
+						//setIono(5, Double.parseDouble(sub.trim()));
+						b[1] = Float.parseFloat(sub.trim());
 
 						sub = line.substring(27, 38).replace('D', 'e');
 						//Navigation.iono[6] = Double.parseDouble(sub.trim());
-						setIono(6, Double.parseDouble(sub.trim()));
-
+						//setIono(6, Double.parseDouble(sub.trim()));
+						b[2] = Float.parseFloat(sub.trim());
 
 						sub = line.substring(39, 50).replace('D', 'e');
 						//Navigation.iono[7] = Double.parseDouble(sub.trim());
-						setIono(7, Double.parseDouble(sub.trim()));
+						//setIono(7, Double.parseDouble(sub.trim()));
+						b[3] = Float.parseFloat(sub.trim());
 
+						if(iono==null) iono = new IonoGps();
+						iono.setBeta(b);
 
 					} else if (typeField.equals("DELTA-UTC: A0,A1,T,W")) {
 
+						if(iono==null) iono = new IonoGps();
+
 						sub = line.substring(3, 22).replace('D', 'e');
-						setA0(Double.parseDouble(sub.trim()));
+						//setA0(Double.parseDouble(sub.trim()));
+						iono.setUtcA0(Double.parseDouble(sub.trim()));
 
 						sub = line.substring(22, 41).replace('D', 'e');
-						setA1(Double.parseDouble(sub.trim()));
+						//setA1(Double.parseDouble(sub.trim()));
+						iono.setUtcA1(Double.parseDouble(sub.trim()));
 
 						sub = line.substring(41, 50).replace('D', 'e');
-						setT(Integer.parseInt(sub.trim()));
+						//setT(Integer.parseInt(sub.trim()));
+						// TODO need check
+						iono.setUtcWNT(Integer.parseInt(sub.trim()));
 
 						sub = line.substring(50, 59).replace('D', 'e');
-						setW(Integer.parseInt(sub.trim()));
+						//setW(Integer.parseInt(sub.trim()));
+						// TODO need check
+						iono.setUtcTOW(Integer.parseInt(sub.trim()));
 
 					} else if (typeField.equals("LEAP SECONDS")) {
-
+						if(iono==null) iono = new IonoGps();
 						sub = line.substring(0, 6).trim().replace('D', 'e');
-						setLeaps(Integer.parseInt(sub.trim()));
+						//setLeaps(Integer.parseInt(sub.trim()));
+						// TODO need check
+						iono.setUtcLS(Integer.parseInt(sub.trim()));
 
 					} else if (typeField.equals("END OF HEADER")) {
 
@@ -503,72 +525,72 @@ public class RinexNavigationParser implements NavigationProducer{
 		this.eph.add(eph);
 	}
 
-	public void setIono(int i, double val){
-		this.iono[i] = val;
+//	public void setIono(int i, double val){
+//		this.iono[i] = val;
+//	}
+	public IonoGps getIono(long utcTime){
+		return iono;
 	}
-	public double getIono(long utcTime, int i){
-		return iono[i];
-	}
-	/**
-	 * @return the a0
-	 */
-	public double getA0() {
-		return A0;
-	}
-	/**
-	 * @param a0 the a0 to set
-	 */
-	public void setA0(double a0) {
-		A0 = a0;
-	}
-	/**
-	 * @return the a1
-	 */
-	public double getA1() {
-		return A1;
-	}
-	/**
-	 * @param a1 the a1 to set
-	 */
-	public void setA1(double a1) {
-		A1 = a1;
-	}
-	/**
-	 * @return the t
-	 */
-	public double getT() {
-		return T;
-	}
-	/**
-	 * @param t the t to set
-	 */
-	public void setT(double t) {
-		T = t;
-	}
-	/**
-	 * @return the w
-	 */
-	public double getW() {
-		return W;
-	}
-	/**
-	 * @param w the w to set
-	 */
-	public void setW(double w) {
-		W = w;
-	}
-	/**
-	 * @return the leaps
-	 */
-	public int getLeaps() {
-		return leaps;
-	}
-	/**
-	 * @param leaps the leaps to set
-	 */
-	public void setLeaps(int leaps) {
-		this.leaps = leaps;
-	}
+//	/**
+//	 * @return the a0
+//	 */
+//	public double getA0() {
+//		return A0;
+//	}
+//	/**
+//	 * @param a0 the a0 to set
+//	 */
+//	public void setA0(double a0) {
+//		A0 = a0;
+//	}
+//	/**
+//	 * @return the a1
+//	 */
+//	public double getA1() {
+//		return A1;
+//	}
+//	/**
+//	 * @param a1 the a1 to set
+//	 */
+//	public void setA1(double a1) {
+//		A1 = a1;
+//	}
+//	/**
+//	 * @return the t
+//	 */
+//	public double getT() {
+//		return T;
+//	}
+//	/**
+//	 * @param t the t to set
+//	 */
+//	public void setT(double t) {
+//		T = t;
+//	}
+//	/**
+//	 * @return the w
+//	 */
+//	public double getW() {
+//		return W;
+//	}
+//	/**
+//	 * @param w the w to set
+//	 */
+//	public void setW(double w) {
+//		W = w;
+//	}
+//	/**
+//	 * @return the leaps
+//	 */
+//	public int getLeaps() {
+//		return leaps;
+//	}
+//	/**
+//	 * @param leaps the leaps to set
+//	 */
+//	public void setLeaps(int leaps) {
+//		this.leaps = leaps;
+//	}
 
 	public boolean isTimestampInEpocsRange(long utcTime){
 		return eph.size()>0 &&
@@ -585,213 +607,11 @@ public class RinexNavigationParser implements NavigationProducer{
 		EphGps eph = findEph(utcTime, satID);
 
 		if (eph != null) {
-			SatellitePosition sp = computePositionGps(utcTime,satID, eph, range);
+			SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, utcTime, satID, range);
 		}
 		return null;
-	}
-
-	/**
-	 * @param time
-	 *            (GPS time in seconds)
-	 * @param satID
-	 * @param range
-	 * @param approxPos
-	 */
-	private SatellitePosition computePositionGps(long utcTime,int satID, EphGps eph, double obsPseudorange) {
-
-		double timeCorrection = getTimeCorrection(utcTime, eph, obsPseudorange);
-
-		// Compute clock corrected transmission time
-		double tGPS = getClockCorrectedTransmissionTime(utcTime, timeCorrection, obsPseudorange);
-
-		// Compute eccentric anomaly
-		double Ek = eccAnomaly(tGPS, eph);
-
-		// Semi-major axis
-		double A = eph.getRootA() * eph.getRootA();
-
-		// Time from the ephemerides reference epoch
-		double tk = checkGpsTime(tGPS - eph.getToe());
-
-		// Position computation
-		double fk = Math.atan2(Math.sqrt(1 - Math.pow(eph.getE(), 2))
-				* Math.sin(Ek), Math.cos(Ek) - eph.getE());
-		double phi = fk + eph.getOmega();
-		phi = Math.IEEEremainder(phi, 2 * Math.PI);
-		double u = phi + eph.getCuc() * Math.cos(2 * phi) + eph.getCus()
-				* Math.sin(2 * phi);
-		double r = A * (1 - eph.getE() * Math.cos(Ek)) + eph.getCrc()
-				* Math.cos(2 * phi) + eph.getCrs() * Math.sin(2 * phi);
-		double ik = eph.getI0() + eph.getiDot() * tk + eph.getCic() * Math.cos(2 * phi)
-				+ eph.getCis() * Math.sin(2 * phi);
-		double Omega = eph.getOmega0()
-				+ (eph.getOmegaDot() - Constants.EARTH_ANGULAR_VELOCITY) * tk
-				- Constants.EARTH_ANGULAR_VELOCITY * eph.getToe();
-		Omega = Math.IEEEremainder(Omega + 2 * Math.PI, 2 * Math.PI);
-		double x1 = Math.cos(u) * r;
-		double y1 = Math.sin(u) * r;
-
-		// Coordinates
-//			double[][] data = new double[3][1];
-//			data[0][0] = x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega);
-//			data[1][0] = x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega);
-//			data[2][0] = y1 * Math.sin(ik);
-
-		// Fill in the satellite position matrix
-		//this.coord.ecef = new SimpleMatrix(data);
-		//this.coord = Coordinates.globalXYZInstance(new SimpleMatrix(data));
-		SatellitePosition sp = new SatellitePosition(utcTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
-				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
-				y1 * Math.sin(ik));
-		sp.setTimeCorrection(timeCorrection);
-		
-		// Apply the correction due to the Earth rotation during signal travel time
-		earthRotationCorrection(utcTime, tGPS, sp);
-
-		return sp;
-//		this.setXYZ(x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
-//				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
-//				y1 * Math.sin(ik));
-
-	}
-
-	/**
-	 * @param time
-	 *            (Uncorrected GPS time)
-	 * @return GPS time accounting for beginning or end of week crossover
-	 */
-	private static double checkGpsTime(double time) {
-
-		// Account for beginning or end of week crossover
-		if (time > Constants.SEC_IN_HALF_WEEK) {
-			time = time - 2 * Constants.SEC_IN_HALF_WEEK;
-		} else if (time < -Constants.SEC_IN_HALF_WEEK) {
-			time = time + 2 * Constants.SEC_IN_HALF_WEEK;
-		}
-		return time;
-	}
-
-	/**
-	 * @param traveltime
-	 */
-	public void earthRotationCorrection(long utcTime, double transmissionTime, Coordinates satellitePosition) {
-
-		// Computation of signal travel time
-		// SimpleMatrix diff = satellitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
-		// double rho2 = Math.pow(diff.get(0), 2) + Math.pow(diff.get(1), 2)
-		// 		+ Math.pow(diff.get(2), 2);
-		// double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
-		long receptionTime = (new Time(utcTime)).getGpsTime();
-		double traveltime = receptionTime - transmissionTime;
-
-		// Compute rotation angle
-		double omegatau = Constants.EARTH_ANGULAR_VELOCITY * traveltime;
-
-		// Rotation matrix
-		double[][] data = new double[3][3];
-		data[0][0] = Math.cos(omegatau);
-		data[0][1] = Math.sin(omegatau);
-		data[0][2] = 0;
-		data[1][0] = -Math.sin(omegatau);
-		data[1][1] = Math.cos(omegatau);
-		data[1][2] = 0;
-		data[2][0] = 0;
-		data[2][1] = 0;
-		data[2][2] = 1;
-		SimpleMatrix R = new SimpleMatrix(data);
-
-		// Apply rotation
-		//this.coord.ecef = R.mult(this.coord.ecef);
-		//this.coord.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
-		satellitePosition.setSMMultXYZ(R);// = R.mult(this.coord.ecef);
-
-	}
-
-	/**
-	 * @param eph
-	 * @return Clock-corrected GPS transmission time
-	 */
-	private double getClockCorrectedTransmissionTime(long utcTime, double timeCorrection, double obsPseudorange) {
-
-		long gpsTime = (new Time(utcTime)).getGpsTime();
-		// Remove signal travel time from observation time
-		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
-
-		return tRaw - timeCorrection;
-	}
-
-	/**
-	 * @param eph
-	 * @return Satellite clock error
-	 */
-	private double getTimeCorrection(long utcTime, EphGps eph, double obsPseudorange){
-		long gpsTime = (new Time(utcTime)).getGpsTime();
-		// Remove signal travel time from observation time
-		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
-
-		// Compute eccentric anomaly
-		double Ek = eccAnomaly(tRaw, eph);
-
-		// Relativistic correction term computation
-		double dtr = Constants.RELATIVISTIC_ERROR_CONSTANT * eph.getE() * eph.getRootA() * Math.sin(Ek);
-
-		// Clock error computation
-		double dt = checkGpsTime(tRaw - eph.getToc());
-		double timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
-		double tGPS = tRaw - timeCorrection;
-		dt = checkGpsTime(tGPS - eph.getToc());
-		timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
-
-		return timeCorrection;
-	}
-
-	/**
-	 * @param time
-	 *            (GPS time in seconds)
-	 * @param eph
-	 * @return Eccentric anomaly
-	 */
-	private static double eccAnomaly(double time, EphGps eph) {
-
-		// Semi-major axis
-		double A = eph.getRootA() * eph.getRootA();
-
-		// Time from the ephemerides reference epoch
-		double tk = checkGpsTime(time - eph.getToe());
-
-		// Computed mean motion [rad/sec]
-		double n0 = Math.sqrt(Constants.EARTH_GRAVITATIONAL_CONSTANT / Math.pow(A, 3));
-
-		// Corrected mean motion [rad/sec]
-		double n = n0 + eph.getDeltaN();
-
-		// Mean anomaly
-		double Mk = eph.getM0() + n * tk;
-
-		// Eccentric anomaly starting value
-		Mk = Math.IEEEremainder(Mk + 2 * Math.PI, 2 * Math.PI);
-		double Ek = Mk;
-
-		int i;
-		double EkOld, dEk;
-
-		// Eccentric anomaly iterative computation
-		for (i = 0; i < 10; i++) {
-			EkOld = Ek;
-			Ek = Mk + eph.getE() * Math.sin(Ek);
-			dEk = Math.IEEEremainder(Ek - EkOld, 2 * Math.PI);
-			if (Math.abs(dEk) < 1e-12)
-				break;
-		}
-
-		// TODO Display/log warning message
-		if (i == 10)
-			System.out.println("Eccentric anomaly does not converge");
-
-		return Ek;
-
 	}
 
 }

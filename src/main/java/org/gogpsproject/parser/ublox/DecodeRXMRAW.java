@@ -22,6 +22,7 @@ package org.gogpsproject.parser.ublox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,23 +36,18 @@ import org.gogpsproject.util.UnsignedOperation;
 
 
 public class DecodeRXMRAW {
-	//private boolean[] bits;
-	InputStream in;
+	private InputStream in;
 
-	int[] fdata;
-	int[] fbits;
-	boolean end = true;
+//	private int[] fdata;
+//	private int[] fbits;
+//	private boolean end = true;
 
-	// public gpsDecode(boolean[] _bits){
-	// bits=_bits;
-	// }
-	public DecodeRXMRAW(InputStream _in) {
-		in = _in;
+	public DecodeRXMRAW(InputStream in) {
+		this.in = in;
 	}
 
-	public Observations decode() throws IOException,UBXException {
+	public Observations decode(OutputStream logos) throws IOException, UBXException {
 		// parse little Endian data
-
 		int[] length = new int[2];
 		int[] data;
 
@@ -67,13 +63,14 @@ public class DecodeRXMRAW {
 		CH_A += length[0];CH_B += CH_A;
 
 		int len = length[0]*256+length[1];
-		//System.out.println(" %%%%%%%%%% Length : " + len+" "+(length[0]*255+length[1]));
+
+		//System.out.println("Length : " + len);
 		data = new int[8];
-		//int[] datatmp = new int[len];
 		//System.out.print("\n Header ");
 		for (int i = 0; i < 8; i++) {
 			data[i] = in.read();
 			CH_A += data[i];CH_B += CH_A;
+			if(logos!=null) logos.write(data[i]);
 			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
 		}
 		//System.out.println();
@@ -120,13 +117,14 @@ public class DecodeRXMRAW {
 			indice++;
 		}
 
-		//System.out.println("Res :  " + Bits.bitsToUInt(bits) + "  ");
+		//System.out.println("Res :  " + Bits.bitsToInt(bits) + "  ");
 
 		data = new int[len - 8];
 
 		for (int i = 0; i < len - 8; i++) {
 			data[i] = in.read();
 			CH_A += data[i];CH_B += CH_A;
+			if(logos!=null) logos.write(data[i]);
 			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
 		}
 		//System.out.println();
@@ -134,10 +132,13 @@ public class DecodeRXMRAW {
 		long gmtTS = getGMTTS(tow, week);
 		Observations o = new Observations(new Time(gmtTS),0);
 
-		//System.out.println(tow+"  "+o.getRefTime().getGpsTime());
+		//System.out.println(gmtTS+" GPS time "+o.getRefTime().getGpsTime());
+		//ubx.log( o.getRefTime().getGpsTime()+" "+tow+"\n\r");
 
 
 		for (int k = 0; k < (len - 8) / 24; k++) {
+//			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%" + k
+//					+ "%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 
 			ObservationSet os = new ObservationSet();
 
@@ -198,11 +199,10 @@ public class DecodeRXMRAW {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			os.setQualityInd(ObservationSet.L1, Bits.bitsTwoComplement(bits));
 //			System.out.print("Nav Measurements Quality Ind.: "
 //					+ Bits.bitsTwoComplement(bits) + "  ");
 //			System.out.print(" QI: "
-//					+ Bits.bitsToUInt(bits) + "  ");
+//					+ Bits.bitsToInt(bits) + "  ");
 			bits = new boolean[8];
 			indice = 0;
 			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1 + 1], 8);
@@ -221,30 +221,29 @@ public class DecodeRXMRAW {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			os.setLossLockInd(ObservationSet.L1, Bits.bitsToUInt(bits));
 //			System.out.println(" Lock: "//Loss of lock indicator (RINEX definition)
-//					+ Bits.bitsToUInt(bits) + "  ");
+//					+ Bits.bitsToInt(bits) + "  ");
 			int total = offset + 7 + 8 + 4 + 1 + 1 + 1 + 1;
 			//System.out.println("Offset " + total);
 
 			o.setGps(k, os);
 		}
 		// / Checksum
-
-
 		CH_A = CH_A & 0xFF;
 		CH_B = CH_B & 0xFF;
-		if(CH_A != in.read() && CH_B!=in.read())
-			throw new UBXException("Wrong message checksum");
-//		System.out.println("CH_A cal " + Integer.toHexString(CH_A)
-//				+ " CH_K packetto " + Integer.toHexString(in.read()));
-//		System.out.println("CH_B cal " + Integer.toHexString(CH_B)
-//				+ " CH_K packetto " + Integer.toHexString(in.read()));
 
+		int c1 = in.read();
+		if(logos!=null) logos.write(c1);
+
+		int c2 = in.read();
+		if(logos!=null) logos.write(c2);
+
+		if(CH_A != c1 || CH_B!=c2)
+			throw new UBXException("Wrong message checksum");
 		return o;
 	}
 
-	private long getGMTTS(int tow, int week) {
+	private long getGMTTS(long tow, long week) {
 		Calendar c = Calendar.getInstance();
 		c.setTimeZone(TimeZone.getTimeZone("GMT"));
 		c.set(Calendar.YEAR, 1980);
@@ -255,12 +254,13 @@ public class DecodeRXMRAW {
 		c.set(Calendar.SECOND, 0);
 		c.set(Calendar.MILLISECOND, 0);
 
-		c.add(Calendar.WEEK_OF_YEAR, week);
-		c.add(Calendar.MILLISECOND, (int)(Math.round((double)tow/1000.0)*1000));
+//		c.add(Calendar.DATE, week*7);
+//		c.add(Calendar.MILLISECOND, tow/1000*1000);
 
 		//SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
 		//System.out.println(sdf.format(c.getTime()));
+		//ubx.log( (c.getTime().getTime())+" "+c.getTime()+" "+week+" "+tow+"\n\r");
 
-		return c.getTimeInMillis();
+		return c.getTime().getTime() + week*7*24*3600*1000 + tow  ;
 	}
 }

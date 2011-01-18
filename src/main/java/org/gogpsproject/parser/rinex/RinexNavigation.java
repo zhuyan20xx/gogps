@@ -35,6 +35,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.gogpsproject.Coordinates;
+import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Time;
 import org.gogpsproject.SatellitePosition;
@@ -251,10 +252,10 @@ public class RinexNavigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getIono(int)
 	 */
 	@Override
-	public double getIono(long utcTime, int i) {
+	public IonoGps getIono(long utcTime) {
 		RinexNavigationParser rnp = getRNPByTimestamp(utcTime);
-		if(rnp!=null) return rnp.getIono(utcTime, i);
-		return 0;
+		if(rnp!=null) return rnp.getIono(utcTime);
+		return null;
 	}
 
 	/* (non-Javadoc)
