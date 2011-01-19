@@ -24,9 +24,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Vector;
 
+import org.gogpsproject.Coordinates;
+
 public class Test {
 
-	
+
 	public static void main(String[] args) {
 
 		Test test = new Test();
@@ -34,21 +36,26 @@ public class Test {
 			System.out.println("Test [host] [port] [user] [pass] ([mountpoint])");
 			System.exit(0);
 		}
-		
-		
+
+
 		try {
 			RTCM3Client client = RTCM3Client.getInstance(args[0],Integer.parseInt(args[1]),args[2],args[3],args.length>4?args[4]:null);
 			if(client==null){
 				System.exit(0);
 			}
-			
+			Coordinates c = Coordinates.globalXYZInstance(4382391.484129859,687600.702220083,4568100.275913926);
+			c.computeGeodetic();
+			System.out.println("lat "+c.getGeodeticLatitude());
+			System.out.println("lon "+c.getGeodeticLongitude());
+			client.setApproxPosition(c);
+
 			client.start();
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 
 	}
 

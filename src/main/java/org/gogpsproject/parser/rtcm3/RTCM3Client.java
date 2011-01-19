@@ -21,11 +21,17 @@
 package org.gogpsproject.parser.rtcm3;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Date;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -33,20 +39,24 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import org.gogpsproject.Coordinates;
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
+import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.util.Bits;
 
-public class RTCM3Client implements Runnable {
+public class RTCM3Client implements Runnable, ObservationsProducer {
 
 	private ConnectionSettings settings;
 	private Thread dataThread;
 	/** Indicates if the end of the data file loop has been reached */
 	private boolean loopend;
-	
+
+	private boolean waitForData = true;
+
 	private boolean go = false;
 	private HashMap<Integer, Decode> decodeMap;
-	
+
 	/** Optinal message handler for showing error messages. */
 	private boolean header = true;
 	private int messagelength = 0;
@@ -55,8 +65,11 @@ public class RTCM3Client implements Runnable {
 	private boolean[] bits;
 	private boolean[] rollbits;
 	private boolean downloadlength = false;
-	
-	private Vector<Observations> observationsBuffer = null;
+
+	private Coordinates approxPosition = null;
+
+	private Vector<Observations> observationsBuffer = new Vector<Observations>();
+	private int obsCursor = 0;
 
 
 	public static RTCM3Client getInstance(String _host, int _port, String _username,
@@ -104,9 +117,9 @@ public class RTCM3Client implements Runnable {
 		go = false;
 		loopend = true;
 		this.settings = settings;
-		
+
 		decodeMap = new HashMap<Integer, Decode>();
-		
+
 		decodeMap.put(new Integer(1004), new Decode1004Msg(this));
 		decodeMap.put(new Integer(1005), new Decode1005Msg());
 		decodeMap.put(new Integer(1007), new Decode1007Msg());
@@ -125,7 +138,7 @@ public class RTCM3Client implements Runnable {
 
 		// The data request containing the logon and password are send
 		out.println("GET / HTTP/1.1");
-		out.println("User-Agent: NTRIP goGPS");
+		out.println("User-Agent: NTRIP goGPS-project java");
 		out.println("Authorization: Basic " + settings.getPass_base64());
 		// out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
 		// out.println("Accept: */*\r\nConnection: close");
@@ -156,13 +169,13 @@ public class RTCM3Client implements Runnable {
 		ArrayList<String> sources = new ArrayList<String>();
 		for (int i = 0; i < lines.size(); i++) {
 			// A new StringTokenizer is created with ";" as delimiter
-			
+
 			StringTokenizer token = new StringTokenizer(lines.elementAt(i), ";");
 			try {
 				if (token.countTokens() > 1 && token.nextToken().equals("STR")) {
-					
-					System.out.println(lines.elementAt(i));
-					
+
+					//System.out.println(lines.elementAt(i));
+
 					// We excpect the correct source to be the first token after
 					// "STR" to through the token wich specifies the RTCM
 					// version
@@ -233,9 +246,33 @@ public class RTCM3Client implements Runnable {
 			in = sck.getInputStream();
 			// The data request containing the logon and password are send
 			out.println("GET /" + settings.getSource() + " HTTP/1.1");
-			out.println("User-Agent: NTRIP goGps");
+			out.println("User-Agent: NTRIP goGPS-project java");
 			out.println("Authorization: Basic " + settings.getAuthbase64());
-			out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
+
+			if(approxPosition!=null){
+				approxPosition.computeGeodetic();
+				String hhmmss= (new SimpleDateFormat("HHmmss")).format(new Date());
+
+				int h = (int)approxPosition.getGeodeticHeight();
+				double lon = approxPosition.getGeodeticLongitude();
+				double lat = approxPosition.getGeodeticLatitude();
+
+				int lon_deg = (int)lon;
+				double lon_min = (lon - lon_deg) * 60;
+				double lon_nmea = lon_deg * 100 + lon_min;
+				String lonn = (new DecimalFormat("00000.000")).format(lon_nmea);
+				int lat_deg = (int)lat;
+				double lat_min = (lat - lat_deg) * 60;
+				double lat_nmea = lat_deg * 100 + lat_min;
+				String latn = (new DecimalFormat("0000.000")).format(lat_nmea);
+				String ntripGAA = "$GPGGA,"+hhmmss+","+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",4,10,1,"+(h<0?0:h)+",M,1,M,3,0";
+				//ntripGAA = "$GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0";
+
+				ntripGAA = "Ntrip-GAA: "+ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
+				System.out.println(ntripGAA);
+				out.println(ntripGAA);
+			}
+
 			// out.println("User-Agent: NTRIP goGps");
 			// out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
 			// out.println("User-Agent: NTRIP GoGps");
@@ -275,7 +312,7 @@ public class RTCM3Client implements Runnable {
 					hindex++;
 				}
 			}
-			
+
 			for (int i = 0; i < 11 && go; i++) {
 				if (header[i] != correctHeader[i]) {
 					go = false;
@@ -293,7 +330,7 @@ public class RTCM3Client implements Runnable {
 				System.out.println(settings.getSource()+" invalid header");
 				return;
 			}
-			
+
 			while (state != 5) {
 				int c = in.read();
 				if (c < 0) break;
@@ -348,6 +385,37 @@ public class RTCM3Client implements Runnable {
 
 	}
 
+	public static void main(String args[]){
+		System.out.println(computeNMEACheckSum("$GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0"));
+
+		File f = new File("./data/rtcm.out");
+		try {
+			FileInputStream fis = new FileInputStream(f);
+			RTCM3Client cl = new RTCM3Client(null);
+			cl.go = true;
+			cl.readLoop(fis);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+	private static String computeNMEACheckSum(String msg){
+		// perform NMEA checksum calculation
+		int chk = 0;
+
+		for (int i = 1; i < msg.length(); i++){
+			chk ^= msg.charAt(i);
+		}
+		String chk_s = Integer.toHexString(chk).toUpperCase();
+		// checksum must be 2 characters!
+		while (chk_s.length() < 2){
+			chk_s = "0" + chk_s;
+		}
+		return chk_s;
+
+	}
 	public void start() {
 		dataThread = new Thread(this);
 		dataThread.start();
@@ -371,7 +439,7 @@ public class RTCM3Client implements Runnable {
 					state = 1;
 				break;
 			}
-	
+
 			case 1: {
 				if (input == 13)
 					state = 2;
@@ -405,7 +473,7 @@ public class RTCM3Client implements Runnable {
 
 	/**
 	 * reads data from an InputStream while go is true
-	 * 
+	 *
 	 * @param in
 	 *            input stream to read from
 	 */
@@ -453,17 +521,17 @@ public class RTCM3Client implements Runnable {
 				}else{
 					// missing message parser
 				}
-				
+
 				// CRC
 				setBits(in, 3);
-			
+
 				header = true;
 				// setBits(in,1);
 				// System.out.println(" dati :" + Bits.bitsToStr(bits));
 			}
 		}
 	}
-	
+
 	private void setBits(InputStream in, int bufferlength) throws IOException {
 		int index = 0;
 		buffer = new int[bufferlength];
@@ -480,11 +548,100 @@ public class RTCM3Client implements Runnable {
 			}
 		}
 	}
-	
+
 	public void addObservation(Observations o){
-		if(observationsBuffer == null) observationsBuffer = new Vector<Observations>();
+		System.out.println("\t\t\t\tM > obs "+o.getGpsSize()+" time "+new Date(o.getRefTime().getMsec()));
+		for(int i=0;i<o.getGpsSize();i++){
+			ObservationSet os = o.getGpsByIdx(i);
+			System.out.print(" svid:"+os.getSatID());
+			System.out.print(" codeC:"+os.getCodeC(0));
+			System.out.print(" codeP:"+os.getCodeP(0));
+			System.out.print(" doppl:"+os.getDoppler(0));
+			System.out.print(" LLInd:"+os.getLossLockInd(0));
+			System.out.print(" phase:"+os.getPhase(0));
+			System.out.print(" pseud:"+os.getPseudorange(0));
+			System.out.print(" q.ind:"+os.getQualityInd(0));
+			System.out.println(" s.str:"+os.getSignalStrength(0));
+
+
+
+
+
+		}
 		observationsBuffer.add(o);
 	}
-	
-	
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#getApproxPosition()
+	 */
+	@Override
+	public Coordinates getApproxPosition() {
+		return approxPosition;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#getCurrentObservations()
+	 */
+	@Override
+	public Observations getCurrentObservations() {
+		if(obsCursor>=observationsBuffer.size()){
+			if(waitForData){
+				while(obsCursor>=observationsBuffer.size()){
+					System.out.print("m");
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {}
+				}
+			}else{
+				return null;
+			}
+		}
+		return observationsBuffer.get(obsCursor);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#init()
+	 */
+	@Override
+	public void init() throws Exception {
+		start();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#nextObservations()
+	 */
+	@Override
+	public Observations nextObservations() {
+		if(observationsBuffer.size()==0 || (obsCursor+1)>=observationsBuffer.size()){
+			if(waitForData){
+				while(observationsBuffer.size()==0 || (obsCursor+1)>=observationsBuffer.size()){
+					System.out.println("\t\t\t\tM cur:"+obsCursor+" pool:"+observationsBuffer.size());
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {}
+				}
+			}else{
+				return null;
+			}
+		}
+		Observations o = observationsBuffer.get(++obsCursor);
+		System.out.println("\t\t\t\tM < Obs "+o.getRefTime().getMsec());
+        return o;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#release()
+	 */
+	@Override
+	public void release() {
+		stop();
+	}
+
+	/**
+	 * @param initialPosition the initialPosition to set
+	 */
+	public void setApproxPosition(Coordinates approxPosition) {
+		this.approxPosition = approxPosition;
+	}
+
 }

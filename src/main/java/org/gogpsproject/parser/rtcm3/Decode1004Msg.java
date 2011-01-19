@@ -35,7 +35,7 @@ import org.gogpsproject.util.Bits;
 public class Decode1004Msg implements Decode {
 
 	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
-	
+
 	private RTCM3Client client;
 	public Decode1004Msg(RTCM3Client client) {
 		this.client = client;
@@ -45,7 +45,7 @@ public class Decode1004Msg implements Decode {
 	 * @see com.crysm.gogps.parser.tes#decode()
 	 */
 	public void decode(boolean[] bits, long referenceTS) {
-		
+
 		int start = 12;
 		//header.setStationID(Bits.bitsToUInt(Bits.subset(bits, start, 12)));
 		int DF003 = Bits.bitsToUInt(Bits.subset(bits, start, 12));
@@ -68,11 +68,11 @@ public class Decode1004Msg implements Decode {
 		//System.out.println(header);
 		long weekTS = getWeekTS(DF004, referenceTS);
 		Observations o = new Observations(new Time(weekTS+DF004),0);
-		
-		System.out.println(weekTS+"+"+DF004+"="+(weekTS+DF004)+" GPS time "+o.getRefTime().getGpsTime());
-		System.out.println(sdf.format(new Date(weekTS+DF004))+"\n"+sdf.format(new Date(referenceTS)));
-		
-		
+
+		//System.out.println(weekTS+"+"+DF004+"="+(weekTS+DF004)+" GPS time "+o.getRefTime().getGpsTime());
+		//System.out.println(sdf.format(new Date(weekTS+DF004))+"\n"+sdf.format(new Date(referenceTS)));
+
+
 		for (int i = 0; i < DF006 /*header.getNumberGPS()*/; i++) {
 			int DF009 = Bits.bitsToUInt(Bits.subset(bits, start, 6));
 			start += 6;
@@ -98,10 +98,10 @@ public class Decode1004Msg implements Decode {
 			start += 7;
 			int DF020 = Bits.bitsToUInt(Bits.subset(bits, start, 8));
 			start += 8;
-			
+
 			ObservationSet os = new ObservationSet();
 			os.setSatID(DF009);
-			
+
 			double DF011d=DF011*0.02+DF014*299792.458;
 	        if (DF012 != 0x80000) {
 	        	if(DF010){
@@ -120,43 +120,43 @@ public class Decode1004Msg implements Decode {
 //	        	    return cp;
 //	        	}
 //	        	rtcm->obs.data[index].L[0]=DF011/lam[0]+cp1;
-	        	
+
 	        	os.setPhase(ObservationSet.L1, DF011d/Constants.LAMBDA_1+cp1);
 	        }
-			
+
 			//os.setCoarseAcquisition((DF011 * 0.02) + (DF014 * 299792.458));
 			//os.setPhase(ObservationSet.L1,(os.getCoarseAcquisition() + (DF012*0.0005)) / Constants.LAMBDA_1);
 	        double snr = (DF015 * 0.25);
 	        snr = (snr<=0.0||255.5<=snr)?0.0:snr+0.5;
 			os.setSignalStrength(ObservationSet.L1, (float)snr);
-			
+
 			if (DF017!=0x2000) {
 	            os.setCodeP(ObservationSet.L2, DF011d+DF017*0.02);
 	        }
 	        if (DF018!=0x80000) {
 	            double cp2=DF018*0.0005/Constants.LAMBDA_2;
-	            
+
 	            os.setPhase(ObservationSet.L2,DF011d/Constants.LAMBDA_2+cp2);
-	            
+
 	        }
-	        
+
 			//os.setPseudorangeCode(ObservationSet.L2, ((DF011 + DF017) * 0.02) + (DF014 * 299792.458));
 			//os.setPhase(ObservationSet.L2,(os.getCoarseAcquisition() + (DF018*0.0005)) / Constants.LAMBDA_2);
-	        
+
 	        snr = (DF020 * 0.25);
 	        snr = (snr<=0.0||255.5<=snr)?0.0:snr+0.5;
 			os.setSignalStrength(ObservationSet.L2, (float)snr);
 			o.setGps(i, os);
 		}
-		
+
 		client.addObservation(o);
 	}
-	
-	
+
+
 	/**
-	 * @return GPS Epoch Time of the beginning of the right GPS week, 
-	 * which begins at midnight GMT on Saturday 
-	 * night/Sunday morning, measured in milliseconds. 
+	 * @return GPS Epoch Time of the beginning of the right GPS week,
+	 * which begins at midnight GMT on Saturday
+	 * night/Sunday morning, measured in milliseconds.
 	 * referenceTS is the reference timestamp to select rigth week near leap saturday/sunday
 	 * (ie. if referenceTS report Saturday but TOW is little it must select next Sunday, not previous)
 	 */
@@ -174,11 +174,11 @@ public class Decode1004Msg implements Decode {
 		cal.set(Calendar.MINUTE, 0);
 		cal.set(Calendar.SECOND, 0);
 		cal.set(Calendar.MILLISECOND, 0);
-		
+
 		// search for right Sunday comparing TOW value and reference date to target right week
 		if(cal.get(Calendar.DAY_OF_WEEK) >= Calendar.FRIDAY){
 			// time ref is friday or saturday, tow should be great
-			
+
 			if( tow < 2*24*3600*1000 ){
 				// tow is < than Tuesday so real week passed Sunday, go forward
 				while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY) cal.add(Calendar.DATE, 1);
@@ -187,18 +187,18 @@ public class Decode1004Msg implements Decode {
 				while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY) cal.add(Calendar.DATE, -1);
 			}
 		}else{
-			// time ref is Sunday to Thusday 
+			// time ref is Sunday to Thusday
 			if( tow > 5*24*3600*1000 ){
 				// but if tow is still in past week, bring back one week
 				cal.add(Calendar.DATE, -7);
 			}
 			//  ensure Sunday
 			while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY) cal.add(Calendar.DATE, -1);
-			
+
 		}
-		
-			
-		
+
+
+
 		while(cal.get(Calendar.DAY_OF_WEEK)!=Calendar.SUNDAY)cal.add(Calendar.DATE, -1);
 
 		return cal.getTimeInMillis();
