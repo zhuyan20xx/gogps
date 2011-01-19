@@ -107,21 +107,13 @@ public class ReceiverPosition extends Coordinates{
 		// Number of GPS observations
 		int nObs = obs.getGpsSize();
 
-		// Allocate matrices
-		BBB = new SimpleMatrix(4, nObs);
-		BBBe = new SimpleMatrix(4, 1);
-		BBBalpha = new SimpleMatrix(4, 1);
-		e = new SimpleMatrix(nObs, 1);
-		alpha = new SimpleMatrix(nObs, 1);
-		possiblePosA = new SimpleMatrix(4, 1);
-		possiblePosB = new SimpleMatrix(4, 1);
-
 		// Allocate an array to store GPS satellite positions
 		pos = new SatellitePosition[nObs];
 
 		// Allocate a 2D array to store Bancroft matrix data
 		double[][] dataB = new double[nObs][4];
 
+		int p=0;
 		for (int i = 0; i < nObs; i++) {
 
 			// Create new satellite position object
@@ -131,20 +123,38 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
 			double obsPseudorange = obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec() /*getGpsTime()*/, obs.getGpsSatID(i), obsPseudorange);
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), obs.getGpsSatID(i), obsPseudorange);
 
 			try {
+				System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
 				// range)
-				dataB[i][0] = pos[i].getX();
-				dataB[i][1] = pos[i].getY();
-				dataB[i][2] = pos[i].getZ();
-				dataB[i][3] = obsPseudorange /*pos[i].getRange()*/ + Constants.SPEED_OF_LIGHT * pos[i].getTimeCorrection();
+				dataB[p][0] = pos[i].getX();
+				dataB[p][1] = pos[i].getY();
+				dataB[p][2] = pos[i].getZ();
+				dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getTimeCorrection();
+				p++;
 			} catch (NullPointerException u) {
-				// System.out.println("Error: satellite positions not computed");
-				return;
+				System.out.println("Error: satellite positions not computed");
+				//return; // don't break eggs so quickly :-)
 			}
 		}
+		if(p==0) return;
+		if(dataB.length != p){
+			double[][] dataB1 = new double[p][4];
+			for(int i=0;i<p;i++){
+				dataB1[i]=dataB[i];
+			}
+			dataB = dataB1;
+		}
+		// Allocate matrices
+		BBB = new SimpleMatrix(4, dataB.length);
+		BBBe = new SimpleMatrix(4, 1);
+		BBBalpha = new SimpleMatrix(4, 1);
+		e = new SimpleMatrix(dataB.length, 1);
+		alpha = new SimpleMatrix(dataB.length, 1);
+		possiblePosA = new SimpleMatrix(4, 1);
+		possiblePosB = new SimpleMatrix(4, 1);
 
 		// Allocate initial B matrix
 		Binit = new SimpleMatrix(dataB);
@@ -155,7 +165,7 @@ public class ReceiverPosition extends Coordinates{
 			// Allocate B matrix
 			B = new SimpleMatrix(Binit);
 
-			for (int i = 0; i < nObs; i++) {
+			for (int i = 0; i < dataB.length; i++) {
 
 				double x = B.get(i, 0);
 				double y = B.get(i, 1);
@@ -174,14 +184,14 @@ public class ReceiverPosition extends Coordinates{
 				B.set(i, 1, -Math.sin(angle) * x + Math.cos(angle) * y);
 			}
 
-			if (nObs > 4) {
+			if (dataB.length > 4) {
 				BBB = B.transpose().mult(B).solve(B.transpose());
 			} else {
 				BBB = B.invert();
 			}
 
 			e.set(1);
-			for (int i = 0; i < nObs; i++) {
+			for (int i = 0; i < dataB.length; i++) {
 
 				alpha.set(i, 0, lorentzInnerProduct(B.extractMatrix(i, i, 0, 3), B
 						.extractMatrix(i, i, 0, 3)) / 2);
@@ -199,7 +209,7 @@ public class ReceiverPosition extends Coordinates{
 			possiblePosB = BBBalpha.plus(r[1], BBBe);
 			possiblePosA.set(3, 0, -possiblePosA.get(3, 0));
 			possiblePosB.set(3, 0, -possiblePosB.get(3, 0));
-			for (int i = 0; i < nObs; i++) {
+			for (int i = 0; i < dataB.length; i++) {
 				cdt = possiblePosA.get(3, 0);
 				calc = B.extractMatrix(i, i, 0, 2).transpose().minus(
 						possiblePosA.extractMatrix(0, 2, 0, 0)).normF()
@@ -290,7 +300,7 @@ public class ReceiverPosition extends Coordinates{
 		// least squares matrices
 		for (int i = 0; i < nObs; i++) {
 
-			if (satAvail.contains(pos[i].getSatID())) {
+			if (pos[i]!=null && satAvail.contains(pos[i].getSatID())) {
 
 				// Compute receiver-satellite approximate pseudorange
 				//SimpleMatrix diff = this.coord.ecef.minus(pos[i].getCoord().ecef);
@@ -475,7 +485,8 @@ public class ReceiverPosition extends Coordinates{
 		// least squares matrices
 		for (int i = 0; i < nObs; i++) {
 
-			if (satAvail.contains(pos[i].getSatID())
+
+			if (pos[i] !=null && satAvail.contains(pos[i].getSatID())
 					&& i != pivot) {
 
 				// Compute rover-satellite approximate pseudorange
@@ -819,25 +830,31 @@ public class ReceiverPosition extends Coordinates{
 			// Compute clock-corrected satellite position
 			//pos[i].computePositionGps(navigation);
 
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(),
 					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
-			// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
-			// pos[i].earthRotationCorrection(this);
+			if(pos[i]!=null){
+				// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
+				// pos[i].earthRotationCorrection(this);
 
-			// Compute azimuth, elevation and distance for each satellite
-			roverTopo[i] = new TopocentricCoordinates();
-			roverTopo[i].computeTopocentric(this, pos[i]);
+				// Compute azimuth, elevation and distance for each satellite
+				roverTopo[i] = new TopocentricCoordinates();
+				roverTopo[i].computeTopocentric(this, pos[i]);
 
-			// Check if satellite elevation is higher than cutoff
-			if (roverTopo[i].getElevation() > cutoff) {
 
-				satAvail.add(pos[i].getSatID());
+				// Check if satellite elevation is higher than cutoff
+				if (roverTopo[i].getElevation() > cutoff) {
 
-				// Check if also phase is available
-				if (roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0) {
+					satAvail.add(pos[i].getSatID());
+					System.out.println("Available sat "+pos[i].getSatID());
 
-					satAvailPhase.add(pos[i].getSatID());
+					// Check if also phase is available
+					if (roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0) {
+						System.out.println("Available sat phase "+pos[i].getSatID());
+						satAvailPhase.add(pos[i].getSatID());
+					}
+				}else{
+					System.out.println("Not available sat "+roverTopo[i].getElevation()+" < "+cutoff);
 				}
 			}
 		}
@@ -898,50 +915,52 @@ public class ReceiverPosition extends Coordinates{
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
 					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
-			// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
-			// pos[i].earthRotationCorrection(this);
+			if(pos[i]!=null){
+				// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
+				// pos[i].earthRotationCorrection(this);
 
-			//System.out.println("ts2:"+roverObs.getRefTime().getMsec()+" sat:"+ roverObs.getGpsSatID(i)+" pos: "+pos[i]);
+				//System.out.println("ts2:"+roverObs.getRefTime().getMsec()+" sat:"+ roverObs.getGpsSatID(i)+" pos: "+pos[i]);
 
-			// Compute azimuth, elevation and distance for each satellite from
-			// rover
-			roverTopo[i] = new TopocentricCoordinates();
-			roverTopo[i].computeTopocentric(this, pos[i]);
+				// Compute azimuth, elevation and distance for each satellite from
+				// rover
+				roverTopo[i] = new TopocentricCoordinates();
+				roverTopo[i].computeTopocentric(this, pos[i]);
 
-			// Compute azimuth, elevation and distance for each satellite from
-			// master
-			masterTopo[i] = new TopocentricCoordinates();
-			masterTopo[i].computeTopocentric(masterPos, pos[i]);
+				// Compute azimuth, elevation and distance for each satellite from
+				// master
+				masterTopo[i] = new TopocentricCoordinates();
+				masterTopo[i].computeTopocentric(masterPos, pos[i]);
 
-			// Check if satellite is available for double differences, after
-			// cutoff
-			if (masterObs.containsGpsSatID(roverObs.getGpsSatID(i)) // gpsSat.get( // masterObs.gpsSat.contains(roverObs.getGpsSatID(i)
-					&& roverTopo[i].getElevation() > cutoff) {
+				// Check if satellite is available for double differences, after
+				// cutoff
+				if (masterObs.containsGpsSatID(roverObs.getGpsSatID(i)) // gpsSat.get( // masterObs.gpsSat.contains(roverObs.getGpsSatID(i)
+						&& roverTopo[i].getElevation() > cutoff) {
 
-				// Store master observations according to the order of rover
-				// observations
-				masterOrdered[i] = new ObservationSet();
-				masterOrdered[i] = masterObs.getGpsByID(roverObs.getGpsSatID(i)); //masterObs.getGps(masterObs.gpsSat.indexOf(roverObs.gpsSat.get(i)));
-
-				// Find code pivot satellite (with highest elevation)
-				if (roverTopo[i].getElevation() > maxElevCode) {
-					pivotCode = i;
-					maxElevCode = roverTopo[i].getElevation();
-				}
-
-				satAvail.add(pos[i].getSatID());
-
-				// Check if also phase is available for both rover and master
-				if (roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0
-						&& masterOrdered[i].getPhase(goGPS.getFreq()) != 0) {
+					// Store master observations according to the order of rover
+					// observations
+					masterOrdered[i] = new ObservationSet();
+					masterOrdered[i] = masterObs.getGpsByID(roverObs.getGpsSatID(i)); //masterObs.getGps(masterObs.gpsSat.indexOf(roverObs.gpsSat.get(i)));
 
 					// Find code pivot satellite (with highest elevation)
-					if (roverTopo[i].getElevation() > maxElevPhase) {
-						pivotPhase = i;
-						maxElevPhase = roverTopo[i].getElevation();
+					if (roverTopo[i].getElevation() > maxElevCode) {
+						pivotCode = i;
+						maxElevCode = roverTopo[i].getElevation();
 					}
 
-					satAvailPhase.add(pos[i].getSatID());
+					satAvail.add(pos[i].getSatID());
+
+					// Check if also phase is available for both rover and master
+					if (roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0
+							&& masterOrdered[i].getPhase(goGPS.getFreq()) != 0) {
+
+						// Find code pivot satellite (with highest elevation)
+						if (roverTopo[i].getElevation() > maxElevPhase) {
+							pivotPhase = i;
+							maxElevPhase = roverTopo[i].getElevation();
+						}
+
+						satAvailPhase.add(pos[i].getSatID());
+					}
 				}
 			}
 		}
@@ -1249,7 +1268,7 @@ public class ReceiverPosition extends Coordinates{
 
 		for (int i = 0; i < nObs; i++) {
 
-			if (satAvailPhase.contains(pos[i].getSatID())) {
+			if (pos[i]!=null && satAvailPhase.contains(pos[i].getSatID())) {
 
 				// Rover-satellite and master-satellite observed code
 				roverSatCodeObs = roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
