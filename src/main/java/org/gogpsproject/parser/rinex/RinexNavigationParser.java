@@ -207,7 +207,7 @@ public class RinexNavigationParser implements NavigationProducer{
 						//Navigation.iono[3] = Double.parseDouble(sub.trim());
 						a[3] = Float.parseFloat(sub.trim());
 
-						if(iono==null) iono = new IonoGps();
+						if(iono==null) iono = new IonoGps(null);
 						iono.setAlpha(a);
 
 					} else if (typeField.equals("ION BETA")) {
@@ -235,12 +235,12 @@ public class RinexNavigationParser implements NavigationProducer{
 						//setIono(7, Double.parseDouble(sub.trim()));
 						b[3] = Float.parseFloat(sub.trim());
 
-						if(iono==null) iono = new IonoGps();
+						if(iono==null) iono = new IonoGps(null);
 						iono.setBeta(b);
 
 					} else if (typeField.equals("DELTA-UTC: A0,A1,T,W")) {
 
-						if(iono==null) iono = new IonoGps();
+						if(iono==null) iono = new IonoGps(null);
 
 						sub = line.substring(3, 22).replace('D', 'e');
 						//setA0(Double.parseDouble(sub.trim()));
@@ -261,7 +261,7 @@ public class RinexNavigationParser implements NavigationProducer{
 						iono.setUtcTOW(Integer.parseInt(sub.trim()));
 
 					} else if (typeField.equals("LEAP SECONDS")) {
-						if(iono==null) iono = new IonoGps();
+						if(iono==null) iono = new IonoGps(null);
 						sub = line.substring(0, 6).trim().replace('D', 'e');
 						//setLeaps(Integer.parseInt(sub.trim()));
 						// TODO need check
@@ -342,6 +342,9 @@ public class RinexNavigationParser implements NavigationProducer{
 									// milliseconds
 									//timeEph.msec = Time.dateStringToTime(dT);
 									eph.setRefTime(new Time(dT));
+
+									// sets Iono reference time
+									if(iono!=null && iono.getRefTime()==null) iono.setRefTime(new Time(dT));
 
 								} catch (ParseException e) {
 									System.err.println("Time parsing failed");
@@ -594,8 +597,8 @@ public class RinexNavigationParser implements NavigationProducer{
 
 	public boolean isTimestampInEpocsRange(long utcTime){
 		return eph.size()>0 &&
-		eph.get(0).getRefTime().getMsec() <= utcTime &&
-		utcTime <= eph.get(eph.size()-1).getRefTime().getMsec()/* missing interval +epochInterval*/;
+		eph.get(0).getRefTime().getMsec() <= utcTime /*&&
+		utcTime <= eph.get(eph.size()-1).getRefTime().getMsec() missing interval +epochInterval*/;
 	}
 
 

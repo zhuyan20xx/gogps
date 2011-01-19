@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
@@ -52,6 +53,9 @@ public class RinexNavigation implements NavigationProducer {
 	public final static String GARNER_NAVIGATION_AUTO = "ftp://garner.ucsd.edu/pub/nav/${yyyy}/${ddd}/auto${ddd}0.${yy}n.Z";
 	public final static String GARNER_NAVIGATION_ZIM2 = "ftp://garner.ucsd.edu/pub/nav/${yyyy}/${ddd}/zim2${ddd}0.${yy}n.Z";
 	public final static String IGN_NAVIGATION_HOURLY_ZIM2 = "ftp://igs.ensg.ign.fr/pub/igs/data/hourly/${yyyy}/${ddd}/zim2${ddd}${h}.${yy}n.Z";
+
+	/** cache for negative answers */
+	private Hashtable<String,Date> negativeChache = new Hashtable<String, Date>();
 
 	/** Folder containing downloaded files */
 	public String RNP_CACHE = "./rnp-cache";
@@ -134,7 +138,7 @@ public class RinexNavigation implements NavigationProducer {
 		while(rnp==null){
 			// found none, retrieve from urltemplate
 			Time t = new Time(reqTime);
-			//System.out.print("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
+			//System.out.println("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
 
 			String url = t.formatTemplate(urltemplate);
 
@@ -155,7 +159,7 @@ public class RinexNavigation implements NavigationProducer {
 						} catch (InterruptedException e) {}
 					}
 				} catch (FileNotFoundException e) {
-					System.out.println("Try with previous time by 6h");
+					//System.out.println("Try with previous time by 6h");
 					reqTime = reqTime - (6L*3600L*1000L);
 				}  catch (IOException e) {
 					e.printStackTrace();
@@ -172,11 +176,20 @@ public class RinexNavigation implements NavigationProducer {
 	private RinexNavigationParser getFromFTP(String url) throws IOException{
 		RinexNavigationParser rnp = null;
 
+		String origurl = url;
+		if(negativeChache.containsKey(url)){
+			if(System.currentTimeMillis()-negativeChache.get(url).getTime() < 60*60*1000){
+				throw new FileNotFoundException("cached answer");
+			}else{
+				negativeChache.remove(url);
+			}
+		}
+
 		String filename = url.replaceAll("[ ,/:]", "_");
 		if(filename.endsWith(".Z")) filename = filename.substring(0, filename.length()-2);
-		File sp3f = new File(RNP_CACHE,filename);
+		File rnf = new File(RNP_CACHE,filename);
 
-		if(!sp3f.exists()){
+		if(!rnf.exists()){
 			System.out.println(url+" from the net.");
 			FTPClient ftp = new FTPClient();
 
@@ -216,6 +229,7 @@ public class RinexNavigation implements NavigationProducer {
 				InputStream uis = is;
 				System.out.println(ftp.getReplyString());
 				if(ftp.getReplyString().startsWith("550")){
+					negativeChache.put(origurl, new Date());
 					throw new FileNotFoundException();
 				}
 
@@ -223,7 +237,7 @@ public class RinexNavigation implements NavigationProducer {
 					uis = new UncompressInputStream(is);
 				}
 
-				rnp = new RinexNavigationParser(uis,sp3f);
+				rnp = new RinexNavigationParser(uis,rnf);
 				rnp.init();
 				is.close();
 
@@ -241,8 +255,8 @@ public class RinexNavigation implements NavigationProducer {
 				}
 			}
 		}else{
-			System.out.println(url+" from cache file "+sp3f);
-			rnp = new RinexNavigationParser(sp3f);
+			System.out.println(url+" from cache file "+rnf);
+			rnp = new RinexNavigationParser(rnf);
 			rnp.init();
 		}
 		return rnp;
