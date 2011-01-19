@@ -24,9 +24,12 @@ import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.PortInUseException;
 
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
+
+import org.gogpsproject.Time;
 
 public class Test {
 
@@ -64,7 +67,9 @@ public class Test {
 
 	public static void main(String[] args) {
 
-		network = new SerialConnection();
+		BufferedUBXRover rover = new BufferedUBXRover();
+
+		network = new SerialConnection(rover);
 		Vector<String> ports = network.getPortList();
 		if (ports.size() > 0) {
 			System.out.println("the following serial ports have been detected:");
@@ -83,12 +88,13 @@ public class Test {
 			speed = Integer.parseInt(args[1]);
 		}
 		if (network.connect(port, speed)) {
-			System.out.println();
+			System.out.println("Start");
 		} else {
 			System.out.println("Test <port> (<speed>)");
 			System.exit(0);
 		}
 
+		System.out.println("end");
 		// // TODO Auto-generated method stub
 		// HashSet<CommPortIdentifier> ha = new HashSet<CommPortIdentifier>();
 		// ha = getAvailableSerialPorts();

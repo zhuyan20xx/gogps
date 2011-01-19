@@ -60,7 +60,7 @@ public class UBXReader {
 						DecodeRXMRAW decodegps = new DecodeRXMRAW(in);
 
 						Observations o = decodegps.decode(null);
-						if(eventListener!=null) eventListener.addObservations(o);
+						if(eventListener!=null && o!=null) eventListener.addObservations(o);
 						return o;
 					}
 				}else
@@ -72,7 +72,7 @@ public class UBXReader {
 							DecodeAIDHUI decodegps = new DecodeAIDHUI(in);
 
 							IonoGps iono = decodegps.decode();
-							if(eventListener!=null) eventListener.addIonospheric(iono);
+							if(eventListener!=null && iono!=null) eventListener.addIonospheric(iono);
 							return iono;
 						}else
 						if (data == 0x31) { // EPH
@@ -80,12 +80,12 @@ public class UBXReader {
 							DecodeAIDEPH decodegps = new DecodeAIDEPH(in);
 
 							EphGps eph = decodegps.decode();
-							if(eventListener!=null) eventListener.addEphemeris(eph);
+							if(eventListener!=null && eph!=null) eventListener.addEphemeris(eph);
 							return eph;
 
 						}
 					}catch(UBXException ubxe){
-						System.out.println(ubxe);
+						//System.out.println(ubxe);
 						parsed = true;
 					}
 				}else{

@@ -36,7 +36,7 @@ import org.gogpsproject.EphGps;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.Observations;
 
-public class SerialConnection implements UBXEventListener{
+public class SerialConnection{
 	private InputStream inputStream;
 	private OutputStream outputStream;
 	private boolean connected = false;
@@ -45,10 +45,10 @@ public class SerialConnection implements UBXEventListener{
 	private SerialPort serialPort;
 
 	private UBXSerialReader ubxReader;
+	private UBXEventListener ubxEventListener;
 
-	public SerialConnection() {
-
-
+	public SerialConnection(UBXEventListener listener) {
+		ubxEventListener = listener;
 	}
 
 
@@ -71,7 +71,7 @@ public class SerialConnection implements UBXEventListener{
 				inputStream = serialPort.getInputStream();
 				outputStream = serialPort.getOutputStream();
 
-				ubxReader = new UBXSerialReader(inputStream,outputStream, this);
+				ubxReader = new UBXSerialReader(inputStream,outputStream, ubxEventListener);
 				ubxReader.start();
 
 				connected = true;
@@ -147,42 +147,42 @@ public class SerialConnection implements UBXEventListener{
 		return connected;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.cryms.gogps.parser.ublox.EventListener#addObservations(org.gogpsproject.Observations)
-	 */
-	@Override
-	public void addObservations(Observations o) {
-		System.out.println("# "+o.getGpsSize()+" GPS time "+o.getRefTime().getMsec());
-
-	}
-
-	/* (non-Javadoc)
-	 * @see org.cryms.gogps.parser.ublox.EventListener#streamClosed()
-	 */
-	@Override
-	public void streamClosed() {
-		disconnect();
-	}
-
-
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.parser.ublox.UBXEventListener#addEphemeris(org.gogpsproject.EphGps)
-	 */
-	@Override
-	public void addEphemeris(EphGps eph) {
-		// TODO Auto-generated method stub
-
-	}
-
-
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.parser.ublox.UBXEventListener#addIonospheric(double[])
-	 */
-	@Override
-	public void addIonospheric(IonoGps iono) {
-		// TODO Auto-generated method stub
-
-	}
+//	/* (non-Javadoc)
+//	 * @see org.cryms.gogps.parser.ublox.EventListener#addObservations(org.gogpsproject.Observations)
+//	 */
+//	@Override
+//	public void addObservations(Observations o) {
+//		System.out.println("# "+o.getGpsSize()+" GPS time "+o.getRefTime().getMsec());
+//
+//	}
+//
+//	/* (non-Javadoc)
+//	 * @see org.cryms.gogps.parser.ublox.EventListener#streamClosed()
+//	 */
+//	@Override
+//	public void streamClosed() {
+//		disconnect();
+//	}
+//
+//
+//	/* (non-Javadoc)
+//	 * @see org.gogpsproject.parser.ublox.UBXEventListener#addEphemeris(org.gogpsproject.EphGps)
+//	 */
+//	@Override
+//	public void addEphemeris(EphGps eph) {
+//		// TODO Auto-generated method stub
+//
+//	}
+//
+//
+//	/* (non-Javadoc)
+//	 * @see org.gogpsproject.parser.ublox.UBXEventListener#addIonospheric(double[])
+//	 */
+//	@Override
+//	public void addIonospheric(IonoGps iono) {
+//		// TODO Auto-generated method stub
+//
+//	}
 
 
 }

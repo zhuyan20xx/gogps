@@ -51,7 +51,7 @@ public class DecodeAIDHUI {
 	public IonoGps decode() throws IOException,UBXException {
 		// parse little Endian data
 
-		IonoGps iono = new IonoGps();
+		IonoGps iono = new IonoGps(null);
 
 		int[] length = new int[2];
 
@@ -147,6 +147,9 @@ public class DecodeAIDHUI {
 		iono.setValidKlobuchar((flags & 0x4) == 0x4);
 		baos.write(bits);
 
+		Time refTime = new Time((int)iono.getUtcWNT(),(int)iono.getUtcTOW());
+		iono.setRefTime(refTime);
+		System.out.println(new Date(refTime.getMsec()));
 
 		byte data[] = baos.toByteArray();
 		for (int i = 0; i < data.length; i++) {
