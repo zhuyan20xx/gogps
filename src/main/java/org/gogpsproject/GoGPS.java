@@ -27,7 +27,10 @@ import java.text.*;
 import org.gogpsproject.parser.rinex.RinexNavigation;
 import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
+import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.sp3.SP3Navigation;
+import org.gogpsproject.parser.ublox.BufferedUBXRover;
+import org.gogpsproject.parser.ublox.SerialConnection;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 
 /**
@@ -119,10 +122,10 @@ public class GoGPS {
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/como_pillar_rover.nav"));
 
 			/* Sardinia, Italy */
-			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/goCerchio_rover.obs"));
-			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/sard0880.10o"));
+//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/goCerchio_rover.obs"));
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/sard0880.10o"));
 			//NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/sard0880.10n"));
-			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_ZIM2);
+//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_ZIM2);
 
 			/* Osaka, Japan (static) */
 //			dynamicModel = DYN_MODEL_STATIC;
@@ -135,10 +138,10 @@ public class GoGPS {
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs2.10n"));
 
 //			/* Locarno, Switzerland */
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/locarno1_rover_RINEX.obs"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirA061N.10o"));
-//			//NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirA061N.10n"));
-//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/locarno1_rover_RINEX.obs"));
+			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirA061N.10o"));
+			//NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirA061N.10n"));
+			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Faido */
 			//ObservationsProducer roverIn = new RinexObservationParser(roverFileObs);
@@ -163,15 +166,18 @@ public class GoGPS {
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs2.10n"));
 //			static File fileNav = new File("./data/vrs2.10n");
 
+
+
+			// 1st init
+			navigationIn.init();
 			roverIn.init();
 			masterIn.init();
-			navigationIn.init();
 
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
 			goGPS.setDynamicModel(dynamicModel);
-			// goGPS.runCodeStandalone();
+			//goGPS.runCodeStandalone(false);
 			// goGPS.runCodeDoubleDifferences();
-			goGPS.runKalmanFilter();
+			//goGPS.runKalmanFilter();
 
 			roverIn.release();
 			masterIn.release();
@@ -200,6 +206,9 @@ public class GoGPS {
 	}
 
 	public void runCodeStandalone() {
+		runCodeStandalone(-1);
+	}
+	public Coordinates runCodeStandalone(int getNthPosition) {
 
 		// Create a new object for the rover position
 		ReceiverPosition roverPos = new ReceiverPosition(this);
@@ -207,38 +216,46 @@ public class GoGPS {
 		Observations obsR = roverIn.nextObservations();
 		while (obsR!=null) { // buffStreamObs.ready()
 
-			// If there are at least four satellites
-			if (roverIn.getCurrentObservations().getGpsSize() >= 4) { // gps.length
+			try{
+				// If there are at least four satellites
+				if (roverIn.getCurrentObservations().getGpsSize() >= 4) { // gps.length
+					System.out.println("OK "+roverIn.getCurrentObservations().getGpsSize()+" satellites");
+					// Compute approximate positioning by Bancroft algorithm
+					roverPos.bancroft(roverIn.getCurrentObservations());
 
-				// Compute approximate positioning by Bancroft algorithm
-				roverPos.bancroft(roverIn.getCurrentObservations());
+					// If an approximate position was computed
+					System.out.println("has valid position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
+					if (roverPos.isValidXYZ()) {
 
-				// If an approximate position was computed
-				if (roverPos.isValidXYZ()) {
+						// Select satellites available for double differences
+						roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
 
-					// Select satellites available for double differences
-					roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
+						// Compute code stand-alone positioning (epoch-by-epoch
+						// solution)
+						roverPos.codeStandalone(roverIn.getCurrentObservations());
 
-					// Compute code stand-alone positioning (epoch-by-epoch
-					// solution)
-					roverPos.codeStandalone(roverIn.getCurrentObservations());
-
-					try {
-						System.out.println("Code standalone positioning:");
-						System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-						System.out.println("Lon:		" + g.format(roverPos.getGeodeticLongitude())); // geod.get(0)
-						System.out.println("Lat:		" + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
-						System.out.println("h:		" + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
-					} catch (NullPointerException e) {
-						System.out.println("Error: rover approximate position not computed");
+						try {
+							System.out.println("Code standalone positioning:");
+							System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
+							System.out.println("Lon:		" + g.format(roverPos.getGeodeticLongitude())); // geod.get(0)
+							System.out.println("Lat:		" + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
+							System.out.println("h:		" + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
+						} catch (NullPointerException e) {
+							System.out.println("Error: rover approximate position not computed");
+						}
+						System.out.println("-------------------- "+getNthPosition);
+						if(getNthPosition>0){
+							getNthPosition--;
+							if(getNthPosition==0)return roverPos;
+						}
 					}
-					System.out.println("--------------------");
 				}
+			}catch(Exception e){
+				System.out.println("Could not complete due to "+e);
 			}
-
 			obsR = roverIn.nextObservations();
 		}
-
+		return roverPos;
 	}
 
 	public void runCodeDoubleDifferences() {
@@ -351,11 +368,13 @@ public class GoGPS {
 				"    <LineString>"+
 				"      <tessellate>1</tessellate>"+
 				"      <coordinates>");
+			out.flush();
 			timeRead = System.currentTimeMillis() - timeRead;
 			depRead = depRead + timeRead;
 
 			Observations obsR = roverIn.nextObservations();
 			Observations obsM = masterIn.nextObservations();
+			System.out.println("R:"+obsR.getRefTime().getMsec()+" M:"+obsM.getRefTime().getMsec());
 			int c=0;
 			while (obsR != null && obsM != null) {
 
@@ -366,18 +385,22 @@ public class GoGPS {
 //				Observations obsR = roverIn.nextObservations();
 //				Observations obsM = masterIn.nextObservations();
 				long obsRtime = obsR.getRefTime().getGpsTime();
+				//System.out.println("look for M "+obsRtime);
 				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getGpsTime()) {
 //					masterIn.skipDataObs();
 //					masterIn.parseEpochObs();
 					obsM = masterIn.nextObservations();
 				}
+				//System.out.println("found M "+obsRtime);
 
 				// Discard rover epochs if correspondent master epochs are
 				// not available
 				long obsMtime = obsM.getRefTime().getGpsTime();
+				//System.out.println("look for R "+obsMtime);
 				while (obsM!=null && obsR!=null && obsR.getRefTime().getGpsTime() < obsMtime) {
 					obsR = roverIn.nextObservations();
 				}
+				//System.out.println("found R "+obsMtime);
 
 				if(obsM!=null && obsR!=null){
 					timeRead = System.currentTimeMillis() - timeRead;
@@ -388,6 +411,8 @@ public class GoGPS {
 					// least four satellites
 					boolean valid = true;
 					if (!kalmanInitialized && obsR.getGpsSize() >= 4) {
+
+						System.out.print("Try to init with bancroft ");
 
 						// Compute approximate positioning by Bancroft algorithm
 						roverPos.bancroft(obsR);
@@ -400,6 +425,9 @@ public class GoGPS {
 
 							kalmanInitialized = true;
 
+							System.out.println("OK");
+						}else{
+							System.out.println("....nope");
 						}
 					} else if (kalmanInitialized) {
 
@@ -424,6 +452,7 @@ public class GoGPS {
 							out.write(lon + "," // geod.get(0)
 									+ lat + "," // geod.get(1)
 									+ h + " \n"); // geod.get(2)
+							out.flush();
 							if(c%10==0){
 								String t = timeKML.format(new Date(obsR.getRefTime().getMsec()));
 
@@ -452,11 +481,14 @@ public class GoGPS {
 					}
 					//System.out.println("--------------------");
 
+					System.out.println("-- Get next epoch ---------------------------------------------------");
 					// get next epoch
 					obsR = roverIn.nextObservations();
 					obsM = masterIn.nextObservations();
 
 					c++;
+				}else{
+					System.out.println("Missing M or R obs ");
 				}
 
 

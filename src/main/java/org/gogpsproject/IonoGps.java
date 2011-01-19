@@ -70,10 +70,32 @@ public class IonoGps {
 	/** Klobuchar parameter fields in this message are valid. */
 	private boolean validKlobuchar;
 
+	/** Reference time. */
+	private Time refTime;
+
+	/**
+	 * Gets the reference time.
+	 *
+	 * @return the refTime
+	 */
+	public Time getRefTime() {
+		return refTime;
+	}
+
+	/**
+	 * Sets the reference time.
+	 *
+	 * @param refTime the refTime to set
+	 */
+	public void setRefTime(Time refTime) {
+		this.refTime = refTime;
+	}
+
 	/**
 	 * Instantiates a new iono gps.
 	 */
-	public IonoGps() {
+	public IonoGps(Time refTime) {
+		this.refTime = refTime;
 	}
 
 	/**
