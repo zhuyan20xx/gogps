@@ -184,8 +184,8 @@ public class DecodeAIDEPH {
 
 		int IODE2 = Bits.bitsToUInt(Bits.subset(bits, 8, 8));
 		eph.setCrs(Bits.bitsTwoComplement(Bits.subset(bits, 16, 16))*TWO_P_M5);
-		eph.setDeltaN(Bits.bitsTwoComplement(Bits.subset(bits, 1*32+8, 16)) + PI + TWO_P_M43);
-		eph.setM0(Bits.bitsTwoComplement( Bits.concat(Bits.subset(bits, 1*32+24, 8), Bits.subset(bits, 2*32+8, 24)) ) + PI + TWO_P_M31);
+		eph.setDeltaN(Bits.bitsTwoComplement(Bits.subset(bits, 1*32+8, 16)) * PI * TWO_P_M43);
+		eph.setM0(Bits.bitsTwoComplement( Bits.concat(Bits.subset(bits, 1*32+24, 8), Bits.subset(bits, 2*32+8, 24)) ) * PI * TWO_P_M31);
 		eph.setCuc(Bits.bitsTwoComplement(Bits.subset(bits, 3*32+8, 16)) * TWO_P_M29);
 		eph.setE(Bits.bitsToULong( Bits.concat(Bits.subset(bits, 3*32+24, 8), Bits.subset(bits, 4*32+8, 24)) ) * TWO_P_M33);
 		eph.setCus(Bits.bitsTwoComplement(Bits.subset(bits, 5*32+8, 16)) * TWO_P_M29);
@@ -227,7 +227,7 @@ public class DecodeAIDEPH {
 
 		eph.setCic(Bits.bitsTwoComplement(Bits.subset(bits, 8, 16)) * TWO_P_M29);
 		eph.setOmega0(Bits.bitsTwoComplement( Bits.concat(Bits.subset(bits, 0*32+24, 8), Bits.subset(bits, 1*32+8, 24)) ) * PI * TWO_P_M31);
-		eph.setCis(Bits.bitsTwoComplement(Bits.subset(bits, 2*32+8, 16))+TWO_P_M29);
+		eph.setCis(Bits.bitsTwoComplement(Bits.subset(bits, 2*32+8, 16)) * TWO_P_M29);
 		eph.setI0(Bits.bitsTwoComplement( Bits.concat(Bits.subset(bits, 2*32+24, 8), Bits.subset(bits, 3*32+8, 24)) ) * PI * TWO_P_M31);
 		eph.setCrc(Bits.bitsTwoComplement(Bits.subset(bits, 4*32+8, 16)) * TWO_P_M5);
 		eph.setOmega(Bits.bitsTwoComplement( Bits.concat(Bits.subset(bits, 4*32+24, 8), Bits.subset(bits, 5*32+8, 24)) ) * PI * TWO_P_M31);

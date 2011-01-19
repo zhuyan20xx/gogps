@@ -50,14 +50,12 @@ public class UBXFileReader implements ObservationsProducer,NavigationProducer {
 	private UBXReader reader;
 	private File file;
 	private Observations obs = null;
-	private IonoGps iono = new IonoGps();
+	private IonoGps iono = null;
 	// TODO support past times, now keep only last broadcast data
 	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
 
 	public UBXFileReader(File file) {
 		this.file = file;
-		iono.setAlpha(new float[]{0.0f,0.0f,0.0f,0.0f});
-		iono.setBeta(new float[]{0.0f,0.0f,0.0f,0.0f});
 	}
 
 	/* (non-Javadoc)
