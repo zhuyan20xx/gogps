@@ -647,12 +647,12 @@ public class ReceiverPosition extends Coordinates{
 		Cvv.set(i2, i2, Math.pow(goGPS.getStDevN(), 2));
 		Cvv.set(i3, i3, Math.pow(goGPS.getStDevU(), 2));
 
+		// Select satellites in common between rover and master
+		selectSatellitesDoubleDiff(roverObs, masterObs, masterPos);
+
 		// Improve approximate position accuracy by applying
 		// twice code double differences
 		for (int i = 0; i < 2; i++) {
-
-			selectSatellitesDoubleDiff(roverObs, masterObs, masterPos);
-
 			codeDoubleDifferences(roverObs, masterObs, masterPos);
 		}
 
