@@ -139,7 +139,7 @@ public class ReceiverPosition extends Coordinates{
 				//return; // don't break eggs so quickly :-)
 			}
 		}
-		if(p==0) return;
+		if(p<4) return;
 		if(dataB.length != p){
 			double[][] dataB1 = new double[p][4];
 			for(int i=0;i<p;i++){
@@ -249,7 +249,7 @@ public class ReceiverPosition extends Coordinates{
 	public void codeStandalone(Observations roverObs) {
 
 		NavigationProducer navigation = goGPS.getNavigation();
-		
+
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
 
@@ -358,7 +358,7 @@ public class ReceiverPosition extends Coordinates{
 		// Receiver position
 		//this.coord.ecef.set(this.coord.ecef.plus(x.extractMatrix(0, 2, 0, 0)));
 		this.setPlusXYZ(x.extractMatrix(0, 2, 0, 0));
-		
+
 		// Receiver clock error
 		this.receiverClockError = x.get(3) / Constants.SPEED_OF_LIGHT;
 
@@ -801,7 +801,7 @@ public class ReceiverPosition extends Coordinates{
 	 * @param roverObs
 	 */
 	public void selectSatellitesStandalone(Observations roverObs) {
-		
+
 		NavigationProducer navigation = goGPS.getNavigation();
 
 		// Retrieve options from goGPS class
@@ -809,7 +809,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
-		
+
 		// Allocate an array to store GPS satellite positions
 		pos = new SatellitePosition[nObs];
 
@@ -822,10 +822,10 @@ public class ReceiverPosition extends Coordinates{
 		// Allocate array of topocentric coordinates
 		roverTopo = new TopocentricCoordinates[nObs];
 
-		// First loop to compute topocentric coordinates and 
+		// First loop to compute topocentric coordinates and
 		// select satellites above the cutoff level
 		for (int i = 0; i < nObs; i++) {
-			
+
 			// Compute GPS satellite positions
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
@@ -860,7 +860,7 @@ public class ReceiverPosition extends Coordinates{
 	 */
 	public void selectSatellitesDoubleDiff(Observations roverObs,
 			Observations masterObs, Coordinates masterPos) {
-		
+
 		NavigationProducer navigation = goGPS.getNavigation();
 
 		// Retrieve options from goGPS class
@@ -868,7 +868,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
-		
+
 		// Allocate an array to store GPS satellite positions
 		pos = new SatellitePosition[nObs];
 
@@ -893,10 +893,10 @@ public class ReceiverPosition extends Coordinates{
 		// Array to store re-ordered master observations
 		masterOrdered = new ObservationSet[nObs];
 
-		// First loop to compute topocentric coordinates and 
+		// First loop to compute topocentric coordinates and
 		// select satellites above the cutoff level
 		for (int i = 0; i < nObs; i++) {
-			
+
 			// Compute GPS satellite positions
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 

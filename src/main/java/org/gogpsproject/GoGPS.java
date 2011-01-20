@@ -33,21 +33,32 @@ import org.gogpsproject.parser.ublox.BufferedUBXRover;
 import org.gogpsproject.parser.ublox.SerialConnection;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 
+// TODO: Auto-generated Javadoc
 /**
- * @author ege, Cryms.com
+ * The Class GoGPS.
  *
+ * @author ege, Cryms.com
  */
 public class GoGPS {
 
+	/** The f. */
 	private static DecimalFormat f = new DecimalFormat("0.000");
+
+	/** The g. */
 	private static DecimalFormat g = new DecimalFormat("0.00000000");
 
 	// Frequency selector
+	/** The Constant FREQ_L1. */
 	public final static int FREQ_L1 = ObservationSet.L1;
+
+	/** The Constant FREQ_L2. */
 	public final static int FREQ_L2 = ObservationSet.L2;
+
+	/** The freq. */
 	private int freq = FREQ_L1;
 
 	// Double-frequency flag
+	/** The dual freq. */
 	private boolean dualFreq = false;
 
 	// Weighting strategy
@@ -55,143 +66,83 @@ public class GoGPS {
 	// 1 = weight based on satellite elevation
 	// 2 = weight based on signal-to-noise ratio
 	// 3 = weight based on combined elevation and signal-to-noise ratio
+	/** The Constant WEIGHT_EQUAL. */
 	public final static int WEIGHT_EQUAL = 0;
+
+	/** The Constant WEIGHT_SAT_ELEVATION. */
 	public final static int WEIGHT_SAT_ELEVATION = 1;
+
+	/** The Constant WEIGHT_SIGNAL_TO_NOISE_RATIO. */
 	public final static int WEIGHT_SIGNAL_TO_NOISE_RATIO = 2;
+
+	/** The Constant WEIGHT_COMBINED_ELEVATION_SNR. */
 	public final static int WEIGHT_COMBINED_ELEVATION_SNR = 3;
 
+	/** The weights. */
 	private int weights = WEIGHT_SIGNAL_TO_NOISE_RATIO;
 
 
+	/** The Constant DYN_MODEL_STATIC. */
 	public final static int DYN_MODEL_STATIC = 1;
+
+	/** The Constant DYN_MODEL_CONST_SPEED. */
 	public final static int DYN_MODEL_CONST_SPEED = 2;
+
+	/** The Constant DYN_MODEL_CONST_ACCELERATION. */
 	public final static int DYN_MODEL_CONST_ACCELERATION = 3;
 	// Kalman filter parameters
+	/** The dynamic model. */
 	private int dynamicModel = DYN_MODEL_CONST_SPEED;
-	/**
-	 * @return the dynamicModel
-	 */
-	public int getDynamicModel() {
-		return dynamicModel;
-	}
 
-	/**
-	 * @param dynamicModel the dynamicModel to set
-	 */
-	public void setDynamicModel(int dynamicModel) {
-		this.dynamicModel = dynamicModel;
-	}
-
+	/** The st dev init. */
 	private double stDevInit = 3;
+
+	/** The st dev e. */
 	private double stDevE = 0.5;
+
+	/** The st dev n. */
 	private double stDevN = 0.5;
+
+	/** The st dev u. */
 	private double stDevU = 0.1;
+
+	/** The st dev code c. */
 	private double stDevCodeC = 3;
+
+	/** The st dev code p. */
 	private double[] stDevCodeP;
+
+	/** The st dev phase. */
 	private double stDevPhase = 0.03;
+
+	/** The st dev ambiguity. */
 	private double stDevAmbiguity = 10;
+
+	/** The min num sat. */
 	private int minNumSat = 2;
+
+	/** The cycle slip threshold. */
 	private double cycleSlipThreshold = 3;
+
+	/** The Elevation cutoff. */
 	private double cutoff = 15; // Elevation cutoff
 
+	/** The navigation. */
 	private NavigationProducer navigation;
+
+	/** The rover in. */
 	private ObservationsProducer roverIn;
+
+	/** The master in. */
 	private ObservationsProducer masterIn;
 
 	/**
-	 * @param args
+	 * Instantiates a new go gps.
+	 *
+	 * @param navigation the navigation
+	 * @param roverIn the rover in
+	 * @param masterIn the master in
 	 */
-	public static void main(String[] args) {
-		int dynamicModel = DYN_MODEL_CONST_SPEED;
-		try{
-			// Get current time
-			long start = System.currentTimeMillis();
-			/* Como */
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/perim2.08o"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/COMO1190.08o"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/COMO1190.08n"));
-//			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_FINAL);
-//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
-
-			/* Como, Italy (static) */
-//			dynamicModel = DYN_MODEL_STATIC;
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/como_pillar_rover.obs"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/como_pillar_master.10o"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/como_pillar_rover.nav"));
-
-			/* Sardinia, Italy */
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/goCerchio_rover.obs"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/sard0880.10o"));
-			//NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/sard0880.10n"));
-//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_ZIM2);
-
-			/* Osaka, Japan (static) */
-//			dynamicModel = DYN_MODEL_STATIC;
-//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100608_024314.ubx"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/vrs.10o"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs.10n"));
-
-//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100617_025543.ubx"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/vrs2.10o"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs2.10n"));
-
-//			/* Locarno, Switzerland */
-			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/locarno1_rover_RINEX.obs"));
-			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirA061N.10o"));
-			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirA061N.10n"));
-			// NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
-
-			/* Faido */
-			//ObservationsProducer roverIn = new RinexObservationParser(roverFileObs);
-//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843324860.ubx"));
-//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009843888879.ubx"));
-//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirFaido19112010b.10o"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirFaido19112010b.10n"));
-//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
-
-			/* Manno, Switzerland (static)*/
-//			dynamicModel = DYN_MODEL_STATIC;
-//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/manno-21.11.2010.ubx"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirManno-21-11-2010.10o"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirManno-21-11-2010.10n"));
-
-			/* Osaka, Japan (static) */
-//			dynamicModel = DYN_MODEL_STATIC;
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/COM10_100617_rover.obs"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/vrs2.10o"));
-//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs2.10n"));
-//			static File fileNav = new File("./data/vrs2.10n");
-
-
-
-			// 1st init
-			navigationIn.init();
-			roverIn.init();
-			masterIn.init();
-
-			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
-			goGPS.setDynamicModel(dynamicModel);
-			// goGPS.runCodeStandalone();
-			// goGPS.runCodeDoubleDifferences();
-			goGPS.runKalmanFilter();
-
-			roverIn.release();
-			masterIn.release();
-			navigationIn.release();
-
-			// Get and display elapsed time
-			int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
-			int elapsedTimeMillisec = (int) ((System.currentTimeMillis() - start) - elapsedTimeSec * 1000);
-			System.out.println("\nElapsed time (read + proc + display + write): "
-					+ elapsedTimeSec + " seconds " + elapsedTimeMillisec
-					+ " milliseconds.");
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
-
 	public GoGPS(NavigationProducer navigation, ObservationsProducer roverIn, ObservationsProducer masterIn){
 
 		stDevCodeP = new double[2];
@@ -203,9 +154,19 @@ public class GoGPS {
 		this.masterIn = masterIn;
 	}
 
+	/**
+	 * Run code standalone.
+	 */
 	public void runCodeStandalone() {
 		runCodeStandalone(-1);
 	}
+
+	/**
+	 * Run code standalone.
+	 *
+	 * @param getNthPosition the get nth position
+	 * @return the coordinates
+	 */
 	public Coordinates runCodeStandalone(int getNthPosition) {
 
 		// Create a new object for the rover position
@@ -300,6 +261,9 @@ public class GoGPS {
 		return roverPos;
 	}
 
+	/**
+	 * Run code double differences.
+	 */
 	public void runCodeDoubleDifferences() {
 
 		// Create a new object for the rover position
@@ -407,6 +371,9 @@ public class GoGPS {
 		}
 	}
 
+	/**
+	 * Run kalman filter.
+	 */
 	public void runKalmanFilter() {
 
 		long timeRead = System.currentTimeMillis();
@@ -600,6 +567,8 @@ public class GoGPS {
 
 
 	/**
+	 * Gets the freq.
+	 *
 	 * @return the freq
 	 */
 	public int getFreq() {
@@ -607,6 +576,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the freq.
+	 *
 	 * @param freq the freq to set
 	 */
 	public void setFreq(int freq) {
@@ -614,6 +585,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Checks if is dual freq.
+	 *
 	 * @return the dualFreq
 	 */
 	public boolean isDualFreq() {
@@ -621,6 +594,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the dual freq.
+	 *
 	 * @param dualFreq the dualFreq to set
 	 */
 	public void setDualFreq(boolean dualFreq) {
@@ -628,6 +603,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the cutoff.
+	 *
 	 * @return the cutoff
 	 */
 	public double getCutoff() {
@@ -635,6 +612,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the cutoff.
+	 *
 	 * @param cutoff the cutoff to set
 	 */
 	public void setCutoff(double cutoff) {
@@ -642,6 +621,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the order.
+	 *
 	 * @return the order
 	 */
 	public int getOrder() {
@@ -649,6 +630,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the order.
+	 *
 	 * @param order the order to set
 	 */
 	public void setOrder(int order) {
@@ -656,6 +639,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev init.
+	 *
 	 * @return the stDevInit
 	 */
 	public double getStDevInit() {
@@ -663,6 +648,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the st dev init.
+	 *
 	 * @param stDevInit the stDevInit to set
 	 */
 	public void setStDevInit(double stDevInit) {
@@ -670,6 +657,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev e.
+	 *
 	 * @return the stDevE
 	 */
 	public double getStDevE() {
@@ -677,6 +666,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the st dev e.
+	 *
 	 * @param stDevE the stDevE to set
 	 */
 	public void setStDevE(double stDevE) {
@@ -684,6 +675,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev n.
+	 *
 	 * @return the stDevN
 	 */
 	public double getStDevN() {
@@ -691,6 +684,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the st dev n.
+	 *
 	 * @param stDevN the stDevN to set
 	 */
 	public void setStDevN(double stDevN) {
@@ -698,6 +693,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev u.
+	 *
 	 * @return the stDevU
 	 */
 	public double getStDevU() {
@@ -705,6 +702,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the st dev u.
+	 *
 	 * @param stDevU the stDevU to set
 	 */
 	public void setStDevU(double stDevU) {
@@ -712,6 +711,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev code.
+	 *
 	 * @param roverObsSet the rover observation set
 	 * @param masterObsSet the master observation set
 	 * @param i the selected GPS frequency
@@ -722,6 +723,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev code c.
+	 *
 	 * @return the stDevCodeC
 	 */
 	public double getStDevCodeC() {
@@ -729,6 +732,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the st dev code c.
+	 *
 	 * @param stDevCodeC the stDevCodeC to set
 	 */
 	public void setStDevCodeC(double stDevCodeC) {
@@ -736,6 +741,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev code p.
+	 *
 	 * @param i the selected GPS frequency
 	 * @return the stDevCodeP
 	 */
@@ -744,6 +751,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the st dev code p.
+	 *
 	 * @param stDevCodeP the stDevCodeP to set
 	 * @param i the selected GPS frequency
 	 */
@@ -752,6 +761,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev phase.
+	 *
 	 * @return the stDevPhase
 	 */
 	public double getStDevPhase() {
@@ -759,6 +770,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the st dev phase.
+	 *
 	 * @param stDevPhase the stDevPhase to set
 	 */
 	public void setStDevPhase(double stDevPhase) {
@@ -766,6 +779,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the st dev ambiguity.
+	 *
 	 * @return the stDevAmbiguity
 	 */
 	public double getStDevAmbiguity() {
@@ -773,6 +788,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the st dev ambiguity.
+	 *
 	 * @param stDevAmbiguity the stDevAmbiguity to set
 	 */
 	public void setStDevAmbiguity(double stDevAmbiguity) {
@@ -780,6 +797,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the min num sat.
+	 *
 	 * @return the minNumSat
 	 */
 	public int getMinNumSat() {
@@ -787,6 +806,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the min num sat.
+	 *
 	 * @param minNumSat the minNumSat to set
 	 */
 	public void setMinNumSat(int minNumSat) {
@@ -794,6 +815,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the cycle slip threshold.
+	 *
 	 * @return the cycle slip threshold
 	 */
 	public double getCycleSlipThreshold() {
@@ -801,6 +824,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the cycle slip threshold.
+	 *
 	 * @param csThreshold the cycle slip threshold to set
 	 */
 	public void setCycleSlipThreshold(double csThreshold) {
@@ -808,6 +833,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the navigation.
+	 *
 	 * @return the navigation
 	 */
 	public NavigationProducer getNavigation() {
@@ -815,6 +842,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the navigation.
+	 *
 	 * @param navigation the navigation to set
 	 */
 	public void setNavigation(NavigationProducer navigation) {
@@ -822,6 +851,8 @@ public class GoGPS {
 	}
 
 	/**
+	 * Gets the weights.
+	 *
 	 * @return the weights
 	 */
 	public int getWeights() {
@@ -829,9 +860,29 @@ public class GoGPS {
 	}
 
 	/**
+	 * Sets the weights.
+	 *
 	 * @param weights the weights to set
 	 */
 	public void setWeights(int weights) {
 		this.weights = weights;
+	}
+
+	/**
+	 * Gets the dynamic model.
+	 *
+	 * @return the dynamicModel
+	 */
+	public int getDynamicModel() {
+		return dynamicModel;
+	}
+
+	/**
+	 * Sets the dynamic model.
+	 *
+	 * @param dynamicModel the dynamicModel to set
+	 */
+	public void setDynamicModel(int dynamicModel) {
+		this.dynamicModel = dynamicModel;
 	}
 }
