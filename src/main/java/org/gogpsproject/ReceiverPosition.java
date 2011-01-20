@@ -798,16 +798,11 @@ public class ReceiverPosition extends Coordinates{
 	 */
 	public void selectSatellitesStandalone(Observations roverObs) {
 
-		NavigationProducer navigation = goGPS.getNavigation();
-
 		// Retrieve options from goGPS class
 		double cutoff = goGPS.getCutoff();
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
-
-		// Allocate an array to store GPS satellite positions
-		pos = new SatellitePosition[nObs];
 
 		// Create a list for available satellites after cutoff
 		satAvail = new ArrayList<Integer>(0);
@@ -818,29 +813,15 @@ public class ReceiverPosition extends Coordinates{
 		// Allocate array of topocentric coordinates
 		roverTopo = new TopocentricCoordinates[nObs];
 
-		// First loop to update satellite position, correct for Earth rotation,
-		// compute topocentric coordinates and select satellites above the
-		// cutoff level
+		// First loop to compute topocentric coordinates and 
+		// select satellites above the cutoff level
 		for (int i = 0; i < nObs; i++) {
 
-			// Create new satellite position object
-			//pos[i] = new SatellitePosition(roverObs.getRefTime().getGpsTime(),
-			//		roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
-
-			// Compute clock-corrected satellite position
-			//pos[i].computePositionGps(navigation);
-
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(),
-					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
-
 			if(pos[i]!=null){
-				// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
-				// pos[i].earthRotationCorrection(this);
 
 				// Compute azimuth, elevation and distance for each satellite
 				roverTopo[i] = new TopocentricCoordinates();
 				roverTopo[i].computeTopocentric(this, pos[i]);
-
 
 				// Check if satellite elevation is higher than cutoff
 				if (roverTopo[i].getElevation() > cutoff) {
@@ -868,16 +849,11 @@ public class ReceiverPosition extends Coordinates{
 	public void selectSatellitesDoubleDiff(Observations roverObs,
 			Observations masterObs, Coordinates masterPos) {
 
-		NavigationProducer navigation = goGPS.getNavigation();
-
 		// Retrieve options from goGPS class
 		double cutoff = goGPS.getCutoff();
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
-
-		// Allocate an array to store GPS satellite positions
-		pos = new SatellitePosition[nObs];
 
 		// Create a list for available satellites
 		satAvail = new ArrayList<Integer>(0);
@@ -900,26 +876,11 @@ public class ReceiverPosition extends Coordinates{
 		// Array to store re-ordered master observations
 		masterOrdered = new ObservationSet[nObs];
 
-		// First loop to update satellite position, correct for Earth rotation,
-		// compute topocentric coordinates and select satellites above the
-		// cutoff level
+		// First loop to compute topocentric coordinates and 
+		// select satellites above the cutoff level
 		for (int i = 0; i < nObs; i++) {
 
-			// Create new satellite position object
-			//pos[i] = new SatellitePosition(roverObs.getRefTime().getGpsTime(),
-			//		roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
-
-			// Compute clock-corrected satellite position
-			//pos[i].computePositionGps(navigation);
-
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/,
-					roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
-
 			if(pos[i]!=null){
-				// Apply Earth rotation correction to satellite positions -> moved into RinexFileNavigation
-				// pos[i].earthRotationCorrection(this);
-
-				//System.out.println("ts2:"+roverObs.getRefTime().getMsec()+" sat:"+ roverObs.getGpsSatID(i)+" pos: "+pos[i]);
 
 				// Compute azimuth, elevation and distance for each satellite from
 				// rover
