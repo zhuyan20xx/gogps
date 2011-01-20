@@ -22,9 +22,9 @@ package org.gogpsproject.parser.ublox;
 import java.util.HashMap;
 import java.util.Vector;
 
-import org.gogpsproject.ComputingToolbox;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
+import org.gogpsproject.EphemerisSystem;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Observations;
@@ -39,7 +39,7 @@ import org.gogpsproject.Time;
  *
  * @author Lorenzo Patocchi cryms.com
  */
-public class BufferedUBXRover implements UBXEventListener,
+public class BufferedUBXRover extends EphemerisSystem implements UBXEventListener,
         ObservationsProducer, NavigationProducer {
 
     class EphSet{
@@ -238,7 +238,7 @@ public class BufferedUBXRover implements UBXEventListener,
         if(closer !=null){
         	EphGps eph = closer.ephs.get(ID);
 
-        	SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range, receiverClockError);
+        	SatellitePosition sp = computePositionGps(utcTime,satID, eph, range, receiverClockError);
         	//System.out.println("\tR: < sat pos "+ID);
 			return sp;
         }

@@ -26,10 +26,10 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 import org.ejml.data.SimpleMatrix;
-import org.gogpsproject.ComputingToolbox;
 import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
+import org.gogpsproject.EphemerisSystem;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Observations;
@@ -44,7 +44,7 @@ import org.gogpsproject.SatellitePosition;
  * @author Lorenzo Patocchi cryms.com
  */
 
-public class UBXFileReader implements ObservationsProducer,NavigationProducer {
+public class UBXFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
 
 	private InputStream in;
 	private UBXReader reader;
@@ -151,7 +151,7 @@ public class UBXFileReader implements ObservationsProducer,NavigationProducer {
 		EphGps eph = ephs.get(new Integer(satID));
 
 		if (eph != null) {
-			SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(utcTime,satID, eph, range, receiverClockError);
 			return sp;
 		}
 		return null ;

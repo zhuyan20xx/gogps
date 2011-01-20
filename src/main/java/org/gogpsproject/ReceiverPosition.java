@@ -324,12 +324,11 @@ public class ReceiverPosition extends Coordinates{
 				// Correct approximate pseudorange for troposphere
 				double elevation = roverTopo[i].getElevation();
 				double height = this.getGeodeticHeight();//geod.get(2);
-				double roverSatelliteTropoCorr = ComputingToolbox.computeTroposphereCorrection(elevation, height);
+				double roverSatelliteTropoCorr = computeTroposphereCorrection(elevation, height);
 
 				// Correct approximate pseudorange for ionosphere
 				double azimuth = roverTopo[i].getAzimuth();
-				double roverSatelliteIonoCorr = ComputingToolbox
-						.computeIonosphereCorrection(navigation,this, azimuth, elevation, roverObs.getRefTime());
+				double roverSatelliteIonoCorr = computeIonosphereCorrection(navigation,this, azimuth, elevation, roverObs.getRefTime());
 
 				// Fill in troposphere and ionosphere double differenced
 				// corrections
@@ -458,23 +457,21 @@ public class ReceiverPosition extends Coordinates{
 		// Computation of rover-pivot troposphere correction
 		double roverElevation = roverTopo[pivot].getElevation();
 		double roverHeight = this.getGeodeticHeight();//geod.get(2);
-		double roverPivotTropoCorr = ComputingToolbox.computeTroposphereCorrection(
-				roverElevation, roverHeight);
+		double roverPivotTropoCorr = computeTroposphereCorrection(roverElevation, roverHeight);
 
 		// Computation of master-pivot troposphere correction
 		double masterElevation = masterTopo[pivot].getElevation();
 		double masterHeight = masterPos.getGeodeticHeight();//geod.get(2);
-		double masterPivotTropoCorr = ComputingToolbox.computeTroposphereCorrection(
-				masterElevation, masterHeight);
+		double masterPivotTropoCorr = computeTroposphereCorrection(masterElevation, masterHeight);
 
 		// Computation of rover-pivot ionosphere correction
 		double roverAzimuth = roverTopo[pivot].getAzimuth();
-		double roverPivotIonoCorr = ComputingToolbox.computeIonosphereCorrection(
+		double roverPivotIonoCorr = computeIonosphereCorrection(
 				navigation, this, roverAzimuth, roverElevation, roverObs.getRefTime());
 
 		// Computation of master-pivot ionosphere correction
 		double masterAzimuth = masterTopo[pivot].getAzimuth();
-		double masterPivotIonoCorr = ComputingToolbox.computeIonosphereCorrection(
+		double masterPivotIonoCorr = computeIonosphereCorrection(
 				navigation, masterPos, masterAzimuth, masterElevation,
 				roverObs.getRefTime());
 
@@ -527,27 +524,21 @@ public class ReceiverPosition extends Coordinates{
 				// Computation of rover-satellite troposphere correction
 				roverElevation = roverTopo[i].getElevation();
 				roverHeight = this.getGeodeticHeight();//geod.get(2);
-				double roverSatTropoCorr = ComputingToolbox
-						.computeTroposphereCorrection(roverElevation,
-								roverHeight);
+				double roverSatTropoCorr = computeTroposphereCorrection(roverElevation, roverHeight);
 
 				// Computation of master-satellite troposphere correction
 				masterElevation = masterTopo[i].getElevation();
 				masterHeight = masterPos.getGeodeticHeight();//geod.get(2);
-				double masterSatTropoCorr = ComputingToolbox
-						.computeTroposphereCorrection(masterElevation,
-								masterHeight);
+				double masterSatTropoCorr = computeTroposphereCorrection(masterElevation, masterHeight);
 
 				// Computation of rover-satellite ionosphere correction
 				roverAzimuth = roverTopo[i].getAzimuth();
-				double roverSatIonoCorr = ComputingToolbox
-						.computeIonosphereCorrection(navigation,
+				double roverSatIonoCorr = computeIonosphereCorrection(navigation,
 								this, roverAzimuth, roverElevation, roverObs.getRefTime());
 
 				// Computation of master-satellite ionosphere correction
 				masterAzimuth = masterTopo[i].getAzimuth();
-				double masterSatIonoCorr = ComputingToolbox
-						.computeIonosphereCorrection(navigation,
+				double masterSatIonoCorr = computeIonosphereCorrection(navigation,
 								masterPos, masterAzimuth, masterElevation, roverObs.getRefTime());
 
 				// Fill in troposphere and ionosphere double differenced
@@ -1454,19 +1445,144 @@ public class ReceiverPosition extends Coordinates{
 		return prod;
 	}
 
-//	/**
-//	 * @return the coord
-//	 */
-//	public Coordinates getCoord() {
-//		return coord;
-//	}
-//
-//	/**
-//	 * @param coord the coord to set
-//	 */
-//	public void setCoord(Coordinates coord) {
-//		this.coord = coord;
-//	}
+	/**
+	 * @param elevation
+	 * @param height
+	 * @return troposphere correction value by Saastamoinen model
+	 */
+	private double computeTroposphereCorrection(double elevation, double height) {
+
+		double tropoCorr = 0;
+
+		if (height < 5000) {
+
+			elevation = Math.toRadians(Math.abs(elevation));
+			if (elevation == 0){
+				elevation = elevation + 0.01;
+			}
+
+			// Numerical constants and tables for Saastamoinen algorithm
+			// (troposphere correction)
+			double hr = 50.0;
+			int[] ha = new int[9];
+			double[] ba = new double[9];
+
+			ha[0] = 0;
+			ha[1] = 500;
+			ha[2] = 1000;
+			ha[3] = 1500;
+			ha[4] = 2000;
+			ha[5] = 2500;
+			ha[6] = 3000;
+			ha[7] = 4000;
+			ha[8] = 5000;
+
+			ba[0] = 1.156;
+			ba[1] = 1.079;
+			ba[2] = 1.006;
+			ba[3] = 0.938;
+			ba[4] = 0.874;
+			ba[5] = 0.813;
+			ba[6] = 0.757;
+			ba[7] = 0.654;
+			ba[8] = 0.563;
+
+			// Saastamoinen algorithm
+			double P = Constants.STANDARD_PRESSURE * Math.pow((1 - 0.0000226 * height), 5.225);
+			double T = Constants.STANDARD_TEMPERATURE - 0.0065 * height;
+			double H = hr * Math.exp(-0.0006396 * height);
+
+			// If height is below zero, keep the maximum correction value
+			double B = ba[0];
+			// Otherwise, interpolate the tables
+			if (height >= 0) {
+				int i = 1;
+				while (height > ha[i]) {
+					i++;
+				}
+				double m = (ba[i] - ba[i - 1]) / (ha[i] - ha[i - 1]);
+				B = ba[i - 1] + m * (height - ha[i - 1]);
+			}
+
+			double e = 0.01
+					* H
+					* Math.exp(-37.2465 + 0.213166 * T - 0.000256908
+							* Math.pow(T, 2));
+
+			tropoCorr = ((0.002277 / Math.sin(elevation))
+					* (P - (B / Math.pow(Math.tan(elevation), 2))) + (0.002277 / Math.sin(elevation))
+					* (1255 / T + 0.05) * e);
+		}
+
+		return tropoCorr;
+	}
+
+	/**
+	 * @param ionoParams
+	 * @param coord
+	 * @param time
+	 * @return ionosphere correction value by Klobuchar model
+	 */
+	private double computeIonosphereCorrection(NavigationProducer navigation,
+			Coordinates coord, double azimuth, double elevation, Time time) {
+
+		double ionoCorr = 0;
+
+		IonoGps iono = navigation.getIono(time.getMsec());
+		if(iono==null) return 0.0;
+//		double a0 = navigation.getIono(time.getMsec(),0);
+//		double a1 = navigation.getIono(time.getMsec(),1);
+//		double a2 = navigation.getIono(time.getMsec(),2);
+//		double a3 = navigation.getIono(time.getMsec(),3);
+//		double b0 = navigation.getIono(time.getMsec(),4);
+//		double b1 = navigation.getIono(time.getMsec(),5);
+//		double b2 = navigation.getIono(time.getMsec(),6);
+//		double b3 = navigation.getIono(time.getMsec(),7);
+
+		elevation = Math.abs(elevation);
+
+		// Parameter conversion to semicircles
+		double lon = coord.getGeodeticLongitude() / 180; // geod.get(0)
+		double lat = coord.getGeodeticLatitude() / 180; //geod.get(1)
+		azimuth = azimuth / 180;
+		elevation = elevation / 180;
+
+		// Klobuchar algorithm
+		double f = 1 + 16 * Math.pow((0.53 - elevation), 3);
+		double psi = 0.0137 / (elevation + 0.11) - 0.022;
+		double phi = lat + psi * Math.cos(azimuth * Math.PI);
+		if (phi > 0.416){
+			phi = 0.416;
+		}
+		if (phi < -0.416){
+			phi = -0.416;
+		}
+		double lambda = lon + (psi * Math.sin(azimuth * Math.PI))
+				/ Math.cos(phi * Math.PI);
+		double ro = phi + 0.064 * Math.cos((lambda - 1.617) * Math.PI);
+		double t = lambda * 43200 + time.getGpsTime();
+		while (t >= 86400)
+			t = t - 86400;
+		while (t < 0)
+			t = t + 86400;
+		double p = iono.getBeta(0) + iono.getBeta(1) * ro + iono.getBeta(2) * Math.pow(ro, 2) + iono.getBeta(3) * Math.pow(ro, 3);
+
+		if (p < 72000)
+			p = 72000;
+		double a = iono.getAlpha(0) + iono.getAlpha(1) * ro + iono.getAlpha(2) * Math.pow(ro, 2) + iono.getAlpha(3) * Math.pow(ro, 3);
+		if (a < 0)
+			a = 0;
+		double x = (2 * Math.PI * (t - 50400)) / p;
+		if (Math.abs(x) < 1.57){
+			ionoCorr = Constants.SPEED_OF_LIGHT
+					* f
+					* (5e-9 + a
+							* (1 - (Math.pow(x, 2)) / 2 + (Math.pow(x, 4)) / 24));
+		}else{
+			ionoCorr = Constants.SPEED_OF_LIGHT * f * 5e-9;
+		}
+		return ionoCorr;
+	}
 
 	/**
 	 * @return the covariance

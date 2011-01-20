@@ -32,10 +32,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 
 import org.ejml.data.SimpleMatrix;
-import org.gogpsproject.ComputingToolbox;
 import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
+import org.gogpsproject.EphemerisSystem;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.SatellitePosition;
@@ -48,7 +48,7 @@ import org.gogpsproject.Time;
  *
  * @author ege, Cryms.com
  */
-public class RinexNavigationParser implements NavigationProducer{
+public class RinexNavigationParser extends EphemerisSystem implements NavigationProducer{
 
 	private File fileNav;
 	private FileInputStream streamNav;
@@ -610,7 +610,7 @@ public class RinexNavigationParser implements NavigationProducer{
 		EphGps eph = findEph(utcTime, satID);
 
 		if (eph != null) {
-			SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(utcTime,satID, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, utcTime, satID, range);
 		}
