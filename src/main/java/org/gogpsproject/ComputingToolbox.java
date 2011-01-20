@@ -179,13 +179,14 @@ public class ComputingToolbox {
 	 */
 	public static SatellitePosition computePositionGps(long utcTime,int satID, EphGps eph, double obsPseudorange) {
 
-		double timeCorrection = getTimeCorrection(utcTime, eph, obsPseudorange);
+		// Compute satellite clock error
+		double satelliteClockError = computeSatelliteClockError(utcTime, eph, obsPseudorange);
 
 		// Compute clock corrected transmission time
-		double tGPS = getClockCorrectedTransmissionTime(utcTime, timeCorrection, obsPseudorange);
+		double tGPS = computeClockCorrectedTransmissionTime(utcTime, satelliteClockError, obsPseudorange);
 
 		// Compute eccentric anomaly
-		double Ek = eccAnomaly(tGPS, eph);
+		double Ek = computeEccentricAnomaly(tGPS, eph);
 
 		// Semi-major axis
 		double A = eph.getRootA() * eph.getRootA();
@@ -223,10 +224,10 @@ public class ComputingToolbox {
 		SatellitePosition sp = new SatellitePosition(utcTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
 				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
 				y1 * Math.sin(ik));
-		sp.setTimeCorrection(timeCorrection);
+		sp.setSatelliteClockError(satelliteClockError);
 
 		// Apply the correction due to the Earth rotation during signal travel time
-		earthRotationCorrection(utcTime, tGPS, sp);
+		computeEarthRotationCorrection(utcTime, tGPS, sp);
 
 		return sp;
 //		this.setXYZ(x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
@@ -254,7 +255,7 @@ public class ComputingToolbox {
 	/**
 	 * @param traveltime
 	 */
-	public static void earthRotationCorrection(long utcTime, double transmissionTime, Coordinates satellitePosition) {
+	public static void computeEarthRotationCorrection(long utcTime, double transmissionTime, Coordinates satellitePosition) {
 
 		// Computation of signal travel time
 		// SimpleMatrix diff = satellitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
@@ -291,26 +292,27 @@ public class ComputingToolbox {
 	 * @param eph
 	 * @return Clock-corrected GPS transmission time
 	 */
-	public static double getClockCorrectedTransmissionTime(long utcTime, double timeCorrection, double obsPseudorange) {
+	public static double computeClockCorrectedTransmissionTime(long utcTime, double satelliteClockError, double obsPseudorange) {
 
 		long gpsTime = (new Time(utcTime)).getGpsTime();
+
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 
-		return tRaw - timeCorrection;
+		return tRaw - satelliteClockError;
 	}
 
 	/**
 	 * @param eph
 	 * @return Satellite clock error
 	 */
-	public static double getTimeCorrection(long utcTime, EphGps eph, double obsPseudorange){
+	public static double computeSatelliteClockError(long utcTime, EphGps eph, double obsPseudorange){
 		long gpsTime = (new Time(utcTime)).getGpsTime();
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 
 		// Compute eccentric anomaly
-		double Ek = eccAnomaly(tRaw, eph);
+		double Ek = computeEccentricAnomaly(tRaw, eph);
 
 		// Relativistic correction term computation
 		double dtr = Constants.RELATIVISTIC_ERROR_CONSTANT * eph.getE() * eph.getRootA() * Math.sin(Ek);
@@ -331,7 +333,7 @@ public class ComputingToolbox {
 	 * @param eph
 	 * @return Eccentric anomaly
 	 */
-	public static double eccAnomaly(double time, EphGps eph) {
+	public static double computeEccentricAnomaly(double time, EphGps eph) {
 
 		// Semi-major axis
 		double A = eph.getRootA() * eph.getRootA();
