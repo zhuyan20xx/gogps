@@ -173,9 +173,9 @@ public class GoGPS {
 
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
 			goGPS.setDynamicModel(dynamicModel);
-			goGPS.runCodeStandalone();
+			// goGPS.runCodeStandalone();
 			// goGPS.runCodeDoubleDifferences();
-			// goGPS.runKalmanFilter();
+			goGPS.runKalmanFilter();
 
 			roverIn.release();
 			masterIn.release();

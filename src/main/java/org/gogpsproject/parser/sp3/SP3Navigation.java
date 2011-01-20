@@ -106,7 +106,7 @@ public class SP3Navigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range) {
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
 
 		SP3Parser sp3p = null;
 		long reqTime = utcTime;
@@ -140,7 +140,7 @@ public class SP3Navigation implements NavigationProducer {
 						pool.put(url, sp3p);
 						// file exist, look for epoch
 						if(sp3p.isTimestampInEpocsRange(utcTime)){
-							return sp3p.getGpsSatPosition(utcTime, satID, range);
+							return sp3p.getGpsSatPosition(utcTime, satID, range, receiverClockError);
 						}else{
 							return null;
 						}
