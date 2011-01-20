@@ -79,7 +79,7 @@ public class LiveTracking {
 			 * MASTER RTCM/RINEX
 			 */
 			RTCM3Client masterIn = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0].trim(), args[1].trim(), "swiposGISGEO_LV03LN02");
-			//navigationIn = new RinexNavigation(RinexNavigation.IGN_NAVIGATION_HOURLY_ZIM2);
+			navigationIn = new RinexNavigation(RinexNavigation.IGN_NAVIGATION_HOURLY_ZIM2);
 			masterIn.setApproxPosition(initialPosition);
 			masterIn.init();
 

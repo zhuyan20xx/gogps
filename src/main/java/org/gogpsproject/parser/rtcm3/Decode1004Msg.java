@@ -78,11 +78,11 @@ public class Decode1004Msg implements Decode {
 			start += 6;
 			boolean DF010 = (Bits.bitsToUInt(Bits.subset(bits, start, 1))==1);
 			start += 1;
-			int DF011 = Bits.bitsTwoComplement(Bits.subset(bits,start, 24));
+			int DF011 = Bits.bitsToUInt(Bits.subset(bits,start, 24));
 			start += 24;
-			int DF012 = Bits.bitsToUInt(Bits.subset(bits, start, 20));
+			int DF012 = Bits.bitsTwoComplement(Bits.subset(bits, start, 20));
 			start += 20;
-			int DF013 = Bits.bitsTwoComplement(Bits.subset(bits, start,7));
+			int DF013 = Bits.bitsToUInt(Bits.subset(bits, start,7));
 			start += 7;
 			int DF014 = Bits.bitsToUInt(Bits.subset(bits, start, 8));
 			start += 8;
