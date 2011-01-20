@@ -121,7 +121,7 @@ public class BufferedUBXRover implements UBXEventListener,
      */
     @Override
     public void addObservations(Observations o) {
-    	System.out.println("\tR# > obs "+o.getGpsSize()+" time "+o.getRefTime().getMsec());
+    	//System.out.println("\tR# > obs "+o.getGpsSize()+" time "+o.getRefTime().getMsec());
         // TODO test if ref time observetions is not already present
         this.timeOrderedObs.add(o);
 
