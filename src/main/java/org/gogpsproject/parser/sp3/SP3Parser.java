@@ -371,7 +371,7 @@ public class SP3Parser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double obsPseudorange) {
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double obsPseudorange, double receiverClockError) {
 		if(isTimestampInEpocsRange(utcTime)){
 			for(int i=0;i<epocTimestamps.size();i++){
 				if(epocTimestamps.get(i).getMsec()<=utcTime && utcTime < epocTimestamps.get(i).getMsec()+epochInterval){

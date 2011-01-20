@@ -177,7 +177,7 @@ public class ComputingToolbox {
 	 * @param range
 	 * @param approxPos
 	 */
-	public static SatellitePosition computePositionGps(long utcTime,int satID, EphGps eph, double obsPseudorange) {
+	public static SatellitePosition computePositionGps(long utcTime,int satID, EphGps eph, double obsPseudorange, double receiverClockError) {
 
 		// Compute satellite clock error
 		double satelliteClockError = computeSatelliteClockError(utcTime, eph, obsPseudorange);
@@ -227,7 +227,7 @@ public class ComputingToolbox {
 		sp.setSatelliteClockError(satelliteClockError);
 
 		// Apply the correction due to the Earth rotation during signal travel time
-		computeEarthRotationCorrection(utcTime, tGPS, sp);
+		computeEarthRotationCorrection(utcTime, receiverClockError, tGPS, sp);
 
 		return sp;
 //		this.setXYZ(x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
@@ -255,7 +255,7 @@ public class ComputingToolbox {
 	/**
 	 * @param traveltime
 	 */
-	public static void computeEarthRotationCorrection(long utcTime, double transmissionTime, Coordinates satellitePosition) {
+	public static void computeEarthRotationCorrection(long utcTime, double receiverClockError, double transmissionTime, Coordinates satellitePosition) {
 
 		// Computation of signal travel time
 		// SimpleMatrix diff = satellitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
@@ -263,7 +263,7 @@ public class ComputingToolbox {
 		// 		+ Math.pow(diff.get(2), 2);
 		// double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
 		long receptionTime = (new Time(utcTime)).getGpsTime();
-		double traveltime = receptionTime - transmissionTime;
+		double traveltime = receptionTime + receiverClockError - transmissionTime;
 
 		// Compute rotation angle
 		double omegatau = Constants.EARTH_ANGULAR_VELOCITY * traveltime;

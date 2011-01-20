@@ -147,11 +147,11 @@ public class UBXFileReader implements ObservationsProducer,NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range) {
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
 		EphGps eph = ephs.get(new Integer(satID));
 
 		if (eph != null) {
-			SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range);
+			SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range, receiverClockError);
 			return sp;
 		}
 		return null ;

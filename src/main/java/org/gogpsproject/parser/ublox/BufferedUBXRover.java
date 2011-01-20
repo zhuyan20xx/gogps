@@ -207,7 +207,7 @@ public class BufferedUBXRover implements UBXEventListener,
      * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
      */
     @Override
-    public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range) {
+    public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
     	if(timeOrderedEphs.size()==0 ||
                 utcTime < timeOrderedEphs.elementAt(0).refTime.getMsec()
                 ){
@@ -238,7 +238,7 @@ public class BufferedUBXRover implements UBXEventListener,
         if(closer !=null){
         	EphGps eph = closer.ephs.get(ID);
 
-        	SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range);
+        	SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range, receiverClockError);
         	//System.out.println("\tR: < sat pos "+ID);
 			return sp;
         }

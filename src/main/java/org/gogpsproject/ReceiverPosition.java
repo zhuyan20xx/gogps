@@ -123,7 +123,7 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
 			double obsPseudorange = obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), obs.getGpsSatID(i), obsPseudorange);
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), obs.getGpsSatID(i), obsPseudorange, this.getReceiverClockError());
 
 			try {
 				System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
@@ -360,7 +360,7 @@ public class ReceiverPosition extends Coordinates{
 		this.setPlusXYZ(x.extractMatrix(0, 2, 0, 0));
 		
 		// Receiver clock error
-		this.receiverClockError = x.get(3);
+		this.receiverClockError = x.get(3) / Constants.SPEED_OF_LIGHT;
 
 		// Estimation of the variance of the observation error
 		vEstim = y0.minus(A.mult(x).plus(b));
@@ -827,7 +827,7 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < nObs; i++) {
 			
 			// Compute GPS satellite positions
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
 			if(pos[i]!=null){
 
@@ -898,7 +898,7 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < nObs; i++) {
 			
 			// Compute GPS satellite positions
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
 			if(pos[i]!=null){
 
@@ -1492,7 +1492,7 @@ public class ReceiverPosition extends Coordinates{
 	/**
 	 * @param receiverClockError the receiver clock error to set
 	 */
-	public void setReceiverClockError(double dt) {
-		this.receiverClockError = dt;
+	public void setReceiverClockError(double receiverClockError) {
+		this.receiverClockError = receiverClockError;
 	}
 }

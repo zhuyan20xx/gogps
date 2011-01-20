@@ -606,11 +606,11 @@ public class RinexNavigationParser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range) {
+	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
 		EphGps eph = findEph(utcTime, satID);
 
 		if (eph != null) {
-			SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range);
+			SatellitePosition sp = ComputingToolbox.computePositionGps(utcTime,satID, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, utcTime, satID, range);
 		}
