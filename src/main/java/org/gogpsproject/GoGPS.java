@@ -50,8 +50,6 @@ public class GoGPS {
 	// Double-frequency flag
 	private boolean dualFreq = false;
 
-	// Elevation cutoff
-
 	// Weighting strategy
 	// 0 = same weight for all observations
 	// 1 = weight based on satellite elevation
@@ -94,7 +92,7 @@ public class GoGPS {
 	private double stDevAmbiguity = 10;
 	private int minNumSat = 2;
 	private double cycleSlipThreshold = 3;
-	private double cutoff = 15;
+	private double cutoff = 15; // Elevation cutoff
 
 	private NavigationProducer navigation;
 	private ObservationsProducer roverIn;
@@ -140,8 +138,8 @@ public class GoGPS {
 //			/* Locarno, Switzerland */
 			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/locarno1_rover_RINEX.obs"));
 			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirA061N.10o"));
-			//NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirA061N.10n"));
-			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirA061N.10n"));
+			// NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Faido */
 			//ObservationsProducer roverIn = new RinexObservationParser(roverFileObs);
@@ -175,9 +173,9 @@ public class GoGPS {
 
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
 			goGPS.setDynamicModel(dynamicModel);
-			//goGPS.runCodeStandalone(false);
+			goGPS.runCodeStandalone();
 			// goGPS.runCodeDoubleDifferences();
-			//goGPS.runKalmanFilter();
+			// goGPS.runKalmanFilter();
 
 			roverIn.release();
 			masterIn.release();
@@ -213,47 +211,91 @@ public class GoGPS {
 		// Create a new object for the rover position
 		ReceiverPosition roverPos = new ReceiverPosition(this);
 
-		Observations obsR = roverIn.nextObservations();
-		while (obsR!=null) { // buffStreamObs.ready()
+		// Name KML file name using Timestamp
+		Date date = new Date();
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		String date1 = sdf1.format(date);
+		String outPath = "./test/" + date1 + ".kml";
 
-			try{
-				// If there are at least four satellites
-				if (roverIn.getCurrentObservations().getGpsSize() >= 4) { // gps.length
-					System.out.println("OK "+roverIn.getCurrentObservations().getGpsSize()+" satellites");
-					// Compute approximate positioning by Bancroft algorithm
-					roverPos.bancroft(roverIn.getCurrentObservations());
+		try {
+			SimpleDateFormat timeKML = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+			FileWriter out = new FileWriter(outPath);
+			// Write KML header part
+			//			out.write("<kml xmlns=\"http://earth.google.com/kml/2.0\">"
+			//							+ "<Folder><name>Track Log Export</name><description>Exported on "
+			//							+ date
+			//							+ " </description>"
+			//							+ "<Style id=\"line\"><LineStyle><color>7fff0000</color><width>5</width></LineStyle></Style>"
+			//							+ "<Placemark><name>Raw Data</name><description>by Daisuke Yoshida, Tezukayama Gakuin University, JAPAN</description>"
+			//							+ "<styleUrl>#line</styleUrl><altitudeMode>relativeToGround</altitudeMode><LineString><coordinates>");
+			String timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
 
-					// If an approximate position was computed
-					System.out.println("has valid position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
-					if (roverPos.isValidXYZ()) {
+			out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+					"<Document xmlns:kml=\"http://earth.google.com/kml/2.1\">"+
+					"  <Style id=\"SMExport_3_ff0000e6_fffefefe\"><LineStyle><color>ff0000e6</color><width>3</width></LineStyle><PolyStyle><color>fffefefe</color></PolyStyle></Style>"+
+					"  <Style id=\"dot-icon\"><IconStyle><Icon><href>http://www.eriadne.org/icons/MapPointer.png</href></Icon></IconStyle></Style>"+
+					"  <Placemark>"+
+					"    <name></name>"+
+					"    <description></description>"+
+					"    <styleUrl>#SMExport_3_ff0000e6_fffefefe</styleUrl>"+
+					"    <LineString>"+
+					"      <tessellate>1</tessellate>"+
+			"      <coordinates>");
+			out.flush();
 
-						// Select satellites available for double differences
-						roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
+			Observations obsR = roverIn.nextObservations();
+			while (obsR!=null) { // buffStreamObs.ready()
 
-						// Compute code stand-alone positioning (epoch-by-epoch
-						// solution)
-						roverPos.codeStandalone(roverIn.getCurrentObservations());
+				try{
+					// If there are at least four satellites
+					if (roverIn.getCurrentObservations().getGpsSize() >= 4) { // gps.length
+						System.out.println("OK "+roverIn.getCurrentObservations().getGpsSize()+" satellites");
+						// Compute approximate positioning by Bancroft algorithm
+						roverPos.bancroft(roverIn.getCurrentObservations());
 
-						try {
-							System.out.println("Code standalone positioning:");
-							System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-							System.out.println("Lon:		" + g.format(roverPos.getGeodeticLongitude())); // geod.get(0)
-							System.out.println("Lat:		" + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
-							System.out.println("h:		" + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
-						} catch (NullPointerException e) {
-							System.out.println("Error: rover approximate position not computed");
-						}
-						System.out.println("-------------------- "+getNthPosition);
-						if(getNthPosition>0){
-							getNthPosition--;
-							if(getNthPosition==0)return roverPos;
+						// If an approximate position was computed
+						System.out.println("has valid position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
+						if (roverPos.isValidXYZ()) {
+
+							// Select satellites available for double differences
+							roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
+
+							// Compute code stand-alone positioning (epoch-by-epoch
+							// solution)
+							roverPos.codeStandalone(roverIn.getCurrentObservations());
+
+							try {
+								System.out.println("Code standalone positioning:");
+								System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
+								System.out.println("Lon:		" + g.format(roverPos.getGeodeticLongitude())); // geod.get(0)
+								System.out.println("Lat:		" + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
+								System.out.println("h:		" + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
+								out.write(g.format(roverPos.getGeodeticLongitude()) + "," // geod.get(0)
+										+ g.format(roverPos.getGeodeticLatitude()) + "," // geod.get(1)
+										+ f.format(roverPos.getGeodeticHeight()) + " \n"); // geod.get(2)
+								out.flush();
+							} catch (NullPointerException e) {
+								System.out.println("Error: rover approximate position not computed");
+							}
+							System.out.println("-------------------- "+getNthPosition);
+							if(getNthPosition>0){
+								getNthPosition--;
+								if(getNthPosition==0)return roverPos;
+							}
 						}
 					}
+				}catch(Exception e){
+					System.out.println("Could not complete due to "+e);
 				}
-			}catch(Exception e){
-				System.out.println("Could not complete due to "+e);
+				obsR = roverIn.nextObservations();
 			}
-			obsR = roverIn.nextObservations();
+			// Write KML footer part
+			// out.write("</coordinates><altitudeMode>absolute</altitudeMode></LineString></Placemark></Folder></kml>");
+			out.write("</coordinates></LineString></Placemark>"+timeline+"</Folder></Document>\n");
+			// Close FileWriter
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		return roverPos;
 	}
@@ -263,64 +305,106 @@ public class GoGPS {
 		// Create a new object for the rover position
 		ReceiverPosition roverPos = new ReceiverPosition(this);
 
+		// Name KML file name using Timestamp
+		Date date = new Date();
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		String date1 = sdf1.format(date);
+		String outPath = "./test/" + date1 + ".kml";
 
-		Observations obsR = roverIn.nextObservations();
-		Observations obsM = masterIn.nextObservations();
-		while (obsR != null && obsM != null) {
+		try {
+			SimpleDateFormat timeKML = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+			FileWriter out = new FileWriter(outPath);
+			// Write KML header part
+			//			out.write("<kml xmlns=\"http://earth.google.com/kml/2.0\">"
+			//							+ "<Folder><name>Track Log Export</name><description>Exported on "
+			//							+ date
+			//							+ " </description>"
+			//							+ "<Style id=\"line\"><LineStyle><color>7fff0000</color><width>5</width></LineStyle></Style>"
+			//							+ "<Placemark><name>Raw Data</name><description>by Daisuke Yoshida, Tezukayama Gakuin University, JAPAN</description>"
+			//							+ "<styleUrl>#line</styleUrl><altitudeMode>relativeToGround</altitudeMode><LineString><coordinates>");
+			String timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
 
-			// Discard master epochs if correspondent rover epochs are
-			// not available
-			long obsRtime = obsR.getRefTime().getGpsTime();
-			while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getGpsTime()) {
-				obsM = masterIn.nextObservations();
-			}
+			out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+					"<Document xmlns:kml=\"http://earth.google.com/kml/2.1\">"+
+					"  <Style id=\"SMExport_3_ff0000e6_fffefefe\"><LineStyle><color>ff0000e6</color><width>3</width></LineStyle><PolyStyle><color>fffefefe</color></PolyStyle></Style>"+
+					"  <Style id=\"dot-icon\"><IconStyle><Icon><href>http://www.eriadne.org/icons/MapPointer.png</href></Icon></IconStyle></Style>"+
+					"  <Placemark>"+
+					"    <name></name>"+
+					"    <description></description>"+
+					"    <styleUrl>#SMExport_3_ff0000e6_fffefefe</styleUrl>"+
+					"    <LineString>"+
+					"      <tessellate>1</tessellate>"+
+			"      <coordinates>");
+			out.flush();
 
-			// Discard rover epochs if correspondent master epochs are
-			// not available
-			long obsMtime = obsM.getRefTime().getGpsTime();
-			while (obsM!=null && obsR!=null && roverIn.getCurrentObservations().getRefTime().getGpsTime() < obsMtime) {
-				obsR = roverIn.nextObservations();
-			}
+			Observations obsR = roverIn.nextObservations();
+			Observations obsM = masterIn.nextObservations();
+			while (obsR != null && obsM != null) {
+
+				// Discard master epochs if correspondent rover epochs are
+				// not available
+				long obsRtime = obsR.getRefTime().getGpsTime();
+				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getGpsTime()) {
+					obsM = masterIn.nextObservations();
+				}
+
+				// Discard rover epochs if correspondent master epochs are
+				// not available
+				long obsMtime = obsM.getRefTime().getGpsTime();
+				while (obsM!=null && obsR!=null && roverIn.getCurrentObservations().getRefTime().getGpsTime() < obsMtime) {
+					obsR = roverIn.nextObservations();
+				}
 
 
-			// If there are at least four satellites
-			if (obsM!=null && obsR!=null){
-				if(roverIn.getCurrentObservations().getGpsSize() >= 4) {
+				// If there are at least four satellites
+				if (obsM!=null && obsR!=null){
+					if(roverIn.getCurrentObservations().getGpsSize() >= 4) {
 
-					// Compute approximate positioning by Bancroft algorithm
-					roverPos.bancroft(roverIn.getCurrentObservations());
+						// Compute approximate positioning by Bancroft algorithm
+						roverPos.bancroft(roverIn.getCurrentObservations());
 
-					// If an approximate position was computed
-					if (roverPos.isValidXYZ()) {
+						// If an approximate position was computed
+						if (roverPos.isValidXYZ()) {
 
-						// Select satellites available for double differences
-						roverPos.selectSatellitesDoubleDiff(roverIn.getCurrentObservations(),
-								masterIn.getCurrentObservations(), masterIn.getApproxPosition());
+							// Select satellites available for double differences
+							roverPos.selectSatellitesDoubleDiff(roverIn.getCurrentObservations(),
+									masterIn.getCurrentObservations(), masterIn.getApproxPosition());
 
-						// Compute code double differences positioning
-						// (epoch-by-epoch solution)
-						roverPos.codeDoubleDifferences(roverIn.getCurrentObservations(),
-								masterIn.getCurrentObservations(), masterIn.getApproxPosition());
+							// Compute code double differences positioning
+							// (epoch-by-epoch solution)
+							roverPos.codeDoubleDifferences(roverIn.getCurrentObservations(),
+									masterIn.getCurrentObservations(), masterIn.getApproxPosition());
 
-						try {
-							System.out.println("Code double difference positioning:");
-							System.out.println("GPS time: " + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-							System.out.println("Lon:      " + g.format(roverPos.getGeodeticLongitude()));//geod.get(0)
-							System.out.println("Lat:      " + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
-							System.out.println("h:        " + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
-						} catch (NullPointerException e) {
-							System.out.println("Error: rover approximate position not computed");
+							try {
+								System.out.println("Code double difference positioning:");
+								System.out.println("GPS time: " + roverIn.getCurrentObservations().getRefTime().getGpsTime());
+								System.out.println("Lon:      " + g.format(roverPos.getGeodeticLongitude()));//geod.get(0)
+								System.out.println("Lat:      " + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
+								System.out.println("h:        " + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
+								out.write(g.format(roverPos.getGeodeticLongitude()) + "," // geod.get(0)
+										+ g.format(roverPos.getGeodeticLatitude()) + "," // geod.get(1)
+										+ f.format(roverPos.getGeodeticHeight()) + " \n"); // geod.get(2)
+								out.flush();
+							} catch (NullPointerException e) {
+								System.out.println("Error: rover approximate position not computed");
+							}
+							System.out.println("--------------------");
+
 						}
-						System.out.println("--------------------");
-
 					}
 				}
+				// get next epoch
+				obsR = roverIn.nextObservations();
+				obsM = masterIn.nextObservations();
 			}
-			// get next epoch
-			obsR = roverIn.nextObservations();
-			obsM = masterIn.nextObservations();
+			// Write KML footer part
+			// out.write("</coordinates><altitudeMode>absolute</altitudeMode></LineString></Placemark></Folder></kml>");
+			out.write("</coordinates></LineString></Placemark>"+timeline+"</Folder></Document>\n");
+			// Close FileWriter
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-
 	}
 
 	public void runKalmanFilter() {
