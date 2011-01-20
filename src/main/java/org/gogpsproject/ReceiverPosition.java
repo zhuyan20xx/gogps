@@ -801,12 +801,17 @@ public class ReceiverPosition extends Coordinates{
 	 * @param roverObs
 	 */
 	public void selectSatellitesStandalone(Observations roverObs) {
+		
+		NavigationProducer navigation = goGPS.getNavigation();
 
 		// Retrieve options from goGPS class
 		double cutoff = goGPS.getCutoff();
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
+		
+		// Allocate an array to store GPS satellite positions
+		pos = new SatellitePosition[nObs];
 
 		// Create a list for available satellites after cutoff
 		satAvail = new ArrayList<Integer>(0);
@@ -820,6 +825,9 @@ public class ReceiverPosition extends Coordinates{
 		// First loop to compute topocentric coordinates and 
 		// select satellites above the cutoff level
 		for (int i = 0; i < nObs; i++) {
+			
+			// Compute GPS satellite positions
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 			if(pos[i]!=null){
 
@@ -852,12 +860,17 @@ public class ReceiverPosition extends Coordinates{
 	 */
 	public void selectSatellitesDoubleDiff(Observations roverObs,
 			Observations masterObs, Coordinates masterPos) {
+		
+		NavigationProducer navigation = goGPS.getNavigation();
 
 		// Retrieve options from goGPS class
 		double cutoff = goGPS.getCutoff();
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
+		
+		// Allocate an array to store GPS satellite positions
+		pos = new SatellitePosition[nObs];
 
 		// Create a list for available satellites
 		satAvail = new ArrayList<Integer>(0);
@@ -883,6 +896,9 @@ public class ReceiverPosition extends Coordinates{
 		// First loop to compute topocentric coordinates and 
 		// select satellites above the cutoff level
 		for (int i = 0; i < nObs; i++) {
+			
+			// Compute GPS satellite positions
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 			if(pos[i]!=null){
 
