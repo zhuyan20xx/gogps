@@ -345,7 +345,7 @@ public class SP3Parser implements NavigationProducer{
 
 
 						SatellitePosition sp = new SatellitePosition(ts.getMsec(), Integer.parseInt(satid.substring(1).trim()), x, y, z);
-						sp.setTimeCorrection(clock);
+						sp.setSatelliteClockError(clock);
 						sp.setPredicted(orbitPredFlag||clockPredFlag);
 						sp.setManeuver(maneuverFlag);
 						// TODO map all the values
@@ -376,7 +376,7 @@ public class SP3Parser implements NavigationProducer{
 			for(int i=0;i<epocTimestamps.size();i++){
 				if(epocTimestamps.get(i).getMsec()<=utcTime && utcTime < epocTimestamps.get(i).getMsec()+epochInterval){
 					SatellitePosition sp = (SatellitePosition) epocs.get(i).get("G"+(satID<10?"0":"")+satID).clone();
-					double tGPS = getClockCorrection(utcTime, sp.getTimeCorrection(), obsPseudorange);
+					double tGPS = getClockCorrection(utcTime, sp.getSatelliteClockError(), obsPseudorange);
 
 					return sp;
 				}

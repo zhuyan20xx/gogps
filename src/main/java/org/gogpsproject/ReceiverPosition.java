@@ -38,10 +38,9 @@ public class ReceiverPosition extends Coordinates{
 	private ArrayList<Integer> satAvailPhase; /* List of satellites available for processing */
 	private SatellitePosition[] pos; /* Absolute position of all visible satellites (ECEF) */
 
-
 	//private Coordinates coord; /* Receiver coordinates */
 	private SimpleMatrix covariance; /* Covariance matrix of the estimation error */
-	private double dt; /* Clock error */
+	private double receiverClockError; /* Clock error */
 
 	// Fields for satellite selection
 	private ObservationSet[] masterOrdered;
@@ -71,6 +70,7 @@ public class ReceiverPosition extends Coordinates{
 		super();
 		this.goGPS = goGPS;
 		this.setXYZ(0.0, 0.0, 0.0);
+		this.receiverClockError = 0.0;
 	}
 
 	/**
@@ -132,7 +132,7 @@ public class ReceiverPosition extends Coordinates{
 				dataB[p][0] = pos[i].getX();
 				dataB[p][1] = pos[i].getY();
 				dataB[p][2] = pos[i].getZ();
-				dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getTimeCorrection();
+				dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getSatelliteClockError();
 				p++;
 			} catch (NullPointerException u) {
 				System.out.println("Error: satellite positions not computed");
@@ -229,13 +229,13 @@ public class ReceiverPosition extends Coordinates{
 				SimpleMatrix sm = possiblePosB.extractMatrix(0, 2, 0, 0);
 				this.setXYZ(sm.get(0),sm.get(1),sm.get(2));
 				// Clock offset
-				this.dt = possiblePosB.get(3, 0) / Constants.SPEED_OF_LIGHT * 1e9;
+				this.receiverClockError = possiblePosB.get(3, 0) / Constants.SPEED_OF_LIGHT;
 			} else {
 				//this.coord.ecef = possiblePosA.extractMatrix(0, 2, 0, 0); // new SimpleMatrix(
 				SimpleMatrix sm = possiblePosA.extractMatrix(0, 2, 0, 0);
 				this.setXYZ(sm.get(0),sm.get(1),sm.get(2));
 				// Clock offset
-				this.dt = possiblePosA.get(3, 0) / Constants.SPEED_OF_LIGHT * 1e9;
+				this.receiverClockError = possiblePosA.get(3, 0) / Constants.SPEED_OF_LIGHT;
 			}
 		}
 
@@ -249,6 +249,7 @@ public class ReceiverPosition extends Coordinates{
 	public void codeStandalone(Observations roverObs) {
 
 		NavigationProducer navigation = goGPS.getNavigation();
+		
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
 
@@ -315,10 +316,10 @@ public class ReceiverPosition extends Coordinates{
 				A.set(k, 3, 1); /* clock error */
 
 				// Add the approximate pseudorange value to b
-				b.set(k, 0, appRange);
+				b.set(k, 0, appRange - pos[i].getSatelliteClockError() * Constants.SPEED_OF_LIGHT);
 
 				// Add the clock-corrected observed pseudorange value to y0
-				y0.set(k, 0, roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()) + pos[i].getTimeCorrection() * Constants.SPEED_OF_LIGHT);
+				y0.set(k, 0, roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
 
 				// Correct approximate pseudorange for troposphere
 				double elevation = roverTopo[i].getElevation();
@@ -357,6 +358,9 @@ public class ReceiverPosition extends Coordinates{
 		// Receiver position
 		//this.coord.ecef.set(this.coord.ecef.plus(x.extractMatrix(0, 2, 0, 0)));
 		this.setPlusXYZ(x.extractMatrix(0, 2, 0, 0));
+		
+		// Receiver clock error
+		this.receiverClockError = x.get(3);
 
 		// Estimation of the variance of the observation error
 		vEstim = y0.minus(A.mult(x).plus(b));
@@ -1463,16 +1467,16 @@ public class ReceiverPosition extends Coordinates{
 	}
 
 	/**
-	 * @return the dt
+	 * @return the receiver clock error
 	 */
-	public double getDt() {
-		return dt;
+	public double getReceiverClockError() {
+		return receiverClockError;
 	}
 
 	/**
-	 * @param dt the dt to set
+	 * @param receiverClockError the receiver clock error to set
 	 */
-	public void setDt(double dt) {
-		this.dt = dt;
+	public void setReceiverClockError(double dt) {
+		this.receiverClockError = dt;
 	}
 }

@@ -30,7 +30,7 @@ import org.ejml.data.SimpleMatrix;
  */
 public class SatellitePosition extends Coordinates{
 	private int satID; /* Satellite ID number */
-	private double timeCorrection; /* Correction due to satellite clock error in seconds*/
+	private double satelliteClockError; /* Correction due to satellite clock error in seconds*/
 	//private double range;
 	private long utcTime;
 	private boolean predicted;
@@ -62,15 +62,15 @@ public class SatellitePosition extends Coordinates{
 	/**
 	 * @return the timeCorrection
 	 */
-	public double getTimeCorrection() {
-		return timeCorrection;
+	public double getSatelliteClockError() {
+		return satelliteClockError;
 	}
 
 	/**
 	 * @param timeCorrection the timeCorrection to set
 	 */
-	public void setTimeCorrection(double timeCorrection) {
-		this.timeCorrection = timeCorrection;
+	public void setSatelliteClockError(double timeCorrection) {
+		this.satelliteClockError = timeCorrection;
 	}
 
 	/**
@@ -109,14 +109,14 @@ public class SatellitePosition extends Coordinates{
 	}
 
 	public String toString(){
-		return "X:"+this.getX()+" Y:"+this.getY()+" Z:"+getZ()+" clkCorr:"+getTimeCorrection();
+		return "X:"+this.getX()+" Y:"+this.getY()+" Z:"+getZ()+" clkCorr:"+getSatelliteClockError();
 	}
 
 	public Object clone(){
 		SatellitePosition sp = new SatellitePosition(this.utcTime,this.satID,this.getX(),this.getY(),this.getZ());
 		sp.maneuver = this.maneuver;
 		sp.predicted = this.predicted;
-		sp.timeCorrection = this.timeCorrection;
+		sp.satelliteClockError = this.satelliteClockError;
 		return sp;
 	}
 }
