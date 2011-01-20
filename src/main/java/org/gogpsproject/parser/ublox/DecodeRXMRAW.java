@@ -129,10 +129,13 @@ public class DecodeRXMRAW {
 		}
 		//System.out.println();
 
+		// avoid 999 ms rounding
+		tow = (tow+499)/1000*1000;
+
 		long gmtTS = getGMTTS(tow, week);
 		Observations o = new Observations(new Time(gmtTS),0);
 
-		//System.out.println(gmtTS+" GPS time "+o.getRefTime().getGpsTime());
+		System.out.println(gmtTS+" GPS time "+o.getRefTime().getGpsTime());
 		//ubx.log( o.getRefTime().getGpsTime()+" "+tow+"\n\r");
 
 
