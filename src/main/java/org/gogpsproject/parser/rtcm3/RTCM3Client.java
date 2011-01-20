@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -44,6 +45,7 @@ import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.util.Bits;
+import org.gogpsproject.util.InputStreamCounter;
 
 public class RTCM3Client implements Runnable, ObservationsProducer {
 
@@ -65,6 +67,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	private boolean[] bits;
 	private boolean[] rollbits;
 	private boolean downloadlength = false;
+
+	private boolean debug=false;
 
 	private Coordinates approxPosition = null;
 
@@ -356,7 +360,17 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// sck.wait(1000);
 			// this.dataThread.sleep(6000);
 			// this.notifyAll();
-			readLoop(in);
+
+			FileOutputStream fos= null;;
+			try {
+				fos = new FileOutputStream("./data/rtcm-swisstopo.out");
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			InputStreamCounter isc = new InputStreamCounter(in, fos);
+
+			readLoop(isc);
 			// System.out.println("1");
 
 		} catch (IOException ex) {
@@ -388,11 +402,12 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	public static void main(String args[]){
 		System.out.println(computeNMEACheckSum("$GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0"));
 
-		File f = new File("./data/rtcm.out");
+		File f = new File("./data/rtcm-swisstopo.out");
 		try {
 			FileInputStream fis = new FileInputStream(f);
 			RTCM3Client cl = new RTCM3Client(null);
 			cl.go = true;
+			cl.debug = true;
 			cl.readLoop(fis);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -512,7 +527,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				setBits(in, messagelength);
 				int msgtype = Bits.bitsToUInt(Bits.subset(bits, 0, 12));
 
-				System.out.println("message type : " + msgtype);
+				//System.out.println("message type : " + msgtype);
 				messagelength = 0;
 
 				Decode dec = decodeMap.get(new Integer(msgtype));
@@ -550,23 +565,20 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	}
 
 	public void addObservation(Observations o){
-		System.out.println("\t\t\t\tM > obs "+o.getGpsSize()+" time "+new Date(o.getRefTime().getMsec()));
-		for(int i=0;i<o.getGpsSize();i++){
-			ObservationSet os = o.getGpsByIdx(i);
-			System.out.print(" svid:"+os.getSatID());
-			System.out.print(" codeC:"+os.getCodeC(0));
-			System.out.print(" codeP:"+os.getCodeP(0));
-			System.out.print(" doppl:"+os.getDoppler(0));
-			System.out.print(" LLInd:"+os.getLossLockInd(0));
-			System.out.print(" phase:"+os.getPhase(0));
-			System.out.print(" pseud:"+os.getPseudorange(0));
-			System.out.print(" q.ind:"+os.getQualityInd(0));
-			System.out.println(" s.str:"+os.getSignalStrength(0));
-
-
-
-
-
+		if(debug){
+			System.out.println("\t\t\t\tM > obs "+o.getGpsSize()+" time "+new Date(o.getRefTime().getMsec()));
+			for(int i=0;i<o.getGpsSize();i++){
+				ObservationSet os = o.getGpsByIdx(i);
+				System.out.print(" svid:"+os.getSatID());
+				System.out.print(" codeC:"+os.getCodeC(0));
+				System.out.print(" codeP:"+os.getCodeP(0));
+				System.out.print(" doppl:"+os.getDoppler(0));
+				System.out.print(" LLInd:"+os.getLossLockInd(0));
+				System.out.print(" phase:"+os.getPhase(0));
+				System.out.print(" pseud:"+os.getPseudorange(0));
+				System.out.print(" q.ind:"+os.getQualityInd(0));
+				System.out.println(" s.str:"+os.getSignalStrength(0));
+			}
 		}
 		observationsBuffer.add(o);
 	}

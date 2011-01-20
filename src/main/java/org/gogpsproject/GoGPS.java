@@ -504,14 +504,16 @@ public class GoGPS {
 									+ lat + "," // geod.get(1)
 									+ h + " \n"); // geod.get(2)
 							out.flush();
+
+							String t = timeKML.format(new Date(obsR.getRefTime().getMsec()));
+							System.out.print("T:" + t);
+							System.out.print(" Lon:" + lon);//geod.get(0)
+							System.out.print(" Lat:" + lat);//geod.get(1)
+							System.out.println(" H:" + h);//geod.get(2)
 							if(c%10==0){
-								String t = timeKML.format(new Date(obsR.getRefTime().getMsec()));
 
 								//System.out.println("Positioning by Kalman filter on code and phase double differences:");
-								System.out.print("T:" + t);
-								System.out.print(" Lon:" + lon);//geod.get(0)
-								System.out.print(" Lat:" + lat);//geod.get(1)
-								System.out.println(" H:" + h);//geod.get(2)
+
 
 								timeline += "\n";
 								timeline += "<Placemark>"+

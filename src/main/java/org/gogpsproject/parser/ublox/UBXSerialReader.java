@@ -19,13 +19,17 @@
  */
 package org.gogpsproject.parser.ublox;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.gogpsproject.util.InputStreamCounter;
+
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author Lorenzo Patocchi cryms.com
@@ -33,7 +37,7 @@ import java.io.OutputStream;
 
 public class UBXSerialReader implements Runnable {
 
-	private InputStream in;
+	private InputStreamCounter in;
 	private OutputStream out;
 	//private boolean end = false;
 	private Thread t = null;
@@ -42,17 +46,24 @@ public class UBXSerialReader implements Runnable {
 	private UBXReader reader;
 
 	public UBXSerialReader(InputStream in,OutputStream out,UBXEventListener el) {
-		this.in = in;
+		FileOutputStream fos= null;;
+		try {
+			fos = new FileOutputStream("./data/ubx.out");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.in = new InputStreamCounter(in,fos);
 		this.out = out;
 		this.eventListener = el;
-		this.reader = new UBXReader(in, el);
+		this.reader = new UBXReader(this.in, el);
 	}
 
 	public void start()  throws IOException{
 		t = new Thread(this);
 		t.start();
 
-		System.out.println("1");
+		//System.out.println("1");
 		int nmea[] = { MessageType.NMEA_GGA, MessageType.NMEA_GLL, MessageType.NMEA_GSA, MessageType.NMEA_GSV, MessageType.NMEA_RMC, MessageType.NMEA_VTG, MessageType.NMEA_GRS,
 				MessageType.NMEA_GST, MessageType.NMEA_ZDA, MessageType.NMEA_GBS, MessageType.NMEA_DTM };
 		for (int i = 0; i < nmea.length; i++) {
@@ -60,7 +71,7 @@ public class UBXSerialReader implements Runnable {
 			out.write(msgcfg.getByte());
 			out.flush();
 		}
-		System.out.println("2");
+		//System.out.println("2");
 		int pubx[] = { MessageType.PUBX_A, MessageType.PUBX_B, MessageType.PUBX_C, MessageType.PUBX_D };
 		for (int i = 0; i < pubx.length; i++) {
 			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_PUBX, pubx[i], false);
@@ -79,7 +90,7 @@ public class UBXSerialReader implements Runnable {
 		out.write(msgcfg.getByte());
 		out.flush();
 
-		System.out.println("3");
+		//System.out.println("3");
 	}
 	public void stop(){
 		stop = true;
@@ -103,6 +114,7 @@ public class UBXSerialReader implements Runnable {
 			out.flush();
 
 			//System.out.println();
+			in.start();
 			while (!stop) {
 				if(in.available()>0){
 					try{
@@ -129,6 +141,8 @@ public class UBXSerialReader implements Runnable {
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidEphTS = curTS;
+
+					System.out.println("BPS:"+in.getCurrentBps()+" bytes:"+in.getCounter());
 				}
 				if(curTS-aidHuiTS > 60*1000){
 					System.out.println("Poll AID HUI");
