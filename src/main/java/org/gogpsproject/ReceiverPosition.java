@@ -126,7 +126,7 @@ public class ReceiverPosition extends Coordinates{
 			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), obs.getGpsSatID(i), obsPseudorange, this.getReceiverClockError());
 
 			try {
-				System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
+				//System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
 				// range)
 				dataB[p][0] = pos[i].getX();
@@ -135,7 +135,7 @@ public class ReceiverPosition extends Coordinates{
 				dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getSatelliteClockError();
 				p++;
 			} catch (NullPointerException u) {
-				System.out.println("Error: satellite positions not computed");
+				System.out.println("Error: satellite positions not computed for satID:"+obs.getGpsSatID(i));
 				//return; // don't break eggs so quickly :-)
 			}
 		}
@@ -839,11 +839,11 @@ public class ReceiverPosition extends Coordinates{
 				if (roverTopo[i].getElevation() > cutoff) {
 
 					satAvail.add(pos[i].getSatID());
-					System.out.println("Available sat "+pos[i].getSatID());
+					//System.out.println("Available sat "+pos[i].getSatID());
 
 					// Check if also phase is available
 					if (roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0) {
-						System.out.println("Available sat phase "+pos[i].getSatID());
+						//System.out.println("Available sat phase "+pos[i].getSatID());
 						satAvailPhase.add(pos[i].getSatID());
 					}
 				}else{
@@ -1036,7 +1036,7 @@ public class ReceiverPosition extends Coordinates{
 
 		for (int i = 0; i < nObs; i++) {
 
-			if (satAvail.contains(pos[i].getSatID())
+			if (pos[i]!=null && satAvail.contains(pos[i].getSatID())
 					&& i != pivot) {
 
 				// Compute rover-satellite approximate pseudorange
@@ -1154,7 +1154,7 @@ public class ReceiverPosition extends Coordinates{
 
 			for (int i = 0; i < pos.length; i++) {
 
-				if (satAvailPhase.contains(pos[i].getSatID())
+				if (pos[i] !=null && satAvailPhase.contains(pos[i].getSatID())
 						&& !satOld.contains(pos[i].getSatID())) {
 
 					// Estimate ambiguity for new satellites
@@ -1201,7 +1201,7 @@ public class ReceiverPosition extends Coordinates{
 		// Check cycle-slips
 		for (int i = 0; i < pos.length; i++) {
 
-			if (satAvailPhase.contains(pos[i].getSatID())) {
+			if (pos[i] != null && satAvailPhase.contains(pos[i].getSatID())) {
 
 				// Estimate ambiguity and check for cycle slips
 				estimateAmbiguitiesApprox(roverObs, masterObs, masterPos, i, pivot, true);
