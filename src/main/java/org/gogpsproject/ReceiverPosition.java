@@ -39,7 +39,7 @@ public class ReceiverPosition extends Coordinates{
 	private SatellitePosition[] pos; /* Absolute position of all visible satellites (ECEF) */
 
 	//private Coordinates coord; /* Receiver coordinates */
-	private SimpleMatrix covariance; /* Covariance matrix of the estimation error */
+	private SimpleMatrix positionCovariance; /* Covariance matrix of the position estimation error */
 	private double receiverClockError; /* Clock error */
 
 	// Fields for satellite selection
@@ -369,11 +369,13 @@ public class ReceiverPosition extends Coordinates{
 				/ (nObsAvail - nUnknowns);
 
 		// Covariance matrix of the estimation error
-		if (nObsAvail > nUnknowns)
-			this.covariance = A.transpose().mult(Q.invert()).mult(A).invert()
-					.scale(varianceEstim);
-		else
-			this.covariance = null;
+		if (nObsAvail > nUnknowns) {
+			SimpleMatrix covariance = A.transpose().mult(Q.invert()).mult(A).invert()
+			.scale(varianceEstim);
+			this.positionCovariance = covariance.extractMatrix(0, 2, 0, 2);
+		}else{
+			this.positionCovariance = null;
+		}
 
 		// Compute positioning in geodetic coordinates
 		this.computeGeodetic();
@@ -589,10 +591,11 @@ public class ReceiverPosition extends Coordinates{
 
 		// Covariance matrix of the estimation error
 		if (nObsAvail > nUnknowns){
-			this.covariance = A.transpose().mult(Q.invert()).mult(A).invert()
+			SimpleMatrix covariance = A.transpose().mult(Q.invert()).mult(A).invert()
 					.scale(varianceEstim);
+			this.positionCovariance = covariance.extractMatrix(0, 2, 0, 2);
 		}else{
-			this.covariance = null;
+			this.positionCovariance = null;
 		}
 		// Compute positioning in geodetic coordinates
 		this.computeGeodetic();
@@ -656,12 +659,6 @@ public class ReceiverPosition extends Coordinates{
 			codeDoubleDifferences(roverObs, masterObs, masterPos);
 		}
 
-		// If it was not possible to compute the covariance matrix
-		if (this.covariance == null) {
-			this.covariance = SimpleMatrix.identity(3).scale(
-					Math.pow(goGPS.getStDevInit(), 2));
-		}
-
 		// Estimate phase ambiguities by comparing observed code and phase
 		estimateAmbiguitiesObserv(roverObs, masterObs);
 
@@ -674,9 +671,15 @@ public class ReceiverPosition extends Coordinates{
 		KFprediction = T.mult(KFstate);
 
 		// Covariance matrix of the initial state
-		Cee.set(0, 0, this.covariance.get(0, 0));
-		Cee.set(i1 + 1, i1 + 1, this.covariance.get(1, 1));
-		Cee.set(i2 + 1, i2 + 1, this.covariance.get(2, 2));
+		if (this.positionCovariance != null) {
+			Cee.set(0, 0, this.positionCovariance.get(0, 0));
+			Cee.set(i1 + 1, i1 + 1, this.positionCovariance.get(1, 1));
+			Cee.set(i2 + 1, i2 + 1, this.positionCovariance.get(2, 2));
+		} else {
+			Cee.set(0, 0, Math.pow(goGPS.getStDevInit(), 2));
+			Cee.set(i1 + 1, i1 + 1, Math.pow(goGPS.getStDevInit(), 2));
+			Cee.set(i2 + 1, i2 + 1, Math.pow(goGPS.getStDevInit(), 2));
+		}
 		for (int i = 1; i < o1; i++) {
 			Cee.set(i, i, Math.pow(goGPS.getStDevInit(), 2));
 			Cee.set(i + i1 + 1, i + i1 + 1, Math.pow(goGPS.getStDevInit(), 2));
@@ -787,11 +790,29 @@ public class ReceiverPosition extends Coordinates{
 			Cee = T.mult(Cee).mult(T.transpose());
 		}
 
-		// Set receiver position to current state estimate
+		// Set receiver position
 		this.setXYZ(KFstate.get(0), KFstate.get(i1 + 1), KFstate.get(i2 + 1));
 //		this.coord.ecef.set(0, 0, KFstate.get(0));
 //		this.coord.ecef.set(1, 0, KFstate.get(i1 + 1));
 //		this.coord.ecef.set(2, 0, KFstate.get(i2 + 1));
+		
+		// Set receiver position error covariance
+//		SimpleMatrix rows = Cee.extractMatrix(0, 0, 0, i2 + 1);
+//		rows = rows.combine(1, 0, Cee.extractMatrix(i1 + 1, i1 + 1, 0, i2 + 1));
+//		rows = rows.combine(2, 0, Cee.extractMatrix(i2 + 1, i2 + 1, 0, i2 + 1));
+//		this.positionCovariance = rows.extractMatrix(0, 2, 0, 0);
+//		this.positionCovariance = this.positionCovariance.combine(0, 1, rows.extractMatrix(0, 2, i1 + 1, i1 + 1));
+//		this.positionCovariance = this.positionCovariance.combine(0, 2, rows.extractMatrix(0, 2, i2 + 1, i2 + 1));
+
+		this.positionCovariance.set(0, 0, Cee.get(0, 0));
+		this.positionCovariance.set(1, 1, Cee.get(i1 + 1, i1 + 1));
+		this.positionCovariance.set(2, 2, Cee.get(i2 + 1, i2 + 1));
+		this.positionCovariance.set(0, 1, Cee.get(0, i1 + 1));
+		this.positionCovariance.set(0, 2, Cee.get(0, i2 + 1));
+		this.positionCovariance.set(1, 0, Cee.get(i1 + 1, 0));
+		this.positionCovariance.set(1, 2, Cee.get(i1 + 1, i2 + 1));
+		this.positionCovariance.set(2, 0, Cee.get(i2 + 1, 0));
+		this.positionCovariance.set(2, 1, Cee.get(i2 + 1, i1 + 1));
 
 		// Compute positioning in geodetic coordinates
 		this.computeGeodetic();
@@ -1469,17 +1490,17 @@ public class ReceiverPosition extends Coordinates{
 //	}
 
 	/**
-	 * @return the covariance
+	 * @return the positionCovariance
 	 */
-	public SimpleMatrix getCovariance() {
-		return covariance;
+	public SimpleMatrix getPositionCovariance() {
+		return positionCovariance;
 	}
 
 	/**
-	 * @param covariance the covariance to set
+	 * @param positionCovariance the positionCovariance to set
 	 */
-	public void setCovariance(SimpleMatrix covariance) {
-		this.covariance = covariance;
+	public void setPositionCovariance(SimpleMatrix positionCovariance) {
+		this.positionCovariance = positionCovariance;
 	}
 
 	/**
