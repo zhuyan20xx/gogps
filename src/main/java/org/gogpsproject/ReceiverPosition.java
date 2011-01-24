@@ -193,8 +193,8 @@ public class ReceiverPosition extends Coordinates{
 			e.set(1);
 			for (int i = 0; i < dataB.length; i++) {
 
-				alpha.set(i, 0, lorentzInnerProduct(B.extractMatrix(i, i, 0, 3), B
-						.extractMatrix(i, i, 0, 3)) / 2);
+				alpha.set(i, 0, lorentzInnerProduct(B.extractMatrix(i, i+1, 0, 4), B
+						.extractMatrix(i, i+1, 0, 4)) / 2);
 			}
 
 			BBBe = BBB.mult(e);
@@ -211,13 +211,13 @@ public class ReceiverPosition extends Coordinates{
 			possiblePosB.set(3, 0, -possiblePosB.get(3, 0));
 			for (int i = 0; i < dataB.length; i++) {
 				cdt = possiblePosA.get(3, 0);
-				calc = B.extractMatrix(i, i, 0, 2).transpose().minus(
-						possiblePosA.extractMatrix(0, 2, 0, 0)).normF()
+				calc = B.extractMatrix(i, i+1, 0, 3).transpose().minus(
+						possiblePosA.extractMatrix(0, 3, 0, 1)).normF()
 						+ cdt;
 				omc[0] = B.get(i, 3) - calc;
 				cdt = possiblePosB.get(3, 0);
-				calc = B.extractMatrix(i, i, 0, 2).transpose().minus(
-						possiblePosB.extractMatrix(0, 2, 0, 0)).normF()
+				calc = B.extractMatrix(i, i+1, 0, 3).transpose().minus(
+						possiblePosB.extractMatrix(0, 3, 0, 1)).normF()
 						+ cdt;
 				omc[1] = B.get(i, 3) - calc;
 			}
@@ -225,14 +225,14 @@ public class ReceiverPosition extends Coordinates{
 			// Discrimination between roots (choose one of the possible
 			// positions)
 			if (Math.abs(omc[0]) > Math.abs(omc[1])) {
-				//this.coord.ecef = possiblePosB.extractMatrix(0, 2, 0, 0); // new SimpleMatrix(
-				SimpleMatrix sm = possiblePosB.extractMatrix(0, 2, 0, 0);
+				//this.coord.ecef = possiblePosB.extractMatrix(0, 3, 0, 1); // new SimpleMatrix(
+				SimpleMatrix sm = possiblePosB.extractMatrix(0, 3, 0, 1);
 				this.setXYZ(sm.get(0),sm.get(1),sm.get(2));
 				// Clock offset
 				this.receiverClockError = possiblePosB.get(3, 0) / Constants.SPEED_OF_LIGHT;
 			} else {
-				//this.coord.ecef = possiblePosA.extractMatrix(0, 2, 0, 0); // new SimpleMatrix(
-				SimpleMatrix sm = possiblePosA.extractMatrix(0, 2, 0, 0);
+				//this.coord.ecef = possiblePosA.extractMatrix(0, 3, 0, 1); // new SimpleMatrix(
+				SimpleMatrix sm = possiblePosA.extractMatrix(0, 3, 0, 1);
 				this.setXYZ(sm.get(0),sm.get(1),sm.get(2));
 				// Clock offset
 				this.receiverClockError = possiblePosA.get(3, 0) / Constants.SPEED_OF_LIGHT;
@@ -355,8 +355,8 @@ public class ReceiverPosition extends Coordinates{
 				.mult(Q.invert()).mult(y0.minus(b));
 
 		// Receiver position
-		//this.coord.ecef.set(this.coord.ecef.plus(x.extractMatrix(0, 2, 0, 0)));
-		this.setPlusXYZ(x.extractMatrix(0, 2, 0, 0));
+		//this.coord.ecef.set(this.coord.ecef.plus(x.extractMatrix(0, 3, 0, 1)));
+		this.setPlusXYZ(x.extractMatrix(0, 3, 0, 1));
 
 		// Receiver clock error
 		this.receiverClockError = x.get(3) / Constants.SPEED_OF_LIGHT;
@@ -371,7 +371,7 @@ public class ReceiverPosition extends Coordinates{
 		if (nObsAvail > nUnknowns) {
 			SimpleMatrix covariance = A.transpose().mult(Q.invert()).mult(A).invert()
 			.scale(varianceEstim);
-			this.positionCovariance = covariance.extractMatrix(0, 2, 0, 2);
+			this.positionCovariance = covariance.extractMatrix(0, 3, 0, 3);
 		}else{
 			this.positionCovariance = null;
 		}
@@ -584,7 +584,7 @@ public class ReceiverPosition extends Coordinates{
 		if (nObsAvail > nUnknowns){
 			SimpleMatrix covariance = A.transpose().mult(Q.invert()).mult(A).invert()
 					.scale(varianceEstim);
-			this.positionCovariance = covariance.extractMatrix(0, 2, 0, 2);
+			this.positionCovariance = covariance.extractMatrix(0, 3, 0, 3);
 		}else{
 			this.positionCovariance = null;
 		}
@@ -788,12 +788,12 @@ public class ReceiverPosition extends Coordinates{
 //		this.coord.ecef.set(2, 0, KFstate.get(i2 + 1));
 		
 		// Set receiver position error covariance
-//		SimpleMatrix rows = Cee.extractMatrix(0, 0, 0, i2 + 1);
-//		rows = rows.combine(1, 0, Cee.extractMatrix(i1 + 1, i1 + 1, 0, i2 + 1));
-//		rows = rows.combine(2, 0, Cee.extractMatrix(i2 + 1, i2 + 1, 0, i2 + 1));
-//		this.positionCovariance = rows.extractMatrix(0, 2, 0, 0);
-//		this.positionCovariance = this.positionCovariance.combine(0, 1, rows.extractMatrix(0, 2, i1 + 1, i1 + 1));
-//		this.positionCovariance = this.positionCovariance.combine(0, 2, rows.extractMatrix(0, 2, i2 + 1, i2 + 1));
+//		SimpleMatrix rows = Cee.extractMatrix(0, 1, 0, i2 + 2);
+//		rows = rows.combine(1, 0, Cee.extractMatrix(i1 + 1, i1 + 2, 0, i2 + 2));
+//		rows = rows.combine(2, 0, Cee.extractMatrix(i2 + 1, i2 + 2, 0, i2 + 2));
+//		this.positionCovariance = rows.extractMatrix(0, 3, 0, 1);
+//		this.positionCovariance = this.positionCovariance.combine(0, 1, rows.extractMatrix(0, 3, i1 + 1, i1 + 2));
+//		this.positionCovariance = this.positionCovariance.combine(0, 2, rows.extractMatrix(0, 3, i2 + 1, i2 + 2));
 
 		this.positionCovariance.set(0, 0, Cee.get(0, 0));
 		this.positionCovariance.set(1, 1, Cee.get(i1 + 1, i1 + 1));
