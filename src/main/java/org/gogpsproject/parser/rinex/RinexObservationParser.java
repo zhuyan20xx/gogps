@@ -511,12 +511,16 @@ public class RinexObservationParser implements ObservationsProducer{
 			} else if (typeOrder[k] == 8) { // ** D1 doppler
 
 				String dopplerD = line.substring(j, j + 14).trim();
-				o.setDoppler(0,Float.parseFloat(dopplerD));
+				if (dopplerD.length() != 0) {
+					o.setDoppler(0,Float.parseFloat(dopplerD));
+				}
 
 			} else if (typeOrder[k] == 9) { // ** D2 doppler
 
 				String dopplerD = line.substring(j, j + 14).trim();
-				o.setDoppler(1,Float.parseFloat(dopplerD));
+				if (dopplerD.length() != 0) {
+					o.setDoppler(1,Float.parseFloat(dopplerD));
+				}
 			}
 		} catch (StringIndexOutOfBoundsException e) {
 			// Skip over blank slots
