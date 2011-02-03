@@ -51,8 +51,8 @@ public class TestGoGPS {
 //			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/perim2.08o"));
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/COMO1190.08o"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/COMO1190.08n"));
-//			NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_FINAL);
-//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+//			//NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_FINAL);
+//			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Como, Italy (static) */
 //			dynamicModel = DYN_MODEL_STATIC;
@@ -105,8 +105,6 @@ public class TestGoGPS {
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs2.10n"));
 //			static File fileNav = new File("./data/vrs2.10n");
 
-
-
 			// 1st init
 			navigationIn.init();
 			roverIn.init();
@@ -114,7 +112,7 @@ public class TestGoGPS {
 
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
 			goGPS.setDynamicModel(dynamicModel);
-			//goGPS.runCodeStandalone(false);
+			// goGPS.runCodeStandalone();
 			// goGPS.runCodeDoubleDifferences();
 			goGPS.runKalmanFilter();
 

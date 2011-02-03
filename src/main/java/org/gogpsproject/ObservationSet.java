@@ -195,7 +195,7 @@ public class ObservationSet {
 	public boolean isLocked(int i){
 		return lossLockInd[i] == 0;
 	}
-	public boolean isCycleSlip(int i){
+	public boolean isPossibleCycleSlip(int i){
 		return lossLockInd[i]>0 && ((lossLockInd[i]&0x1) == 0x1);
 	}
 	public boolean isHalfWavelength(int i){
