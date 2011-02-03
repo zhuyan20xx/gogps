@@ -218,12 +218,11 @@ public class GoGPS {
 						System.out.println("has valid position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
 						if (roverPos.isValidXYZ()) {
 
-							// Select satellites available for double differences
+							// Select available satellites
 							roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
 
-							// Compute code stand-alone positioning (epoch-by-epoch
-							// solution)
-							roverPos.codeStandalone(roverIn.getCurrentObservations());
+							// Compute code stand-alone positioning (epoch-by-epoch solution)
+							roverPos.codeStandalone(roverIn.getCurrentObservations(), false);
 
 							try {
 								System.out.println("Code standalone positioning:");
@@ -720,8 +719,8 @@ public class GoGPS {
 	 * @param i the selected GPS frequency
 	 * @return the stDevCode
 	 */
-	public double getStDevCode(ObservationSet roverObsSet, ObservationSet masterObsSet, int i) {
-		return (roverObsSet.isPseudorangeP(i) & masterObsSet.isPseudorangeP(i))?stDevCodeP[i]:stDevCodeC;
+	public double getStDevCode(ObservationSet obsSet, int i) {
+		return obsSet.isPseudorangeP(i)?stDevCodeP[i]:stDevCodeC;
 	}
 
 	/**
