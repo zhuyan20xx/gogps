@@ -1570,17 +1570,27 @@ public class ReceiverPosition extends Coordinates{
 							* (roverPivotWeight + masterPivotWeight)
 							+ (Math.pow(goGPS.getStDevPhase(), 2) + Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[i].getSatID()))
 							* (roverSatWeight + masterSatWeight));
+				int r = 1;
+				for (int j = i+1; j < nObs; j++) {
+					if (pos[j] !=null && satAvailPhase.contains(pos[j].getSatID()) && j != pivotIndex) {
+					Qphase.set(p, p+r, Qphase.get(p, p+r) 
+							+ (Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[j].getSatID()))
+							* (roverPivotWeight + masterPivotWeight));
+					Qphase.set(p+r, p, Qphase.get(p, p+r));
+					r++;
+					}
+				}
 
 				// Increment available satellite counters
 				k++;
 				p++;
 			}
 		}
-		
+
 		// Apply troposphere and ionosphere correction
 		b = b.plus(tropoCorr);
 		b = b.plus(ionoCorr);
-		
+
 		//Build complete cofactor matrix (code and phase)
 		Q.insertIntoThis(0, 0, Qcode);
 		Q.insertIntoThis(nObsAvail, nObsAvail, Qphase);
