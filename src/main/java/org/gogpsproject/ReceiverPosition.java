@@ -618,6 +618,7 @@ public class ReceiverPosition extends Coordinates{
 			Cee.set(i1 + 1, i1 + 1, this.positionCovariance.get(1, 1));
 			Cee.set(i2 + 1, i2 + 1, this.positionCovariance.get(2, 2));
 		} else {
+			this.positionCovariance = new SimpleMatrix(3, 3);
 			Cee.set(0, 0, Math.pow(goGPS.getStDevInit(), 2));
 			Cee.set(i1 + 1, i1 + 1, Math.pow(goGPS.getStDevInit(), 2));
 			Cee.set(i2 + 1, i2 + 1, Math.pow(goGPS.getStDevInit(), 2));
@@ -648,13 +649,18 @@ public class ReceiverPosition extends Coordinates{
 		satOld = satAvailPhase;
 
 		// Save the ID and index of the previous pivot satellite
-		oldPivotId = pos[pivot].getSatID();
+		try {
+			oldPivotId = pos[pivot].getSatID();
+		} catch(ArrayIndexOutOfBoundsException e) {
+			oldPivotId = 0;
+		}
 		
 		// Select satellites for standalone
 		selectSatellitesStandalone(roverObs);
 		
-		// Estimate receiver clock error by code stand-alone
-		codeStandalone(roverObs, true);
+		if (satAvail.size() >= 4)
+			// Estimate receiver clock error by code stand-alone
+			codeStandalone(roverObs, true);
 
 		// Select satellites for double differences
 		selectSatellitesDoubleDiff(roverObs, masterObs, masterPos);
@@ -1180,7 +1186,7 @@ public class ReceiverPosition extends Coordinates{
 		ArrayList<Integer> newSatellites = new ArrayList<Integer>(0);
 		ArrayList<Integer> slippedSatellites = new ArrayList<Integer>(0);
 
-		int oldPivotIndex = 0;
+		int temporaryPivot = 0;
 		boolean newPivot = false;
 
 		// Check if satellites were lost since the previous epoch
@@ -1201,34 +1207,55 @@ public class ReceiverPosition extends Coordinates{
 			if (pos[i] != null && satAvailPhase.contains(pos[i].getSatID())
 					&& !satOld.contains(pos[i].getSatID())) {
 
+				newSatellites.add(pos[i].getSatID());
+
 				if (pos[i].getSatID() != pos[pivot].getSatID()) {
 					System.out.println("New satellite "+pos[i].getSatID());
-					newSatellites.add(pos[i].getSatID());
 				} else {
-					// If the new satellite is going to be the pivot, its ambiguity needs to be estimated before switching pivot
-					newSatellites.add(pos[i].getSatID());
-					// Find the index of the old pivot
-					for (int j = 0; j < pos.length; j ++) {
-						if (pos[j].getSatID() == oldPivotId) {
-							oldPivotIndex = j;
-							newPivot = true;
-							break;
-						}
-					}
+					newPivot = true;
 					System.out.println("New satellite "+pos[i].getSatID()+" (new pivot)");
 				}
 			}
 		}
 
+		// If a new satellite is going to be the pivot, its ambiguity needs to be estimated before switching pivot
 		if (newPivot) {
-			// If the pivot is a new satellite, estimate its ambiguity, using the old pivot
-			estimateAmbiguitiesLeastSquares(roverObs, masterObs, masterPos, newSatellites, slippedSatellites, oldPivotIndex);
-			// Then remove it from new satellites
+			// If it is not the only satellite with phase
+			if (satAvailPhase.size() > 1) {
+				// If the former pivot is still among satellites with phase
+				if (satAvailPhase.contains(oldPivotId)) {
+					// Find the index of the old pivot
+					for (int j = 0; j < pos.length; j ++) {
+						if (pos[j].getSatID() == oldPivotId) {
+							temporaryPivot = j;
+						}
+					}
+				} else {
+					double maxEl = 0;
+					// Find a temporary pivot with phase
+					for (int j = 0; j < pos.length; j ++) {
+						if (satAvailPhase.contains(pos[j].getSatID())
+								&& j != pivot
+								&& roverTopo[j].getElevation() > maxEl) {
+							temporaryPivot = j;
+							maxEl = roverTopo[j].getElevation();
+						}
+					}
+					// Reset the ambiguities of other satellites according to the temporary pivot
+					newSatellites.clear();
+					newSatellites.addAll(satAvailPhase);
+					newSatellites.remove(newSatellites.indexOf(pos[temporaryPivot].getSatID()));
+					oldPivotId = pos[temporaryPivot].getSatID();
+				}
+				// Estimate the ambiguity of the new pivot, using the temporary pivot
+				estimateAmbiguitiesLeastSquares(roverObs, masterObs, masterPos, newSatellites, slippedSatellites, temporaryPivot);
+			}
+			// Then remove the new pivot from the list of new satellites
 			newSatellites.remove(newSatellites.indexOf(pos[pivot].getSatID()));
 		}
 
 		// Check if pivot satellite changed since the previous epoch
-		if (oldPivotId != pos[pivot].getSatID()) {
+		if (oldPivotId != pos[pivot].getSatID() && satAvailPhase.size() > 1) {
 
 			System.out.println("Pivot change from satellite "+oldPivotId+" to satellite "+pos[pivot].getSatID());
 
@@ -1266,22 +1293,24 @@ public class ReceiverPosition extends Coordinates{
 		boolean lossOfLockCycleSlip;
 		boolean dopplerCycleSlip;
 		for (int i = 0; i < pos.length; i++) {
-			// cycle slip detected by loss of lock indicator (temporarily disabled)
-			lossOfLockCycleSlip = roverObs.getGpsByID(pos[i].getSatID()).isPossibleCycleSlip(goGPS.getFreq());
-			lossOfLockCycleSlip = false;
 
-			// cycle slip detected by Doppler predicted phase range
-			dopplerCycleSlip = this.getDopplerPredictedPhase(pos[i].getSatID()) != 0 && (Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
-					- this.getDopplerPredictedPhase(pos[i].getSatID()))	> goGPS.getCycleSlipThreshold());
+			if (pos[i] != null) {
+				// cycle slip detected by loss of lock indicator (temporarily disabled)
+				lossOfLockCycleSlip = roverObs.getGpsByID(pos[i].getSatID()).isPossibleCycleSlip(goGPS.getFreq());
+				lossOfLockCycleSlip = false;
 
-			if (pos[i] != null && satAvailPhase.contains(pos[i].getSatID())
-					&& (pos[i].getSatID() != pos[pivot].getSatID())
-					&& !newSatellites.contains(pos[i].getSatID())
-					&& (lossOfLockCycleSlip || dopplerCycleSlip)) {
-				System.out.println("Cycle slip on satellite "+pos[i].getSatID()+" (range diff = "+Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
-						- this.getDopplerPredictedPhase(pos[i].getSatID()))+")");
-				slippedSatellites.add(pos[i].getSatID());
+				// cycle slip detected by Doppler predicted phase range
+				dopplerCycleSlip = this.getDopplerPredictedPhase(pos[i].getSatID()) != 0 && (Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
+						- this.getDopplerPredictedPhase(pos[i].getSatID()))	> goGPS.getCycleSlipThreshold());
 
+				if (satAvailPhase.contains(pos[i].getSatID()) && (pos[i].getSatID() != pos[pivot].getSatID())
+						&& !newSatellites.contains(pos[i].getSatID())
+						&& (lossOfLockCycleSlip || dopplerCycleSlip)) {
+					System.out.println("Cycle slip on satellite "+pos[i].getSatID()+" (range diff = "+Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
+							- this.getDopplerPredictedPhase(pos[i].getSatID()))+")");
+					slippedSatellites.add(pos[i].getSatID());
+
+				}
 			}
 		}
 
