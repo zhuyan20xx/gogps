@@ -594,13 +594,23 @@ public class ReceiverPosition extends Coordinates{
 			codeDoubleDifferences(roverObs, masterObs, masterPos);
 		}
 
-		// Estimate phase ambiguities by comparing observed code and phase
-		estimateAmbiguitiesObserv(roverObs, masterObs);
-		
+		// Estimate phase ambiguities...
+		if (satAvailPhase.size() <= 5)
+			// ... by comparing observed code and phase
+			estimateAmbiguitiesObserv(roverObs, masterObs);
+		else {
+			// ... by least squares adjustment
+			ArrayList<Integer> newSatellites = new ArrayList<Integer>(0);
+			newSatellites.addAll(satAvailPhase);
+			newSatellites.remove(newSatellites.indexOf(pos[pivot].getSatID()));
+			estimateAmbiguitiesLeastSquares(roverObs, masterObs, masterPos, newSatellites, pivot, true);
+		}
+
 		// Compute predicted phase ranges based on Doppler observations
 		dopplerPredictedPhase = new double[32];
 		for (int i = 0; i < roverObs.getGpsSize(); i++)
-			if (pos[i] !=null)
+			if (pos[i] !=null && roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0
+					&& roverObs.getGpsByIdx(i).getDoppler(goGPS.getFreq()) != 0)
 				this.setDopplerPredictedPhase(pos[i].getSatID(), roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq())
 					- roverObs.getGpsByIdx(i).getDoppler(goGPS.getFreq()));
 
@@ -751,7 +761,8 @@ public class ReceiverPosition extends Coordinates{
 		// Compute predicted phase ranges based on Doppler observations
 		dopplerPredictedPhase = new double[32];
 		for (int i = 0; i < roverObs.getGpsSize(); i++)
-			if (pos[i] != null)
+			if (pos[i] != null && roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0
+				&& roverObs.getGpsByIdx(i).getDoppler(goGPS.getFreq()) != 0)
 				this.setDopplerPredictedPhase(pos[i].getSatID(), roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq())
 					- roverObs.getGpsByIdx(i).getDoppler(goGPS.getFreq()));
 
@@ -1186,9 +1197,6 @@ public class ReceiverPosition extends Coordinates{
 		ArrayList<Integer> newSatellites = new ArrayList<Integer>(0);
 		ArrayList<Integer> slippedSatellites = new ArrayList<Integer>(0);
 
-		int temporaryPivot = 0;
-		boolean newPivot = false;
-
 		// Check if satellites were lost since the previous epoch
 		for (int i = 0; i < satOld.size(); i++) {
 
@@ -1202,6 +1210,8 @@ public class ReceiverPosition extends Coordinates{
 		}
 
 		// Check if new satellites are available since the previous epoch
+		int temporaryPivot = 0;
+		boolean newPivot = false;
 		for (int i = 0; i < pos.length; i++) {
 
 			if (pos[i] != null && satAvailPhase.contains(pos[i].getSatID())
@@ -1248,7 +1258,7 @@ public class ReceiverPosition extends Coordinates{
 					oldPivotId = pos[temporaryPivot].getSatID();
 				}
 				// Estimate the ambiguity of the new pivot, using the temporary pivot
-				estimateAmbiguitiesLeastSquares(roverObs, masterObs, masterPos, newSatellites, slippedSatellites, temporaryPivot);
+				estimateAmbiguitiesLeastSquares(roverObs, masterObs, masterPos, newSatellites, temporaryPivot, false);
 			}
 			// Then remove the new pivot from the list of new satellites
 			newSatellites.remove(newSatellites.indexOf(pos[pivot].getSatID()));
@@ -1292,6 +1302,7 @@ public class ReceiverPosition extends Coordinates{
 		// Cycle-slip detection
 		boolean lossOfLockCycleSlip;
 		boolean dopplerCycleSlip;
+		boolean slippedPivot = false;
 		for (int i = 0; i < pos.length; i++) {
 
 			if (pos[i] != null) {
@@ -1303,20 +1314,43 @@ public class ReceiverPosition extends Coordinates{
 				dopplerCycleSlip = this.getDopplerPredictedPhase(pos[i].getSatID()) != 0 && (Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
 						- this.getDopplerPredictedPhase(pos[i].getSatID()))	> goGPS.getCycleSlipThreshold());
 
-				if (satAvailPhase.contains(pos[i].getSatID()) && (pos[i].getSatID() != pos[pivot].getSatID())
+				if (satAvailPhase.contains(pos[i].getSatID())
 						&& !newSatellites.contains(pos[i].getSatID())
 						&& (lossOfLockCycleSlip || dopplerCycleSlip)) {
-					System.out.println("Cycle slip on satellite "+pos[i].getSatID()+" (range diff = "+Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
-							- this.getDopplerPredictedPhase(pos[i].getSatID()))+")");
+
 					slippedSatellites.add(pos[i].getSatID());
 
+					if (pos[i].getSatID() != pos[pivot].getSatID()) {
+						System.out.println("Cycle slip on satellite "+pos[i].getSatID()+" (range diff = "+Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
+								- this.getDopplerPredictedPhase(pos[i].getSatID()))+")");
+					} else {
+						slippedPivot = true;
+						System.out.println(satAvailPhase.toString());
+						System.out.println("Cycle slip on pivot satellite "+pos[i].getSatID()+" (range diff = "+Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
+								- this.getDopplerPredictedPhase(pos[i].getSatID()))+")");
+					}
 				}
 			}
+		}
+		
+		// If the pivot satellites slipped, the ambiguities of all the other satellites must be re-estimated
+		if (slippedPivot) {
+			// If it is not the only satellite with phase
+			if (satAvailPhase.size() > 1) {
+				// Reset the ambiguities of other satellites
+				newSatellites.clear();
+				slippedSatellites.clear();
+				slippedSatellites.addAll(satAvailPhase);
+			}
+			slippedSatellites.remove(slippedSatellites.indexOf(pos[pivot].getSatID()));
 		}
 
 		// Ambiguity estimation
 		if (newSatellites.size() != 0 || slippedSatellites.size() != 0) {
-			estimateAmbiguitiesLeastSquares(roverObs, masterObs, masterPos, newSatellites, slippedSatellites, pivot);
+			// List of satellites that need ambiguity estimation
+			ArrayList<Integer> satAmb = newSatellites;
+			satAmb.addAll(slippedSatellites);
+			estimateAmbiguitiesLeastSquares(roverObs, masterObs, masterPos, satAmb, pivot, false);
 		}
 	}
 
@@ -1397,15 +1431,10 @@ public class ReceiverPosition extends Coordinates{
 	 * @param masterPos
 	 */
 	private void estimateAmbiguitiesLeastSquares(Observations roverObs,
-			Observations masterObs, Coordinates masterPos, ArrayList<Integer> newSatellites,
-			ArrayList<Integer> slippedSatellites, int pivotIndex) {
+			Observations masterObs, Coordinates masterPos, ArrayList<Integer> satAmb, int pivotIndex, boolean init) {
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
-
-		// List of satellites that need ambiguity estimation
-		ArrayList<Integer> satAmb = newSatellites;
-		satAmb.addAll(slippedSatellites);
 
 		// Number of unknown parameters
 		int nUnknowns = 3 + satAmb.size();
@@ -1418,6 +1447,8 @@ public class ReceiverPosition extends Coordinates{
 		SimpleMatrix Qphase;
 		SimpleMatrix Q;
 		SimpleMatrix x;
+		SimpleMatrix vEstim;
+		SimpleMatrix covariance;
 		SimpleMatrix tropoCorr;
 		SimpleMatrix ionoCorr;
 
@@ -1450,6 +1481,12 @@ public class ReceiverPosition extends Coordinates{
 
 		// Solution vector
 		x = new SimpleMatrix(nUnknowns, 1);
+		
+		// Vector for observation error
+		vEstim = new SimpleMatrix(nObsAvail, 1);
+		
+		// Error covariance matrix
+		covariance = new SimpleMatrix(nUnknowns, nUnknowns);
 
 		// Vectors for troposphere and ionosphere corrections
 		tropoCorr = new SimpleMatrix(nObsAvail+nObsAvailPhase, 1);
@@ -1628,13 +1665,42 @@ public class ReceiverPosition extends Coordinates{
 		x = A.transpose().mult(Q.invert()).mult(A).invert().mult(A.transpose())
 				.mult(Q.invert()).mult(y0.minus(b));
 
-		for (int i = 0; i < satAmb.size(); i++) {
-			// Estimated ambiguity
-			KFprediction.set(i3 + satAmb.get(i), 0, x.get(3 + i));
+		if (init) {
+			// Estimation of the variance of the observation error
+			vEstim = y0.minus(A.mult(x).plus(b));
+			double varianceEstim = (vEstim.transpose().mult(Q.invert())
+					.mult(vEstim)).get(0)
+					/ (nObsAvail - nUnknowns);
 
-			// Store the variance of the estimated ambiguity
-			Cvv.set(i3 + satAmb.get(i), i3 + satAmb.get(i),
-					Math.pow(goGPS.getStDevAmbiguity(), 2));
+			// Covariance matrix of the estimation error
+			if (nObsAvail > nUnknowns){
+				covariance = A.transpose().mult(Q.invert()).mult(A).invert()
+						.scale(varianceEstim);
+			}else{
+				covariance = null;
+			}
+
+			for (int i = 0; i < satAmb.size(); i++) {
+				// Estimated ambiguity
+				KFstate.set(i3 + satAmb.get(i), 0, x.get(3 + i));
+
+				// Store the variance of the estimated ambiguity
+				if (covariance != null)
+					Cee.set(i3 + satAmb.get(i), i3 + satAmb.get(i),
+						covariance.get(3 + i, 3 + i));
+				else
+					Cee.set(i3 + satAmb.get(i), i3 + satAmb.get(i),
+							Math.pow(goGPS.getStDevAmbiguity(), 2));
+			}
+		} else {
+			for (int i = 0; i < satAmb.size(); i++) {
+				// Estimated ambiguity
+				KFprediction.set(i3 + satAmb.get(i), 0, x.get(3 + i));
+
+				// Store the variance of the estimated ambiguity
+				Cvv.set(i3 + satAmb.get(i), i3 + satAmb.get(i),
+						Math.pow(goGPS.getStDevAmbiguity(), 2));
+			}
 		}
 	}
 
