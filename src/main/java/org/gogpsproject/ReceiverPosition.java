@@ -1257,11 +1257,13 @@ public class ReceiverPosition extends Coordinates{
 					newSatellites.remove(newSatellites.indexOf(pos[temporaryPivot].getSatID()));
 					oldPivotId = pos[temporaryPivot].getSatID();
 				}
-				// Estimate the ambiguity of the new pivot, using the temporary pivot
+				// Estimate the ambiguity of the new pivot and other (new) satellites, using the temporary pivot
 				estimateAmbiguitiesLeastSquares(roverObs, masterObs, masterPos, newSatellites, temporaryPivot, false);
+				newSatellites.clear();
+			} else {
+				// Remove the new pivot from the list of new satellites
+				newSatellites.remove(newSatellites.indexOf(pos[pivot].getSatID()));
 			}
-			// Then remove the new pivot from the list of new satellites
-			newSatellites.remove(newSatellites.indexOf(pos[pivot].getSatID()));
 		}
 
 		// Check if pivot satellite changed since the previous epoch
