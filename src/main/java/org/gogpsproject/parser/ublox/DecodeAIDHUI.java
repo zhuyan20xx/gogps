@@ -51,7 +51,7 @@ public class DecodeAIDHUI {
 	public IonoGps decode() throws IOException,UBXException {
 		// parse little Endian data
 
-		IonoGps iono = new IonoGps(null);
+		IonoGps iono = new IonoGps();
 
 		int[] length = new int[2];
 

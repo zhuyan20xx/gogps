@@ -207,7 +207,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 						//Navigation.iono[3] = Double.parseDouble(sub.trim());
 						a[3] = Float.parseFloat(sub.trim());
 
-						if(iono==null) iono = new IonoGps(null);
+						if(iono==null) iono = new IonoGps();
 						iono.setAlpha(a);
 
 					} else if (typeField.equals("ION BETA")) {
@@ -235,12 +235,12 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 						//setIono(7, Double.parseDouble(sub.trim()));
 						b[3] = Float.parseFloat(sub.trim());
 
-						if(iono==null) iono = new IonoGps(null);
+						if(iono==null) iono = new IonoGps();
 						iono.setBeta(b);
 
 					} else if (typeField.equals("DELTA-UTC: A0,A1,T,W")) {
 
-						if(iono==null) iono = new IonoGps(null);
+						if(iono==null) iono = new IonoGps();
 
 						sub = line.substring(3, 22).replace('D', 'e');
 						//setA0(Double.parseDouble(sub.trim()));
@@ -261,7 +261,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 						iono.setUtcTOW(Integer.parseInt(sub.trim()));
 
 					} else if (typeField.equals("LEAP SECONDS")) {
-						if(iono==null) iono = new IonoGps(null);
+						if(iono==null) iono = new IonoGps();
 						sub = line.substring(0, 6).trim().replace('D', 'e');
 						//setLeaps(Integer.parseInt(sub.trim()));
 						// TODO need check
