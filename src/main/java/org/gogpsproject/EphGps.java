@@ -19,11 +19,15 @@
  *
  */
 package org.gogpsproject;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+
 /**
  * <p>
  * GPS broadcast ephemerides
  * </p>
- * 
+ *
  * @author ege, Cryms.com
  */
 public class EphGps {
@@ -67,12 +71,47 @@ public class EphGps {
 										 * perturbations
 										 */
 	private double fitInt; /* Fit interval */
-	
-	
+
+
 	public EphGps(){
-		
+
 	}
-	
+	public EphGps(DataInputStream dai) throws IOException{
+		long l = dai.readLong();
+		refTime = new Time(l>0?l:System.currentTimeMillis());
+		satID = dai.read();
+		week = dai.readInt();
+		L2Code = dai.readInt();
+		L2Flag = dai.readInt();
+		svAccur = dai.readInt();
+		svHealth = dai.readInt();
+		iode = dai.readInt();
+		iodc = dai.readInt();
+		toc = dai.readDouble();
+		toe = dai.readDouble();
+		af0 = dai.readDouble();
+		af1 = dai.readDouble();
+		af2 = dai.readDouble();
+		tgd = dai.readDouble();
+		rootA = dai.readDouble();
+		e = dai.readDouble();
+		i0 = dai.readDouble();
+		iDot = dai.readDouble();
+		omega = dai.readDouble();
+		omega0 = dai.readDouble();
+		omegaDot = dai.readDouble();
+		M0 = dai.readDouble();
+		deltaN = dai.readDouble();
+		crc = dai.readDouble();
+		crs = dai.readDouble();
+		cuc = dai.readDouble();
+		cus = dai.readDouble();
+		cic = dai.readDouble();
+		cis = dai.readDouble();
+		fitInt = dai.readDouble();
+
+	}
+
 	/**
 	 * @return the refTime
 	 */

@@ -19,7 +19,9 @@
  */
 package org.gogpsproject;
 
-import org.gogpsproject.util.Bits;
+import java.io.DataInputStream;
+import java.io.IOException;
+
 
 /**
  * The Class IonoGps.
@@ -72,6 +74,32 @@ public class IonoGps {
 
 	/** Reference time. */
 	private Time refTime;
+
+	public IonoGps(){
+
+	}
+	public IonoGps(DataInputStream dai) throws IOException{
+		health = dai.readLong();
+		utcA1 = dai.readDouble();
+		utcA0 = dai.readDouble();
+		utcTOW = dai.readLong();
+		utcWNT = dai.readInt();
+		utcLS = dai.readInt();
+		utcWNF = dai.readInt();
+		utcDN = dai.readInt();
+		utcLSF = dai.readInt();
+		for(int i=0;i<alpha.length;i++){
+			alpha[i] = dai.readFloat();
+		}
+		for(int i=0;i<beta.length;i++){
+			beta[i] = dai.readFloat();
+		}
+		validHealth = dai.readBoolean();
+		validUTC = dai.readBoolean();
+		validKlobuchar = dai.readBoolean();
+		long l = dai.readLong();
+		refTime = new Time(l>0?l:System.currentTimeMillis());
+	}
 
 	/**
 	 * Gets the reference time.

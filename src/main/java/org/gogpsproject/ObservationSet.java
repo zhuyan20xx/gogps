@@ -19,6 +19,11 @@
  *
  */
 package org.gogpsproject;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 /**
  * <p>
  * Set of observations for one epoch and one satellite
@@ -34,27 +39,39 @@ public class ObservationSet {
 
 	private int satID;	/* Satellite number */
 	/* Array of [L1,L2] */
-	private double[] codeC;			/* C Coarse/Acquisition (C/A) code [m] */
-	private double[] codeP;			/* P Code Pseudorange [m] */
-	private double[] phase;			/* L Carrier Phase [cycle] */
-	private float[] signalStrength;	/* C/N0 (signal strength) [dBHz] */
-	private float[] doppler;		/* Doppler value [Hz] */
+	private double[] codeC = {Double.NaN,Double.NaN};			/* C Coarse/Acquisition (C/A) code [m] */
+	private double[] codeP = {Double.NaN,Double.NaN};			/* P Code Pseudorange [m] */
+	private double[] phase = {Double.NaN,Double.NaN};			/* L Carrier Phase [cycle] */
+	private float[] signalStrength = {Float.NaN,Float.NaN};	/* C/N0 (signal strength) [dBHz] */
+	private float[] doppler = {Float.NaN,Float.NaN};		/* Doppler value [Hz] */
 
 	private int[] qualityInd = {-1,-1};	/* Nav Measurements Quality Ind. ublox proprietary? */
 	private int[] lossLockInd = {-1,-1};   /* Loss of lock indicator (RINEX definition) */
 
 	public ObservationSet(){
-		codeC = new double[2];
-		codeC[0] = Double.NaN;
-		codeC[1] = Double.NaN;
+	}
 
-		codeP = new double[2];
-		codeP[0] = Double.NaN;
-		codeP[1] = Double.NaN;
+	public ObservationSet(DataInputStream dai) throws IOException{
+		satID = dai.read();
 
-		phase = new double[2];
-		signalStrength = new float[2];
-		doppler = new float[2];
+		// L1 data
+		qualityInd[L1] = dai.read();
+		lossLockInd[L1] = dai.read();
+		codeC[L1] = dai.readDouble();
+		codeP[L1] = dai.readDouble();
+		phase[L1] = dai.readDouble();
+		signalStrength[L1] = dai.readFloat();
+		doppler[L1] = dai.readFloat();
+		if(dai.readBoolean()){
+			// L2 data
+			qualityInd[L2] = dai.read();
+			lossLockInd[L2] = dai.read();
+			codeC[L2] = dai.readDouble();
+			codeP[L2] = dai.readDouble();
+			phase[L2] = dai.readDouble();
+			signalStrength[L2] = dai.readFloat();
+			doppler[L2] = dai.readFloat();
+		}
 	}
 
 	/**
@@ -205,5 +222,19 @@ public class ObservationSet {
 		return lossLockInd[i]>0 && ((lossLockInd[i]&0x4) == 0x4);
 	}
 
+	public int write(DataOutputStream dos) throws IOException{
+		dos.write(satID);		// 1
+		// L1 data
+		dos.write(qualityInd[L1]);	// 2
+		dos.write(lossLockInd[L1]);	// 3
+		dos.writeDouble(codeC[L1]); // 11
+		dos.writeDouble(codeP[L1]); // 19
+		dos.writeDouble(phase[L1]); // 27
+		dos.writeFloat(signalStrength[L1]); // 31
+		dos.writeFloat(doppler[L1]); // 35
+		// write L2 data ?
+		dos.writeBoolean(false); // 36
+		return 36;
+	}
 
 }
