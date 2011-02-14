@@ -165,10 +165,12 @@ public class Observations {
 		return size;
 	}
 	public String toString(){
-		String out= " GPS Time:"+getRefTime().getGpsTime()+" evt:"+eventFlag+"\n\r";
+		String lineBreak = System.getProperty("line.separator");
+
+		String out= " GPS Time:"+getRefTime().getGpsTime()+" evt:"+eventFlag+lineBreak;
 		for(int i=0;i<getGpsSize();i++){
 			ObservationSet os = getGpsByIdx(i);
-			out+="  Sat:"+os.getSatID()+"\tC:"+os.getCodeC(0)+" P:"+os.getCodeP(0)+" Ph:"+os.getPhase(0)+" Ps:"+os.getPseudorange(0)+" Dp:"+os.getDoppler(0)+" Ss:"+os.getSignalStrength(0)+"\n\r";
+			out+="  Sat:"+os.getSatID()+"\tC:"+os.getCodeC(0)+" P:"+os.getCodeP(0)+" Ph:"+os.getPhase(0)+" Ps:"+os.getPseudorange(0)+" Dp:"+os.getDoppler(0)+" Ss:"+os.getSignalStrength(0)+lineBreak;
 		}
 		return out;
 	}
