@@ -17,14 +17,20 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.gogpsproject;
+package org.gogpsproject.producer;
+
+import org.gogpsproject.Coordinates;
 
 /**
  * @author Lorenzo
  *
  */
 public interface PositionConsumer {
+	public final static int EVENT_START_OF_TRACK = 0;
+	public final static int EVENT_END_OF_TRACK = 1;
+	public final static int EVENT_GOGPS_THREAD_ENDED = 2;
+
 	public void addCoordinate(Coordinates coord);
-	public void endOfTrack();
-	public void startOfTrack();
+	public void event(int event);
+
 }

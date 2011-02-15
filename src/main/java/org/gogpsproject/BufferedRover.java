@@ -17,29 +17,21 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.gogpsproject.parser.ublox;
+package org.gogpsproject;
 
 import java.util.HashMap;
 import java.util.Vector;
 
-import org.gogpsproject.Coordinates;
-import org.gogpsproject.EphGps;
-import org.gogpsproject.EphemerisSystem;
-import org.gogpsproject.IonoGps;
-import org.gogpsproject.NavigationProducer;
-import org.gogpsproject.Observations;
-import org.gogpsproject.ObservationsProducer;
-import org.gogpsproject.SatellitePosition;
-import org.gogpsproject.Time;
+import org.gogpsproject.parser.ublox.UBXEventListener;
 /**
  * <p>
- * This class receive data from serial interface and keep it buffered for navigation and observation consumer.
- * It do not release consumed data.
+ * This class receive data from streaming source and keep it buffered for navigation and observation consumer.
+ * It does not release consumed data.
  * </p>
  *
  * @author Lorenzo Patocchi cryms.com
  */
-public class BufferedUBXRover extends EphemerisSystem implements UBXEventListener,
+public class BufferedRover extends EphemerisSystem implements UBXEventListener,
         ObservationsProducer, NavigationProducer {
 
     class EphSet{
@@ -63,7 +55,7 @@ public class BufferedUBXRover extends EphemerisSystem implements UBXEventListene
     /**
      *
      */
-    public BufferedUBXRover() {
+    public BufferedRover() {
 
     }
 

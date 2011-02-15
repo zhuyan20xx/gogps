@@ -18,7 +18,7 @@
  *
  */
 
-package org.gogpsproject.parser.ublox;
+package org.gogpsproject;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
@@ -29,9 +29,11 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
+import org.gogpsproject.BufferedRover;
 import org.gogpsproject.Time;
+import org.gogpsproject.parser.ublox.SerialConnection;
 
-public class Test {
+public class TestUBX {
 
 	public static int speed = 9600;
 	private static SerialConnection network;
@@ -67,7 +69,7 @@ public class Test {
 
 	public static void main(String[] args) {
 
-		BufferedUBXRover rover = new BufferedUBXRover();
+		BufferedRover rover = new BufferedRover();
 
 		network = new SerialConnection(rover);
 		Vector<String> ports = network.getPortList();

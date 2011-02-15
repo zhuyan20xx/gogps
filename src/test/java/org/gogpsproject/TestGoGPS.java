@@ -21,6 +21,7 @@
 package org.gogpsproject;
 import java.io.*;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.text.*;
 
@@ -29,9 +30,9 @@ import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.sp3.SP3Navigation;
-import org.gogpsproject.parser.ublox.BufferedUBXRover;
 import org.gogpsproject.parser.ublox.SerialConnection;
 import org.gogpsproject.parser.ublox.UBXFileReader;
+import org.gogpsproject.producer.KmlProducer;
 
 /**
  * @author ege, Cryms.com
@@ -104,7 +105,15 @@ public class TestGoGPS {
 			roverIn.init();
 			masterIn.init();
 
+			// Name KML file name using Timestamp
+			Date date = new Date();
+			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+			String date1 = sdf1.format(date);
+			String outPath = "./test/" + date1 + ".kml";
+			KmlProducer kml = new KmlProducer(outPath);
+
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
+			goGPS.addPositionConsumerListener(kml);
 			goGPS.setDynamicModel(dynamicModel);
 			// goGPS.runCodeStandalone();
 			// goGPS.runCodeDoubleDifferences();
