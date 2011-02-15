@@ -31,7 +31,7 @@ import java.io.IOException;
  *
  * @author ege, Cryms.com
  */
-public class ObservationSet {
+public class ObservationSet implements Streamable {
 
 	public final static int L1 = 0;
 	public final static int L2 = 1;
@@ -52,26 +52,7 @@ public class ObservationSet {
 	}
 
 	public ObservationSet(DataInputStream dai) throws IOException{
-		satID = dai.read();
-
-		// L1 data
-		qualityInd[L1] = dai.read();
-		lossLockInd[L1] = dai.read();
-		codeC[L1] = dai.readDouble();
-		codeP[L1] = dai.readDouble();
-		phase[L1] = dai.readDouble();
-		signalStrength[L1] = dai.readFloat();
-		doppler[L1] = dai.readFloat();
-		if(dai.readBoolean()){
-			// L2 data
-			qualityInd[L2] = dai.read();
-			lossLockInd[L2] = dai.read();
-			codeC[L2] = dai.readDouble();
-			codeP[L2] = dai.readDouble();
-			phase[L2] = dai.readDouble();
-			signalStrength[L2] = dai.readFloat();
-			doppler[L2] = dai.readFloat();
-		}
+		read(dai);
 	}
 
 	/**
@@ -223,18 +204,61 @@ public class ObservationSet {
 	}
 
 	public int write(DataOutputStream dos) throws IOException{
+		int size = 1;
 		dos.write(satID);		// 1
 		// L1 data
-		dos.write(qualityInd[L1]);	// 2
-		dos.write(lossLockInd[L1]);	// 3
-		dos.writeDouble(codeC[L1]); // 11
-		dos.writeDouble(codeP[L1]); // 19
-		dos.writeDouble(phase[L1]); // 27
-		dos.writeFloat(signalStrength[L1]); // 31
-		dos.writeFloat(doppler[L1]); // 35
+		dos.write(qualityInd[L1]);	size+=1;
+		dos.write(lossLockInd[L1]);	size+=1;
+		dos.writeDouble(codeC[L1]); size+=8;
+		dos.writeDouble(codeP[L1]); size+=8;
+		dos.writeDouble(phase[L1]); size+=8;
+		dos.writeFloat(signalStrength[L1]); size+=4;
+		dos.writeFloat(doppler[L1]); size+=4;
 		// write L2 data ?
-		dos.writeBoolean(false); // 36
-		return 36;
+		boolean hasL2 = false;
+		if(!Double.isNaN(codeC[L2])) hasL2 = true;
+		if(!Double.isNaN(codeP[L2])) hasL2 = true;
+		if(!Double.isNaN(phase[L2])) hasL2 = true;
+		if(!Float.isNaN(signalStrength[L2])) hasL2 = true;
+		if(!Float.isNaN(doppler[L2])) hasL2 = true;
+		dos.writeBoolean(hasL2); size+=1;
+		if(hasL2){
+			dos.write(qualityInd[L2]);	size+=1;
+			dos.write(lossLockInd[L2]);	size+=1;
+			dos.writeDouble(codeC[L2]); size+=8;
+			dos.writeDouble(codeP[L2]); size+=8;
+			dos.writeDouble(phase[L2]); size+=8;
+			dos.writeFloat(signalStrength[L2]); size+=4;
+			dos.writeFloat(doppler[L2]); size+=4;
+		}
+		return size;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
+	 */
+	@Override
+	public void read(DataInputStream dai) throws IOException {
+		satID = dai.read();
+
+		// L1 data
+		qualityInd[L1] = dai.read();
+		lossLockInd[L1] = dai.read();
+		codeC[L1] = dai.readDouble();
+		codeP[L1] = dai.readDouble();
+		phase[L1] = dai.readDouble();
+		signalStrength[L1] = dai.readFloat();
+		doppler[L1] = dai.readFloat();
+		if(dai.readBoolean()){
+			// L2 data
+			qualityInd[L2] = dai.read();
+			lossLockInd[L2] = dai.read();
+			codeC[L2] = dai.readDouble();
+			codeP[L2] = dai.readDouble();
+			phase[L2] = dai.readDouble();
+			signalStrength[L2] = dai.readFloat();
+			doppler[L2] = dai.readFloat();
+		}
 	}
 
 }

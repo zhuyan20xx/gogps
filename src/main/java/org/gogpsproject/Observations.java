@@ -31,7 +31,7 @@ import java.util.ArrayList;
  *
  * @author ege, Cryms.com
  */
-public class Observations {
+public class Observations implements Streamable {
 	private Time refTime; /* Reference time of the dataset */
 	private int eventFlag; /* Event flag */
 //	private ArrayList<Integer> gpsSat; /* Ordered list of visible GPS satellites IDs */
@@ -49,16 +49,7 @@ public class Observations {
 		this.eventFlag = flag;
 	}
 	public Observations(DataInputStream dai) throws IOException{
-		refTime = new Time(dai.readLong());
-		eventFlag = dai.read();
-		int size = dai.read();
-		gps = new ArrayList<ObservationSet>(size);
-
-		for(int i=0;i<size;i++){
-			ObservationSet os = new ObservationSet(dai);
-			gps.add(os);
-		}
-
+		read(dai);
 	}
 
 	public int getGpsSize(){
@@ -173,5 +164,20 @@ public class Observations {
 			out+="  Sat:"+os.getSatID()+"\tC:"+os.getCodeC(0)+" P:"+os.getCodeP(0)+" Ph:"+os.getPhase(0)+" Ps:"+os.getPseudorange(0)+" Dp:"+os.getDoppler(0)+" Ss:"+os.getSignalStrength(0)+lineBreak;
 		}
 		return out;
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
+	 */
+	@Override
+	public void read(DataInputStream dai) throws IOException {
+		refTime = new Time(dai.readLong());
+		eventFlag = dai.read();
+		int size = dai.read();
+		gps = new ArrayList<ObservationSet>(size);
+
+		for(int i=0;i<size;i++){
+			ObservationSet os = new ObservationSet(dai);
+			gps.add(os);
+		}
 	}
 }
