@@ -21,6 +21,7 @@
 package org.gogpsproject;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
@@ -30,7 +31,7 @@ import java.io.IOException;
  *
  * @author ege, Cryms.com
  */
-public class EphGps {
+public class EphGps implements Streamable {
 	private Time refTime; /* Reference time of the dataset */
 	private int satID; /* Satellite ID number */
 	private int week; /* GPS week number */
@@ -77,39 +78,7 @@ public class EphGps {
 
 	}
 	public EphGps(DataInputStream dai) throws IOException{
-		long l = dai.readLong();
-		refTime = new Time(l>0?l:System.currentTimeMillis());
-		satID = dai.read();
-		week = dai.readInt();
-		L2Code = dai.readInt();
-		L2Flag = dai.readInt();
-		svAccur = dai.readInt();
-		svHealth = dai.readInt();
-		iode = dai.readInt();
-		iodc = dai.readInt();
-		toc = dai.readDouble();
-		toe = dai.readDouble();
-		af0 = dai.readDouble();
-		af1 = dai.readDouble();
-		af2 = dai.readDouble();
-		tgd = dai.readDouble();
-		rootA = dai.readDouble();
-		e = dai.readDouble();
-		i0 = dai.readDouble();
-		iDot = dai.readDouble();
-		omega = dai.readDouble();
-		omega0 = dai.readDouble();
-		omegaDot = dai.readDouble();
-		M0 = dai.readDouble();
-		deltaN = dai.readDouble();
-		crc = dai.readDouble();
-		crs = dai.readDouble();
-		cuc = dai.readDouble();
-		cus = dai.readDouble();
-		cic = dai.readDouble();
-		cis = dai.readDouble();
-		fitInt = dai.readDouble();
-
+		read(dai);
 	}
 
 	/**
@@ -483,5 +452,94 @@ public class EphGps {
 	 */
 	public void setFitInt(double fitInt) {
 		this.fitInt = fitInt;
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#write(java.io.DataOutputStream)
+	 */
+	@Override
+	public int write(DataOutputStream dos) throws IOException {
+		int size=5;
+		dos.writeUTF("eph"); // 5
+
+		dos.writeLong(refTime==null?-1:refTime.getMsec());  size +=8;
+		dos.write(satID);  size +=1;
+		dos.writeInt(week); size +=4;
+
+		dos.writeInt(L2Code); size +=4;
+		dos.writeInt(L2Flag); size +=4;
+
+		dos.writeInt(svAccur); size +=4;
+		dos.writeInt(svHealth); size +=4;
+
+		dos.writeInt(iode); size +=4;
+		dos.writeInt(iodc); size +=4;
+
+		dos.writeDouble(toc); size +=8;
+		dos.writeDouble(toe); size +=8;
+
+		dos.writeDouble(af0); size +=8;
+		dos.writeDouble(af1); size +=8;
+		dos.writeDouble(af2); size +=8;
+		dos.writeDouble(tgd); size +=8;
+
+
+		dos.writeDouble(rootA); size +=8;
+		dos.writeDouble(e); size +=8;
+		dos.writeDouble(i0); size +=8;
+		dos.writeDouble(iDot); size +=8;
+		dos.writeDouble(omega); size +=8;
+		dos.writeDouble(omega0); size +=8;
+
+		dos.writeDouble(omegaDot); size +=8;
+		dos.writeDouble(M0); size +=8;
+		dos.writeDouble(deltaN); size +=8;
+		dos.writeDouble(crc); size +=8;
+		dos.writeDouble(crs); size +=8;
+		dos.writeDouble(cuc); size +=8;
+		dos.writeDouble(cus); size +=8;
+		dos.writeDouble(cic); size +=8;
+		dos.writeDouble(cis); size +=8;
+
+		dos.writeDouble(fitInt); size +=8;
+
+		return size;
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
+	 */
+	@Override
+	public void read(DataInputStream dai) throws IOException {
+		long l = dai.readLong();
+		refTime = new Time(l>0?l:System.currentTimeMillis());
+		satID = dai.read();
+		week = dai.readInt();
+		L2Code = dai.readInt();
+		L2Flag = dai.readInt();
+		svAccur = dai.readInt();
+		svHealth = dai.readInt();
+		iode = dai.readInt();
+		iodc = dai.readInt();
+		toc = dai.readDouble();
+		toe = dai.readDouble();
+		af0 = dai.readDouble();
+		af1 = dai.readDouble();
+		af2 = dai.readDouble();
+		tgd = dai.readDouble();
+		rootA = dai.readDouble();
+		e = dai.readDouble();
+		i0 = dai.readDouble();
+		iDot = dai.readDouble();
+		omega = dai.readDouble();
+		omega0 = dai.readDouble();
+		omegaDot = dai.readDouble();
+		M0 = dai.readDouble();
+		deltaN = dai.readDouble();
+		crc = dai.readDouble();
+		crs = dai.readDouble();
+		cuc = dai.readDouble();
+		cus = dai.readDouble();
+		cic = dai.readDouble();
+		cis = dai.readDouble();
+		fitInt = dai.readDouble();
 	}
 }

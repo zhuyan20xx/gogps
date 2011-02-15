@@ -20,6 +20,7 @@
 package org.gogpsproject;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 
@@ -28,7 +29,7 @@ import java.io.IOException;
  *
  * @author Lorenzo Patocchi
  */
-public class IonoGps {
+public class IonoGps implements Streamable{
 
 	/** Bitmask, every bit represenst a GPS SV (1-32). If the bit is set the SV is healthy. */
 	private long health = 0;
@@ -79,26 +80,7 @@ public class IonoGps {
 
 	}
 	public IonoGps(DataInputStream dai) throws IOException{
-		health = dai.readLong();
-		utcA1 = dai.readDouble();
-		utcA0 = dai.readDouble();
-		utcTOW = dai.readLong();
-		utcWNT = dai.readInt();
-		utcLS = dai.readInt();
-		utcWNF = dai.readInt();
-		utcDN = dai.readInt();
-		utcLSF = dai.readInt();
-		for(int i=0;i<alpha.length;i++){
-			alpha[i] = dai.readFloat();
-		}
-		for(int i=0;i<beta.length;i++){
-			beta[i] = dai.readFloat();
-		}
-		validHealth = dai.readBoolean();
-		validUTC = dai.readBoolean();
-		validKlobuchar = dai.readBoolean();
-		long l = dai.readLong();
-		refTime = new Time(l>0?l:System.currentTimeMillis());
+		read(dai);
 	}
 
 	/**
@@ -378,6 +360,61 @@ public class IonoGps {
 	 */
 	public void setValidKlobuchar(boolean validKlobuchar) {
 		this.validKlobuchar = validKlobuchar;
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#write(java.io.DataOutputStream)
+	 */
+	@Override
+	public int write(DataOutputStream dos) throws IOException {
+		int size=5;
+		dos.writeUTF("ion"); // 5
+		dos.writeLong(health); size +=8;
+		dos.writeDouble(utcA1); size +=8;
+		dos.writeDouble(utcA0); size +=8;
+		dos.writeLong(utcTOW); size +=8;
+		dos.writeInt(utcWNT); size +=4;
+		dos.writeInt(utcLS); size +=4;
+		dos.writeInt(utcWNF); size +=4;
+		dos.writeInt(utcDN); size +=4;
+		dos.writeInt(utcLSF); size +=4;
+		for(int i=0;i<alpha.length;i++){
+			dos.writeFloat(alpha[i]); size +=4;
+		}
+		for(int i=0;i<beta.length;i++){
+			dos.writeFloat(beta[i]); size +=4;
+		}
+		dos.writeBoolean(validHealth);  size +=1;
+		dos.writeBoolean(validUTC); size +=1;
+		dos.writeBoolean(validKlobuchar); size +=1;
+		dos.writeLong(refTime==null?-1:refTime.getMsec());  size +=8;
+
+		return size;
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
+	 */
+	@Override
+	public void read(DataInputStream dai) throws IOException {
+		health = dai.readLong();
+		utcA1 = dai.readDouble();
+		utcA0 = dai.readDouble();
+		utcTOW = dai.readLong();
+		utcWNT = dai.readInt();
+		utcLS = dai.readInt();
+		utcWNF = dai.readInt();
+		utcDN = dai.readInt();
+		utcLSF = dai.readInt();
+		for(int i=0;i<alpha.length;i++){
+			alpha[i] = dai.readFloat();
+		}
+		for(int i=0;i<beta.length;i++){
+			beta[i] = dai.readFloat();
+		}
+		validHealth = dai.readBoolean();
+		validUTC = dai.readBoolean();
+		validKlobuchar = dai.readBoolean();
+		long l = dai.readLong();
+		refTime = new Time(l>0?l:System.currentTimeMillis());
 	}
 
 }
