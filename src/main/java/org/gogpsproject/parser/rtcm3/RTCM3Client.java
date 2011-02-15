@@ -62,11 +62,9 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	/** Optinal message handler for showing error messages. */
 	private boolean header = true;
 	private int messagelength = 0;
-	private int switchboolean;
 	private int[] buffer;
 	private boolean[] bits;
 	private boolean[] rollbits;
-	private boolean downloadlength = false;
 
 	private boolean debug=false;
 
@@ -75,6 +73,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	private Vector<Observations> observationsBuffer = new Vector<Observations>();
 	private int obsCursor = 0;
 
+	private String streamFileLogger = null;
 
 	public static RTCM3Client getInstance(String _host, int _port, String _username,
 			String _password, String _mountpoint) throws Exception{
@@ -99,15 +98,15 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		}
 		for (int j = 0; j < mountpoints.size(); j++) {
 			if(_mountpoint == null){
-				System.out.print("\t[" + mountpoints.get(j)+"]");
+				System.out.println("\t[" + mountpoints.get(j)+"]");
 			}else{
-				System.out.print("\t[" + mountpoints.get(j)+"]["+_mountpoint+"]");
+				//System.out.print("\t[" + mountpoints.get(j)+"]["+_mountpoint+"]");
 				if(_mountpoint.equalsIgnoreCase(mountpoints.get(j))){
 					settings.setSource(mountpoints.get(j));
-					System.out.print(" found");
+					//System.out.print(" found");
 				}
 			}
-			System.out.println();
+			//System.out.println();
 		}
 		if(settings.getSource() == null){
 			System.out.println("Select a valid mountpoint!");
@@ -361,14 +360,16 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// this.dataThread.sleep(6000);
 			// this.notifyAll();
 
-			FileOutputStream fos= null;;
+			FileOutputStream fos= null;
 			try {
-				fos = new FileOutputStream("./data/rtcm-swisstopo.out");
+				if(streamFileLogger!=null){
+					fos = new FileOutputStream(streamFileLogger);
+				}
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			InputStreamCounter isc = new InputStreamCounter(in, fos);
+
+			InputStream isc = (fos==null?in:new InputStreamCounter(in, fos));
 
 			readLoop(isc);
 			// System.out.println("1");
@@ -399,23 +400,23 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 	}
 
-	public static void main(String args[]){
-		System.out.println(computeNMEACheckSum("$GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0"));
-
-		File f = new File("./data/rtcm-swisstopo.out");
-		try {
-			FileInputStream fis = new FileInputStream(f);
-			RTCM3Client cl = new RTCM3Client(null);
-			cl.go = true;
-			cl.debug = true;
-			cl.readLoop(fis);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
+//	public static void main(String args[]){
+//		System.out.println(computeNMEACheckSum("$GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0"));
+//
+//		File f = new File("./data/rtcm.out");
+//		try {
+//			FileInputStream fis = new FileInputStream(f);
+//			RTCM3Client cl = new RTCM3Client(null);
+//			cl.go = true;
+//			cl.debug = true;
+//			cl.readLoop(fis);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//
+//	}
 	private static String computeNMEACheckSum(String msg){
 		// perform NMEA checksum calculation
 		int chk = 0;
@@ -599,7 +600,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		if(obsCursor>=observationsBuffer.size()){
 			if(waitForData){
 				while(obsCursor>=observationsBuffer.size()){
-					System.out.print("m");
+					if(debug) System.out.print("m");
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {}
@@ -627,7 +628,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		if(observationsBuffer.size()==0 || (obsCursor+1)>=observationsBuffer.size()){
 			if(waitForData){
 				while(observationsBuffer.size()==0 || (obsCursor+1)>=observationsBuffer.size()){
-					System.out.println("\t\t\t\tM cur:"+obsCursor+" pool:"+observationsBuffer.size());
+					if(debug) System.out.println("\t\t\t\tM cur:"+obsCursor+" pool:"+observationsBuffer.size());
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {}
@@ -637,7 +638,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			}
 		}
 		Observations o = observationsBuffer.get(++obsCursor);
-		System.out.println("\t\t\t\tM < Obs "+o.getRefTime().getMsec());
+		if(debug) System.out.println("\t\t\t\tM < Obs "+o.getRefTime().getMsec());
         return o;
 	}
 
@@ -654,6 +655,20 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	 */
 	public void setApproxPosition(Coordinates approxPosition) {
 		this.approxPosition = approxPosition;
+	}
+
+	/**
+	 * @return the streamFileLogger
+	 */
+	public String getStreamFileLogger() {
+		return streamFileLogger;
+	}
+
+	/**
+	 * @param streamFileLogger the streamFileLogger to set
+	 */
+	public void setStreamFileLogger(String streamFileLogger) {
+		this.streamFileLogger = streamFileLogger;
 	}
 
 }
