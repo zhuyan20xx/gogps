@@ -29,7 +29,7 @@ import java.io.IOException;
 public interface ObservationsProducer {
 
 	public void init() throws Exception;
-	public void release();
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException;
 	//public boolean hasMoreObservations() throws IOException;
 	public Observations getCurrentObservations();
 	public Observations nextObservations();

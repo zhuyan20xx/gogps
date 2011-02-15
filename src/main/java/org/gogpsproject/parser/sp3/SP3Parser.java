@@ -164,7 +164,7 @@ public class SP3Parser implements NavigationProducer{
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.Navigation#release()
 	 */
-	public void release() {
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
 
 	}
 

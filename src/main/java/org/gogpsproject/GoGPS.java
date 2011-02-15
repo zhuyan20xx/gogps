@@ -136,6 +136,14 @@ public class GoGPS {
 	/** The master in. */
 	private ObservationsProducer masterIn;
 
+	/** The rover calculated position */
+	private ReceiverPosition roverPos = null;
+
+	/** The rover calculated position is valid */
+	private boolean validPosition = false;
+
+	private Vector<PositionConsumer> positionConsumers = new Vector<PositionConsumer>();
+
 	/**
 	 * Instantiates a new go gps.
 	 *
@@ -152,6 +160,8 @@ public class GoGPS {
 		this.navigation = navigation;
 		this.roverIn = roverIn;
 		this.masterIn = masterIn;
+
+		validPosition = false;
 	}
 
 	/**
@@ -170,7 +180,7 @@ public class GoGPS {
 	public Coordinates runCodeStandalone(int getNthPosition) {
 
 		// Create a new object for the rover position
-		ReceiverPosition roverPos = new ReceiverPosition(this);
+		roverPos = new ReceiverPosition(this);
 
 		// Name KML file name using Timestamp
 		Date date = new Date();
@@ -217,6 +227,7 @@ public class GoGPS {
 						// If an approximate position was computed
 						System.out.println("has valid position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
 						if (roverPos.isValidXYZ()) {
+							validPosition = true;
 
 							// Select available satellites
 							roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
@@ -246,6 +257,7 @@ public class GoGPS {
 					}
 				}catch(Exception e){
 					System.out.println("Could not complete due to "+e);
+					e.printStackTrace();
 				}
 				obsR = roverIn.nextObservations();
 			}
@@ -266,7 +278,7 @@ public class GoGPS {
 	public void runCodeDoubleDifferences() {
 
 		// Create a new object for the rover position
-		ReceiverPosition roverPos = new ReceiverPosition(this);
+		roverPos = new ReceiverPosition(this);
 
 		// Name KML file name using Timestamp
 		Date date = new Date();
@@ -328,6 +340,7 @@ public class GoGPS {
 
 						// If an approximate position was computed
 						if (roverPos.isValidXYZ()) {
+							validPosition = true;
 
 							// Select satellites available for double differences
 							roverPos.selectSatellitesDoubleDiff(roverIn.getCurrentObservations(),
@@ -382,7 +395,7 @@ public class GoGPS {
 		long depProc = 0;
 
 		// Create a new object for the rover position
-		ReceiverPosition roverPos = new ReceiverPosition(this);
+		roverPos = new ReceiverPosition(this);
 
 		// Flag to check if Kalman filter has been initialized
 		boolean kalmanInitialized = false;
@@ -424,9 +437,10 @@ public class GoGPS {
 
 			Observations obsR = roverIn.nextObservations();
 			Observations obsM = masterIn.nextObservations();
-			System.out.println("R:"+obsR.getRefTime().getMsec()+" M:"+obsM.getRefTime().getMsec());
+
 			int c=0;
 			while (obsR != null && obsM != null) {
+				System.out.println("R:"+obsR.getRefTime().getMsec()+" M:"+obsM.getRefTime().getMsec());
 
 				timeRead = System.currentTimeMillis();
 
@@ -493,7 +507,16 @@ public class GoGPS {
 					timeProc = System.currentTimeMillis() - timeProc;
 					depProc = depProc + timeProc;
 
-					if(kalmanInitialized & valid){
+					if(kalmanInitialized && valid){
+						if(!validPosition){
+							notifyPositionConsumerStartOfTrack();
+							validPosition = true;
+						}
+						if(positionConsumers.size()>0){
+							Coordinates coord = (Coordinates)roverPos.clone();
+							coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
+							notifyPositionConsumerAddCoordinate(coord);
+						}
 						try {
 							String lon = g.format(roverPos.getGeodeticLongitude());
 							String lat = g.format(roverPos.getGeodeticLatitude());
@@ -552,6 +575,8 @@ public class GoGPS {
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			notifyPositionConsumerEndOfTrack();
 		}
 
 		int elapsedTimeSec = (int) Math.floor(depRead / 1000);
@@ -885,5 +910,63 @@ public class GoGPS {
 	 */
 	public void setDynamicModel(int dynamicModel) {
 		this.dynamicModel = dynamicModel;
+	}
+
+	/**
+	 * @return the validPosition
+	 */
+	public boolean isValidPosition() {
+		return validPosition;
+	}
+
+	/**
+	 * @return the roverPos
+	 */
+	public Coordinates getRoverPos() {
+		return (Coordinates)roverPos.clone();
+	}
+
+	/**
+	 * @return the positionConsumer
+	 */
+	public void cleanPositionConsumers() {
+		positionConsumers.clear();
+	}
+	public void removePositionConsumer(PositionConsumer positionConsumer) {
+		positionConsumers.remove(positionConsumer);
+	}
+	/**
+	 * @param positionConsumer the positionConsumer to add
+	 */
+	public void addPositionConsumerListener(PositionConsumer positionConsumer) {
+		this.positionConsumers.add(positionConsumer);
+	}
+
+	private void notifyPositionConsumerStartOfTrack(){
+		for(PositionConsumer pc:positionConsumers){
+			try{
+				pc.startOfTrack();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+	private void notifyPositionConsumerEndOfTrack(){
+		for(PositionConsumer pc:positionConsumers){
+			try{
+				pc.endOfTrack();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+	private void notifyPositionConsumerAddCoordinate(Coordinates coord){
+		for(PositionConsumer pc:positionConsumers){
+			try{
+				pc.addCoordinate(coord);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 	}
 }

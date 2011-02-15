@@ -66,6 +66,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	private boolean[] bits;
 	private boolean[] rollbits;
 
+	private InputStream in = null;
+
 	private boolean debug=false;
 
 	private Coordinates approxPosition = null;
@@ -221,7 +223,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	public void run() {
 		Socket sck = null;
 		PrintWriter out = null;
-		InputStream in = null;
+
 
 		try {
 			go = true;
@@ -375,7 +377,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// System.out.println("1");
 
 		} catch (IOException ex) {
-
+			ex.printStackTrace();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 
@@ -434,12 +436,26 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	}
 	public void start() {
 		dataThread = new Thread(this);
+		dataThread.setName("RTCM3Client "+settings.getHost()+" "+settings.getSource());
 		dataThread.start();
 	}
 
-	/** stops the execution of this thread */
-	public void stop() {
+	/** stops the execution of this thread
+	 * @throws InterruptedException */
+	public void stop(boolean waitForThread, long timeoutMs) throws InterruptedException {
+
 		go = false;
+		if(waitForThread && dataThread!=null){
+			try{
+				dataThread.join(timeoutMs);
+			}catch(InterruptedException ie){
+				ie.printStackTrace();
+			}
+			if(dataThread.isAlive()){
+				System.out.println("Killing thread "+dataThread.getName());
+				dataThread.interrupt();
+			}
+		}
 	}
 
 	/** returns true if the data thread still is alive */
@@ -568,18 +584,18 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	public void addObservation(Observations o){
 		if(debug){
 			System.out.println("\t\t\t\tM > obs "+o.getGpsSize()+" time "+new Date(o.getRefTime().getMsec()));
-			for(int i=0;i<o.getGpsSize();i++){
-				ObservationSet os = o.getGpsByIdx(i);
-				System.out.print(" svid:"+os.getSatID());
-				System.out.print(" codeC:"+os.getCodeC(0));
-				System.out.print(" codeP:"+os.getCodeP(0));
-				System.out.print(" doppl:"+os.getDoppler(0));
-				System.out.print(" LLInd:"+os.getLossLockInd(0));
-				System.out.print(" phase:"+os.getPhase(0));
-				System.out.print(" pseud:"+os.getPseudorange(0));
-				System.out.print(" q.ind:"+os.getQualityInd(0));
-				System.out.println(" s.str:"+os.getSignalStrength(0));
-			}
+//			for(int i=0;i<o.getGpsSize();i++){
+//				ObservationSet os = o.getGpsByIdx(i);
+//				System.out.print(" svid:"+os.getSatID());
+//				System.out.print(" codeC:"+os.getCodeC(0));
+//				System.out.print(" codeP:"+os.getCodeP(0));
+//				System.out.print(" doppl:"+os.getDoppler(0));
+//				System.out.print(" LLInd:"+os.getLossLockInd(0));
+//				System.out.print(" phase:"+os.getPhase(0));
+//				System.out.print(" pseud:"+os.getPseudorange(0));
+//				System.out.print(" q.ind:"+os.getQualityInd(0));
+//				System.out.println(" s.str:"+os.getSignalStrength(0));
+//			}
 		}
 		observationsBuffer.add(o);
 	}
@@ -646,8 +662,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	 * @see org.gogpsproject.ObservationsProducer#release()
 	 */
 	@Override
-	public void release() {
-		stop();
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
+		stop(waitForThread, timeoutMs);
 	}
 
 	/**
@@ -669,6 +685,20 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	 */
 	public void setStreamFileLogger(String streamFileLogger) {
 		this.streamFileLogger = streamFileLogger;
+	}
+
+	/**
+	 * @return the debug
+	 */
+	public boolean isDebug() {
+		return debug;
+	}
+
+	/**
+	 * @param debug the debug to set
+	 */
+	public void setDebug(boolean debug) {
+		this.debug = debug;
 	}
 
 }

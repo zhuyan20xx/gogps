@@ -61,6 +61,7 @@ public class UBXSerialReader implements Runnable {
 
 	public void start()  throws IOException{
 		t = new Thread(this);
+		t.setName("UBXSerialReader");
 		t.start();
 
 		//System.out.println("1");

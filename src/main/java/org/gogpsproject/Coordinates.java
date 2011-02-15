@@ -37,6 +37,8 @@ public class Coordinates {
 	// Local systems (require to specify an origin)
 	private SimpleMatrix enu; /* Local coordinates (East, North, Up) */
 
+	private Time refTime = null;
+
 	protected Coordinates(){
 		ecef = new SimpleMatrix(3, 1);
 		geod = new SimpleMatrix(3, 1);
@@ -172,6 +174,8 @@ public class Coordinates {
 		c.ecef = this.ecef.copy();
 		c.enu = this.enu.copy();
 		c.geod = this.geod.copy();
+
+		if(refTime!=null) c.refTime = (Time)refTime.clone();
 		return c;
 	}
 
@@ -203,5 +207,19 @@ public class Coordinates {
 		SimpleMatrix R = new SimpleMatrix(data);
 
 		return R;
+	}
+
+	/**
+	 * @return the refTime
+	 */
+	public Time getRefTime() {
+		return refTime;
+	}
+
+	/**
+	 * @param refTime the refTime to set
+	 */
+	public void setRefTime(Time refTime) {
+		this.refTime = refTime;
 	}
 }

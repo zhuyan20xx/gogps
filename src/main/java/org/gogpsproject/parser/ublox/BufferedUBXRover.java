@@ -149,19 +149,18 @@ public class BufferedUBXRover extends EphemerisSystem implements UBXEventListene
      */
     @Override
     public Observations getCurrentObservations() {
-    	if(timeOrderedObs.size()==0 || obsCursor>=timeOrderedObs.size()){
-	        if(waitForData){
-				while(timeOrderedObs.size()==0 || obsCursor>=timeOrderedObs.size()){
-					System.out.print("r");
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {}
-				}
-			}else{
-				return null;
-			}
-        }
-        return timeOrderedObs.get(obsCursor);
+    	while(waitForData && (timeOrderedObs.size()==0 || obsCursor>=timeOrderedObs.size())){
+			//System.out.print("r");
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {}
+		}
+
+    	if(timeOrderedObs.size()>0 && obsCursor<timeOrderedObs.size()){
+    		return timeOrderedObs.get(obsCursor);
+    	}else{
+    		return null;
+    	}
     }
 
     /* (non-Javadoc)
@@ -177,30 +176,30 @@ public class BufferedUBXRover extends EphemerisSystem implements UBXEventListene
      */
     @Override
     public Observations nextObservations() {
-        if(timeOrderedObs.size()==0 || (obsCursor+1)>=timeOrderedObs.size()){
-	        if(waitForData){
-				while(timeOrderedObs.size()==0 || (obsCursor+1)>=timeOrderedObs.size()){
-					//System.out.println("\tR cur:"+obsCursor+" pool:"+timeOrderedObs.size());
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {}
-				}
-			}else{
-				return null;
-			}
-        }
-        Observations o = timeOrderedObs.get(++obsCursor);
 
-        System.out.println("\tR < Obs "+o.getRefTime().getMsec());
-        return o;
+    	while(waitForData && (timeOrderedObs.size()==0 || (obsCursor+1)>=timeOrderedObs.size())){
+			System.out.println("\tR look for :"+(obsCursor+1)+" but pool size is:"+timeOrderedObs.size());
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {}
+		}
+
+        if(timeOrderedObs.size()>0 && (obsCursor+1) < timeOrderedObs.size()){
+        	Observations o = timeOrderedObs.get(++obsCursor);
+
+            System.out.println("\tR < Obs "+o.getRefTime().getMsec());
+            return o;
+        }
+
+        return null;
     }
 
     /* (non-Javadoc)
      * @see org.gogpsproject.ObservationsProducer#release()
      */
     @Override
-    public void release() {
-
+    public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
+    	waitForData = false;
     }
 
     /* (non-Javadoc)
@@ -211,7 +210,7 @@ public class BufferedUBXRover extends EphemerisSystem implements UBXEventListene
     	if(timeOrderedEphs.size()==0 ||
                 utcTime < timeOrderedEphs.elementAt(0).refTime.getMsec()
                 ){
-    		System.out.println("\tR: sat pos not found for "+satID);
+    		//System.out.println("\tR: sat pos not found for "+satID);
     		return null;
     	}
         EphSet closer = null;// timeOrderedEphs.elementAt(ephCursor);
@@ -242,7 +241,7 @@ public class BufferedUBXRover extends EphemerisSystem implements UBXEventListene
         	//System.out.println("\tR: < sat pos "+ID);
 			return sp;
         }
-        System.out.println("\tR: < sat pos not found for "+ID);
+        //System.out.println("\tR: < sat pos not found for "+ID);
         return null;
     }
 
