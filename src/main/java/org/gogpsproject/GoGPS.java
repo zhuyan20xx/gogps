@@ -29,9 +29,9 @@ import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.sp3.SP3Navigation;
-import org.gogpsproject.parser.ublox.BufferedUBXRover;
 import org.gogpsproject.parser.ublox.SerialConnection;
 import org.gogpsproject.parser.ublox.UBXFileReader;
+import org.gogpsproject.producer.PositionConsumer;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -39,13 +39,7 @@ import org.gogpsproject.parser.ublox.UBXFileReader;
  *
  * @author ege, Cryms.com
  */
-public class GoGPS {
-
-	/** The f. */
-	private static DecimalFormat f = new DecimalFormat("0.000");
-
-	/** The g. */
-	private static DecimalFormat g = new DecimalFormat("0.00000000");
+public class GoGPS implements Runnable{
 
 	// Frequency selector
 	/** The Constant FREQ_L1. */
@@ -127,6 +121,13 @@ public class GoGPS {
 	/** The Elevation cutoff. */
 	private double cutoff = 15; // Elevation cutoff
 
+	public final static int RUN_MODE_STANDALONE = 0;
+	public final static int RUN_MODE_DOUBLE_DIFF = 1;
+	public final static int RUN_MODE_KALMAN_FILTER = 2;
+
+	private int runMode = -1;
+	private Thread runThread=null;
+
 	/** The navigation. */
 	private NavigationProducer navigation;
 
@@ -182,38 +183,7 @@ public class GoGPS {
 		// Create a new object for the rover position
 		roverPos = new ReceiverPosition(this);
 
-		// Name KML file name using Timestamp
-		Date date = new Date();
-		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-		String date1 = sdf1.format(date);
-		String outPath = "./test/" + date1 + ".kml";
-
 		try {
-			SimpleDateFormat timeKML = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-			FileWriter out = new FileWriter(outPath);
-			// Write KML header part
-			//			out.write("<kml xmlns=\"http://earth.google.com/kml/2.0\">"
-			//							+ "<Folder><name>Track Log Export</name><description>Exported on "
-			//							+ date
-			//							+ " </description>"
-			//							+ "<Style id=\"line\"><LineStyle><color>7fff0000</color><width>5</width></LineStyle></Style>"
-			//							+ "<Placemark><name>Raw Data</name><description>by Daisuke Yoshida, Tezukayama Gakuin University, JAPAN</description>"
-			//							+ "<styleUrl>#line</styleUrl><altitudeMode>relativeToGround</altitudeMode><LineString><coordinates>");
-			String timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
-
-			out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
-					"<Document xmlns:kml=\"http://earth.google.com/kml/2.1\">"+
-					"  <Style id=\"SMExport_3_ff0000e6_fffefefe\"><LineStyle><color>ff0000e6</color><width>3</width></LineStyle><PolyStyle><color>fffefefe</color></PolyStyle></Style>"+
-					"  <Style id=\"dot-icon\"><IconStyle><Icon><href>http://www.eriadne.org/icons/MapPointer.png</href></Icon></IconStyle></Style>"+
-					"  <Placemark>"+
-					"    <name></name>"+
-					"    <description></description>"+
-					"    <styleUrl>#SMExport_3_ff0000e6_fffefefe</styleUrl>"+
-					"    <LineString>"+
-					"      <tessellate>1</tessellate>"+
-			"      <coordinates>");
-			out.flush();
-
 			Observations obsR = roverIn.nextObservations();
 			while (obsR!=null) { // buffStreamObs.ready()
 
@@ -227,27 +197,22 @@ public class GoGPS {
 						// If an approximate position was computed
 						System.out.println("has valid position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
 						if (roverPos.isValidXYZ()) {
-							validPosition = true;
-
 							// Select available satellites
 							roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
 
 							// Compute code stand-alone positioning (epoch-by-epoch solution)
 							roverPos.codeStandalone(roverIn.getCurrentObservations(), false);
 
-							try {
-								System.out.println("Code standalone positioning:");
-								System.out.println("GPS time:	" + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-								System.out.println("Lon:		" + g.format(roverPos.getGeodeticLongitude())); // geod.get(0)
-								System.out.println("Lat:		" + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
-								System.out.println("h:		" + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
-								out.write(g.format(roverPos.getGeodeticLongitude()) + "," // geod.get(0)
-										+ g.format(roverPos.getGeodeticLatitude()) + "," // geod.get(1)
-										+ f.format(roverPos.getGeodeticHeight()) + " \n"); // geod.get(2)
-								out.flush();
-							} catch (NullPointerException e) {
-								System.out.println("Error: rover approximate position not computed");
+							if(positionConsumers.size()>0){
+								if(!validPosition){
+									notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
+									validPosition = true;
+								}
+								Coordinates coord = (Coordinates)roverPos.clone();
+								coord.setRefTime(new Time(roverIn.getCurrentObservations().getRefTime().getMsec()));
+								notifyPositionConsumerAddCoordinate(coord);
 							}
+
 							System.out.println("-------------------- "+getNthPosition);
 							if(getNthPosition>0){
 								getNthPosition--;
@@ -261,13 +226,10 @@ public class GoGPS {
 				}
 				obsR = roverIn.nextObservations();
 			}
-			// Write KML footer part
-			// out.write("</coordinates><altitudeMode>absolute</altitudeMode></LineString></Placemark></Folder></kml>");
-			out.write("</coordinates></LineString></Placemark>"+timeline+"</Folder></Document>\n");
-			// Close FileWriter
-			out.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			notifyPositionConsumerEvent(PositionConsumer.EVENT_END_OF_TRACK);
 		}
 		return roverPos;
 	}
@@ -280,38 +242,7 @@ public class GoGPS {
 		// Create a new object for the rover position
 		roverPos = new ReceiverPosition(this);
 
-		// Name KML file name using Timestamp
-		Date date = new Date();
-		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-		String date1 = sdf1.format(date);
-		String outPath = "./test/" + date1 + ".kml";
-
 		try {
-			SimpleDateFormat timeKML = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-			FileWriter out = new FileWriter(outPath);
-			// Write KML header part
-			//			out.write("<kml xmlns=\"http://earth.google.com/kml/2.0\">"
-			//							+ "<Folder><name>Track Log Export</name><description>Exported on "
-			//							+ date
-			//							+ " </description>"
-			//							+ "<Style id=\"line\"><LineStyle><color>7fff0000</color><width>5</width></LineStyle></Style>"
-			//							+ "<Placemark><name>Raw Data</name><description>by Daisuke Yoshida, Tezukayama Gakuin University, JAPAN</description>"
-			//							+ "<styleUrl>#line</styleUrl><altitudeMode>relativeToGround</altitudeMode><LineString><coordinates>");
-			String timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
-
-			out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
-					"<Document xmlns:kml=\"http://earth.google.com/kml/2.1\">"+
-					"  <Style id=\"SMExport_3_ff0000e6_fffefefe\"><LineStyle><color>ff0000e6</color><width>3</width></LineStyle><PolyStyle><color>fffefefe</color></PolyStyle></Style>"+
-					"  <Style id=\"dot-icon\"><IconStyle><Icon><href>http://www.eriadne.org/icons/MapPointer.png</href></Icon></IconStyle></Style>"+
-					"  <Placemark>"+
-					"    <name></name>"+
-					"    <description></description>"+
-					"    <styleUrl>#SMExport_3_ff0000e6_fffefefe</styleUrl>"+
-					"    <LineString>"+
-					"      <tessellate>1</tessellate>"+
-			"      <coordinates>");
-			out.flush();
-
 			Observations obsR = roverIn.nextObservations();
 			Observations obsM = masterIn.nextObservations();
 			while (obsR != null && obsM != null) {
@@ -340,7 +271,6 @@ public class GoGPS {
 
 						// If an approximate position was computed
 						if (roverPos.isValidXYZ()) {
-							validPosition = true;
 
 							// Select satellites available for double differences
 							roverPos.selectSatellitesDoubleDiff(roverIn.getCurrentObservations(),
@@ -351,19 +281,17 @@ public class GoGPS {
 							roverPos.codeDoubleDifferences(roverIn.getCurrentObservations(),
 									masterIn.getCurrentObservations(), masterIn.getApproxPosition());
 
-							try {
-								System.out.println("Code double difference positioning:");
-								System.out.println("GPS time: " + roverIn.getCurrentObservations().getRefTime().getGpsTime());
-								System.out.println("Lon:      " + g.format(roverPos.getGeodeticLongitude()));//geod.get(0)
-								System.out.println("Lat:      " + g.format(roverPos.getGeodeticLatitude())); // geod.get(1)
-								System.out.println("h:        " + f.format(roverPos.getGeodeticHeight())); // geod.get(2)
-								out.write(g.format(roverPos.getGeodeticLongitude()) + "," // geod.get(0)
-										+ g.format(roverPos.getGeodeticLatitude()) + "," // geod.get(1)
-										+ f.format(roverPos.getGeodeticHeight()) + " \n"); // geod.get(2)
-								out.flush();
-							} catch (NullPointerException e) {
-								System.out.println("Error: rover approximate position not computed");
+							if(positionConsumers.size()>0){
+								if(!validPosition){
+									notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
+									validPosition = true;
+								}
+
+								Coordinates coord = (Coordinates)roverPos.clone();
+								coord.setRefTime(new Time(roverIn.getCurrentObservations().getRefTime().getMsec()));
+								notifyPositionConsumerAddCoordinate(coord);
 							}
+
 							System.out.println("--------------------");
 
 						}
@@ -373,13 +301,10 @@ public class GoGPS {
 				obsR = roverIn.nextObservations();
 				obsM = masterIn.nextObservations();
 			}
-			// Write KML footer part
-			// out.write("</coordinates><altitudeMode>absolute</altitudeMode></LineString></Placemark></Folder></kml>");
-			out.write("</coordinates></LineString></Placemark>"+timeline+"</Folder></Document>\n");
-			// Close FileWriter
-			out.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			notifyPositionConsumerEvent(PositionConsumer.EVENT_END_OF_TRACK);
 		}
 	}
 
@@ -400,45 +325,14 @@ public class GoGPS {
 		// Flag to check if Kalman filter has been initialized
 		boolean kalmanInitialized = false;
 
-		// Name KML file name using Timestamp
-		Date date = new Date();
-		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-		String date1 = sdf1.format(date);
-		String outPath = "./test/" + date1 + ".kml";
-		// String outPath = "./test/output.kml";
-
 		try {
-			SimpleDateFormat timeKML = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-			FileWriter out = new FileWriter(outPath);
-			// Write KML header part
-//			out.write("<kml xmlns=\"http://earth.google.com/kml/2.0\">"
-//							+ "<Folder><name>Track Log Export</name><description>Exported on "
-//							+ date
-//							+ " </description>"
-//							+ "<Style id=\"line\"><LineStyle><color>7fff0000</color><width>5</width></LineStyle></Style>"
-//							+ "<Placemark><name>Raw Data</name><description>by Daisuke Yoshida, Tezukayama Gakuin University, JAPAN</description>"
-//							+ "<styleUrl>#line</styleUrl><altitudeMode>relativeToGround</altitudeMode><LineString><coordinates>");
-			String timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
 
-			out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
-				"<Document xmlns:kml=\"http://earth.google.com/kml/2.1\">"+
-				"  <Style id=\"SMExport_3_ff0000e6_fffefefe\"><LineStyle><color>ff0000e6</color><width>3</width></LineStyle><PolyStyle><color>fffefefe</color></PolyStyle></Style>"+
-				"  <Style id=\"dot-icon\"><IconStyle><Icon><href>http://www.eriadne.org/icons/MapPointer.png</href></Icon></IconStyle></Style>"+
-				"  <Placemark>"+
-				"    <name></name>"+
-				"    <description></description>"+
-				"    <styleUrl>#SMExport_3_ff0000e6_fffefefe</styleUrl>"+
-				"    <LineString>"+
-				"      <tessellate>1</tessellate>"+
-				"      <coordinates>");
-			out.flush();
 			timeRead = System.currentTimeMillis() - timeRead;
 			depRead = depRead + timeRead;
 
 			Observations obsR = roverIn.nextObservations();
 			Observations obsM = masterIn.nextObservations();
 
-			int c=0;
 			while (obsR != null && obsM != null) {
 				System.out.println("R:"+obsR.getRefTime().getMsec()+" M:"+obsM.getRefTime().getMsec());
 
@@ -508,51 +402,16 @@ public class GoGPS {
 					depProc = depProc + timeProc;
 
 					if(kalmanInitialized && valid){
-						if(!validPosition){
-							notifyPositionConsumerStartOfTrack();
-							validPosition = true;
-						}
 						if(positionConsumers.size()>0){
+							if(!validPosition){
+								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
+								validPosition = true;
+							}
 							Coordinates coord = (Coordinates)roverPos.clone();
 							coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
 							notifyPositionConsumerAddCoordinate(coord);
 						}
-						try {
-							String lon = g.format(roverPos.getGeodeticLongitude());
-							String lat = g.format(roverPos.getGeodeticLatitude());
-							String h = f.format(roverPos.getGeodeticHeight());
 
-							out.write(lon + "," // geod.get(0)
-									+ lat + "," // geod.get(1)
-									+ h + " \n"); // geod.get(2)
-							out.flush();
-
-							String t = timeKML.format(new Date(obsR.getRefTime().getMsec()));
-							System.out.print("T:" + t);
-							System.out.print(" Lon:" + lon);//geod.get(0)
-							System.out.print(" Lat:" + lat);//geod.get(1)
-							System.out.println(" H:" + h);//geod.get(2)
-							if(c%10==0){
-
-								//System.out.println("Positioning by Kalman filter on code and phase double differences:");
-
-
-								timeline += "\n";
-								timeline += "<Placemark>"+
-						        "<TimeStamp>"+
-						        "<when>"+t+"</when>"+
-						        "</TimeStamp>"+
-						        "<styleUrl>#dot-icon</styleUrl>"+
-						        "<Point>"+
-						        "<coordinates>"+lon + ","
-								+ lat + ","
-								+ h + "</coordinates>"+
-						        "</Point>"+
-						        "</Placemark>";
-							}
-						} catch (NullPointerException e) {
-							System.out.println("Rover position not computed");
-						}
 					}
 					//System.out.println("--------------------");
 
@@ -561,22 +420,15 @@ public class GoGPS {
 					obsR = roverIn.nextObservations();
 					obsM = masterIn.nextObservations();
 
-					c++;
 				}else{
 					System.out.println("Missing M or R obs ");
 				}
-
-
 			}
-			// Write KML footer part
-			// out.write("</coordinates><altitudeMode>absolute</altitudeMode></LineString></Placemark></Folder></kml>");
-			out.write("</coordinates></LineString></Placemark>"+timeline+"</Folder></Document>\n");
-			// Close FileWriter
-			out.close();
-		} catch (IOException e) {
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			notifyPositionConsumerEndOfTrack();
+			notifyPositionConsumerEvent(PositionConsumer.EVENT_END_OF_TRACK);
 		}
 
 		int elapsedTimeSec = (int) Math.floor(depRead / 1000);
@@ -942,19 +794,10 @@ public class GoGPS {
 		this.positionConsumers.add(positionConsumer);
 	}
 
-	private void notifyPositionConsumerStartOfTrack(){
+	private void notifyPositionConsumerEvent(int event){
 		for(PositionConsumer pc:positionConsumers){
 			try{
-				pc.startOfTrack();
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-	}
-	private void notifyPositionConsumerEndOfTrack(){
-		for(PositionConsumer pc:positionConsumers){
-			try{
-				pc.endOfTrack();
+				pc.event(event);
 			}catch(Exception e){
 				e.printStackTrace();
 			}
@@ -968,5 +811,55 @@ public class GoGPS {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * @return the runMode
+	 */
+	public int getRunMode() {
+		return runMode;
+	}
+
+	/**
+	 * @param runMode the run mode to use
+	 */
+	public void runThreadMode(int runMode) {
+		this.runMode = runMode;
+		this.runThread = new Thread(this);
+		switch(runMode){
+			case RUN_MODE_STANDALONE:
+				this.runThread.setName("goGPS standalone");
+				runCodeStandalone();
+				break;
+			case RUN_MODE_DOUBLE_DIFF:
+				this.runThread.setName("goGPS double difference");
+				break;
+			case RUN_MODE_KALMAN_FILTER:
+				this.runThread.setName("goGPS Kalman filter");
+				break;
+		}
+		this.runThread.start();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run() {
+		if(this.runMode<0) return;
+
+		switch(runMode){
+			case RUN_MODE_STANDALONE:
+				runCodeStandalone();
+				break;
+			case RUN_MODE_DOUBLE_DIFF:
+				runCodeDoubleDifferences();
+				break;
+			case RUN_MODE_KALMAN_FILTER:
+				runKalmanFilter();
+				break;
+		}
+
+		notifyPositionConsumerEvent(PositionConsumer.EVENT_GOGPS_THREAD_ENDED);
 	}
 }
