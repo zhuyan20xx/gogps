@@ -25,9 +25,9 @@ import org.gogpsproject.util.Bits;
 public class Decode1005Msg implements Decode {
 
 
-	
+
 	public Decode1005Msg() {
-		
+
 	}
 
 
@@ -35,7 +35,7 @@ public class Decode1005Msg implements Decode {
 		int start = 12;
 		//System.out.println("Debug : Decode 1005");
 		StationaryAntenna stationaryantenne = new StationaryAntenna();
-		
+
 		stationaryantenne.setStationID(Bits.bitsToUInt(Bits.subset(bits, start,
 				12)));
 		start += 12;
@@ -74,16 +74,5 @@ public class Decode1005Msg implements Decode {
 		//System.out.println(stationaryantenne);
 		//System.out.println("Debug length: " + start);
 	}
-
-//	@Override
-//	public void run() {
-//		decode();
-//
-//	}
-//
-//	public void start() {
-//		dataThread = new Thread(this);
-//		dataThread.start();
-//	}
 
 }

@@ -52,6 +52,8 @@ public class SP3Navigation implements NavigationProducer {
 	public final static String IGN_FR_FINAL = "ftp://igs.ensg.ign.fr/pub/igs/products/${wwww}/igs${wwww}${d}.sp3.Z";
 
 	public String SP3_CACHE = "./sp3-cache";
+
+	private boolean waitForData = true;
 	/**
 	 * @param args
 	 */
@@ -111,7 +113,9 @@ public class SP3Navigation implements NavigationProducer {
 		SP3Parser sp3p = null;
 		long reqTime = utcTime;
 
-		while(sp3p==null){
+		boolean retrievable = true;
+
+		do{
 			// found none, retrieve from urltemplate
 			Time t = new Time(reqTime);
 			//System.out.print("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
@@ -144,11 +148,11 @@ public class SP3Navigation implements NavigationProducer {
 						}else{
 							return null;
 						}
-					}else{
-						try {
-							Thread.sleep(1000*10);
-						} catch (InterruptedException e) {}
 					}
+					System.out.println("Try in 10s");
+					try {
+						Thread.sleep(1000*10);
+					} catch (InterruptedException ee) {}
 				} catch (FileNotFoundException e) {
 					System.out.println("Try with previous time by 6h");
 					reqTime = reqTime - (6L*3600L*1000L);
@@ -159,8 +163,12 @@ public class SP3Navigation implements NavigationProducer {
 						Thread.sleep(1000*10);
 					} catch (InterruptedException ee) {}
 				}
+
+
+			}else{
+				retrievable = false;
 			}
-		}
+		}while(retrievable && waitForData && sp3p==null);
 
 		return null;
 	}
@@ -264,8 +272,8 @@ public class SP3Navigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#release()
 	 */
 	@Override
-	public void release() {
-
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
+		waitForData = false;
 	}
 
 }

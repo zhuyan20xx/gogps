@@ -59,6 +59,8 @@ public class RinexNavigation implements NavigationProducer {
 
 	/** Folder containing downloaded files */
 	public String RNP_CACHE = "./rnp-cache";
+
+	private boolean waitForData = true;
 	/**
 	 * @param args
 	 */
@@ -134,8 +136,9 @@ public class RinexNavigation implements NavigationProducer {
 
 		RinexNavigationParser rnp = null;
 		long reqTime = utcTime;
+		boolean retrievable = true;
 
-		while(rnp==null){
+		do{
 			// found none, retrieve from urltemplate
 			Time t = new Time(reqTime);
 			//System.out.println("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
@@ -153,11 +156,11 @@ public class RinexNavigation implements NavigationProducer {
 					if(rnp != null){
 						pool.put(url, rnp);
 						return rnp;
-					}else{
-						try {
-							Thread.sleep(1000*10);
-						} catch (InterruptedException e) {}
 					}
+					System.out.println("Try in 10s");
+					try {
+						Thread.sleep(1000*10);
+					} catch (InterruptedException ee) {}
 				} catch (FileNotFoundException e) {
 					//System.out.println("Try with previous time by 6h");
 					reqTime = reqTime - (6L*3600L*1000L);
@@ -168,8 +171,12 @@ public class RinexNavigation implements NavigationProducer {
 						Thread.sleep(1000*10);
 					} catch (InterruptedException ee) {}
 				}
+
+			}else{
+				// no way to get out
+				retrievable = false;
 			}
-		}
+		} while(retrievable && waitForData && rnp==null);
 
 		return null;
 	}
@@ -284,8 +291,8 @@ public class RinexNavigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#release()
 	 */
 	@Override
-	public void release() {
-
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
+		waitForData = false;
 	}
 
 }

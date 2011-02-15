@@ -81,7 +81,7 @@ public class RinexObservationParser implements ObservationsProducer{
 		buffStreamObs = new BufferedReader(inStreamObs);
 	}
 
-	public void release() {
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
 		try {
 			streamObs.close();
 		} catch (FileNotFoundException e1) {

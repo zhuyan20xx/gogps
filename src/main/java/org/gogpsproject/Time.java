@@ -228,4 +228,8 @@ public class Time {
 	public void setFraction(double fraction) {
 		this.fraction = fraction;
 	}
+
+	public Object clone(){
+		return new Time(this.msec,this.fraction);
+	}
 }

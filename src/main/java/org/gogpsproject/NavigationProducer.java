@@ -30,31 +30,12 @@ package org.gogpsproject;
  */
 public interface NavigationProducer {
 
-
 	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError);
 
 	public void init() throws Exception;
-	public void release();
+
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException;
 
 	public IonoGps getIono(long utcTime);
-//	/**
-//	 * @return the a0
-//	 */
-//	public double getA0();
-//	/**
-//	 * @return the a1
-//	 */
-//	public double getA1();
-//	/**
-//	 * @return the t
-//	 */
-//	public double getT();
-//	/**
-//	 * @return the w
-//	 */
-//	public double getW();
-//	/**
-//	 * @return the leaps
-//	 */
-//	public int getLeaps();
+
 }

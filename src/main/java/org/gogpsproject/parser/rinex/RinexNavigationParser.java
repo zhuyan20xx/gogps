@@ -109,7 +109,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	 * @see org.gogpsproject.Navigation#release()
 	 */
 	@Override
-	public void release() {
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
 
 	}
 

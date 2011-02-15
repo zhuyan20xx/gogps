@@ -135,7 +135,7 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 	 * @see org.gogpsproject.ObservationsProducer#release()
 	 */
 	@Override
-	public void release() {
+	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
 		try {
 			in.close();
 		} catch (IOException e) {

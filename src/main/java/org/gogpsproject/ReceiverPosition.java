@@ -45,7 +45,7 @@ public class ReceiverPosition extends Coordinates{
 	private ObservationSet[] masterOrdered;
 	private TopocentricCoordinates[] roverTopo;
 	private TopocentricCoordinates[] masterTopo;
-	
+
 	// Fields related to receiver-satellite geometry
 	private SimpleMatrix[] diffRoverSat; /* Rover-satellite vector */
 	private SimpleMatrix[] diffMasterSat; /* Master-satellite vector */
@@ -55,7 +55,7 @@ public class ReceiverPosition extends Coordinates{
 	private double[] masterSatTropoCorr; /* Master-satellite troposphere correction */
 	private double[] roverSatIonoCorr; /* Rover-satellite ionosphere correction */
 	private double[] masterSatIonoCorr; /* Master-satellite ionosphere correction */
-	
+
 	// Fields for storing values from previous epoch
 	private double[] dopplerPredictedPhase; /* L Carrier Phase predicted from previous epoch (based on Doppler) [cycle] */
 
@@ -141,11 +141,13 @@ public class ReceiverPosition extends Coordinates{
 				//System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
 				// Store Bancroft matrix data (X, Y, Z and clock-corrected
 				// range)
-				dataB[p][0] = pos[i].getX();
-				dataB[p][1] = pos[i].getY();
-				dataB[p][2] = pos[i].getZ();
-				dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getSatelliteClockError();
-				p++;
+				if(pos[i]!=null){
+					dataB[p][0] = pos[i].getX();
+					dataB[p][1] = pos[i].getY();
+					dataB[p][2] = pos[i].getZ();
+					dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getSatelliteClockError();
+					p++;
+				}
 			} catch (NullPointerException u) {
 				System.out.println("Error: satellite positions not computed for satID:"+obs.getGpsSatID(i));
 				//return; // don't break eggs so quickly :-)
@@ -350,7 +352,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Receiver clock error
 		this.receiverClockError = x.get(3) / Constants.SPEED_OF_LIGHT;
-		
+
 		if(estimateOnlyClock)
 			return;
 
@@ -647,7 +649,7 @@ public class ReceiverPosition extends Coordinates{
 //		this.coord.ecef.set(0, 0, KFprediction.get(0));
 //		this.coord.ecef.set(1, 0, KFprediction.get(i1 + 1));
 //		this.coord.ecef.set(2, 0, KFprediction.get(i2 + 1));
-		
+
 		// Save previous list of available satellites with phase
 		satOld = satAvailPhase;
 
@@ -657,10 +659,10 @@ public class ReceiverPosition extends Coordinates{
 		} catch(ArrayIndexOutOfBoundsException e) {
 			oldPivotId = 0;
 		}
-		
+
 		// Select satellites for standalone
 		selectSatellitesStandalone(roverObs);
-		
+
 		if (satAvail.size() >= 4)
 			// Estimate receiver clock error by code stand-alone
 			codeStandalone(roverObs, true);
@@ -764,7 +766,7 @@ public class ReceiverPosition extends Coordinates{
 //		this.coord.ecef.set(0, 0, KFstate.get(0));
 //		this.coord.ecef.set(1, 0, KFstate.get(i1 + 1));
 //		this.coord.ecef.set(2, 0, KFstate.get(i2 + 1));
-		
+
 		// Set receiver position error covariance
 //		SimpleMatrix rows = Cee.extractMatrix(0, 1, 0, i2 + 2);
 //		rows = rows.combine(1, 0, Cee.extractMatrix(i1 + 1, i1 + 2, 0, i2 + 2));
@@ -802,13 +804,13 @@ public class ReceiverPosition extends Coordinates{
 
 		// Allocate an array to store GPS satellite positions
 		pos = new SatellitePosition[nObs];
-		
+
 		// Allocate an array to store receiver-satellite vectors
 		diffRoverSat = new SimpleMatrix[nObs];
-		
+
 		// Allocate an array to store receiver-satellite approximate range
 		roverSatAppRange = new double[nObs];
-		
+
 		// Allocate arrays to store receiver-satellite atmospheric corrections
 		roverSatTropoCorr = new double[nObs];
 		roverSatIonoCorr = new double[nObs];
@@ -882,15 +884,15 @@ public class ReceiverPosition extends Coordinates{
 
 		// Allocate an array to store GPS satellite positions
 		pos = new SatellitePosition[nObs];
-		
+
 		// Allocate arrays to store receiver-satellite vectors
 		diffRoverSat = new SimpleMatrix[nObs];
 		diffMasterSat = new SimpleMatrix[nObs];
-		
+
 		// Allocate arrays to store receiver-satellite approximate range
 		roverSatAppRange = new double[nObs];
 		masterSatAppRange = new double[nObs];
-		
+
 		// Allocate arrays to store receiver-satellite atmospheric corrections
 		roverSatTropoCorr = new double[nObs];
 		roverSatIonoCorr = new double[nObs];
@@ -926,13 +928,13 @@ public class ReceiverPosition extends Coordinates{
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
 			if(pos[i]!=null){
-				
+
 				// Compute rover-satellite approximate pseudorange
 				diffRoverSat[i] = this.minusXYZ(pos[i]);
 				roverSatAppRange[i] = Math.sqrt(Math.pow(diffRoverSat[i].get(0), 2)
 						+ Math.pow(diffRoverSat[i].get(1), 2)
 						+ Math.pow(diffRoverSat[i].get(2), 2));
-				
+
 				// Compute master-satellite approximate pseudorange
 				diffMasterSat[i] = masterPos.minusXYZ(pos[i]);
 				masterSatAppRange[i] = Math.sqrt(Math.pow(diffMasterSat[i].get(0), 2)
@@ -948,7 +950,7 @@ public class ReceiverPosition extends Coordinates{
 				// master
 				masterTopo[i] = new TopocentricCoordinates();
 				masterTopo[i].computeTopocentric(masterPos, pos[i]);
-				
+
 				// Computation of rover-satellite troposphere correction
 				roverSatTropoCorr[i] = computeTroposphereCorrection(roverTopo[i].getElevation(), this.getGeodeticHeight());
 
@@ -1050,7 +1052,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Master-pivot approximate pseudoranges
 		double masterPivotAppRange = masterSatAppRange[pivot];
-		
+
 		// Rover-pivot and master-pivot troposphere correction
 		double roverPivotTropoCorr = roverSatTropoCorr[pivot];
 		double masterPivotTropoCorr = masterSatTropoCorr[pivot];;
@@ -1109,13 +1111,13 @@ public class ReceiverPosition extends Coordinates{
 				double ddpObs = (lambda * roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) - lambda
 						* masterOrdered[i].getPhase(goGPS.getFreq()))
 						- (roverPivotPhaseObs - masterPivotPhaseObs);
-				
+
 				// Compute troposphere and ionosphere residuals
 				double tropoResiduals = (roverSatTropoCorr[i] - masterSatTropoCorr[i])
 						- (roverPivotTropoCorr - masterPivotTropoCorr);
 				double ionoResiduals = (roverSatIonoCorr[i] - masterSatIonoCorr[i])
 						- (roverPivotIonoCorr - masterPivotIonoCorr);
-				
+
 				// Compute approximate ranges
 				double appRangeCode;
 				double appRangePhase;
@@ -1323,7 +1325,7 @@ public class ReceiverPosition extends Coordinates{
 				}
 			}
 		}
-		
+
 //		// If the pivot satellites slipped, the ambiguities of all the other satellites must be re-estimated
 //		if (slippedPivot) {
 //			// If it is not the only satellite with phase
@@ -1359,14 +1361,14 @@ public class ReceiverPosition extends Coordinates{
 		} else {
 			lambda = Constants.LAMBDA_2;
 		}
-		
+
 		// Check if pivot is in satAmb, in case remove it
 		if (satAmb.contains(pos[pivotIndex].getSatID()))
 			satAmb.remove(satAmb.indexOf(pos[pivotIndex].getSatID()));
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
-		
+
 		// Number of available satellites (i.e. observations)
 		int nObsAvail = satAvail.size();
 
@@ -1555,7 +1557,7 @@ public class ReceiverPosition extends Coordinates{
 					double masterSatWeight = computeWeight(
 							masterTopo[i].getElevation(),
 							masterOrdered[i].getSignalStrength(goGPS.getFreq()));
-					Qphase.set(p, p, Qphase.get(p, p) 
+					Qphase.set(p, p, Qphase.get(p, p)
 							+ (Math.pow(goGPS.getStDevPhase(), 2) + Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[i].getSatID()))
 							* (roverPivotWeight + masterPivotWeight)
 							+ (Math.pow(goGPS.getStDevPhase(), 2) + Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[i].getSatID()))
@@ -1571,7 +1573,7 @@ public class ReceiverPosition extends Coordinates{
 //					int r = 1;
 //					for (int j = i+1; j < nObs; j++) {
 //						if (pos[j] !=null && satAvailPhase.contains(pos[j].getSatID()) && j != pivotIndex) {
-//							Qphase.set(p, p+r, Qphase.get(p, p+r) 
+//							Qphase.set(p, p+r, Qphase.get(p, p+r)
 //									+ (Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[j].getSatID()))
 //									* (roverPivotWeight + masterPivotWeight));
 //							Qphase.set(p+r, p, Qphase.get(p, p+r));
@@ -1911,7 +1913,7 @@ public class ReceiverPosition extends Coordinates{
 	public void setReceiverClockError(double receiverClockError) {
 		this.receiverClockError = receiverClockError;
 	}
-	
+
 	/**
 	 * @return the Doppler predicted phase
 	 */

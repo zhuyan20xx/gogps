@@ -24,5 +24,7 @@ package org.gogpsproject;
  *
  */
 public interface PositionConsumer {
-
+	public void addCoordinate(Coordinates coord);
+	public void endOfTrack();
+	public void startOfTrack();
 }

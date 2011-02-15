@@ -110,9 +110,21 @@ public class TestGoGPS {
 			// goGPS.runCodeDoubleDifferences();
 			goGPS.runKalmanFilter();
 
-			roverIn.release();
-			masterIn.release();
-			navigationIn.release();
+			try{
+				roverIn.release(true,10000);
+			}catch(InterruptedException ie){
+				ie.printStackTrace();
+			}
+			try{
+				masterIn.release(true,10000);
+			}catch(InterruptedException ie){
+				ie.printStackTrace();
+			}
+			try{
+				navigationIn.release(true,10000);
+			}catch(InterruptedException ie){
+				ie.printStackTrace();
+			}
 
 			// Get and display elapsed time
 			int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
