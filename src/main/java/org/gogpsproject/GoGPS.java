@@ -169,7 +169,12 @@ public class GoGPS implements Runnable{
 	 * Run code standalone.
 	 */
 	public void runCodeStandalone() {
-		runCodeStandalone(-1);
+
+		try {
+			runCodeStandalone(-1);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -177,8 +182,9 @@ public class GoGPS implements Runnable{
 	 *
 	 * @param getNthPosition the get nth position
 	 * @return the coordinates
+	 * @throws Exception
 	 */
-	public Coordinates runCodeStandalone(int getNthPosition) {
+	public Coordinates runCodeStandalone(int getNthPosition) throws Exception {
 
 		// Create a new object for the rover position
 		roverPos = new ReceiverPosition(this);
@@ -187,7 +193,7 @@ public class GoGPS implements Runnable{
 			Observations obsR = roverIn.nextObservations();
 			while (obsR!=null) { // buffStreamObs.ready()
 
-				try{
+				//try{
 					// If there are at least four satellites
 					if (roverIn.getCurrentObservations().getGpsSize() >= 4) { // gps.length
 						System.out.println("OK "+roverIn.getCurrentObservations().getGpsSize()+" satellites");
@@ -203,11 +209,11 @@ public class GoGPS implements Runnable{
 							// Compute code stand-alone positioning (epoch-by-epoch solution)
 							roverPos.codeStandalone(roverIn.getCurrentObservations(), false);
 
+							if(!validPosition){
+								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
+								validPosition = true;
+							}
 							if(positionConsumers.size()>0){
-								if(!validPosition){
-									notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
-									validPosition = true;
-								}
 								Coordinates coord = (Coordinates)roverPos.clone();
 								coord.setRefTime(new Time(roverIn.getCurrentObservations().getRefTime().getMsec()));
 								notifyPositionConsumerAddCoordinate(coord);
@@ -220,14 +226,15 @@ public class GoGPS implements Runnable{
 							}
 						}
 					}
-				}catch(Exception e){
-					System.out.println("Could not complete due to "+e);
-					e.printStackTrace();
-				}
+//				}catch(Exception e){
+//					System.out.println("Could not complete due to "+e);
+//					e.printStackTrace();
+//				}
 				obsR = roverIn.nextObservations();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			throw e;
 		} finally {
 			notifyPositionConsumerEvent(PositionConsumer.EVENT_END_OF_TRACK);
 		}
@@ -280,13 +287,11 @@ public class GoGPS implements Runnable{
 							// (epoch-by-epoch solution)
 							roverPos.codeDoubleDifferences(roverIn.getCurrentObservations(),
 									masterIn.getCurrentObservations(), masterIn.getApproxPosition());
-
+							if(!validPosition){
+								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
+								validPosition = true;
+							}
 							if(positionConsumers.size()>0){
-								if(!validPosition){
-									notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
-									validPosition = true;
-								}
-
 								Coordinates coord = (Coordinates)roverPos.clone();
 								coord.setRefTime(new Time(roverIn.getCurrentObservations().getRefTime().getMsec()));
 								notifyPositionConsumerAddCoordinate(coord);
@@ -402,11 +407,11 @@ public class GoGPS implements Runnable{
 					depProc = depProc + timeProc;
 
 					if(kalmanInitialized && valid){
+						if(!validPosition){
+							notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
+							validPosition = true;
+						}
 						if(positionConsumers.size()>0){
-							if(!validPosition){
-								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
-								validPosition = true;
-							}
 							Coordinates coord = (Coordinates)roverPos.clone();
 							coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
 							notifyPositionConsumerAddCoordinate(coord);
