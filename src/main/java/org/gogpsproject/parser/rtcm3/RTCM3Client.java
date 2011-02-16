@@ -85,7 +85,9 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		ArrayList<String> mountpoints = new ArrayList<String>();
 		RTCM3Client net = new RTCM3Client(settings);
 		try {
+			//System.out.println("Get sources");
 			s = net.getSources();
+			//System.out.println("Got sources");
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new Exception(e);
@@ -132,8 +134,11 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	}
 
 	public ArrayList<String> getSources() throws IOException {
+
+		//System.out.println("Open Socket "+settings.getHost()+" port "+ settings.getPort());
 		Socket sck = new Socket(settings.getHost(), settings.getPort());
 
+		//System.out.println("Open streams");
 		// The input and output streams are created
 		PrintWriter out = new PrintWriter(sck.getOutputStream(), true);
 		InputStream sckIn = sck.getInputStream();
@@ -141,21 +146,28 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		InputStreamReader inRead = new InputStreamReader(sckIn);
 		BufferedReader in = new BufferedReader(inRead);
 
+		//System.out.println("Send request");
 		// The data request containing the logon and password are send
-		out.println("GET / HTTP/1.1");
-		out.println("User-Agent: NTRIP goGPS-project java");
-		out.println("Authorization: Basic " + settings.getPass_base64());
+		out.print("GET / HTTP/1.1\r\n");
+		out.print("User-Agent: NTRIP goGPS-project java\r\n");
+		out.print("Authorization: Basic " + settings.getPass_base64()+"\r\n");
 		// out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
 		// out.println("Accept: */*\r\nConnection: close");
-		out.println();
+		out.print("\r\n");
 		out.flush();
 
+		//System.out.println("Get answer");
 		boolean going = true;
 		boolean first = true;
 		Vector<String> lines = new Vector<String>();
+
+
 		while (going) {
 			// The next byte is read and added to the buffer
+
 			String newLine = in.readLine();
+
+			//System.out.println("Read:"+newLine);
 			if (newLine == null) {
 				going = false;
 			} else if (first) {
@@ -250,9 +262,9 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			out = new PrintWriter(sck.getOutputStream(), true);
 			in = sck.getInputStream();
 			// The data request containing the logon and password are send
-			out.println("GET /" + settings.getSource() + " HTTP/1.1");
-			out.println("User-Agent: NTRIP goGPS-project java");
-			out.println("Authorization: Basic " + settings.getAuthbase64());
+			out.print("GET /" + settings.getSource() + " HTTP/1.1\r\n");
+			out.print("User-Agent: NTRIP goGPS-project java\r\n");
+			out.print("Authorization: Basic " + settings.getAuthbase64()+"\r\n");
 
 			if(approxPosition!=null){
 				approxPosition.computeGeodetic();
@@ -275,14 +287,14 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 				ntripGAA = "Ntrip-GAA: "+ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
 				System.out.println(ntripGAA);
-				out.println(ntripGAA);
+				out.print(ntripGAA+"\r\n");
 			}
 
 			// out.println("User-Agent: NTRIP goGps");
 			// out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
 			// out.println("User-Agent: NTRIP GoGps");
 			// out.println("Accept: */*\r\nConnection: close");
-			out.println();
+			out.print("\r\n");
 			out.flush();
 //			System.out.println(" \n %%%%%%%%%%%%%%%%%%%%% \n password >>> "
 //					+ settings.getAuthbase64());
@@ -304,7 +316,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// when go is changed to false the loop is stopped
 			while (go && state == 0) {
 				int c = in.read();
-				System.out.print((char)c);
+				//System.out.print((char)c);
 				if (c < 0)
 					break;
 				// tester.write(c);
@@ -402,7 +414,20 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 	}
 
-//	public static void main(String args[]){
+	public static void main(String args[]){
+
+		try {
+			RTCM3Client rtcm = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, "user","pass", "swiposGISGEO_LV03LN02");
+			rtcm.setDebug(true);
+
+			Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
+			rtcm.setApproxPosition(coordinates);
+			rtcm.init();
+
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+
 //		System.out.println(computeNMEACheckSum("$GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0"));
 //
 //		File f = new File("./data/rtcm.out");
@@ -417,8 +442,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 //		} catch (IOException e) {
 //			e.printStackTrace();
 //		}
-//
-//	}
+
+	}
 	private static String computeNMEACheckSum(String msg){
 		// perform NMEA checksum calculation
 		int chk = 0;
@@ -584,18 +609,18 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	public void addObservation(Observations o){
 		if(debug){
 			System.out.println("\t\t\t\tM > obs "+o.getGpsSize()+" time "+new Date(o.getRefTime().getMsec()));
-//			for(int i=0;i<o.getGpsSize();i++){
-//				ObservationSet os = o.getGpsByIdx(i);
-//				System.out.print(" svid:"+os.getSatID());
-//				System.out.print(" codeC:"+os.getCodeC(0));
-//				System.out.print(" codeP:"+os.getCodeP(0));
-//				System.out.print(" doppl:"+os.getDoppler(0));
-//				System.out.print(" LLInd:"+os.getLossLockInd(0));
-//				System.out.print(" phase:"+os.getPhase(0));
-//				System.out.print(" pseud:"+os.getPseudorange(0));
-//				System.out.print(" q.ind:"+os.getQualityInd(0));
-//				System.out.println(" s.str:"+os.getSignalStrength(0));
-//			}
+			for(int i=0;i<o.getGpsSize();i++){
+				ObservationSet os = o.getGpsByIdx(i);
+				System.out.print(" svid:"+os.getSatID());
+				System.out.print(" codeC:"+os.getCodeC(0));
+				System.out.print(" codeP:"+os.getCodeP(0));
+				System.out.print(" doppl:"+os.getDoppler(0));
+				System.out.print(" LLInd:"+os.getLossLockInd(0));
+				System.out.print(" phase:"+os.getPhase(0));
+				System.out.print(" pseud:"+os.getPseudorange(0));
+				System.out.print(" q.ind:"+os.getQualityInd(0));
+				System.out.println(" s.str:"+os.getSignalStrength(0));
+			}
 		}
 		observationsBuffer.add(o);
 	}

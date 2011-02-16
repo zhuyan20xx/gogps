@@ -147,6 +147,8 @@ public class ReceiverPosition extends Coordinates{
 					dataB[p][2] = pos[i].getZ();
 					dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getSatelliteClockError();
 					p++;
+				}else{
+					System.out.println("Error: satellite positions not computed for satID:"+obs.getGpsSatID(i));
 				}
 			} catch (NullPointerException u) {
 				System.out.println("Error: satellite positions not computed for satID:"+obs.getGpsSatID(i));
