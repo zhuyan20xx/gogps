@@ -46,7 +46,7 @@ public class UBXSerialReader implements Runnable {
 	private UBXReader reader;
 
 	public UBXSerialReader(InputStream in,OutputStream out,UBXEventListener el) {
-		FileOutputStream fos= null;;
+		FileOutputStream fos= null;
 		try {
 			fos = new FileOutputStream("./data/ubx.out");
 		} catch (FileNotFoundException e) {

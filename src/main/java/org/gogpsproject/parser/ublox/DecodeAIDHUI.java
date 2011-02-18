@@ -149,7 +149,7 @@ public class DecodeAIDHUI {
 
 		Time refTime = new Time((int)iono.getUtcWNT(),(int)iono.getUtcTOW());
 		iono.setRefTime(refTime);
-		System.out.println(new Date(refTime.getMsec()));
+		//System.out.println(new Date(refTime.getMsec()));
 
 		byte data[] = baos.toByteArray();
 		for (int i = 0; i < data.length; i++) {
