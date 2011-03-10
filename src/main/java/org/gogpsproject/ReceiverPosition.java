@@ -57,7 +57,8 @@ public class ReceiverPosition extends Coordinates{
 	private double[] masterSatIonoCorr; /* Master-satellite ionosphere correction */
 
 	// Fields for storing values from previous epoch
-	private double[] dopplerPredictedPhase; /* L Carrier Phase predicted from previous epoch (based on Doppler) [cycle] */
+	private double[] roverDopplerPredPhase; /* rover L Carrier Phase predicted from previous epoch (based on Doppler) [cycle] */
+	private double[] masterDopplerPredPhase; /* master L Carrier Phase predicted from previous epoch (based on Doppler) [cycle] */
 
 	// Fields for Kalman filter
 	int o1, o2, o3;
@@ -604,12 +605,7 @@ public class ReceiverPosition extends Coordinates{
 		estimateAmbiguities(roverObs, masterObs, masterPos, newSatellites, pivot, true);
 
 		// Compute predicted phase ranges based on Doppler observations
-		dopplerPredictedPhase = new double[32];
-		for (int i = 0; i < roverObs.getGpsSize(); i++)
-			if (pos[i] !=null && roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0
-					&& roverObs.getGpsByIdx(i).getDoppler(goGPS.getFreq()) != 0)
-				this.setDopplerPredictedPhase(pos[i].getSatID(), roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq())
-					- roverObs.getGpsByIdx(i).getDoppler(goGPS.getFreq()));
+		computeDopplerPredictedPhase(roverObs, masterObs);
 
 		// Initial state
 		KFstate.set(0, 0, this.getX());
@@ -756,12 +752,7 @@ public class ReceiverPosition extends Coordinates{
 		}
 
 		// Compute predicted phase ranges based on Doppler observations
-		dopplerPredictedPhase = new double[32];
-		for (int i = 0; i < roverObs.getGpsSize(); i++)
-			if (pos[i] != null && roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0
-				&& roverObs.getGpsByIdx(i).getDoppler(goGPS.getFreq()) != 0)
-				this.setDopplerPredictedPhase(pos[i].getSatID(), roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq())
-					- roverObs.getGpsByIdx(i).getDoppler(goGPS.getFreq()));
+		computeDopplerPredictedPhase(roverObs, masterObs);
 
 		// Set receiver position
 		this.setXYZ(KFstate.get(0), KFstate.get(i1 + 1), KFstate.get(i2 + 1));
@@ -857,12 +848,12 @@ public class ReceiverPosition extends Coordinates{
 					//System.out.println("Available sat "+pos[i].getSatID());
 
 					// Check if also phase is available
-					if (roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0) {
+					if (!Double.isNaN(roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()))) {
 						//System.out.println("Available sat phase "+pos[i].getSatID());
 						satAvailPhase.add(pos[i].getSatID());
 					}
 				}else{
-					System.out.println("Not available sat "+roverTopo[i].getElevation()+" < "+cutoff);
+					//System.out.println("Not available sat "+roverTopo[i].getElevation()+" < "+cutoff);
 				}
 			}
 		}
@@ -986,8 +977,8 @@ public class ReceiverPosition extends Coordinates{
 					satAvail.add(pos[i].getSatID());
 
 					// Check if also phase is available for both rover and master
-					if (roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) != 0
-							&& masterOrdered[i].getPhase(goGPS.getFreq()) != 0) {
+					if (!Double.isNaN(roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq())) &&
+							!Double.isNaN(masterOrdered[i].getPhase(goGPS.getFreq()))) {
 
 						// Find code pivot satellite (with highest elevation)
 						if (roverTopo[i].getElevation() > maxElevPhase) {
@@ -1295,36 +1286,46 @@ public class ReceiverPosition extends Coordinates{
 		}
 
 		// Cycle-slip detection
-		boolean lossOfLockCycleSlip;
-		boolean dopplerCycleSlip;
+		boolean lossOfLockCycleSlipRover;
+		boolean lossOfLockCycleSlipMaster;
+		boolean dopplerCycleSlipRover;
+		boolean dopplerCycleSlipMaster;
+		boolean cycleSlip;
 		//boolean slippedPivot = false;
-		for (int i = 0; i < pos.length; i++) {
+		for (int i = 0; i < satAvailPhase.size(); i++) {
+			
+			int satID = satAvailPhase.get(i);
 
-			if (pos[i] != null) {
-				// cycle slip detected by loss of lock indicator (temporarily disabled)
-				lossOfLockCycleSlip = roverObs.getGpsByID(pos[i].getSatID()).isPossibleCycleSlip(goGPS.getFreq());
-				lossOfLockCycleSlip = false;
+			// cycle slip detected by loss of lock indicator (temporarily disabled)
+			lossOfLockCycleSlipRover = roverObs.getGpsByID(satID).isPossibleCycleSlip(goGPS.getFreq());
+			lossOfLockCycleSlipMaster = masterObs.getGpsByID(satID).isPossibleCycleSlip(goGPS.getFreq());
+			lossOfLockCycleSlipRover = false;
+			lossOfLockCycleSlipMaster = false;
 
-				// cycle slip detected by Doppler predicted phase range
-				dopplerCycleSlip = this.getDopplerPredictedPhase(pos[i].getSatID()) != 0 && (Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
-						- this.getDopplerPredictedPhase(pos[i].getSatID()))	> goGPS.getCycleSlipThreshold());
+			// cycle slip detected by Doppler predicted phase range
+			dopplerCycleSlipRover = this.getRoverDopplerPredictedPhase(satID) != 0.0 && (Math.abs(roverObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+					- this.getRoverDopplerPredictedPhase(satID)) > goGPS.getCycleSlipThreshold());
+			dopplerCycleSlipMaster = this.getMasterDopplerPredictedPhase(satID) != 0.0 && (Math.abs(masterObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+					- this.getMasterDopplerPredictedPhase(satID)) > goGPS.getCycleSlipThreshold());
 
-				if (satAvailPhase.contains(pos[i].getSatID())
-						&& pos[i].getSatID() != pos[pivot].getSatID()
-						&& !newSatellites.contains(pos[i].getSatID())
-						&& (lossOfLockCycleSlip || dopplerCycleSlip)) {
+			cycleSlip = (lossOfLockCycleSlipRover || lossOfLockCycleSlipMaster || dopplerCycleSlipRover || dopplerCycleSlipMaster);
 
-					slippedSatellites.add(pos[i].getSatID());
+			if (satID != pos[pivot].getSatID() && !newSatellites.contains(satID) && cycleSlip) {
 
-//					if (pos[i].getSatID() != pos[pivot].getSatID()) {
-						System.out.println("Cycle slip on satellite "+pos[i].getSatID()+" (range diff = "+Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
-								- this.getDopplerPredictedPhase(pos[i].getSatID()))+")");
-//					} else {
-//						slippedPivot = true;
-//						System.out.println("Cycle slip on pivot satellite "+pos[i].getSatID()+" (range diff = "+Math.abs(roverObs.getGpsByID(pos[i].getSatID()).getPhase(goGPS.getFreq())
-//								- this.getDopplerPredictedPhase(pos[i].getSatID()))+")");
-//					}
-				}
+				slippedSatellites.add(satID);
+
+				//					if (satID != pos[pivot].getSatID()) {
+				if (dopplerCycleSlipRover)
+					System.out.println("[ROVER] Cycle slip on satellite "+satID+" (range diff = "+Math.abs(roverObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+							- this.getRoverDopplerPredictedPhase(satID))+")");
+				if (dopplerCycleSlipMaster)
+					System.out.println("[MASTER] Cycle slip on satellite "+satID+" (range diff = "+Math.abs(masterObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+							- this.getMasterDopplerPredictedPhase(satID))+")");
+				//					} else {
+				//						slippedPivot = true;
+				//						System.out.println("Cycle slip on pivot satellite "+satID+" (range diff = "+Math.abs(roverObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+				//								- this.getDopplerPredictedPhase(satID))+")");
+				//					}
 			}
 		}
 
@@ -1697,6 +1698,12 @@ public class ReceiverPosition extends Coordinates{
 		float SA = Constants.SNR_A;
 		float S0 = Constants.SNR_0;
 		float S1 = Constants.SNR_1;
+		
+		if (Float.isNaN(snr) && (goGPS.getWeights() == GoGPS.WEIGHT_SIGNAL_TO_NOISE_RATIO || 
+				goGPS.getWeights() == GoGPS.WEIGHT_COMBINED_ELEVATION_SNR)) {
+			System.out.println("SNR not available: forcing satellite elevation-based weights...");
+			goGPS.setWeights(GoGPS.WEIGHT_SAT_ELEVATION);
+		}
 
 		switch (goGPS.getWeights()) {
 
@@ -1887,6 +1894,29 @@ public class ReceiverPosition extends Coordinates{
 		}
 		return ionoCorr;
 	}
+	
+	/**
+	 * @param roverObs
+	 * @param masterObs
+	 */
+	private void computeDopplerPredictedPhase(Observations roverObs, Observations masterObs) {
+
+		this.roverDopplerPredPhase = new double[32];
+		this.masterDopplerPredPhase = new double[32];
+
+		for (int i = 0; i < satAvailPhase.size(); i++) {
+
+			double roverPhase = roverObs.getGpsByID(satAvailPhase.get(i)).getPhase(goGPS.getFreq());
+			double masterPhase = masterObs.getGpsByID(satAvailPhase.get(i)).getPhase(goGPS.getFreq());
+			float roverDoppler = roverObs.getGpsByID(satAvailPhase.get(i)).getDoppler(goGPS.getFreq());
+			float masterDoppler = masterObs.getGpsByID(satAvailPhase.get(i)).getDoppler(goGPS.getFreq());
+
+			if (!Double.isNaN(roverPhase) && !Float.isNaN(roverDoppler))
+				this.setRoverDopplerPredictedPhase(satAvailPhase.get(i), roverPhase - roverDoppler);
+			if (!Double.isNaN(masterPhase) && !Float.isNaN(masterDoppler))
+				this.setMasterDopplerPredictedPhase(satAvailPhase.get(i), masterPhase - masterDoppler);
+		}
+	}
 
 	/**
 	 * @return the positionCovariance
@@ -1917,16 +1947,30 @@ public class ReceiverPosition extends Coordinates{
 	}
 
 	/**
-	 * @return the Doppler predicted phase
+	 * @return the rover Doppler predicted phase
 	 */
-	public double getDopplerPredictedPhase(int satID) {
-		return dopplerPredictedPhase[satID - 1];
+	public double getRoverDopplerPredictedPhase(int satID) {
+		return roverDopplerPredPhase[satID - 1];
 	}
 
 	/**
-	 * @param dopplerPredictedPhase the Doppler predicted phase to set
+	 * @param roverDopplerPredictedPhase the Doppler predicted phase to set
 	 */
-	public void setDopplerPredictedPhase(int satID, double dopplerPredictedPhase) {
-		this.dopplerPredictedPhase[satID - 1] = dopplerPredictedPhase;
+	public void setRoverDopplerPredictedPhase(int satID, double roverDopplerPredictedPhase) {
+		this.roverDopplerPredPhase[satID - 1] = roverDopplerPredictedPhase;
+	}
+	
+	/**
+	 * @return the master Doppler predicted phase
+	 */
+	public double getMasterDopplerPredictedPhase(int satID) {
+		return masterDopplerPredPhase[satID - 1];
+	}
+
+	/**
+	 * @param masterDopplerPredictedPhase the Doppler predicted phase to set
+	 */
+	public void setMasterDopplerPredictedPhase(int satID, double masterDopplerPredictedPhase) {
+		this.masterDopplerPredPhase[satID - 1] = masterDopplerPredictedPhase;
 	}
 }
