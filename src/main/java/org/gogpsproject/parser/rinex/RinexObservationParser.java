@@ -52,6 +52,7 @@ public class RinexObservationParser implements ObservationsProducer{
 
 	private int nTypes; /* Number of observation types */
 	private int[] typeOrder; /* Order of observation data */
+	private boolean hasSField = false; /* S* field (SNR) is present */ 
 	private Time timeFirstObs; /* Time of first observation set */
 
 	private Coordinates approxPos; /* Approximate position (X, Y, Z) [m] */
@@ -466,11 +467,11 @@ public class RinexObservationParser implements ObservationsProducer{
 							o.setLossLockInd(0,lli);
 						}catch(Exception ignore){}
 						try{
-							// Signal Strenght
+							// Signal Strength
 							int ss = Integer.parseInt(line.substring(j+15, j + 16));
-
+							if (!hasSField)
+								o.setSignalStrength(0,ss * 6);
 						}catch(Exception ignore){}
-
 					}
 				} catch (NumberFormatException e) {
 				}
@@ -487,9 +488,10 @@ public class RinexObservationParser implements ObservationsProducer{
 							o.setLossLockInd(1,lli);
 						}catch(Exception ignore){}
 						try{
-							// Signal Strenght
+							// Signal Strength
 							int ss = Integer.parseInt(line.substring(j+15, j + 16));
-
+							if (!hasSField)
+								o.setSignalStrength(1,ss * 6);
 						}catch(Exception ignore){}
 					}
 				} catch (NumberFormatException e) {
@@ -500,21 +502,18 @@ public class RinexObservationParser implements ObservationsProducer{
 				if (snrS.length() != 0) {
 					o.setSignalStrength(0,Float.parseFloat(snrS));
 				}
-
 			} else if (typeOrder[k] == 7) { // ** SNR on L2
 
 				String snrS = line.substring(j, j + 14).trim();
 				if (snrS.length() != 0) {
 					o.setSignalStrength(1,Float.parseFloat(snrS));
 				}
-
 			} else if (typeOrder[k] == 8) { // ** D1 doppler
 
 				String dopplerD = line.substring(j, j + 14).trim();
 				if (dopplerD.length() != 0) {
 					o.setDoppler(0,Float.parseFloat(dopplerD));
 				}
-
 			} else if (typeOrder[k] == 9) { // ** D2 doppler
 
 				String dopplerD = line.substring(j, j + 14).trim();
@@ -558,8 +557,10 @@ public class RinexObservationParser implements ObservationsProducer{
 				typeOrder[i] = 5;
 			} else if (type.equals("S1")) {
 				typeOrder[i] = 6;
+				hasSField = true;
 			} else if (type.equals("S2")) {
 				typeOrder[i] = 7;
+				hasSField = true;
 			} else if (type.equals("D1")) {
 				typeOrder[i] = 8;
 			} else if (type.equals("D2")) {
