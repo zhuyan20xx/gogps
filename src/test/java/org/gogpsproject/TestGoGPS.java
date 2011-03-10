@@ -48,11 +48,13 @@ public class TestGoGPS {
 		try{
 			// Get current time
 			long start = System.currentTimeMillis();
-			/* Como */
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/perim2.08o"));
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/COMO1190.08o"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/COMO1190.08n"));
-//			//NavigationProducer navigationIn = new SP3Navigation(SP3Navigation.IGN_FR_FINAL);
+
+			/* Osaka, Japan (TOPCON test) */
+//			//ObservationsProducer roverIn = new RinexObservationParser(new File("./data/log1220b_TOPCON_f.10o")); /* TOPCON front */
+//			//ObservationsProducer roverIn = new RinexObservationParser(new File("./data/log1220b_TOPCON_r.10o")); /* TOPCON back */
+//			ObservationsProducer roverIn = new UBXFileReader(new File("./data/log1220b_ublox.ubx")); /* u-blox */
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/Vb05.10o"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Vb05.10n"));
 //			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Como, Italy (static) */
@@ -77,13 +79,13 @@ public class TestGoGPS {
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100617_025543.ubx"));
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/vrs2.10o"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs2.10n"));
-//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+//			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 //			/* Locarno, Switzerland */
 			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/locarno1_rover_RINEX.obs"));
 			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirA061N.10o"));
 			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirA061N.10n"));
-			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+//			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Faido */
 			//ObservationsProducer roverIn = new RinexObservationParser(roverFileObs);
@@ -92,7 +94,7 @@ public class TestGoGPS {
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/1009844950228.ubx"));
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirFaido19112010b.10o"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirFaido19112010b.10n"));
-//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Manno, Switzerland (static)*/
 //			dynamicModel = GoGPS.DYN_MODEL_STATIC;
@@ -115,8 +117,8 @@ public class TestGoGPS {
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
 			goGPS.addPositionConsumerListener(kml);
 			goGPS.setDynamicModel(dynamicModel);
-			// goGPS.runCodeStandalone();
-			// goGPS.runCodeDoubleDifferences();
+			//goGPS.runCodeStandalone();
+			//goGPS.runCodeDoubleDifferences();
 			goGPS.runKalmanFilter();
 
 			try{
