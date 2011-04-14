@@ -291,6 +291,8 @@ public class RinexObservationParser implements ObservationsProducer{
 			//obs.eventFlag = eventFlag;
 
 			parseDataObs();
+			
+			obs.cleanObservations();
 
 			return obs;
 		} catch (ParseException e) {

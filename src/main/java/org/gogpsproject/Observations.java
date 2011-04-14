@@ -51,7 +51,20 @@ public class Observations implements Streamable {
 	public Observations(DataInputStream dai) throws IOException{
 		read(dai);
 	}
-
+	public void cleanObservations(){
+		if(gps != null)
+			for (int i=0;i<gps.size();i++)
+				if(gps.get(i)==null || Double.isNaN(gps.get(i).getPseudorange(0)))
+					gps.remove(i);
+		if(glo != null)
+			for (int i=0;i<glo.size();i++)
+				if(glo.get(i)==null || Double.isNaN(glo.get(i).getPseudorange(0)))
+					glo.remove(i);
+		if(sbs != null)
+			for (int i=0;i<sbs.size();i++)
+				if(sbs.get(i)==null || Double.isNaN(sbs.get(i).getPseudorange(0)))
+					sbs.remove(i);
+	}
 	public int getGpsSize(){
 		return gps==null?-1:gps.size();
 	}
