@@ -195,19 +195,19 @@ public class GoGPS implements Runnable{
 
 				//try{
 					// If there are at least four satellites
-					if (roverIn.getCurrentObservations().getGpsSize() >= 4) { // gps.length
-						System.out.println("OK "+roverIn.getCurrentObservations().getGpsSize()+" satellites");
+					if (obsR.getGpsSize() >= 4) { // gps.length
+						System.out.println("OK "+obsR.getGpsSize()+" satellites");
 						// Compute approximate positioning by Bancroft algorithm
-						roverPos.bancroft(roverIn.getCurrentObservations());
+						roverPos.bancroft(obsR);
 
 						// If an approximate position was computed
 						System.out.println("has valid position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
 						if (roverPos.isValidXYZ()) {
 							// Select available satellites
-							roverPos.selectSatellitesStandalone(roverIn.getCurrentObservations());
+							roverPos.selectSatellitesStandalone(obsR);
 
 							// Compute code stand-alone positioning (epoch-by-epoch solution)
-							roverPos.codeStandalone(roverIn.getCurrentObservations(), false);
+							roverPos.codeStandalone(obsR, false);
 
 							if(!validPosition){
 								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
@@ -215,7 +215,7 @@ public class GoGPS implements Runnable{
 							}
 							if(positionConsumers.size()>0){
 								Coordinates coord = (Coordinates)roverPos.clone();
-								coord.setRefTime(new Time(roverIn.getCurrentObservations().getRefTime().getMsec()));
+								coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
 								notifyPositionConsumerAddCoordinate(coord);
 							}
 
@@ -252,6 +252,7 @@ public class GoGPS implements Runnable{
 		try {
 			Observations obsR = roverIn.nextObservations();
 			Observations obsM = masterIn.nextObservations();
+			
 			while (obsR != null && obsM != null) {
 
 				// Discard master epochs if correspondent rover epochs are
@@ -264,36 +265,36 @@ public class GoGPS implements Runnable{
 				// Discard rover epochs if correspondent master epochs are
 				// not available
 				long obsMtime = obsM.getRefTime().getGpsTime();
-				while (obsM!=null && obsR!=null && roverIn.getCurrentObservations().getRefTime().getGpsTime() < obsMtime) {
+				while (obsM!=null && obsR!=null && obsR.getRefTime().getGpsTime() < obsMtime) {
 					obsR = roverIn.nextObservations();
 				}
 
 
 				// If there are at least four satellites
 				if (obsM!=null && obsR!=null){
-					if(roverIn.getCurrentObservations().getGpsSize() >= 4) {
+					if(obsR.getGpsSize() >= 4) {
 
 						// Compute approximate positioning by Bancroft algorithm
-						roverPos.bancroft(roverIn.getCurrentObservations());
+						roverPos.bancroft(obsR);
 
 						// If an approximate position was computed
 						if (roverPos.isValidXYZ()) {
 
 							// Select satellites available for double differences
-							roverPos.selectSatellitesDoubleDiff(roverIn.getCurrentObservations(),
-									masterIn.getCurrentObservations(), masterIn.getApproxPosition());
+							roverPos.selectSatellitesDoubleDiff(obsR,
+									obsM, masterIn.getApproxPosition());
 
 							// Compute code double differences positioning
 							// (epoch-by-epoch solution)
-							roverPos.codeDoubleDifferences(roverIn.getCurrentObservations(),
-									masterIn.getCurrentObservations(), masterIn.getApproxPosition());
+							roverPos.codeDoubleDifferences(obsR,
+									obsM, masterIn.getApproxPosition());
 							if(!validPosition){
 								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
 								validPosition = true;
 							}
 							if(positionConsumers.size()>0){
 								Coordinates coord = (Coordinates)roverPos.clone();
-								coord.setRefTime(new Time(roverIn.getCurrentObservations().getRefTime().getMsec()));
+								coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
 								notifyPositionConsumerAddCoordinate(coord);
 							}
 
