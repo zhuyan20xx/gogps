@@ -104,13 +104,13 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			if(_mountpoint == null){
 				System.out.println("\t[" + mountpoints.get(j)+"]");
 			}else{
-				//System.out.print("\t[" + mountpoints.get(j)+"]["+_mountpoint+"]");
+				System.out.print("\t[" + mountpoints.get(j)+"]["+_mountpoint+"]");
 				if(_mountpoint.equalsIgnoreCase(mountpoints.get(j))){
 					settings.setSource(mountpoints.get(j));
-					//System.out.print(" found");
+					System.out.print(" found");
 				}
 			}
-			//System.out.println();
+			System.out.println();
 		}
 		if(settings.getSource() == null){
 			System.out.println("Select a valid mountpoint!");
@@ -150,6 +150,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		// The data request containing the logon and password are send
 		out.print("GET / HTTP/1.1\r\n");
 		out.print("User-Agent: NTRIP goGPS-project java\r\n");
+		out.print("Host: "+settings.getHost()+"\r\n");
+		out.print("Connection: close\r\n");
 		out.print("Authorization: Basic " + settings.getPass_base64()+"\r\n");
 		// out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
 		// out.println("Accept: */*\r\nConnection: close");
@@ -263,7 +265,9 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			in = sck.getInputStream();
 			// The data request containing the logon and password are send
 			out.print("GET /" + settings.getSource() + " HTTP/1.1\r\n");
-			out.print("User-Agent: NTRIP goGPS-project java\r\n");
+			out.print("User-Agent: NTRIP goGPS-project-java\r\n");
+			out.print("Host: "+settings.getHost()+"\r\n");
+			out.print("Connection: close\r\n");
 			out.print("Authorization: Basic " + settings.getAuthbase64()+"\r\n");
 
 			if(approxPosition!=null){
@@ -283,9 +287,10 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				double lat_nmea = lat_deg * 100 + lat_min;
 				String latn = (new DecimalFormat("0000.000")).format(lat_nmea);
 				String ntripGAA = "$GPGGA,"+hhmmss+","+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",4,10,1,"+(h<0?0:h)+",M,1,M,3,0";
-				//ntripGAA = "$GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0";
+				//String ntripGAA = "$GPGGA,"+hhmmss+".00,"+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",1,10,1.00,"+(h<0?0:h)+",M,37.3,M,,";
+				//ntripGAA = "$GPGGA,214833.00,3435.40000000,N,13530.00000000,E,1,10,1.00,-17.3,M,37.3,M,,";
 
-				ntripGAA = "Ntrip-GAA: "+ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
+				ntripGAA = /*"Ntrip-GAA: "+*/ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
 				System.out.println(ntripGAA);
 				out.print(ntripGAA+"\r\n");
 			}
@@ -316,7 +321,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// when go is changed to false the loop is stopped
 			while (go && state == 0) {
 				int c = in.read();
-				//System.out.print((char)c);
+				System.out.print((char)c);
 				if (c < 0)
 					break;
 				// tester.write(c);
@@ -352,6 +357,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				int c = in.read();
 				if (c < 0) break;
 				// tester.write(c);
+				System.out.print((char)c);
 				state = transition(state, c);
 			}
 			// When HTTP header is read, the GPS data are recived and parsed:
@@ -417,10 +423,14 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	public static void main(String args[]){
 
 		try {
-			RTCM3Client rtcm = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, "user","pass", "swiposGISGEO_LV03LN02");
+			//RTCM3Client rtcm = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0],args[1], "swiposGISGEO_LV03LN02");
+			RTCM3Client rtcm = RTCM3Client.getInstance("ntrip.jenoba.jp", 2101, args[0],args[1], "JVR30");
 			rtcm.setDebug(true);
-
-			Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
+			// Ntrip-GAA: $GPGGA,183836,3435.524,N,13530.231,E,4,10,1,164,M,1,M,3,0*69
+			// CH Manno
+			// Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
+			// JP Osaka
+			Coordinates coordinates = Coordinates.globalXYZInstance(-3749314.940644724,3684015.867703885,3600798.5084946174);
 			rtcm.setApproxPosition(coordinates);
 			rtcm.init();
 
@@ -539,7 +549,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		int index;
 		while (go) {
 			c = in.read();
-//			System.out.println("Header : " + c);
+			if(debug) System.out.println("Header : " + c);
 			if (c < 0)
 				break;
 			if (header) {
@@ -558,8 +568,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 						}
 					}
 					messagelength = Bits.bitsToUInt(Bits.subset(bits, 6, 10));
-//					System.out.println("Debug message length : "
-//							+ messagelength);
+					if(debug) System.out.println("Debug message length : " + messagelength);
 					header = false;
 					// downloadlength = true;
 				}
@@ -569,7 +578,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				setBits(in, messagelength);
 				int msgtype = Bits.bitsToUInt(Bits.subset(bits, 0, 12));
 
-				//System.out.println("message type : " + msgtype);
+				if(debug) System.out.println("message type : " + msgtype);
 				messagelength = 0;
 
 				Decode dec = decodeMap.get(new Integer(msgtype));
@@ -584,7 +593,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 				header = true;
 				// setBits(in,1);
-				// System.out.println(" dati :" + Bits.bitsToStr(bits));
+				if(debug) System.out.println(" dati :" + Bits.bitsToStr(bits));
 			}
 		}
 	}
