@@ -853,7 +853,7 @@ public class ReceiverPosition extends Coordinates{
 						satAvailPhase.add(pos[i].getSatID());
 					}
 				}else{
-					//System.out.println("Not available sat "+roverTopo[i].getElevation()+" < "+cutoff);
+					System.out.println("Not useful sat "+roverObs.getGpsSatID(i)+" for too low elevation "+roverTopo[i].getElevation()+" < "+cutoff);
 				}
 			}
 		}
