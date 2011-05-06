@@ -21,6 +21,7 @@
 package org.gogpsproject;
 import java.io.*;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.text.*;
 
@@ -30,7 +31,9 @@ import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.sp3.SP3Navigation;
 import org.gogpsproject.parser.ublox.SerialConnection;
+import org.gogpsproject.parser.ublox.UBXAssistNow;
 import org.gogpsproject.parser.ublox.UBXFileReader;
+import org.gogpsproject.producer.KmlProducer;
 
 /**
  * @author ege, Cryms.com
@@ -50,7 +53,7 @@ public class LiveTracking {
 
 			// Realtime
 			if(args.length<2){
-				System.out.println("GoGPS <rtcm_user> <rtcm_pass>");
+				System.out.println("GoGPS <rtcm_user> <rtcm_pass> [<ubx_user> <ubx_pass>]");
 				return;
 			}
 
@@ -63,6 +66,18 @@ public class LiveTracking {
 			SerialConnection serialConn = new SerialConnection(roverIn);
 			serialConn.connect("COM10", 9600);
 
+			if(args.length>3){
+				String cmd="aid";
+				String lon="8.92";
+				String lat="46.03";
+				navigationIn = new UBXAssistNow( args[2], args[3], cmd, lon, lat);
+				try {
+					navigationIn.init();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				System.out.println("Use UBXAssistNow as Navigation");
+			}
 			// wait for some data to buffer
 			Thread.sleep(5000);
 
@@ -88,23 +103,44 @@ public class LiveTracking {
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
 			goGPSstandalone.setDynamicModel(dynamicModel);
 
+			// set Output
+			Date date = new Date();
+			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+			String date1 = sdf1.format(date);
+			String outPath = "./test/" + date1 + ".kml";
+			KmlProducer kml = new KmlProducer(outPath);
+			goGPS.addPositionConsumerListener(kml);
+
 			// goGPS.runCodeDoubleDifferences();
-			goGPS.runKalmanFilter();
+			// run blocking (never exit in live-tracking)
+			// goGPS.runKalmanFilter();
+
+			// run in background
+			goGPS.runThreadMode(GoGPS.RUN_MODE_KALMAN_FILTER);
+
+			// wait for 1 minutes
+			Thread.sleep(10*1000);
+
+			System.out.println("OK give up ---------------------------------------------");
 
 			/******************************************
 			 * END
 			 */
 			try{
+				System.out.println("Stop Rover");
+				serialConn.disconnect();
 				roverIn.release(true,10000);
 			}catch(InterruptedException ie){
 				ie.printStackTrace();
 			}
 			try{
+				System.out.println("Stop Master");
 				masterIn.release(true,10000);
 			}catch(InterruptedException ie){
 				ie.printStackTrace();
 			}
 			try{
+				System.out.println("Stop Navigation");
 				navigationIn.release(true,10000);
 			}catch(InterruptedException ie){
 				ie.printStackTrace();
