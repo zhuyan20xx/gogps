@@ -42,7 +42,6 @@ public class ReceiverPosition extends Coordinates{
 	private double receiverClockError; /* Clock error */
 
 	// Fields for satellite selection
-	private ObservationSet[] masterOrdered;
 	private TopocentricCoordinates[] roverTopo;
 	private TopocentricCoordinates[] masterTopo;
 
@@ -127,16 +126,19 @@ public class ReceiverPosition extends Coordinates{
 		double[][] dataB = new double[nObs][4];
 
 		int p=0;
+		int id = 0;
 		for (int i = 0; i < nObs; i++) {
+			
+			id = obs.getGpsSatID(i);
 
 			// Create new satellite position object
-			//pos[i] = new SatellitePosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
+			//pos[i] = new SatellitePosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obs.getGpsByID(id).getPseudorange(goGPS.getFreq()));
 
 			// Compute clock-corrected satellite position
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
-			double obsPseudorange = obs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), obs.getGpsSatID(i), obsPseudorange, this.getReceiverClockError());
+			double obsPseudorange = obs.getGpsByID(id).getPseudorange(goGPS.getFreq());
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), id, obsPseudorange, this.getReceiverClockError());
 
 			try {
 				//System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
@@ -311,11 +313,16 @@ public class ReceiverPosition extends Coordinates{
 
 		// Initialize the cofactor matrix
 		Q.set(1);
+		
+		// Satellite ID
+		int id = 0;
 
 		// Set up the least squares matrices
 		for (int i = 0; i < nObs; i++) {
+			
+			id = roverObs.getGpsSatID(i);
 
-			if (pos[i]!=null && satAvail.contains(pos[i].getSatID())) {
+			if (pos[i]!=null && satAvail.contains(id)) {
 
 				// Fill in one row in the design matrix
 				A.set(k, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]); /* X */
@@ -327,7 +334,7 @@ public class ReceiverPosition extends Coordinates{
 				b.set(k, 0, roverSatAppRange[i] - pos[i].getSatelliteClockError() * Constants.SPEED_OF_LIGHT);
 
 				// Add the clock-corrected observed pseudorange value to y0
-				y0.set(k, 0, roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()));
+				y0.set(k, 0, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()));
 
 				// Fill in troposphere and ionosphere double differenced
 				// corrections
@@ -337,7 +344,7 @@ public class ReceiverPosition extends Coordinates{
 				// Fill in the cofactor matrix
 				double weight = Q.get(k, k)
 						+ computeWeight(roverTopo[i].getElevation(),
-								roverObs.getGpsByIdx(i).getSignalStrength(goGPS.getFreq()));
+								roverObs.getGpsByID(id).getSignalStrength(goGPS.getFreq()));
 				Q.set(k, k, weight);
 
 				// Increment available satellites counter
@@ -437,10 +444,13 @@ public class ReceiverPosition extends Coordinates{
 
 		// Counter for available satellites
 		int k = 0;
+		
+		// Pivot satellite index
+		int pivotId = roverObs.getGpsSatID(pivot);
 
 		// Store rover-pivot and master-pivot observed pseudoranges
-		double roverPivotObs = roverObs.getGpsByIdx(pivot).getPseudorange(goGPS.getFreq());
-		double masterPivotObs = masterOrdered[pivot].getPseudorange(goGPS.getFreq());
+		double roverPivotObs = roverObs.getGpsByID(pivotId).getPseudorange(goGPS.getFreq());
+		double masterPivotObs = masterObs.getGpsByID(pivotId).getPseudorange(goGPS.getFreq());
 
 		// Rover-pivot approximate pseudoranges
 		SimpleMatrix diffRoverPivot = diffRoverSat[pivot];
@@ -463,16 +473,20 @@ public class ReceiverPosition extends Coordinates{
 
 		// Compute rover-pivot and master-pivot weights
 		double roverPivotWeight = computeWeight(roverTopo[pivot].getElevation(),
-				roverObs.getGpsByIdx(pivot).getSignalStrength(goGPS.getFreq()));
+				roverObs.getGpsByID(pivotId).getSignalStrength(goGPS.getFreq()));
 		double masterPivotWeight = computeWeight(masterTopo[pivot].getElevation(),
-				masterOrdered[pivot].getSignalStrength(goGPS.getFreq()));
+				masterObs.getGpsByID(pivotId).getSignalStrength(goGPS.getFreq()));
 		Q.set(roverPivotWeight + masterPivotWeight);
+		
+		// Satellite ID
+		int id = 0;
 
 		// Set up the least squares matrices
 		for (int i = 0; i < nObs; i++) {
+			
+			id = roverObs.getGpsSatID(i);
 
-			if (pos[i] !=null && satAvail.contains(pos[i].getSatID())
-					&& i != pivot) {
+			if (pos[i] !=null && satAvail.contains(id) && i != pivot) {
 
 				// Fill in one row in the design matrix
 				A.set(k, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]
@@ -489,7 +503,7 @@ public class ReceiverPosition extends Coordinates{
 						- (roverPivotAppRange - masterPivotAppRange));
 
 				// Add the differenced observed pseudorange value to y0
-				y0.set(k, 0, (roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()) - masterOrdered[i].getPseudorange(goGPS.getFreq()))
+				y0.set(k, 0, (roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()) - masterObs.getGpsByID(id).getPseudorange(goGPS.getFreq()))
 						- (roverPivotObs - masterPivotObs));
 
 				// Fill in troposphere and ionosphere double differenced
@@ -501,9 +515,9 @@ public class ReceiverPosition extends Coordinates{
 
 				// Fill in the cofactor matrix
 				double roverSatWeight = computeWeight(roverTopo[i].getElevation(),
-						roverObs.getGpsByIdx(i).getSignalStrength(goGPS.getFreq()));
+						roverObs.getGpsByID(id).getSignalStrength(goGPS.getFreq()));
 				double masterSatWeight = computeWeight(masterTopo[i].getElevation(),
-						masterOrdered[i].getSignalStrength(goGPS.getFreq()));
+						masterObs.getGpsByID(id).getSignalStrength(goGPS.getFreq()));
 				Q.set(k, k, Q.get(k, k) + roverSatWeight + masterSatWeight);
 
 				// Increment available satellites counter
@@ -816,12 +830,18 @@ public class ReceiverPosition extends Coordinates{
 
 		// Allocate array of topocentric coordinates
 		roverTopo = new TopocentricCoordinates[nObs];
+		
+		// Satellite ID
+		int id = 0;
 
 		// Compute topocentric coordinates and
 		// select satellites above the cutoff level
 		for (int i = 0; i < nObs; i++) {
+			
+			id = roverObs.getGpsSatID(i);
+			
 			// Compute GPS satellite positions
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
 			if(pos[i]!=null){
 
@@ -844,13 +864,13 @@ public class ReceiverPosition extends Coordinates{
 				// Check if satellite elevation is higher than cutoff
 				if (roverTopo[i].getElevation() > cutoff) {
 
-					satAvail.add(pos[i].getSatID());
-					//System.out.println("Available sat "+pos[i].getSatID());
+					satAvail.add(id);
+					//System.out.println("Available sat "+id);
 
 					// Check if also phase is available
-					if (!Double.isNaN(roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()))) {
-						//System.out.println("Available sat phase "+pos[i].getSatID());
-						satAvailPhase.add(pos[i].getSatID());
+					if (!Double.isNaN(roverObs.getGpsByID(id).getPhase(goGPS.getFreq()))) {
+						//System.out.println("Available sat phase "+id);
+						satAvailPhase.add(id);
 					}
 				}else{
 					System.out.println("Not useful sat "+roverObs.getGpsSatID(i)+" for too low elevation "+roverTopo[i].getElevation()+" < "+cutoff);
@@ -909,16 +929,18 @@ public class ReceiverPosition extends Coordinates{
 		// Variables for code pivot and phase pivot
 		int pivotCode = -1;
 		int pivotPhase = -1;
-
-		// Array to store re-ordered master observations
-		masterOrdered = new ObservationSet[nObs];
+		
+		// Satellite ID
+		int id = 0;
 
 		// Compute topocentric coordinates and
 		// select satellites above the cutoff level
 		for (int i = 0; i < nObs; i++) {
+			
+			id = roverObs.getGpsSatID(i);
 
 			// Compute GPS satellite positions
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, roverObs.getGpsSatID(i), roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, id, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
 			if(pos[i]!=null){
 
@@ -963,22 +985,17 @@ public class ReceiverPosition extends Coordinates{
 				if (masterObs.containsGpsSatID(roverObs.getGpsSatID(i)) // gpsSat.get( // masterObs.gpsSat.contains(roverObs.getGpsSatID(i)
 						&& roverTopo[i].getElevation() > cutoff) {
 
-					// Store master observations according to the order of rover
-					// observations
-					masterOrdered[i] = new ObservationSet();
-					masterOrdered[i] = masterObs.getGpsByID(roverObs.getGpsSatID(i)); //masterObs.getGps(masterObs.gpsSat.indexOf(roverObs.gpsSat.get(i)));
-
 					// Find code pivot satellite (with highest elevation)
 					if (roverTopo[i].getElevation() > maxElevCode) {
 						pivotCode = i;
 						maxElevCode = roverTopo[i].getElevation();
 					}
 
-					satAvail.add(pos[i].getSatID());
+					satAvail.add(id);
 
 					// Check if also phase is available for both rover and master
-					if (!Double.isNaN(roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq())) &&
-							!Double.isNaN(masterOrdered[i].getPhase(goGPS.getFreq()))) {
+					if (!Double.isNaN(roverObs.getGpsByID(id).getPhase(goGPS.getFreq())) &&
+							!Double.isNaN(masterObs.getGpsByID(id).getPhase(goGPS.getFreq()))) {
 
 						// Find code pivot satellite (with highest elevation)
 						if (roverTopo[i].getElevation() > maxElevPhase) {
@@ -986,7 +1003,7 @@ public class ReceiverPosition extends Coordinates{
 							maxElevPhase = roverTopo[i].getElevation();
 						}
 
-						satAvailPhase.add(pos[i].getSatID());
+						satAvailPhase.add(id);
 					}
 				}
 			}
@@ -1030,14 +1047,17 @@ public class ReceiverPosition extends Coordinates{
 		} else {
 			lambda = Constants.LAMBDA_2;
 		}
+		
+		// Pivot satellite ID
+		int pivotId = roverObs.getGpsSatID(pivot);
 
 		// Store rover-pivot and master-pivot observed pseudoranges
-		double roverPivotCodeObs = roverObs.getGpsByIdx(pivot).getPseudorange(goGPS.getFreq());
-		double masterPivotCodeObs = masterOrdered[pivot].getPseudorange(goGPS.getFreq());
+		double roverPivotCodeObs = roverObs.getGpsByID(pivotId).getPseudorange(goGPS.getFreq());
+		double masterPivotCodeObs = masterObs.getGpsByID(pivotId).getPseudorange(goGPS.getFreq());
 
 		// Compute and store rover-pivot and master-pivot observed phase ranges
-		double roverPivotPhaseObs = lambda * roverObs.getGpsByIdx(pivot).getPhase(goGPS.getFreq());
-		double masterPivotPhaseObs = lambda	* masterOrdered[pivot].getPhase(goGPS.getFreq());
+		double roverPivotPhaseObs = lambda * roverObs.getGpsByID(pivotId).getPhase(goGPS.getFreq());
+		double masterPivotPhaseObs = lambda	* masterObs.getGpsByID(pivotId).getPhase(goGPS.getFreq());
 
 		// Rover-pivot approximate pseudoranges
 		SimpleMatrix diffRoverPivot = diffRoverSat[pivot];
@@ -1058,9 +1078,9 @@ public class ReceiverPosition extends Coordinates{
 		double roverElevation = roverTopo[pivot].getElevation();
 		double masterElevation = masterTopo[pivot].getElevation();
 		double roverPivotWeight = computeWeight(roverElevation,
-				roverObs.getGpsByIdx(pivot).getSignalStrength(goGPS.getFreq()));
+				roverObs.getGpsByID(pivotId).getSignalStrength(goGPS.getFreq()));
 		double masterPivotWeight = computeWeight(masterElevation,
-				masterOrdered[pivot].getSignalStrength(goGPS.getFreq()));
+				masterObs.getGpsByID(pivotId).getSignalStrength(goGPS.getFreq()));
 
 		// Start filling in the observation error covariance matrix
 		Cnn.zero();
@@ -1070,18 +1090,23 @@ public class ReceiverPosition extends Coordinates{
 			for (int j = 0; j < nSatAvail + nSatAvailPhase; j++) {
 
 				if (i < nSatAvail && j < nSatAvail)
-					Cnn.set(i, j, goGPS.getStDevCode(roverObs.getGpsByIdx(pivot), goGPS.getFreq())
-							* goGPS.getStDevCode(masterOrdered[pivot], goGPS.getFreq())
+					Cnn.set(i, j, goGPS.getStDevCode(roverObs.getGpsByID(pivotId), goGPS.getFreq())
+							* goGPS.getStDevCode(masterObs.getGpsByID(pivotId), goGPS.getFreq())
 							* (roverPivotWeight + masterPivotWeight));
 				else if (i >= nSatAvail && j >= nSatAvail)
 					Cnn.set(i, j, Math.pow(goGPS.getStDevPhase(), 2)
 							* (roverPivotWeight + masterPivotWeight));
 			}
 		}
+		
+		// Satellite ID
+		int id = 0;
 
 		for (int i = 0; i < nObs; i++) {
+			
+			id = roverObs.getGpsSatID(i);
 
-			if (pos[i]!=null && satAvail.contains(pos[i].getSatID())
+			if (pos[i]!=null && satAvail.contains(id)
 					&& i != pivot) {
 
 				// Compute parameters obtained from linearization of observation equations
@@ -1097,12 +1122,12 @@ public class ReceiverPosition extends Coordinates{
 						- (roverPivotAppRange - masterPivotAppRange);
 
 				// Observed code double difference
-				double ddcObs = (roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()) - masterOrdered[i].getPseudorange(goGPS.getFreq()))
+				double ddcObs = (roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()) - masterObs.getGpsByID(id).getPseudorange(goGPS.getFreq()))
 						- (roverPivotCodeObs - masterPivotCodeObs);
 
 				// Observed phase double difference
-				double ddpObs = (lambda * roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) - lambda
-						* masterOrdered[i].getPhase(goGPS.getFreq()))
+				double ddpObs = (lambda * roverObs.getGpsByID(id).getPhase(goGPS.getFreq()) - lambda
+						* masterObs.getGpsByID(id).getPhase(goGPS.getFreq()))
 						- (roverPivotPhaseObs - masterPivotPhaseObs);
 
 				// Compute troposphere and ionosphere residuals
@@ -1134,21 +1159,21 @@ public class ReceiverPosition extends Coordinates{
 
 				// Fill in the observation error covariance matrix (for code)
 				double roverSatWeight = computeWeight(roverElevation,
-						roverObs.getGpsByIdx(i).getSignalStrength(goGPS.getFreq()));
+						roverObs.getGpsByID(id).getSignalStrength(goGPS.getFreq()));
 				double masterSatWeight = computeWeight(masterElevation,
-						masterOrdered[i].getSignalStrength(goGPS.getFreq()));
+						masterObs.getGpsByID(id).getSignalStrength(goGPS.getFreq()));
 				double CnnBase = Cnn.get(k, k);
-				Cnn.set(k, k, CnnBase + goGPS.getStDevCode(roverObs.getGpsByIdx(i), goGPS.getFreq())
-						* goGPS.getStDevCode(masterOrdered[i], goGPS.getFreq())
+				Cnn.set(k, k, CnnBase + goGPS.getStDevCode(roverObs.getGpsByID(id), goGPS.getFreq())
+						* goGPS.getStDevCode(masterObs.getGpsByID(id), goGPS.getFreq())
 						* (roverSatWeight + masterSatWeight));
 
-				if (satAvailPhase.contains(pos[i].getSatID())) {
+				if (satAvailPhase.contains(id)) {
 
 					// Fill in one row in the design matrix (for phase)
 					H.set(nObsAvail + p, 0, alphaX);
 					H.set(nObsAvail + p, i1 + 1, alphaY);
 					H.set(nObsAvail + p, i2 + 1, alphaZ);
-					H.set(nObsAvail + p, i3 + pos[i].getSatID(), -lambda);
+					H.set(nObsAvail + p, i3 + id, -lambda);
 
 					// Fill in one element of the observation vector (for phase)
 					y0.set(nObsAvail + p, 0, ddpObs - appRangePhase + alphaX
@@ -1314,18 +1339,22 @@ public class ReceiverPosition extends Coordinates{
 
 				slippedSatellites.add(satID);
 
-				//					if (satID != pos[pivot].getSatID()) {
-				if (dopplerCycleSlipRover)
-					System.out.println("[ROVER] Cycle slip on satellite "+satID+" (range diff = "+Math.abs(roverObs.getGpsByID(satID).getPhase(goGPS.getFreq())
-							- this.getRoverDopplerPredictedPhase(satID))+")");
-				if (dopplerCycleSlipMaster)
-					System.out.println("[MASTER] Cycle slip on satellite "+satID+" (range diff = "+Math.abs(masterObs.getGpsByID(satID).getPhase(goGPS.getFreq())
-							- this.getMasterDopplerPredictedPhase(satID))+")");
-				//					} else {
-				//						slippedPivot = true;
-				//						System.out.println("Cycle slip on pivot satellite "+satID+" (range diff = "+Math.abs(roverObs.getGpsByID(satID).getPhase(goGPS.getFreq())
-				//								- this.getDopplerPredictedPhase(satID))+")");
-				//					}
+//				if (satID != pos[pivot].getSatID()) {
+					if (dopplerCycleSlipRover)
+						System.out.println("[ROVER] Cycle slip on satellite "+satID+" (range diff = "+Math.abs(roverObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+								- this.getRoverDopplerPredictedPhase(satID))+")");
+					if (dopplerCycleSlipMaster)
+						System.out.println("[MASTER] Cycle slip on satellite "+satID+" (range diff = "+Math.abs(masterObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+								- this.getMasterDopplerPredictedPhase(satID))+")");
+//				} else {
+//					boolean slippedPivot = true;
+//					if (dopplerCycleSlipRover)
+//						System.out.println("[ROVER] Cycle slip on pivot satellite "+satID+" (range diff = "+Math.abs(roverObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+//								- this.getRoverDopplerPredictedPhase(satID))+")");
+//					if (dopplerCycleSlipMaster)
+//						System.out.println("[MASTER] Cycle slip on pivot satellite "+satID+" (range diff = "+Math.abs(masterObs.getGpsByID(satID).getPhase(goGPS.getFreq())
+//								- this.getMasterDopplerPredictedPhase(satID))+")");
+//				}
 			}
 		}
 
@@ -1385,14 +1414,24 @@ public class ReceiverPosition extends Coordinates{
 
 		// Number of unknown parameters
 		int nUnknowns = 3 + satAmb.size();
+		
+		// Pivot satellite ID
+		int pivotId = roverObs.getGpsSatID(pivotIndex);
 
 		// Rover-pivot and master-pivot observed pseudorange
-		double roverPivotCodeObs = roverObs.getGpsByIdx(pivotIndex).getPseudorange(goGPS.getFreq());
-		double masterPivotCodeObs = masterOrdered[pivotIndex].getPseudorange(goGPS.getFreq());
+		double roverPivotCodeObs = roverObs.getGpsByID(pivotId).getPseudorange(goGPS.getFreq());
+		double masterPivotCodeObs = masterObs.getGpsByID(pivotId).getPseudorange(goGPS.getFreq());
 
 		// Rover-pivot and master-pivot observed phase
-		double roverPivotPhaseObs = roverObs.getGpsByIdx(pivotIndex).getPhase(goGPS.getFreq());
-		double masterPivotPhaseObs = masterOrdered[pivotIndex].getPhase(goGPS.getFreq());
+		double roverPivotPhaseObs = roverObs.getGpsByID(pivotId).getPhase(goGPS.getFreq());
+		double masterPivotPhaseObs = masterObs.getGpsByID(pivotId).getPhase(goGPS.getFreq());
+		
+		// Rover-pivot approximate pseudoranges
+		SimpleMatrix diffRoverPivot = diffRoverSat[pivotIndex];
+		double roverPivotAppRange = roverSatAppRange[pivotIndex];
+
+		// Master-pivot approximate pseudoranges
+		double masterPivotAppRange = masterSatAppRange[pivotIndex];
 
 		// Estimated ambiguity combinations (double differences)
 		double[] estimatedAmbiguityComb;
@@ -1401,8 +1440,93 @@ public class ReceiverPosition extends Coordinates{
 		// Covariance of estimated ambiguity combinations
 		double[] estimatedAmbiguityCombCovariance;
 		estimatedAmbiguityCombCovariance = new double[satAmb.size()];
+		
+		// Variables to store rover-satellite and master-satellite observed code
+		double roverSatCodeObs;
+		double masterSatCodeObs;
 
-		if (nObsAvail + nObsAvailPhase > nUnknowns) {
+		// Variables to store rover-satellite and master-satellite observed phase
+		double roverSatPhaseObs;
+		double masterSatPhaseObs;
+		
+		// Variables to store rover-satellite and master-satellite observed
+        // code
+        double roverSatCodeAppRange;
+        double masterSatCodeAppRange;
+
+		// Variables to store code and phase double differences
+		double codeDoubleDiffObserv;
+		double codeDoubleDiffApprox;
+		double phaseDoubleDiffObserv;
+		
+		// Satellite ID
+		int id = 0;
+
+		if (goGPS.getAmbiguityStrategy() == GoGPS.AMBIGUITY_OBSERV) {
+
+			for (int i = 0; i < nObs; i++) {
+				
+				id = roverObs.getGpsSatID(i);
+
+				if (pos[i]!=null && satAmb.contains(id) && id != pivotId) {
+
+					// Rover-satellite and master-satellite observed code
+					roverSatCodeObs = roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq());
+					masterSatCodeObs = masterObs.getGpsByID(id).getPseudorange(goGPS.getFreq());
+
+					// Rover-satellite and master-satellite observed phase
+					roverSatPhaseObs = roverObs.getGpsByID(id).getPhase(goGPS.getFreq());
+					masterSatPhaseObs = masterObs.getGpsByID(id).getPhase(goGPS.getFreq());
+
+					// Observed code double difference
+					codeDoubleDiffObserv = (roverSatCodeObs - masterSatCodeObs)
+					- (roverPivotCodeObs - masterPivotCodeObs);
+
+					// Observed phase double difference
+					phaseDoubleDiffObserv = (roverSatPhaseObs - masterSatPhaseObs)
+					- (roverPivotPhaseObs - masterPivotPhaseObs);
+
+					// Store estimated ambiguity combinations and their covariance
+					estimatedAmbiguityComb[satAmb.indexOf(id)] = codeDoubleDiffObserv / lambda
+					- phaseDoubleDiffObserv;
+					estimatedAmbiguityCombCovariance[satAmb.indexOf(id)] = 4
+					* goGPS.getStDevCode(roverObs.getGpsByID(id), goGPS.getFreq())
+					* goGPS.getStDevCode(masterObs.getGpsByID(id), goGPS.getFreq()) / Math.pow(lambda, 2);
+				}
+			}
+		} else if(goGPS.getAmbiguityStrategy() == GoGPS.AMBIGUITY_APPROX | (nObsAvail + nObsAvailPhase <= nUnknowns)) {
+
+			for (int i = 0; i < nObs; i++) {
+				
+				id = roverObs.getGpsSatID(i);
+
+				if (pos[i]!=null && satAmb.contains(id) && id != pivotId) {
+
+					// Rover-satellite and master-satellite approximate pseudorange
+	                roverSatCodeAppRange = roverSatAppRange[i];
+	                masterSatCodeAppRange = masterSatAppRange[i];
+	                
+	                // Rover-satellite and master-satellite observed phase
+					roverSatPhaseObs = roverObs.getGpsByID(id).getPhase(goGPS.getFreq());
+					masterSatPhaseObs = masterObs.getGpsByID(id).getPhase(goGPS.getFreq());
+
+	                // Estimated code pseudorange double differences
+	                codeDoubleDiffApprox = (roverSatCodeAppRange - masterSatCodeAppRange)
+	                                - (roverPivotAppRange - masterPivotAppRange);
+
+	                // Observed phase double differences
+	                phaseDoubleDiffObserv = (roverSatPhaseObs - masterSatPhaseObs)
+	                                - (roverPivotPhaseObs - masterPivotPhaseObs);
+
+					// Store estimated ambiguity combinations and their covariance
+					estimatedAmbiguityComb[satAmb.indexOf(id)] = codeDoubleDiffApprox / lambda
+					- phaseDoubleDiffObserv;
+					estimatedAmbiguityCombCovariance[satAmb.indexOf(id)] = 4
+					* goGPS.getStDevCode(roverObs.getGpsByID(id), goGPS.getFreq())
+					* goGPS.getStDevCode(masterObs.getGpsByID(id), goGPS.getFreq()) / Math.pow(lambda, 2);
+				}
+			}
+		} else if (goGPS.getAmbiguityStrategy() == GoGPS.AMBIGUITY_LS) {
 
 			// Define least squares matrices
 			SimpleMatrix A;
@@ -1450,13 +1574,6 @@ public class ReceiverPosition extends Coordinates{
 			int k = 0;
 			int p = 0;
 
-			// Rover-pivot approximate pseudoranges
-			SimpleMatrix diffRoverPivot = diffRoverSat[pivotIndex];
-			double roverPivotAppRange = roverSatAppRange[pivotIndex];
-
-			// Master-pivot approximate pseudoranges
-			double masterPivotAppRange = masterSatAppRange[pivotIndex];
-
 			// Rover-pivot and master-pivot troposphere correction
 			double roverPivotTropoCorr = roverSatTropoCorr[pivotIndex];
 			double masterPivotTropoCorr = masterSatTropoCorr[pivotIndex];;
@@ -1467,19 +1584,21 @@ public class ReceiverPosition extends Coordinates{
 
 			// Compute rover-pivot and master-pivot weights
 			double roverPivotWeight = computeWeight(roverTopo[pivotIndex].getElevation(),
-					roverObs.getGpsByIdx(pivotIndex).getSignalStrength(goGPS.getFreq()));
+					roverObs.getGpsByID(pivotId).getSignalStrength(goGPS.getFreq()));
 			double masterPivotWeight = computeWeight(masterTopo[pivotIndex].getElevation(),
-					masterOrdered[pivotIndex].getSignalStrength(goGPS.getFreq()));
-			Qcode.set(goGPS.getStDevCode(roverObs.getGpsByIdx(pivotIndex), goGPS.getFreq())
-					* goGPS.getStDevCode(masterOrdered[pivotIndex], goGPS.getFreq())
+					masterObs.getGpsByID(pivotId).getSignalStrength(goGPS.getFreq()));
+			Qcode.set(goGPS.getStDevCode(roverObs.getGpsByID(pivotId), goGPS.getFreq())
+					* goGPS.getStDevCode(masterObs.getGpsByID(pivotId), goGPS.getFreq())
 					* (roverPivotWeight + masterPivotWeight));
 			Qphase.set(Math.pow(goGPS.getStDevPhase(), 2) * (roverPivotWeight + masterPivotWeight));
 
 			// Set up the least squares matrices...
 			// ... for code ...
 			for (int i = 0; i < nObs; i++) {
+				
+				id = roverObs.getGpsSatID(i);
 
-				if (pos[i] !=null && satAvail.contains(pos[i].getSatID())
+				if (pos[i] !=null && satAvail.contains(id)
 						&& i != pivotIndex) {
 
 					// Fill in one row in the design matrix
@@ -1494,7 +1613,7 @@ public class ReceiverPosition extends Coordinates{
 							- (roverPivotAppRange - masterPivotAppRange));
 
 					// Add the differenced observed pseudorange value to y0
-					y0.set(k, 0, (roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq()) - masterOrdered[i].getPseudorange(goGPS.getFreq()))
+					y0.set(k, 0, (roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()) - masterObs.getGpsByID(id).getPseudorange(goGPS.getFreq()))
 							- (roverPivotCodeObs - masterPivotCodeObs));
 
 					// Fill in troposphere and ionosphere double differenced
@@ -1506,11 +1625,11 @@ public class ReceiverPosition extends Coordinates{
 
 					// Fill in the cofactor matrix
 					double roverSatWeight = computeWeight(roverTopo[i].getElevation(),
-							roverObs.getGpsByIdx(i).getSignalStrength(goGPS.getFreq()));
+							roverObs.getGpsByID(id).getSignalStrength(goGPS.getFreq()));
 					double masterSatWeight = computeWeight(masterTopo[i].getElevation(),
-							masterOrdered[i].getSignalStrength(goGPS.getFreq()));
-					Qcode.set(k, k, Qcode.get(k, k) + goGPS.getStDevCode(roverObs.getGpsByIdx(i), goGPS.getFreq())
-							* goGPS.getStDevCode(masterOrdered[i], goGPS.getFreq())
+							masterObs.getGpsByID(id).getSignalStrength(goGPS.getFreq()));
+					Qcode.set(k, k, Qcode.get(k, k) + goGPS.getStDevCode(roverObs.getGpsByID(id), goGPS.getFreq())
+							* goGPS.getStDevCode(masterObs.getGpsByID(id), goGPS.getFreq())
 							* (roverSatWeight + masterSatWeight));
 
 					// Increment available satellites counter
@@ -1520,8 +1639,10 @@ public class ReceiverPosition extends Coordinates{
 
 			// ... and phase
 			for (int i = 0; i < nObs; i++) {
+				
+				id = roverObs.getGpsSatID(i);
 
-				if (pos[i] !=null && satAvailPhase.contains(pos[i].getSatID())
+				if (pos[i] !=null && satAvailPhase.contains(id)
 						&& i != pivotIndex) {
 
 					// Fill in one row in the design matrix
@@ -1531,16 +1652,16 @@ public class ReceiverPosition extends Coordinates{
 
 					A.set(k, 2, diffRoverSat[i].get(2) / roverSatAppRange[i] - diffRoverPivot.get(2) / roverPivotAppRange); /* Z */
 
-					if (satAmb.contains(pos[i].getSatID())) {
-						A.set(k, 3 + satAmb.indexOf(pos[i].getSatID()), -lambda); /* N */
+					if (satAmb.contains(id)) {
+						A.set(k, 3 + satAmb.indexOf(id), -lambda); /* N */
 
 						// Add the differenced observed pseudorange value to y0
-						y0.set(k, 0, lambda * ((roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) - masterOrdered[i].getPhase(goGPS.getFreq()))
+						y0.set(k, 0, lambda * ((roverObs.getGpsByID(id).getPhase(goGPS.getFreq()) - masterObs.getGpsByID(id).getPhase(goGPS.getFreq()))
 								- (roverPivotPhaseObs - masterPivotPhaseObs)));
 					} else {
 						// Add the differenced observed pseudorange value + known N to y0
-						y0.set(k, 0, lambda * (((roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq()) - masterOrdered[i].getPhase(goGPS.getFreq()))
-								- (roverPivotPhaseObs - masterPivotPhaseObs)) + KFprediction.get(i3 + pos[i].getSatID())));
+						y0.set(k, 0, lambda * (((roverObs.getGpsByID(id).getPhase(goGPS.getFreq()) - masterObs.getGpsByID(id).getPhase(goGPS.getFreq()))
+								- (roverPivotPhaseObs - masterPivotPhaseObs)) + KFprediction.get(i3 + id)));
 					}
 
 					// Add the differenced approximate pseudorange value to b
@@ -1555,34 +1676,34 @@ public class ReceiverPosition extends Coordinates{
 
 					// Fill in the cofactor matrix
 					double roverSatWeight = computeWeight(
-							roverTopo[i].getElevation(), roverObs.getGpsByIdx(i)
+							roverTopo[i].getElevation(), roverObs.getGpsByID(id)
 							.getSignalStrength(goGPS.getFreq()));
 					double masterSatWeight = computeWeight(
 							masterTopo[i].getElevation(),
-							masterOrdered[i].getSignalStrength(goGPS.getFreq()));
+							masterObs.getGpsByID(id).getSignalStrength(goGPS.getFreq()));
 					Qphase.set(p, p, Qphase.get(p, p)
-							+ (Math.pow(goGPS.getStDevPhase(), 2) + Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[i].getSatID()))
+							+ (Math.pow(goGPS.getStDevPhase(), 2) + Math.pow(lambda, 2) * Cee.get(i3 + id, i3 + id))
 							* (roverPivotWeight + masterPivotWeight)
-							+ (Math.pow(goGPS.getStDevPhase(), 2) + Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[i].getSatID()))
+							+ (Math.pow(goGPS.getStDevPhase(), 2) + Math.pow(lambda, 2) * Cee.get(i3 + id, i3 + id))
 							* (roverSatWeight + masterSatWeight));
 					int r = 1;
-					for (int j = i+1; j < nObs; j++) {
-						if (pos[j] !=null && satAvailPhase.contains(pos[j].getSatID()) && j != pivotIndex) {
+					for (int m = i+1; m < nObs; m++) {
+						if (pos[m] !=null && satAvailPhase.contains(pos[m].getSatID()) && m != pivotIndex) {
 							Qphase.set(p, p+r, 0);
 							Qphase.set(p+r, p, 0);
 							r++;
 						}
 					}
-//					int r = 1;
-//					for (int j = i+1; j < nObs; j++) {
-//						if (pos[j] !=null && satAvailPhase.contains(pos[j].getSatID()) && j != pivotIndex) {
-//							Qphase.set(p, p+r, Qphase.get(p, p+r)
-//									+ (Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[j].getSatID()))
-//									* (roverPivotWeight + masterPivotWeight));
-//							Qphase.set(p+r, p, Qphase.get(p, p+r));
-//							r++;
-//						}
-//					}
+					//					int r = 1;
+					//					for (int j = i+1; j < nObs; j++) {
+					//						if (pos[j] !=null && satAvailPhase.contains(pos[j].getSatID()) && j != pivotIndex) {
+					//							Qphase.set(p, p+r, Qphase.get(p, p+r)
+					//									+ (Math.pow(lambda, 2) * Cee.get(i3 + pos[i].getSatID(), i3 + pos[j].getSatID()))
+					//									* (roverPivotWeight + masterPivotWeight));
+					//							Qphase.set(p+r, p, Qphase.get(p, p+r));
+					//							r++;
+					//						}
+					//					}
 
 					// Increment available satellite counters
 					k++;
@@ -1613,55 +1734,9 @@ public class ReceiverPosition extends Coordinates{
 			.scale(varianceEstim);
 
 			// Store estimated ambiguity combinations and their covariance
-			for (int j = 0; j < satAmb.size(); j++) {
-				estimatedAmbiguityComb[j] = x.get(3 + j);
-				estimatedAmbiguityCombCovariance[j] = covariance.get(3 + j, 3 + j);
-			}
-
-		} else { // if number of observations <= number of unknowns
-
-			// Variables to store rover-satellite and master-satellite observed code
-			double roverSatCodeObs;
-			double masterSatCodeObs;
-
-			// Variables to store rover-satellite and master-satellite observed phase
-			double roverSatPhaseObs;
-			double masterSatPhaseObs;
-
-			// Variables to store code and phase double differences
-			double codeDoubleDiffObserv;
-			double phaseDoubleDiffObserv;
-
-			int j = 0;
-
-			for (int i = 0; i < nObs; i++) {
-
-				if (pos[i]!=null && satAmb.contains(pos[i].getSatID()) && pos[i].getSatID() != pos[pivotIndex].getSatID()) {
-
-					// Rover-satellite and master-satellite observed code
-					roverSatCodeObs = roverObs.getGpsByIdx(i).getPseudorange(goGPS.getFreq());
-					masterSatCodeObs = masterOrdered[i].getPseudorange(goGPS.getFreq());
-
-					// Rover-satellite and master-satellite observed phase
-					roverSatPhaseObs = roverObs.getGpsByIdx(i).getPhase(goGPS.getFreq());
-					masterSatPhaseObs = masterOrdered[i].getPhase(goGPS.getFreq());
-
-					// Observed code double difference
-					codeDoubleDiffObserv = (roverSatCodeObs - masterSatCodeObs)
-					- (roverPivotCodeObs - masterPivotCodeObs);
-
-					// Observed phase double difference
-					phaseDoubleDiffObserv = (roverSatPhaseObs - masterSatPhaseObs)
-					- (roverPivotPhaseObs - masterPivotPhaseObs);
-
-					// Store estimated ambiguity combinations and their covariance
-					estimatedAmbiguityComb[j] = codeDoubleDiffObserv / lambda
-					- phaseDoubleDiffObserv;
-					estimatedAmbiguityCombCovariance[j] = 4
-					* goGPS.getStDevCode(roverObs.getGpsByIdx(i), goGPS.getFreq())
-					* goGPS.getStDevCode(masterOrdered[i], goGPS.getFreq()) / Math.pow(lambda, 2);
-					j++;
-				}
+			for (int m = 0; m < satAmb.size(); m++) {
+				estimatedAmbiguityComb[m] = x.get(3 + m);
+				estimatedAmbiguityCombCovariance[m] = covariance.get(3 + m, 3 + m);
 			}
 		}
 
