@@ -117,6 +117,18 @@ public class GoGPS implements Runnable{
 
 	/** The cycle slip threshold. */
 	private double cycleSlipThreshold = 3;
+	
+	/** The Constant AMBIGUITY_OBSERV. */
+	public final static int AMBIGUITY_OBSERV = 0;
+
+	/** The Constant AMBIGUITY_APPROX. */
+	public final static int AMBIGUITY_APPROX = 1;
+
+	/** The Constant AMBIGUITY_LS. */
+	public final static int AMBIGUITY_LS = 2;
+
+	/** The ambiguity strategy. */
+	private int ambiguityStrategy = AMBIGUITY_APPROX;
 
 	/** The Elevation cutoff. */
 	private double cutoff = 15; // Elevation cutoff
@@ -768,6 +780,24 @@ public class GoGPS implements Runnable{
 	 */
 	public void setDynamicModel(int dynamicModel) {
 		this.dynamicModel = dynamicModel;
+	}
+	
+	/**
+	 * Gets the ambiguity strategy.
+	 *
+	 * @return the ambiguityStrategy
+	 */
+	public int getAmbiguityStrategy() {
+		return ambiguityStrategy;
+	}
+
+	/**
+	 * Sets the ambiguity strategy.
+	 *
+	 * @param ambiguityStrategy the ambiguityStrategy to set
+	 */
+	public void setAmbiguityStrategy(int ambiguityStrategy) {
+		this.ambiguityStrategy = ambiguityStrategy;
 	}
 
 	/**
