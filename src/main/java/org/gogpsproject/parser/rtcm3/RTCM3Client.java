@@ -265,11 +265,11 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			in = sck.getInputStream();
 			// The data request containing the logon and password are send
 			out.print("GET /" + settings.getSource() + " HTTP/1.1\r\n");
-			out.print("User-Agent: NTRIP goGPS-project-java\r\n");
 			out.print("Host: "+settings.getHost()+"\r\n");
-			out.print("Connection: close\r\n");
-			out.print("Authorization: Basic " + settings.getAuthbase64()+"\r\n");
-
+			//out.print("Ntrip-Version: Ntrip/2.0\r\n");
+			out.print("Accept: rtk/rtcm, dgps/rtcm\r\n");
+			out.print("User-Agent: NTRIP goGPSprojectJava\r\n");
+			String ntripGAA = null;
 			if(approxPosition!=null){
 				approxPosition.computeGeodetic();
 				String hhmmss= (new SimpleDateFormat("HHmmss")).format(new Date());
@@ -286,20 +286,23 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				double lat_min = (lat - lat_deg) * 60;
 				double lat_nmea = lat_deg * 100 + lat_min;
 				String latn = (new DecimalFormat("0000.000")).format(lat_nmea);
-				String ntripGAA = "$GPGGA,"+hhmmss+","+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",4,10,1,"+(h<0?0:h)+",M,1,M,3,0";
+				ntripGAA = "$GPGGA,"+hhmmss+","+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",4,10,1,"+(h<0?0:h)+",M,1,M,3,0";
 				//String ntripGAA = "$GPGGA,"+hhmmss+".00,"+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",1,10,1.00,"+(h<0?0:h)+",M,37.3,M,,";
-				//ntripGAA = "$GPGGA,214833.00,3435.40000000,N,13530.00000000,E,1,10,1.00,-17.3,M,37.3,M,,";
+				//ntripGAA = "$GPGGA,214833.00,3500.40000000,N,13900.10000000,E,1,10,1,-17.3,M,,M,,";
 
 				ntripGAA = /*"Ntrip-GAA: "+*/ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
 				System.out.println(ntripGAA);
-				out.print(ntripGAA+"\r\n");
+				//out.print(ntripGAA+"\r\n");
 			}
-
+			out.print("Connection: close\r\n");
+			out.print("Authorization: Basic " + settings.getAuthbase64()+"\r\n");
+			
 			// out.println("User-Agent: NTRIP goGps");
 			// out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
 			// out.println("User-Agent: NTRIP GoGps");
 			// out.println("Accept: */*\r\nConnection: close");
 			out.print("\r\n");
+			if(ntripGAA!=null)out.print(ntripGAA+"\r\n");
 			out.flush();
 //			System.out.println(" \n %%%%%%%%%%%%%%%%%%%%% \n password >>> "
 //					+ settings.getAuthbase64());
@@ -319,11 +322,14 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			int[] correctHeader = { 73, 67, 89, 32, 50, 48, 48, 32, 79, 75, 13 };
 			int hindex = 0;
 			// when go is changed to false the loop is stopped
+			
 			while (go && state == 0) {
 				int c = in.read();
 				System.out.print((char)c);
-				if (c < 0)
+				if (c < 0){
 					break;
+				}
+				//	break;
 				// tester.write(c);
 				state = transition(state, c);
 				if (hindex > 10) {
@@ -345,9 +351,12 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 					System.out.print((char)header[i]);
 				int c = in.read();
 				while(c!=-1){
-					System.out.print((char)c);
+					System.out.println(((int)c)+" "+(char)c);
+					
 					c = in.read();
 				}
+				System.out.println(((int)c)+" "+(char)c);
+				
 				System.out.println();
 				System.out.println(settings.getSource()+" invalid header");
 				return;
@@ -355,9 +364,11 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 			while (state != 5) {
 				int c = in.read();
-				if (c < 0) break;
+				System.out.println(((int)c)+" "+(char)c);
+				if (c < 0) {
+					break;
+				}
 				// tester.write(c);
-				System.out.print((char)c);
 				state = transition(state, c);
 			}
 			// When HTTP header is read, the GPS data are recived and parsed:
@@ -391,6 +402,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 			InputStream isc = (fos==null?in:new InputStreamCounter(in, fos));
 
+
+			
 			readLoop(isc);
 			// System.out.println("1");
 
@@ -424,7 +437,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 		try {
 			//RTCM3Client rtcm = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0],args[1], "swiposGISGEO_LV03LN02");
-			RTCM3Client rtcm = RTCM3Client.getInstance("ntrip.jenoba.jp", 2101, args[0],args[1], "JVR30");
+			RTCM3Client rtcm = RTCM3Client.getInstance("ntrip.jenoba.jp", 80, args[0],args[1], "JVR30");
 			rtcm.setDebug(true);
 			// Ntrip-GAA: $GPGGA,183836,3435.524,N,13530.231,E,4,10,1,164,M,1,M,3,0*69
 			// CH Manno
@@ -547,12 +560,22 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	protected void readLoop(InputStream in) throws IOException {
 		int c;
 		int index;
+		long start = System.currentTimeMillis();
+		if(debug) System.out.print("Wait for header");
 		while (go) {
 			c = in.read();
-			if(debug) System.out.println("Header : " + c);
-			if (c < 0)
-				break;
+			
+			if (c < 0){
+				if(!header || System.currentTimeMillis()-start >10*60*1000) break;
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				if(debug) System.out.print(".");
+			}
 			if (header) {
+				//if(debug) System.out.println("Header : " + c);
 				if (c == 211) { // header
 					index = 0;
 					buffer = new int[2];
@@ -568,7 +591,10 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 						}
 					}
 					messagelength = Bits.bitsToUInt(Bits.subset(bits, 6, 10));
-					if(debug) System.out.println("Debug message length : " + messagelength);
+					if(debug){
+						System.out.println();
+						System.out.println("Debug message length : " + messagelength);
+					}
 					header = false;
 					// downloadlength = true;
 				}
