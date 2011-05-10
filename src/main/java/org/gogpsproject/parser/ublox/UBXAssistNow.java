@@ -33,6 +33,7 @@ import org.gogpsproject.EphemerisSystem;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.SatellitePosition;
+import org.gogpsproject.StreamResource;
 
 /**
  * <p>

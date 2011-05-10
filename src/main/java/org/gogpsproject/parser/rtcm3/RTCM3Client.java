@@ -44,6 +44,8 @@ import org.gogpsproject.Coordinates;
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
+import org.gogpsproject.StreamEventListener;
+import org.gogpsproject.StreamResource;
 import org.gogpsproject.util.Bits;
 import org.gogpsproject.util.InputStreamCounter;
 
@@ -51,15 +53,14 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 	private ConnectionSettings settings;
 	private Thread dataThread;
-	/** Indicates if the end of the data file loop has been reached */
-	private boolean loopend;
 
 	private boolean waitForData = true;
 
-	private boolean go = false;
+	private boolean running = false;
+	private boolean askForStop = false;
 	private HashMap<Integer, Decode> decodeMap;
 
-	/** Optinal message handler for showing error messages. */
+	/** Optional message handler for showing error messages. */
 	private boolean header = true;
 	private int messagelength = 0;
 	private int[] buffer;
@@ -76,6 +77,15 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	private int obsCursor = 0;
 
 	private String streamFileLogger = null;
+
+	private String ntripGAA = null;
+	private long lastNtripGAAsent = 0;
+	private long ntripGAAsendDelay = 10*1000; // 10 sec
+
+	public final static int CONNECTION_POLICY_LEAVE = 0;
+	public final static int CONNECTION_POLICY_RECONNECT = 1;
+	private int reconnectionPolicy = CONNECTION_POLICY_RECONNECT;
+
 
 	public static RTCM3Client getInstance(String _host, int _port, String _username,
 			String _password, String _mountpoint) throws Exception{
@@ -121,8 +131,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 	public RTCM3Client(ConnectionSettings settings) {
 		super();
-		go = false;
-		loopend = true;
+		running = false;
 		this.settings = settings;
 
 		decodeMap = new HashMap<Integer, Decode>();
@@ -240,25 +249,31 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 
 		try {
-			go = true;
-			loopend = false;
 			// Socket for reciving data are created
 
 			try {
 				sck = new Socket(settings.getHost(), settings.getPort());
-				System.out.println("Connected to " + settings.getHost() + ":"
+				if(debug) System.out.println("Connected to " + settings.getHost() + ":"
 						+ settings.getPort());
+				running = true;
+
 			} catch (Exception e) {
-				go = false;
-				String msg = "Connection to " + settings.getHost() + ":"
-						+ settings.getPort() + " failed: \n  " + e;
+
+				System.out.println("Connection to " + settings.getHost() + ":"
+						+ settings.getPort() + " failed: \n  " + e);
 				// if (messages == null) {
 				// tester.println("<" + settings.getSource() + ">" + msg);
 				// } else {
 				// messages.showErrorMessage(settings.getSource(), msg);
 				// }
+				if(!askForStop && reconnectionPolicy == CONNECTION_POLICY_RECONNECT){
+					System.out.println("Sleep 10s before retry");
+					Thread.sleep(10*1000);
+					start();
+				}
 				return;
 			}
+
 
 			// The input and output streams are created
 			out = new PrintWriter(sck.getOutputStream(), true);
@@ -269,7 +284,6 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			//out.print("Ntrip-Version: Ntrip/2.0\r\n");
 			out.print("Accept: rtk/rtcm, dgps/rtcm\r\n");
 			out.print("User-Agent: NTRIP goGPSprojectJava\r\n");
-			String ntripGAA = null;
 			if(approxPosition!=null){
 				approxPosition.computeGeodetic();
 				String hhmmss= (new SimpleDateFormat("HHmmss")).format(new Date());
@@ -290,19 +304,23 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				//String ntripGAA = "$GPGGA,"+hhmmss+".00,"+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",1,10,1.00,"+(h<0?0:h)+",M,37.3,M,,";
 				//ntripGAA = "$GPGGA,214833.00,3500.40000000,N,13900.10000000,E,1,10,1,-17.3,M,,M,,";
 
-				ntripGAA = /*"Ntrip-GAA: "+*/ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
+				ntripGAA = "Ntrip-GAA: "+ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
 				System.out.println(ntripGAA);
+
 				//out.print(ntripGAA+"\r\n");
 			}
 			out.print("Connection: close\r\n");
 			out.print("Authorization: Basic " + settings.getAuthbase64()+"\r\n");
-			
+
 			// out.println("User-Agent: NTRIP goGps");
 			// out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
 			// out.println("User-Agent: NTRIP GoGps");
 			// out.println("Accept: */*\r\nConnection: close");
 			out.print("\r\n");
-			if(ntripGAA!=null)out.print(ntripGAA+"\r\n");
+			if(ntripGAA!=null){
+				out.print(ntripGAA+"\r\n");
+				lastNtripGAAsent = System.currentTimeMillis();
+			}
 			out.flush();
 //			System.out.println(" \n %%%%%%%%%%%%%%%%%%%%% \n password >>> "
 //					+ settings.getAuthbase64());
@@ -322,10 +340,10 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			int[] correctHeader = { 73, 67, 89, 32, 50, 48, 48, 32, 79, 75, 13 };
 			int hindex = 0;
 			// when go is changed to false the loop is stopped
-			
-			while (go && state == 0) {
+
+			while (running && state == 0) {
 				int c = in.read();
-				System.out.print((char)c);
+				if(debug)System.out.print((char)c);
 				if (c < 0){
 					break;
 				}
@@ -334,37 +352,37 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				state = transition(state, c);
 				if (hindex > 10) {
 					// The header should only be 11 charecters long
-					go = false;
+					running = false;
 				} else {
 					header[hindex] = c;
 					hindex++;
 				}
 			}
 
-			for (int i = 0; i < 11 && go; i++) {
+			for (int i = 0; i < 11 && running; i++) {
 				if (header[i] != correctHeader[i]) {
-					go = false;
+					running = false;
 				}
 			}
-			if(!go){
+			if(!running){
 				for(int i=0;i<header.length;i++)
-					System.out.print((char)header[i]);
+					if(debug)System.out.print((char)header[i]);
 				int c = in.read();
 				while(c!=-1){
-					System.out.println(((int)c)+" "+(char)c);
-					
+					if(debug)System.out.println(((int)c)+" "+(char)c);
+
 					c = in.read();
 				}
-				System.out.println(((int)c)+" "+(char)c);
-				
-				System.out.println();
-				System.out.println(settings.getSource()+" invalid header");
+				if(debug)System.out.println(((int)c)+" "+(char)c);
+
+				if(debug)System.out.println();
+				if(debug)System.out.println(settings.getSource()+" invalid header");
 				return;
 			}
 
 			while (state != 5) {
 				int c = in.read();
-				System.out.println(((int)c)+" "+(char)c);
+				if(debug)System.out.println(((int)c)+" "+(char)c);
 				if (c < 0) {
 					break;
 				}
@@ -377,13 +395,13 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// There is a full word + a byte. The extra byte (first in buffer)
 			// is
 			// used for parity check.
-			if (go) {
+			if (running) {
 				// tester.println("<" + settings.getSource() +
 				// ">Header least: OK");
-				System.out.println(settings.getSource()+" connected successfully");
+				if(debug)System.out.println(settings.getSource()+" connected successfully");
 			} else {
 				// showErrorMessage(settings.getSource(), "Error");
-				System.out.println(settings.getSource()+" not connected");
+				if(debug)System.out.println(settings.getSource()+" not connected");
 				return;
 			}
 			// The read loop is started
@@ -403,8 +421,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			InputStream isc = (fos==null?in:new InputStreamCounter(in, fos));
 
 
-			
-			readLoop(isc);
+
+			readLoop(isc, out);
 			// System.out.println("1");
 
 		} catch (IOException ex) {
@@ -414,10 +432,16 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 		} finally {
 			// Connection was either terminated or an IOError accured
-			go = false;
-			loopend = true;
 
-			System.out.println(settings.getSource() + "Connection Error: Data is empty");
+			if(running){
+				System.out.println(settings.getSource() + " Connection Error: Data is empty");
+			}else{
+				if(debug) System.out.println(settings.getSource() + " Connection closed by client");
+			}
+
+
+			running = false;
+
 			// All connections are closed
 			try {
 				if (out != null)
@@ -429,6 +453,17 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			} catch (IOException ex) {
 			}
 
+			// reconnect if needed
+			if(!askForStop && reconnectionPolicy == CONNECTION_POLICY_RECONNECT){
+				System.out.println("Sleep 10s before retry");
+				try {
+					Thread.sleep(10*1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				start();
+			}
+
 		}
 
 	}
@@ -436,14 +471,14 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	public static void main(String args[]){
 
 		try {
-			//RTCM3Client rtcm = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0],args[1], "swiposGISGEO_LV03LN02");
-			RTCM3Client rtcm = RTCM3Client.getInstance("ntrip.jenoba.jp", 80, args[0],args[1], "JVR30");
+			RTCM3Client rtcm = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0],args[1], "swiposGISGEO_LV03LN02");
+			//RTCM3Client rtcm = RTCM3Client.getInstance("ntrip.jenoba.jp", 80, args[0],args[1], "JVR30");
 			rtcm.setDebug(true);
 			// Ntrip-GAA: $GPGGA,183836,3435.524,N,13530.231,E,4,10,1,164,M,1,M,3,0*69
 			// CH Manno
-			// Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
+			Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
 			// JP Osaka
-			Coordinates coordinates = Coordinates.globalXYZInstance(-3749314.940644724,3684015.867703885,3600798.5084946174);
+			//Coordinates coordinates = Coordinates.globalXYZInstance(-3749314.940644724,3684015.867703885,3600798.5084946174);
 			rtcm.setApproxPosition(coordinates);
 			rtcm.init();
 
@@ -491,8 +526,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	/** stops the execution of this thread
 	 * @throws InterruptedException */
 	public void stop(boolean waitForThread, long timeoutMs) throws InterruptedException {
-
-		go = false;
+		askForStop = true;
+		running = false;
 		if(waitForThread && dataThread!=null){
 			try{
 				dataThread.join(timeoutMs);
@@ -557,16 +592,16 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	 * @param in
 	 *            input stream to read from
 	 */
-	protected void readLoop(InputStream in) throws IOException {
+	protected void readLoop(InputStream in,PrintWriter out) throws IOException {
 		int c;
 		int index;
 		long start = System.currentTimeMillis();
 		if(debug) System.out.print("Wait for header");
-		while (go) {
+		while (running) {
 			c = in.read();
-			
+
 			if (c < 0){
-				if(!header || System.currentTimeMillis()-start >10*60*1000) break;
+				if(!header || System.currentTimeMillis()-start >10*1000) break;
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -620,6 +655,12 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				header = true;
 				// setBits(in,1);
 				if(debug) System.out.println(" dati :" + Bits.bitsToStr(bits));
+			}
+
+			if(System.currentTimeMillis()-lastNtripGAAsent > ntripGAAsendDelay){
+				out.print(ntripGAA+"\r\n");
+				lastNtripGAAsent = System.currentTimeMillis();
+				if(debug) System.out.println("refresh ntripGGA:" + ntripGAA);
 			}
 		}
 	}
@@ -759,6 +800,20 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	 */
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+
+	/**
+	 * @param reconnectionPolicy the reconnectionPolicy to set
+	 */
+	public void setReconnectionPolicy(int reconnectionPolicy) {
+		this.reconnectionPolicy = reconnectionPolicy;
+	}
+
+	/**
+	 * @return the reconnectionPolicy
+	 */
+	public int getReconnectionPolicy() {
+		return reconnectionPolicy;
 	}
 
 }

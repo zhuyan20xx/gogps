@@ -19,18 +19,13 @@
  */
 package org.gogpsproject;
 
-import java.io.IOException;
-
 
 /**
- * @author Lorenzo
+ * @author Cryms.com
  *
  */
-public interface ObservationsProducer {
+public interface ObservationsProducer extends StreamResource {
 
-	public void init() throws Exception;
-	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException;
-	//public boolean hasMoreObservations() throws IOException;
 	public Observations getCurrentObservations();
 	public Observations nextObservations();
 	public Coordinates getApproxPosition();

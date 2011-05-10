@@ -28,13 +28,9 @@ package org.gogpsproject;
  *
  * @author ege, Cryms.com
  */
-public interface NavigationProducer {
+public interface NavigationProducer extends StreamResource{
 
 	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError);
-
-	public void init() throws Exception;
-
-	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException;
 
 	public IonoGps getIono(long utcTime);
 

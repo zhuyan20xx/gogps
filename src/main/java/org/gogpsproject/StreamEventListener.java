@@ -17,24 +17,15 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.gogpsproject.parser.ublox;
+package org.gogpsproject;
 
-import org.gogpsproject.EphGps;
-import org.gogpsproject.IonoGps;
-import org.gogpsproject.Observations;
-/**
- * <p>
- *
- * </p>
- *
- * @author Lorenzo Patocchi cryms.com
- */
+
 
 /**
- * @author Lorenzo
+ * @author Cryms.com
  *
  */
-public interface UBXEventListener {
+public interface StreamEventListener {
 
 	public void streamClosed();
 	public void addObservations(Observations o);

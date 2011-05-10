@@ -31,12 +31,12 @@ import java.util.Vector;
 
 import org.gogpsproject.BufferedRover;
 import org.gogpsproject.Time;
-import org.gogpsproject.parser.ublox.SerialConnection;
+import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
 public class TestUBX {
 
 	public static int speed = 9600;
-	private static SerialConnection network;
+	private static UBXSerialConnection ubxSerialConn;
 	private static boolean resend_active = false;
 
 	/**
@@ -69,10 +69,8 @@ public class TestUBX {
 
 	public static void main(String[] args) {
 
-		BufferedRover rover = new BufferedRover();
 
-		network = new SerialConnection(rover);
-		Vector<String> ports = network.getPortList();
+		Vector<String> ports = UBXSerialConnection.getPortList();
 		if (ports.size() > 0) {
 			System.out.println("the following serial ports have been detected:");
 		} else {
@@ -89,12 +87,18 @@ public class TestUBX {
 		if(args.length>2){
 			speed = Integer.parseInt(args[1]);
 		}
-		if (network.connect(port, speed)) {
-			System.out.println("Start");
-		} else {
-			System.out.println("Test <port> (<speed>)");
-			System.exit(0);
+
+
+		ubxSerialConn = new UBXSerialConnection(port, speed);
+		BufferedRover rover = new BufferedRover(ubxSerialConn);
+
+		try {
+			rover.init();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+
+
 
 		System.out.println("end");
 		// // TODO Auto-generated method stub
