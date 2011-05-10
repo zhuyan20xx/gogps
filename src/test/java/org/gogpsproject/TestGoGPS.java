@@ -30,7 +30,7 @@ import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.sp3.SP3Navigation;
-import org.gogpsproject.parser.ublox.SerialConnection;
+import org.gogpsproject.parser.ublox.UBXSerialConnection;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.KmlProducer;
 

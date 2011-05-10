@@ -25,6 +25,8 @@ import java.io.InputStream;
 import org.gogpsproject.EphGps;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.Observations;
+import org.gogpsproject.StreamEventListener;
+import org.gogpsproject.StreamEventProducer;
 /**
  * <p>
  * Read and parse UBX messages
@@ -32,16 +34,16 @@ import org.gogpsproject.Observations;
  *
  * @author Lorenzo Patocchi cryms.com
  */
-public class UBXReader {
+public class UBXReader implements StreamEventProducer {
 	private InputStream in;
-	private UBXEventListener eventListener;
+	private StreamEventListener streamEventListener;
 
 	public UBXReader(InputStream is){
 		this(is,null);
 	}
-	public UBXReader(InputStream is, UBXEventListener eventListener){
+	public UBXReader(InputStream is, StreamEventListener eventListener){
 		this.in = is;
-		this.eventListener = eventListener;
+		this.streamEventListener = eventListener;
 	}
 
 	public Object readMessagge() throws IOException, UBXException{
@@ -60,7 +62,7 @@ public class UBXReader {
 						DecodeRXMRAW decodegps = new DecodeRXMRAW(in);
 
 						Observations o = decodegps.decode(null);
-						if(eventListener!=null && o!=null) eventListener.addObservations(o);
+						if(streamEventListener!=null && o!=null) streamEventListener.addObservations(o);
 						return o;
 					}
 				}else
@@ -72,7 +74,7 @@ public class UBXReader {
 							DecodeAIDHUI decodegps = new DecodeAIDHUI(in);
 
 							IonoGps iono = decodegps.decode();
-							if(eventListener!=null && iono!=null) eventListener.addIonospheric(iono);
+							if(streamEventListener!=null && iono!=null) streamEventListener.addIonospheric(iono);
 							return iono;
 						}else
 						if (data == 0x31) { // EPH
@@ -80,7 +82,7 @@ public class UBXReader {
 							DecodeAIDEPH decodegps = new DecodeAIDEPH(in);
 
 							EphGps eph = decodegps.decode();
-							if(eventListener!=null && eph!=null) eventListener.addEphemeris(eph);
+							if(streamEventListener!=null && eph!=null) streamEventListener.addEphemeris(eph);
 							return eph;
 
 						}
@@ -111,5 +113,17 @@ public class UBXReader {
 //			//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 //		}
 			return null;
+	}
+	/**
+	 * @return the streamEventListener
+	 */
+	public StreamEventListener getStreamEventListener() {
+		return streamEventListener;
+	}
+	/**
+	 * @param streamEventListener the streamEventListener to set
+	 */
+	public void setStreamEventListener(StreamEventListener streamEventListener) {
+		this.streamEventListener = streamEventListener;
 	}
 }

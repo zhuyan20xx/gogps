@@ -30,7 +30,7 @@ import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.sp3.SP3Navigation;
-import org.gogpsproject.parser.ublox.SerialConnection;
+import org.gogpsproject.parser.ublox.UBXSerialConnection;
 import org.gogpsproject.parser.ublox.UBXAssistNow;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.KmlProducer;
@@ -60,11 +60,11 @@ public class LiveTracking {
 			/******************************************
 			 * ROVER & NOVIGATION uBlox
 			 */
-			BufferedRover roverIn = new BufferedRover();
+			UBXSerialConnection ubxSerialConn = new UBXSerialConnection("COM10", 9600);
+
+			BufferedRover roverIn = new BufferedRover(ubxSerialConn);
 			NavigationProducer navigationIn = roverIn;
 			roverIn.init();
-			SerialConnection serialConn = new SerialConnection(roverIn);
-			serialConn.connect("COM10", 9600);
 
 			if(args.length>3){
 				String cmd="aid";
@@ -119,7 +119,10 @@ public class LiveTracking {
 			goGPS.runThreadMode(GoGPS.RUN_MODE_KALMAN_FILTER);
 
 			// wait for 1 minutes
-			Thread.sleep(10*1000);
+			Thread.sleep(60*1000);
+
+			System.out.println();
+			System.out.println();
 
 			System.out.println("OK give up ---------------------------------------------");
 
@@ -128,7 +131,6 @@ public class LiveTracking {
 			 */
 			try{
 				System.out.println("Stop Rover");
-				serialConn.disconnect();
 				roverIn.release(true,10000);
 			}catch(InterruptedException ie){
 				ie.printStackTrace();

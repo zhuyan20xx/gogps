@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.gogpsproject.StreamEventListener;
+import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.util.InputStreamCounter;
 
 /**
@@ -35,28 +37,29 @@ import org.gogpsproject.util.InputStreamCounter;
  * @author Lorenzo Patocchi cryms.com
  */
 
-public class UBXSerialReader implements Runnable {
+public class UBXSerialReader implements Runnable,StreamEventProducer {
 
 	private InputStreamCounter in;
 	private OutputStream out;
 	//private boolean end = false;
 	private Thread t = null;
 	private boolean stop = false;
-	private UBXEventListener eventListener;
+	private StreamEventListener streamEventListener;
 	private UBXReader reader;
 
-	public UBXSerialReader(InputStream in,OutputStream out,UBXEventListener el) {
+	public UBXSerialReader(InputStream in,OutputStream out) {
+		this(in,out,null);
+	}
+	public UBXSerialReader(InputStream in,OutputStream out,StreamEventListener streamEventListener) {
 		FileOutputStream fos= null;
 		try {
 			fos = new FileOutputStream("./data/ubx.out");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		this.in = new InputStreamCounter(in,fos);
 		this.out = out;
-		this.eventListener = el;
-		this.reader = new UBXReader(this.in, el);
+		this.reader = new UBXReader(this.in,streamEventListener);
 	}
 
 	public void start()  throws IOException{
@@ -93,8 +96,15 @@ public class UBXSerialReader implements Runnable {
 
 		//System.out.println("3");
 	}
-	public void stop(){
+	public void stop(boolean waitForThread, long timeoutMs){
 		stop = true;
+		if(waitForThread && t!=null && t.isAlive()){
+			try {
+				t.join(timeoutMs);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	public void run() {
 
@@ -156,7 +166,22 @@ public class UBXSerialReader implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		eventListener.streamClosed();
+		if(streamEventListener!=null) streamEventListener.streamClosed();
+	}
+
+	/**
+	 * @return the streamEventListener
+	 */
+	public StreamEventListener getStreamEventListener() {
+		return streamEventListener;
+	}
+
+	/**
+	 * @param streamEventListener the streamEventListener to set
+	 */
+	public void setStreamEventListener(StreamEventListener streamEventListener) {
+		this.streamEventListener = streamEventListener;
+		if(this.reader!=null) this.reader.setStreamEventListener(streamEventListener);
 	}
 
 }

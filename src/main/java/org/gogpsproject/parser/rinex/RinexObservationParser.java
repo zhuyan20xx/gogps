@@ -34,6 +34,7 @@ import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
+import org.gogpsproject.StreamResource;
 import org.gogpsproject.Time;
 
 /**
@@ -52,7 +53,7 @@ public class RinexObservationParser implements ObservationsProducer{
 
 	private int nTypes; /* Number of observation types */
 	private int[] typeOrder; /* Order of observation data */
-	private boolean hasSField = false; /* S* field (SNR) is present */ 
+	private boolean hasSField = false; /* S* field (SNR) is present */
 	private Time timeFirstObs; /* Time of first observation set */
 
 	private Coordinates approxPos; /* Approximate position (X, Y, Z) [m] */
@@ -291,7 +292,7 @@ public class RinexObservationParser implements ObservationsProducer{
 			//obs.eventFlag = eventFlag;
 
 			parseDataObs();
-			
+
 			obs.cleanObservations();
 
 			return obs;

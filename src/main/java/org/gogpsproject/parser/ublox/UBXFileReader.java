@@ -35,6 +35,7 @@ import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.SatellitePosition;
+import org.gogpsproject.StreamResource;
 
 /**
  * <p>

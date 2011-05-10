@@ -22,7 +22,6 @@ package org.gogpsproject;
 import java.util.HashMap;
 import java.util.Vector;
 
-import org.gogpsproject.parser.ublox.UBXEventListener;
 /**
  * <p>
  * This class receive data from streaming source and keep it buffered for navigation and observation consumer.
@@ -31,8 +30,9 @@ import org.gogpsproject.parser.ublox.UBXEventListener;
  *
  * @author Lorenzo Patocchi cryms.com
  */
-public class BufferedRover extends EphemerisSystem implements UBXEventListener,
-        ObservationsProducer, NavigationProducer {
+public class BufferedRover
+	extends EphemerisSystem
+	implements StreamEventListener, ObservationsProducer, NavigationProducer {
 
     class EphSet{
         public Time refTime;
@@ -52,11 +52,17 @@ public class BufferedRover extends EphemerisSystem implements UBXEventListener,
     private int obsCursor = 0;
     private HashMap<Integer,Integer> ephCursors = new HashMap<Integer, Integer>();
 
+    private StreamResource streamResource;
+
     /**
      *
      */
-    public BufferedRover() {
-
+    public BufferedRover(StreamResource streamResource) {
+    	this.streamResource = streamResource;
+    	// if resource produces also events register for it
+    	if(streamResource instanceof StreamEventProducer){
+    		((StreamEventProducer)streamResource).setStreamEventListener(this);
+    	}
     }
 
     private int getEphCursor(int satID){
@@ -124,7 +130,7 @@ public class BufferedRover extends EphemerisSystem implements UBXEventListener,
      */
     @Override
     public void streamClosed() {
-
+    	// TODO implement reconnection policy, i.e. if(streamResource!=null && !waitForData) streamResource.reconnect();
     }
 
     /* (non-Javadoc)
@@ -160,7 +166,7 @@ public class BufferedRover extends EphemerisSystem implements UBXEventListener,
      */
     @Override
     public void init() throws Exception {
-
+    	if(streamResource!=null) streamResource.init();
     }
 
     /* (non-Javadoc)
@@ -191,7 +197,10 @@ public class BufferedRover extends EphemerisSystem implements UBXEventListener,
      */
     @Override
     public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
+    	// make the request to nextObservations() return null as end of stream
     	waitForData = false;
+    	if(streamResource!=null) streamResource.release(waitForThread, timeoutMs);
+
     }
 
     /* (non-Javadoc)

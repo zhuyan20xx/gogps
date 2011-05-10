@@ -37,6 +37,7 @@ import org.apache.commons.net.ftp.FTPReply;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
+import org.gogpsproject.StreamResource;
 import org.gogpsproject.Time;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.util.UncompressInputStream;

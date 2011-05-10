@@ -29,7 +29,7 @@ import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.sp3.SP3Navigation;
-import org.gogpsproject.parser.ublox.SerialConnection;
+import org.gogpsproject.parser.ublox.UBXSerialConnection;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.PositionConsumer;
 
@@ -117,7 +117,7 @@ public class GoGPS implements Runnable{
 
 	/** The cycle slip threshold. */
 	private double cycleSlipThreshold = 3;
-	
+
 	/** The Constant AMBIGUITY_OBSERV. */
 	public final static int AMBIGUITY_OBSERV = 0;
 
@@ -264,7 +264,7 @@ public class GoGPS implements Runnable{
 		try {
 			Observations obsR = roverIn.nextObservations();
 			Observations obsM = masterIn.nextObservations();
-			
+
 			while (obsR != null && obsM != null) {
 
 				// Discard master epochs if correspondent rover epochs are
@@ -781,7 +781,7 @@ public class GoGPS implements Runnable{
 	public void setDynamicModel(int dynamicModel) {
 		this.dynamicModel = dynamicModel;
 	}
-	
+
 	/**
 	 * Gets the ambiguity strategy.
 	 *
