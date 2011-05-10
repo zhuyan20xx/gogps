@@ -255,7 +255,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// Socket for reciving data are created
 
 			try {
-				Proxy proxy = Proxy.NO_PROXY;// new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("localhost", 8888));
+				Proxy proxy = Proxy.NO_PROXY;
+				// proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 8888));
 
 				sck = new Socket(proxy);
 				InetSocketAddress dest = new InetSocketAddress(settings.getHost(), settings.getPort());
