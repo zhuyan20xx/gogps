@@ -29,7 +29,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.Date;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -252,7 +255,12 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// Socket for reciving data are created
 
 			try {
-				sck = new Socket(settings.getHost(), settings.getPort());
+				Proxy proxy = Proxy.NO_PROXY;// new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("localhost", 8888));
+
+				sck = new Socket(proxy);
+				InetSocketAddress dest = new InetSocketAddress(settings.getHost(), settings.getPort());
+				sck.connect(dest);
+				//sck = new Socket(settings.getHost(), settings.getPort());
 				if(debug) System.out.println("Connected to " + settings.getHost() + ":"
 						+ settings.getPort());
 				running = true;
