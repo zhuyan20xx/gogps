@@ -66,7 +66,10 @@ public class Observations implements Streamable {
 					sbs.remove(i);
 	}
 	public int getGpsSize(){
-		return gps==null?-1:gps.size();
+		int nsat = 0;
+		for(int i=0;i<gps.size();i++)
+			if(gps.get(i)!=null) nsat++;
+		return gps==null?-1:nsat;
 	}
 	public ObservationSet getGpsByIdx(int idx){
 		return gps.get(idx);
