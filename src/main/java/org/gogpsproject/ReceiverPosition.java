@@ -1992,6 +1992,20 @@ public class ReceiverPosition extends Coordinates{
 				this.setMasterDopplerPredictedPhase(satAvailPhase.get(i), masterPhase - masterDoppler);
 		}
 	}
+	
+	/**
+	 * @return the number of available satellites
+	 */
+	public int getSatAvailNumber() {
+		return satAvail.size();
+	}
+	
+	/**
+	 * @return the number of available satellites (with phase)
+	 */
+	public int getSatAvailPhaseNumber() {
+		return satAvailPhase.size();
+	}
 
 	/**
 	 * @return the positionCovariance

@@ -209,18 +209,26 @@ public class GoGPS implements Runnable{
 					// If there are at least four satellites
 					if (obsR.getGpsSize() >= 4) { // gps.length
 						System.out.println("OK "+obsR.getGpsSize()+" satellites");
+
 						// Compute approximate positioning by Bancroft algorithm
 						roverPos.bancroft(obsR);
 
 						// If an approximate position was computed
-						System.out.println("has valid position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
+						System.out.println("Valid Bancroft position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
 						if (roverPos.isValidXYZ()) {
 							// Select available satellites
 							roverPos.selectSatellitesStandalone(obsR);
 
-							// Compute code stand-alone positioning (epoch-by-epoch solution)
-							roverPos.codeStandalone(obsR, false);
+							if (roverPos.getSatAvailNumber() >= 4)
+								// Compute code stand-alone positioning (epoch-by-epoch solution)
+								roverPos.codeStandalone(obsR, false);
+							else
+								// Discard Bancroft positioning
+								roverPos.setXYZ(0, 0, 0);
+						}
 
+						System.out.println("Valid LS position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
+						if (roverPos.isValidXYZ()) {
 							if(!validPosition){
 								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
 								validPosition = true;
@@ -296,10 +304,17 @@ public class GoGPS implements Runnable{
 							roverPos.selectSatellitesDoubleDiff(obsR,
 									obsM, masterIn.getApproxPosition());
 
-							// Compute code double differences positioning
-							// (epoch-by-epoch solution)
-							roverPos.codeDoubleDifferences(obsR,
-									obsM, masterIn.getApproxPosition());
+							if (roverPos.getSatAvailNumber() >= 4)
+								// Compute code double differences positioning
+								// (epoch-by-epoch solution)
+								roverPos.codeDoubleDifferences(obsR,
+										obsM, masterIn.getApproxPosition());
+							else
+								// Discard Bancroft positioning
+								roverPos.setXYZ(0, 0, 0);
+						}
+
+						if (roverPos.isValidXYZ()) {
 							if(!validPosition){
 								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
 								validPosition = true;

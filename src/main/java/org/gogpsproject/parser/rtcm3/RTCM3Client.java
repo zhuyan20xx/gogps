@@ -313,7 +313,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				//String ntripGAA = "$GPGGA,"+hhmmss+".00,"+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",1,10,1.00,"+(h<0?0:h)+",M,37.3,M,,";
 				//ntripGAA = "$GPGGA,214833.00,3500.40000000,N,13900.10000000,E,1,10,1,-17.3,M,,M,,";
 
-				ntripGAA = "Ntrip-GAA: "+ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
+				ntripGAA = /*"Ntrip-GAA: "+*/ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
 				System.out.println(ntripGAA);
 
 				//out.print(ntripGAA+"\r\n");
