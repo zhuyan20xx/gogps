@@ -55,12 +55,18 @@ public class BufferedRover
     private StreamResource streamResource;
 
     /**
+    *
+    */
+   public BufferedRover() {
+	   this(null);
+   }
+    /**
      *
      */
     public BufferedRover(StreamResource streamResource) {
     	this.streamResource = streamResource;
     	// if resource produces also events register for it
-    	if(streamResource instanceof StreamEventProducer){
+    	if(streamResource!=null && streamResource instanceof StreamEventProducer){
     		((StreamEventProducer)streamResource).setStreamEventListener(this);
     	}
     }
