@@ -40,6 +40,12 @@ public class ReceiverPosition extends Coordinates{
 	// Fields related to the receiver position
 	private SimpleMatrix positionCovariance; /* Covariance matrix of the position estimation error */
 	private double receiverClockError; /* Clock error */
+	private double pDop; /* Position dilution of precision (PDOP) */
+	private double hDop; /* Horizontal dilution of precision (HDOP) */
+	private double vDop; /* Vertical dilution of precision (VDOP) */
+	private double kpDop; /* Kalman-derived position dilution of precision (KPDOP) */
+	private double khDop; /* Kalman-derived horizontal dilution of precision (KHDOP) */
+	private double kvDop; /* Kalman-derived vertical dilution of precision (KVDOP) */
 
 	// Fields for satellite selection
 	private TopocentricCoordinates[] roverTopo;
@@ -654,6 +660,10 @@ public class ReceiverPosition extends Coordinates{
 	 *
 	 */
 	public void kalmanFilterLoop(Observations roverObs, Observations masterObs, Coordinates masterPos) {
+		
+		// Covariance matrix obtained from matrix A (satellite geometry) [local coordinates]
+		SimpleMatrix covENU;
+		covENU = new SimpleMatrix(3, 3);
 
 		// Set linearization point (approximate coordinates by KF
 		// prediction at previous step)
@@ -791,6 +801,18 @@ public class ReceiverPosition extends Coordinates{
 		this.positionCovariance.set(1, 2, Cee.get(i1 + 1, i2 + 1));
 		this.positionCovariance.set(2, 0, Cee.get(i2 + 1, 0));
 		this.positionCovariance.set(2, 1, Cee.get(i2 + 1, i1 + 1));
+		
+		// Allocate and build rotation matrix
+		SimpleMatrix R = new SimpleMatrix(3, 3);
+		R = Coordinates.rotationMatrix(this);
+		
+		// Propagate covariance from global system to local system
+		covENU = R.mult(this.positionCovariance).mult(R.transpose());
+		
+		// Kalman filter DOP computation
+		this.kpDop = Math.sqrt(this.positionCovariance.get(0, 0) + this.positionCovariance.get(1, 1) + this.positionCovariance.get(2, 2));
+		this.khDop = Math.sqrt(covENU.get(0, 0) + covENU.get(1, 1));
+		this.kvDop = Math.sqrt(covENU.get(2, 2));
 
 		// Compute positioning in geodetic coordinates
 		this.computeGeodetic();
@@ -1023,6 +1045,11 @@ public class ReceiverPosition extends Coordinates{
 	 * @param masterPos
 	 */
 	private void setupKalmanFilterInput(Observations roverObs, Observations masterObs, Coordinates masterPos) {
+		
+		// Definition of matrices
+		SimpleMatrix A;
+		SimpleMatrix covXYZ;
+		SimpleMatrix covENU;
 
 		// Number of GPS observations
 		int nObs = roverObs.getGpsSize();
@@ -1033,6 +1060,15 @@ public class ReceiverPosition extends Coordinates{
 		// Double differences with respect to pivot satellite reduce
 		// observations by 1
 		nObsAvail--;
+		
+		// Matrix containing parameters obtained from the linearization of the observation equations
+		A = new SimpleMatrix(nObsAvail, 3);
+		
+		// Covariance matrix obtained from matrix A (satellite geometry) [ECEF coordinates]
+		covXYZ = new SimpleMatrix(3, 3);
+		
+		// Covariance matrix obtained from matrix A (satellite geometry) [local coordinates]
+		covENU = new SimpleMatrix(3, 3);
 
 		// Counter for available satellites
 		int k = 0;
@@ -1116,6 +1152,11 @@ public class ReceiverPosition extends Coordinates{
 						- diffRoverPivot.get(1) / roverPivotAppRange;
 				double alphaZ = diffRoverSat[i].get(2) / roverSatAppRange[i]
 						- diffRoverPivot.get(2) / roverPivotAppRange;
+				
+				// Fill in the A matrix
+				A.set(k, 0, alphaX); /* X */
+				A.set(k, 1, alphaY); /* Y */
+				A.set(k, 2, alphaZ); /* Z */
 
 				// Approximate code double difference
 				double ddcApp = (roverSatAppRange[i] - masterSatAppRange[i])
@@ -1196,6 +1237,21 @@ public class ReceiverPosition extends Coordinates{
 				k++;
 			}
 		}
+		
+		// Compute covariance matrix from A matrix [ECEF reference system]
+		covXYZ = A.transpose().mult(A).invert();
+		
+		// Allocate and build rotation matrix
+		SimpleMatrix R = new SimpleMatrix(3, 3);
+		R = Coordinates.rotationMatrix(this);
+		
+		// Propagate covariance from global system to local system
+		covENU = R.mult(covXYZ).mult(R.transpose());
+		
+		//Compute DOP values
+		this.pDop = Math.sqrt(covXYZ.get(0, 0) + covXYZ.get(1, 1) + covXYZ.get(2, 2));
+		this.hDop = Math.sqrt(covENU.get(0, 0) + covENU.get(1, 1));
+		this.vDop = Math.sqrt(covENU.get(2, 2));
 	}
 
 	/**
@@ -2061,5 +2117,89 @@ public class ReceiverPosition extends Coordinates{
 	 */
 	public void setMasterDopplerPredictedPhase(int satID, double masterDopplerPredictedPhase) {
 		this.masterDopplerPredPhase[satID - 1] = masterDopplerPredictedPhase;
+	}
+
+	/**
+	 * @return the pDop
+	 */
+	public double getpDop() {
+		return pDop;
+	}
+
+	/**
+	 * @param pDop the pDop to set
+	 */
+	public void setpDop(double pDop) {
+		this.pDop = pDop;
+	}
+
+	/**
+	 * @return the hDop
+	 */
+	public double gethDop() {
+		return hDop;
+	}
+
+	/**
+	 * @param hDop the hDop to set
+	 */
+	public void sethDop(double hDop) {
+		this.hDop = hDop;
+	}
+
+	/**
+	 * @return the vDop
+	 */
+	public double getvDop() {
+		return vDop;
+	}
+
+	/**
+	 * @param vDop the vDop to set
+	 */
+	public void setvDop(double vDop) {
+		this.vDop = vDop;
+	}
+
+	/**
+	 * @return the kpDop
+	 */
+	public double getKpDop() {
+		return kpDop;
+	}
+
+	/**
+	 * @param kpDop the kpDop to set
+	 */
+	public void setKpDop(double kpDop) {
+		this.kpDop = kpDop;
+	}
+
+	/**
+	 * @return the khDop
+	 */
+	public double getKhDop() {
+		return khDop;
+	}
+
+	/**
+	 * @param khDop the khDop to set
+	 */
+	public void setKhDop(double khDop) {
+		this.khDop = khDop;
+	}
+
+	/**
+	 * @return the kvDop
+	 */
+	public double getKvDop() {
+		return kvDop;
+	}
+
+	/**
+	 * @param kvDop the kvDop to set
+	 */
+	public void setKvDop(double kvDop) {
+		this.kvDop = kvDop;
 	}
 }
