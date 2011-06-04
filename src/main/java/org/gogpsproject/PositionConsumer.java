@@ -17,9 +17,8 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.gogpsproject.producer;
+package org.gogpsproject;
 
-import org.gogpsproject.Coordinates;
 
 /**
  * @author Lorenzo
@@ -30,7 +29,7 @@ public interface PositionConsumer {
 	public final static int EVENT_END_OF_TRACK = 1;
 	public final static int EVENT_GOGPS_THREAD_ENDED = 2;
 
-	public void addCoordinate(Coordinates coord);
+	public void addCoordinate(RoverPosition coord);
 	public void event(int event);
 
 }
