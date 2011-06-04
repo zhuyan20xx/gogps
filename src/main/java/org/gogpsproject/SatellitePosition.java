@@ -19,7 +19,6 @@
  *
  */
 package org.gogpsproject;
-import org.ejml.data.SimpleMatrix;
 
 /**
  * <p>

@@ -31,7 +31,6 @@ import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.sp3.SP3Navigation;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 import org.gogpsproject.parser.ublox.UBXFileReader;
-import org.gogpsproject.producer.PositionConsumer;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -196,7 +195,7 @@ public class GoGPS implements Runnable{
 	 * @return the coordinates
 	 * @throws Exception
 	 */
-	public Coordinates runCodeStandalone(int getNthPosition) throws Exception {
+	public RoverPosition runCodeStandalone(double stopAtDopThreshold) throws Exception {
 
 		// Create a new object for the rover position
 		roverPos = new ReceiverPosition(this);
@@ -232,17 +231,17 @@ public class GoGPS implements Runnable{
 							if(!validPosition){
 								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
 								validPosition = true;
-							}
-							if(positionConsumers.size()>0){
-								Coordinates coord = (Coordinates)roverPos.clone();
-								coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
-								notifyPositionConsumerAddCoordinate(coord);
-							}
+							}else{
+								RoverPosition coord = new RoverPosition(roverPos, RoverPosition.DOP_TYPE_KALMAN, roverPos.getpDop(), roverPos.gethDop(), roverPos.getvDop());
 
-							System.out.println("-------------------- "+getNthPosition);
-							if(getNthPosition>0){
-								getNthPosition--;
-								if(getNthPosition==0)return roverPos;
+								if(positionConsumers.size()>0){
+									coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
+									notifyPositionConsumerAddCoordinate(coord);
+								}
+								System.out.println("-------------------- "+roverPos.getpDop());
+								if(roverPos.getpDop()<stopAtDopThreshold){
+									return coord;
+								}
 							}
 						}
 					}
@@ -258,7 +257,7 @@ public class GoGPS implements Runnable{
 		} finally {
 			notifyPositionConsumerEvent(PositionConsumer.EVENT_END_OF_TRACK);
 		}
-		return roverPos;
+		return null;
 	}
 
 	/**
@@ -320,7 +319,9 @@ public class GoGPS implements Runnable{
 								validPosition = true;
 							}
 							if(positionConsumers.size()>0){
-								Coordinates coord = (Coordinates)roverPos.clone();
+								// TODO missing computed DOP
+								RoverPosition coord = new RoverPosition(roverPos);
+
 								coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
 								notifyPositionConsumerAddCoordinate(coord);
 							}
@@ -438,9 +439,9 @@ public class GoGPS implements Runnable{
 						if(!validPosition){
 							notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
 							validPosition = true;
-						}
+						}else
 						if(positionConsumers.size()>0){
-							Coordinates coord = (Coordinates)roverPos.clone();
+							RoverPosition coord = new RoverPosition(roverPos, RoverPosition.DOP_TYPE_KALMAN, roverPos.getKpDop(), roverPos.getKhDop(), roverPos.getKvDop());
 							coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
 							notifyPositionConsumerAddCoordinate(coord);
 						}
@@ -854,7 +855,7 @@ public class GoGPS implements Runnable{
 			}
 		}
 	}
-	private void notifyPositionConsumerAddCoordinate(Coordinates coord){
+	private void notifyPositionConsumerAddCoordinate(RoverPosition coord){
 		for(PositionConsumer pc:positionConsumers){
 			try{
 				pc.addCoordinate(coord);

@@ -29,7 +29,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
-import org.gogpsproject.BufferedRover;
+import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.Time;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
@@ -90,7 +90,7 @@ public class TestUBX {
 
 
 		ubxSerialConn = new UBXSerialConnection(port, speed);
-		BufferedRover rover = new BufferedRover(ubxSerialConn);
+		ObservationsBuffer rover = new ObservationsBuffer(ubxSerialConn);
 
 		try {
 			rover.init();

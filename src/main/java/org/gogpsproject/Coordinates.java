@@ -171,14 +171,17 @@ public class Coordinates {
 
 	public Object clone(){
 		Coordinates c = new Coordinates();
+		cloneInto(c);
+		return c;
+	}
+
+	public void cloneInto(Coordinates c){
 		c.ecef = this.ecef.copy();
 		c.enu = this.enu.copy();
 		c.geod = this.geod.copy();
 
 		if(refTime!=null) c.refTime = (Time)refTime.clone();
-		return c;
 	}
-
 	/**
 	 * @param origin
 	 * @return Rotation matrix used to switch from global to local reference systems (and vice-versa)

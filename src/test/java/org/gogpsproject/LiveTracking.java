@@ -46,7 +46,7 @@ public class LiveTracking {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
+		int dynamicModel = GoGPS.DYN_MODEL_STATIC;//CONST_SPEED;
 		try{
 			// Get current time
 			long start = System.currentTimeMillis();
@@ -62,14 +62,14 @@ public class LiveTracking {
 			 */
 			UBXSerialConnection ubxSerialConn = new UBXSerialConnection("COM10", 9600);
 
-			BufferedRover roverIn = new BufferedRover(ubxSerialConn);
+			ObservationsBuffer roverIn = new ObservationsBuffer(ubxSerialConn);
 			NavigationProducer navigationIn = roverIn;
 			roverIn.init();
 
 			if(args.length>3){
 				String cmd="aid";
-				String lon="8.92";
-				String lat="46.03";
+				String lon="135";
+				String lat="35";
 				navigationIn = new UBXAssistNow( args[2], args[3], cmd, lon, lat);
 				try {
 					navigationIn.init();
@@ -93,6 +93,7 @@ public class LiveTracking {
 			 * MASTER RTCM/RINEX
 			 */
 			RTCM3Client masterIn = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0].trim(), args[1].trim(), "swiposGISGEO_LV03LN02");
+//			RTCM3Client masterIn = RTCM3Client.getInstance("ntrip.jenoba.jp", 2101, args[0].trim(), args[1].trim(), "JVR30");
 			//navigationIn = new RinexNavigation(RinexNavigation.IGN_NAVIGATION_HOURLY_ZIM2);
 			masterIn.setApproxPosition(initialPosition);
 			masterIn.init();
@@ -108,7 +109,7 @@ public class LiveTracking {
 			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 			String date1 = sdf1.format(date);
 			String outPath = "./test/" + date1 + ".kml";
-			KmlProducer kml = new KmlProducer(outPath);
+			KmlProducer kml = new KmlProducer(outPath, 2.5, 10);
 			goGPS.addPositionConsumerListener(kml);
 
 			// goGPS.runCodeDoubleDifferences();
