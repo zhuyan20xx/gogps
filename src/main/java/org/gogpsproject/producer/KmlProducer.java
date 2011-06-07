@@ -96,9 +96,12 @@ public class KmlProducer implements PositionConsumer {
 			System.out.print("T:" + t);
 //			System.out.print(" Lon:" + lon);//geod.get(0)
 //			System.out.print(" Lat:" + lat);//geod.get(1)
+			String dopLabel = "DOP";
+			if (coord.getDopType() == RoverPosition.DOP_TYPE_KALMAN)
+				dopLabel = "KDOP";
 			System.out.println("Lon:"+lon + " " // geod.get(0)
 					+"Lat:"+ lat + " " // geod.get(1)
-					+"H:"+ h + "\tDOP "  // geod.get(2)
+					+"H:"+ h + "\t" + dopLabel + " " // geod.get(2)
 					+"P:"+ coord.getpDop()+" "
 					+"H:"+ coord.gethDop()+" "
 					+"V:"+ coord.getvDop()+" ");//geod.get(2)
