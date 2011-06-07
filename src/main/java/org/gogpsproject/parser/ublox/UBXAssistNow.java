@@ -59,7 +59,15 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 
 	public final static String DEFAULT_PACC = "300000";
 
-	private String user, pass, cmd, lon, lat;
+	private final static int LAT_MIN = -45;
+	private final static int LAT_MAX = +45;
+	private final static int LAT_STEP= 90;
+	private final static int LON_MIN = -180;
+	private final static int LON_MAX =  +90;
+	private final static int LON_STEP= 90;
+
+
+	private String user, pass, cmd, lon=null, lat=null;
 
 	private ArrayList<EphGps> ephs = new ArrayList<EphGps>(); /* GPS broadcast ephemerides */
 	private ArrayList<IonoGps> ionos = new ArrayList<IonoGps>(); /* GPS broadcast ionospheric */
@@ -67,11 +75,13 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 	private Thread t = null;
 
 	private long requestSecondDelay = 15*60; // 15 min
+
+	private boolean debug = false;
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		UBXAssistNow agps = new UBXAssistNow(args[0], args[1], CMD_AID, "8.92", "46.03");
+		UBXAssistNow agps = new UBXAssistNow(args[0], args[1], CMD_AID/*, "8.92", "46.03"*/);
 
 		try {
 			agps.requestSecondDelay = 60;
@@ -100,96 +110,130 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 		this.lon = lon;
 		this.lat = lat;
 	}
+	public UBXAssistNow(String username, String password, String cmd){
+		this.user = username;
+		this.pass = password;
+		this.cmd = cmd;
+	}
 
 	public ByteArrayOutputStream doRequest(){
-		String request = ASSISTNOW_REQUEST+"\n";
-
-		request = request.replaceAll("\\$\\{cmd\\}", cmd);
-		request = request.replaceAll("\\$\\{user\\}", user);
-		request = request.replaceAll("\\$\\{pass\\}", pass);
-		request = request.replaceAll("\\$\\{lat\\}", lat);
-		request = request.replaceAll("\\$\\{lon\\}", lon);
-		request = request.replaceAll("\\$\\{pacc\\}", DEFAULT_PACC);
 
 
-		InputStream is = null;
-		OutputStream os = null;
-		Socket sck = null;
-		ByteArrayOutputStream cache = null;
-		try {
 
-			int retry=3;
-			while( cache==null && retry>0 ){
+		ArrayList<String> lats = new ArrayList<String>();
+		ArrayList<String> lons = new ArrayList<String>();
 
-
-				try {
-					/* Open all */
-					sck = new Socket(ASSISTNOW_SERVER, ASSISTNOW_PORT);
-
-					os = sck.getOutputStream();
-					is = sck.getInputStream();
-
-					System.out.println("["+request+"]");
-					os.write(request.getBytes("UTF-8"));
-		            os.flush();
-
-		            int lenght=-1;
-		            String responseLine;
-		            boolean start = false;
-		            int lines = 0;
-		            while ((responseLine = readLine(is)) != null && !start) {
-		            	System.out.println("["+responseLine+"]");
-
-		            	String key = "Content-Length: ";
-		            	if(responseLine.indexOf(key)>-1){
-
-		            		lenght = Integer.parseInt(responseLine.substring(responseLine.indexOf(key)+key.length()));
-		            		System.out.println("len ["+lenght+"]");
-
-		            	}
-		            	key = "Content-Type: application/ubx";
-		            	if(responseLine.indexOf(key)>-1){
-		            		start = true;
-		            	}
-		            	key = "error:";
-		            	if(responseLine.indexOf(key)>-1){
-		            		throw new Exception(responseLine);
-		            	}
-		            	if(lines++ > 20){
-		            		throw new Exception("Read more than 20 lines of header");
-		            	}
-		            }
-
-		            cache = new ByteArrayOutputStream(lenght);
-		            int tot = 0;
-		            byte buf[] = new byte[1024];
-		            int c = is.read(buf,0,buf.length);
-		            while(c>=0){
-		            	tot += c;
-		            	cache.write(buf,0,c);
-		            	System.out.println("Read: "+c+" Tot:"+tot);
-		                c = is.read(buf,0,buf.length);
-		            }
-		            if(lenght==cache.size()){
-		            	System.out.println("Successfull read");
-
-		            }else{
-		            	System.out.println("Read err "+lenght+"!="+cache.size());
-		            	cache.reset();
-		            	cache = null;
-		            	Thread.sleep(1000);
-		            }
-				}catch (IOException e) {
-					e.printStackTrace();
-			    }catch (Exception e) {
-			    	e.printStackTrace();
-			    }finally{
-	    	    	try{is.close();}catch(Exception ignore){}
-	    	    	try{os.close();}catch(Exception ignore){}
-	    	    	try{sck.close();}catch(Exception ignore){}
-	    	    }
-				retry--;
+		if(lat!=null&& lon!=null){
+			lats.add(lat);
+			lons.add(lon);
+		}else{
+			for(int la=LAT_MIN;la<=LAT_MAX;la+=LAT_STEP){
+				for(int lo=LON_MIN;lo<=LON_MAX;lo+=LON_STEP){
+					lats.add(""+la);
+					lons.add(""+lo);
+				}
 			}
+		}
+		ByteArrayOutputStream cache = new ByteArrayOutputStream();
+
+		for(int s=0;s<lats.size();s++){
+
+			String llat = lats.get(s);
+			String llon = lons.get(s);
+
+			String request = ASSISTNOW_REQUEST+"\n";
+			request = request.replaceAll("\\$\\{cmd\\}", cmd);
+			request = request.replaceAll("\\$\\{user\\}", user);
+			request = request.replaceAll("\\$\\{pass\\}", pass);
+			request = request.replaceAll("\\$\\{lat\\}", llat);
+			request = request.replaceAll("\\$\\{lon\\}", llon);
+			request = request.replaceAll("\\$\\{pacc\\}", DEFAULT_PACC);
+
+
+			InputStream is = null;
+			OutputStream os = null;
+			Socket sck = null;
+			try {
+
+				int retry=3;
+				while( retry>0 ){
+
+
+					try {
+						/* Open all */
+						sck = new Socket(ASSISTNOW_SERVER, ASSISTNOW_PORT);
+
+						os = sck.getOutputStream();
+						is = sck.getInputStream();
+
+						if(debug) System.out.println("["+request+"]");
+						os.write(request.getBytes("UTF-8"));
+			            os.flush();
+
+			            int lenght=-1;
+			            String responseLine;
+			            boolean start = false;
+			            int lines = 0;
+			            while ((responseLine = readLine(is)) != null && !start) {
+			            	if(debug) System.out.println("["+responseLine+"]");
+
+			            	String key = "Content-Length: ";
+			            	if(responseLine.indexOf(key)>-1){
+
+			            		lenght = Integer.parseInt(responseLine.substring(responseLine.indexOf(key)+key.length()));
+			            		if(debug) System.out.println("len ["+lenght+"]");
+
+			            	}
+			            	key = "Content-Type: application/ubx";
+			            	if(responseLine.indexOf(key)>-1){
+			            		start = true;
+			            	}
+			            	key = "error:";
+			            	if(responseLine.indexOf(key)>-1){
+			            		throw new Exception(responseLine);
+			            	}
+			            	if(lines++ > 20){
+			            		throw new Exception("Read more than 20 lines of header");
+			            	}
+			            }
+
+			            int init = cache.size();
+			            int tot = 0;
+			            byte buf[] = new byte[1024];
+			            int c = is.read(buf,0,buf.length);
+			            while(c>=0){
+			            	tot += c;
+			            	cache.write(buf,0,c);
+			            	if(debug) System.out.println("Read: "+c+" Tot:"+tot);
+			                c = is.read(buf,0,buf.length);
+			            }
+			            if(lenght==(cache.size()-init)){
+			            	if(debug) System.out.println("Successfull read");
+			            	retry = 0;
+			            }else{
+			            	if(debug) System.out.println("Read err "+lenght+"!="+(cache.size()-init));
+			            	byte tmp[] = cache.toByteArray();
+			            	cache.reset();
+			            	cache.write(tmp, 0, init);
+
+			            	//cache = null;
+			            	Thread.sleep(1000);
+			            }
+					}catch (IOException e) {
+						e.printStackTrace();
+				    }catch (Exception e) {
+				    	e.printStackTrace();
+				    }finally{
+		    	    	try{is.close();}catch(Exception ignore){}
+		    	    	try{os.close();}catch(Exception ignore){}
+		    	    	try{sck.close();}catch(Exception ignore){}
+		    	    }
+					retry--;
+				}
+			}catch (Exception e) {
+		    	e.printStackTrace();
+		    }
+		}
 
 //	        if(cache!=null){
 //	            // Write to GPS
@@ -208,9 +252,7 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 
 
 
-		}catch (Exception e) {
-	    	e.printStackTrace();
-	    }
+
 		return cache;
 	}
 
@@ -360,15 +402,15 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 							if(msg != null){
 								//System.out.println("msg "+msg.getClass().getName());
 								if(msg instanceof EphGps){
-									System.out.println("Ephemeris for SatID:"+((EphGps)msg).getSatID()+" "+(new Date(((EphGps)msg).getRefTime().getMsec())));
+									if(debug) System.out.println("Ephemeris for SatID:"+((EphGps)msg).getSatID()+" "+(new Date(((EphGps)msg).getRefTime().getMsec())));
 									ephs.add((EphGps)msg);
 								}
 								if(msg instanceof IonoGps){
-									System.out.println("Iono "+(new Date(((IonoGps)msg).getRefTime().getMsec())));
+									if(debug) System.out.println("Iono "+(new Date(((IonoGps)msg).getRefTime().getMsec())));
 									ionos.add((IonoGps)msg);
 								}
 							}else{
-								System.out.println("msg unknown");
+								if(debug) System.out.println("msg unknown");
 							}
 						} catch (IOException e) {
 							e.printStackTrace();
@@ -400,5 +442,21 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 	 */
 	public long getRequestSecondDelay() {
 		return requestSecondDelay;
+	}
+
+
+	/**
+	 * @param debug the debug to set
+	 */
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+
+
+	/**
+	 * @return the debug
+	 */
+	public boolean isDebug() {
+		return debug;
 	}
 }

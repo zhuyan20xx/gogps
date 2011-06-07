@@ -68,9 +68,11 @@ public class LiveTracking {
 
 			if(args.length>3){
 				String cmd="aid";
-				String lon="135";
-				String lat="35";
-				navigationIn = new UBXAssistNow( args[2], args[3], cmd, lon, lat);
+//				String lon="135";
+//				String lat="35";
+				String lon=null;
+				String lat=null;
+				navigationIn = new UBXAssistNow( args[2], args[3], cmd/*, lon, lat*/);
 				try {
 					navigationIn.init();
 				} catch (Exception e) {
