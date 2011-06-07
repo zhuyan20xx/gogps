@@ -232,7 +232,7 @@ public class GoGPS implements Runnable{
 								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
 								validPosition = true;
 							}else{
-								RoverPosition coord = new RoverPosition(roverPos, RoverPosition.DOP_TYPE_KALMAN, roverPos.getpDop(), roverPos.gethDop(), roverPos.getvDop());
+								RoverPosition coord = new RoverPosition(roverPos, RoverPosition.DOP_TYPE_STANDARD, roverPos.getpDop(), roverPos.gethDop(), roverPos.getvDop());
 
 								if(positionConsumers.size()>0){
 									coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
@@ -317,17 +317,15 @@ public class GoGPS implements Runnable{
 							if(!validPosition){
 								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
 								validPosition = true;
+							}else{
+								RoverPosition coord = new RoverPosition(roverPos, RoverPosition.DOP_TYPE_STANDARD, roverPos.getpDop(), roverPos.gethDop(), roverPos.getvDop());
+
+								if(positionConsumers.size()>0){
+									coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
+									notifyPositionConsumerAddCoordinate(coord);
+								}
+								System.out.println("-------------------- "+roverPos.getpDop());
 							}
-							if(positionConsumers.size()>0){
-								// TODO missing computed DOP
-								RoverPosition coord = new RoverPosition(roverPos);
-
-								coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
-								notifyPositionConsumerAddCoordinate(coord);
-							}
-
-							System.out.println("--------------------");
-
 						}
 					}
 				}

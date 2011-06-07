@@ -288,6 +288,14 @@ public class ReceiverPosition extends Coordinates{
 		SimpleMatrix vEstim;
 		SimpleMatrix tropoCorr;
 		SimpleMatrix ionoCorr;
+		
+		// Covariance matrix obtained from matrix A (satellite geometry) [ECEF coordinates]
+		SimpleMatrix covXYZ;
+		covXYZ = new SimpleMatrix(3, 3);
+		
+		// Covariance matrix obtained from matrix A (satellite geometry) [local coordinates]
+		SimpleMatrix covENU;
+		covENU = new SimpleMatrix(3, 3);
 
 		// Number of available satellites (i.e. observations)
 		int nObsAvail = satAvail.size();
@@ -390,7 +398,22 @@ public class ReceiverPosition extends Coordinates{
 		}else{
 			this.positionCovariance = null;
 		}
-
+		
+		// Compute covariance matrix from A matrix [ECEF reference system]
+		covXYZ = A.extractMatrix(0, nObsAvail, 0, 3).transpose().mult(A.extractMatrix(0, nObsAvail, 0, 3)).invert();
+		
+		// Allocate and build rotation matrix
+		SimpleMatrix R = new SimpleMatrix(3, 3);
+		R = Coordinates.rotationMatrix(this);
+		
+		// Propagate covariance from global system to local system
+		covENU = R.mult(covXYZ).mult(R.transpose());
+		
+		//Compute DOP values
+		this.pDop = Math.sqrt(covXYZ.get(0, 0) + covXYZ.get(1, 1) + covXYZ.get(2, 2));
+		this.hDop = Math.sqrt(covENU.get(0, 0) + covENU.get(1, 1));
+		this.vDop = Math.sqrt(covENU.get(2, 2));
+		
 		// Compute positioning in geodetic coordinates
 		this.computeGeodetic();
 
@@ -411,6 +434,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Define least squares matrices
 		SimpleMatrix A;
+		SimpleMatrix Adop;
 		SimpleMatrix b;
 		SimpleMatrix y0;
 		SimpleMatrix Q;
@@ -418,9 +442,20 @@ public class ReceiverPosition extends Coordinates{
 		SimpleMatrix vEstim;
 		SimpleMatrix tropoCorr;
 		SimpleMatrix ionoCorr;
+		
+		// Covariance matrix obtained from matrix A (satellite geometry) [ECEF coordinates]
+		SimpleMatrix covXYZ;
+		covXYZ = new SimpleMatrix(3, 3);
+		
+		// Covariance matrix obtained from matrix A (satellite geometry) [local coordinates]
+		SimpleMatrix covENU;
+		covENU = new SimpleMatrix(3, 3);
 
 		// Number of available satellites (i.e. observations)
 		int nObsAvail = satAvail.size();
+		
+		// Full design matrix for DOP computation
+		Adop = new SimpleMatrix(nObsAvail, 3);
 
 		// Double differences with respect to pivot satellite reduce
 		// observations by 1
@@ -448,8 +483,11 @@ public class ReceiverPosition extends Coordinates{
 		tropoCorr = new SimpleMatrix(nObsAvail, 1);
 		ionoCorr = new SimpleMatrix(nObsAvail, 1);
 
-		// Counter for available satellites
+		// Counter for available satellites (without pivot)
 		int k = 0;
+		
+		// Counter for available satellites (with pivot)
+		int d = 0;
 		
 		// Pivot satellite index
 		int pivotId = roverObs.getGpsSatID(pivot);
@@ -529,6 +567,15 @@ public class ReceiverPosition extends Coordinates{
 				// Increment available satellites counter
 				k++;
 			}
+			
+			// Design matrix for DOP computation
+			if (pos[i] != null && satAvail.contains(id)) {
+				// Fill in one row in the design matrix (complete one, for DOP)
+				Adop.set(d, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]); /* X */
+				Adop.set(d, 1, diffRoverSat[i].get(1) / roverSatAppRange[i]); /* Y */
+				Adop.set(d, 2, diffRoverSat[i].get(2) / roverSatAppRange[i]); /* Z */
+				d++;
+			}
 		}
 
 		// Apply troposphere and ionosphere correction
@@ -557,6 +604,22 @@ public class ReceiverPosition extends Coordinates{
 		}else{
 			this.positionCovariance = null;
 		}
+		
+		// Compute covariance matrix from A matrix [ECEF reference system]
+		covXYZ = Adop.transpose().mult(Adop).invert();
+		
+		// Allocate and build rotation matrix
+		SimpleMatrix R = new SimpleMatrix(3, 3);
+		R = Coordinates.rotationMatrix(this);
+		
+		// Propagate covariance from global system to local system
+		covENU = R.mult(covXYZ).mult(R.transpose());
+		
+		//Compute DOP values
+		this.pDop = Math.sqrt(covXYZ.get(0, 0) + covXYZ.get(1, 1) + covXYZ.get(2, 2));
+		this.hDop = Math.sqrt(covENU.get(0, 0) + covENU.get(1, 1));
+		this.vDop = Math.sqrt(covENU.get(2, 2));
+		
 		// Compute positioning in geodetic coordinates
 		this.computeGeodetic();
 	}
