@@ -39,8 +39,8 @@ public class RoverPosition extends Coordinates {
 
 	private int dopType = DOP_TYPE_NONE;
 	public final static int DOP_TYPE_NONE = 0;
-	public final static int DOP_TYPE_STANDALONE = 1;
-	public final static int DOP_TYPE_KALMAN = 2;
+	public final static int DOP_TYPE_STANDARD = 1; /* Standard DOP values (satellite geometry only) */
+	public final static int DOP_TYPE_KALMAN = 2; /* Kalman DOP values (KDOP), based on the Kalman filter error covariance matrix */
 
 
 	public RoverPosition(Coordinates c) {
