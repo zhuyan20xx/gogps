@@ -239,7 +239,7 @@ public class GoGPS implements Runnable{
 									notifyPositionConsumerAddCoordinate(coord);
 								}
 								System.out.println("-------------------- "+roverPos.getpDop());
-								if(roverPos.getpDop()<stopAtDopThreshold){
+								if(stopAtDopThreshold>0.0 && roverPos.getpDop()<stopAtDopThreshold){
 									return coord;
 								}
 							}
