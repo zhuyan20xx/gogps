@@ -42,7 +42,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.TimeZone;
 
-import org.ejml.data.SimpleMatrix;
+import org.ejml.simple.SimpleMatrix;
 import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;

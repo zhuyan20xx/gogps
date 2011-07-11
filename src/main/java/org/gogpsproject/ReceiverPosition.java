@@ -20,7 +20,7 @@
  */
 package org.gogpsproject;
 import java.util.ArrayList;
-import org.ejml.data.SimpleMatrix;
+import org.ejml.simple.SimpleMatrix;
 
 /**
  * <p>
