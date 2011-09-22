@@ -537,6 +537,9 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	public void stop(boolean waitForThread, long timeoutMs) throws InterruptedException {
 		askForStop = true;
 		running = false;
+		// disable waitForData to avoid wait forever in nextObservations()
+		waitForData = false;
+		
 		if(waitForThread && dataThread!=null){
 			try{
 				dataThread.join(timeoutMs);
@@ -548,6 +551,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				dataThread.interrupt();
 			}
 		}
+		
 	}
 
 	/** returns true if the data thread still is alive */
