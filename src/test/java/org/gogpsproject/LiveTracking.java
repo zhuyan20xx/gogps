@@ -104,7 +104,7 @@ public class LiveTracking {
 			 * compute precise position in Kalman filter mode
 			 */
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
-			goGPSstandalone.setDynamicModel(dynamicModel);
+			goGPS.setDynamicModel(dynamicModel);
 
 			// set Output
 			Date date = new Date();
