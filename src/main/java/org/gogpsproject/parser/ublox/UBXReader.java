@@ -21,6 +21,8 @@ package org.gogpsproject.parser.ublox;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Vector;
 
 import org.gogpsproject.EphGps;
 import org.gogpsproject.IonoGps;
@@ -36,14 +38,15 @@ import org.gogpsproject.StreamEventProducer;
  */
 public class UBXReader implements StreamEventProducer {
 	private InputStream in;
-	private StreamEventListener streamEventListener;
+	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
+//	private StreamEventListener streamEventListener;
 
 	public UBXReader(InputStream is){
 		this(is,null);
 	}
 	public UBXReader(InputStream is, StreamEventListener eventListener){
 		this.in = is;
-		this.streamEventListener = eventListener;
+		addStreamEventListener(eventListener);
 	}
 
 	public Object readMessagge() throws IOException, UBXException{
@@ -62,7 +65,12 @@ public class UBXReader implements StreamEventProducer {
 						DecodeRXMRAW decodegps = new DecodeRXMRAW(in);
 
 						Observations o = decodegps.decode(null);
-						if(streamEventListener!=null && o!=null) streamEventListener.addObservations(o);
+						if(streamEventListeners!=null && o!=null){
+							for(StreamEventListener sel:streamEventListeners){
+								// TODO clone o
+								sel.addObservations(o);
+							}
+						}
 						return o;
 					}
 				}else
@@ -74,7 +82,12 @@ public class UBXReader implements StreamEventProducer {
 							DecodeAIDHUI decodegps = new DecodeAIDHUI(in);
 
 							IonoGps iono = decodegps.decode();
-							if(streamEventListener!=null && iono!=null) streamEventListener.addIonospheric(iono);
+							if(streamEventListeners!=null && iono!=null){
+								for(StreamEventListener sel:streamEventListeners){
+									// TODO clone iono
+									sel.addIonospheric(iono);
+								}
+							}
 							return iono;
 						}else
 						if (data == 0x31) { // EPH
@@ -82,7 +95,12 @@ public class UBXReader implements StreamEventProducer {
 							DecodeAIDEPH decodegps = new DecodeAIDEPH(in);
 
 							EphGps eph = decodegps.decode();
-							if(streamEventListener!=null && eph!=null) streamEventListener.addEphemeris(eph);
+							if(streamEventListeners!=null && eph!=null){
+								for(StreamEventListener sel:streamEventListeners){
+									// TODO clone eph
+									sel.addEphemeris(eph);
+								}
+							}
 							return eph;
 
 						}
@@ -117,13 +135,29 @@ public class UBXReader implements StreamEventProducer {
 	/**
 	 * @return the streamEventListener
 	 */
-	public StreamEventListener getStreamEventListener() {
-		return streamEventListener;
+	@SuppressWarnings("unchecked")
+	@Override
+	public Vector<StreamEventListener> getStreamEventListeners() {
+		return (Vector<StreamEventListener>)streamEventListeners.clone();
 	}
 	/**
 	 * @param streamEventListener the streamEventListener to set
 	 */
-	public void setStreamEventListener(StreamEventListener streamEventListener) {
-		this.streamEventListener = streamEventListener;
+	@Override
+	public void addStreamEventListener(StreamEventListener streamEventListener) {
+		if(streamEventListener==null) return;
+		if(!streamEventListeners.contains(streamEventListener))
+			this.streamEventListeners.add(streamEventListener);
 	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#removeStreamEventListener(org.gogpsproject.StreamEventListener)
+	 */
+	@Override
+	public void removeStreamEventListener(
+			StreamEventListener streamEventListener) {
+		if(streamEventListener==null) return;
+		if(streamEventListeners.contains(streamEventListener))
+			this.streamEventListeners.remove(streamEventListener);
+	}
+
 }

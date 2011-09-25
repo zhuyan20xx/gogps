@@ -41,7 +41,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	private SerialPort serialPort;
 
 	private UBXSerialReader ubxReader;
-	private StreamEventListener streamEventListener;
+	//private StreamEventListener streamEventListener;
 
 	private String portName;
 	private int speed;
@@ -99,7 +99,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 				outputStream = serialPort.getOutputStream();
 
 				ubxReader = new UBXSerialReader(inputStream,outputStream);
-				ubxReader.setStreamEventListener(streamEventListener);
+				//ubxReader.setStreamEventListener(streamEventListener);
 				ubxReader.start();
 
 				connected = true;
@@ -154,21 +154,29 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 
 	}
 
-
-	/**
-	 * @return the streamEventListener
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#addStreamEventListener(org.gogpsproject.StreamEventListener)
 	 */
-	public StreamEventListener getStreamEventListener() {
-		return streamEventListener;
+	@Override
+	public void addStreamEventListener(StreamEventListener streamEventListener) {
+		ubxReader.addStreamEventListener(streamEventListener);
 	}
 
-
-	/**
-	 * @param streamEventListener the streamEventListener to set
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#getStreamEventListeners()
 	 */
-	public void setStreamEventListener(StreamEventListener streamEventListener) {
-		this.streamEventListener = streamEventListener;
-		if(this.ubxReader!=null) this.ubxReader.setStreamEventListener(streamEventListener);
+	@Override
+	public Vector<StreamEventListener> getStreamEventListeners() {
+		return ubxReader.getStreamEventListeners();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#removeStreamEventListener(org.gogpsproject.StreamEventListener)
+	 */
+	@Override
+	public void removeStreamEventListener(
+			StreamEventListener streamEventListener) {
+		ubxReader.removeStreamEventListener(streamEventListener);
 	}
 
 }

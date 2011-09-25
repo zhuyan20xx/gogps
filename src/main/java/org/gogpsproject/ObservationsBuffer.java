@@ -42,6 +42,8 @@ public class ObservationsBuffer
         }
     }
 
+    private Coordinates approxPosition = null;
+
     private boolean waitForData=true;
 
     private Vector<Observations> timeOrderedObs = new Vector<Observations>();
@@ -67,7 +69,7 @@ public class ObservationsBuffer
     	this.streamResource = streamResource;
     	// if resource produces also events register for it
     	if(streamResource!=null && streamResource instanceof StreamEventProducer){
-    		((StreamEventProducer)streamResource).setStreamEventListener(this);
+    		((StreamEventProducer)streamResource).addStreamEventListener(this);
     	}
     }
 
@@ -137,16 +139,12 @@ public class ObservationsBuffer
     @Override
     public void streamClosed() {
     	// TODO implement reconnection policy, i.e. if(streamResource!=null && !waitForData) streamResource.reconnect();
+    	waitForData = false;
     }
 
-    /* (non-Javadoc)
-     * @see org.gogpsproject.ObservationsProducer#getApproxPosition()
-     */
-    @Override
-    public Coordinates getApproxPosition() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+
+
+
 
     /* (non-Javadoc)
      * @see org.gogpsproject.ObservationsProducer#getCurrentObservations()
@@ -172,7 +170,8 @@ public class ObservationsBuffer
      */
     @Override
     public void init() throws Exception {
-    	if(streamResource!=null) streamResource.init();
+    	// Stream should have been already initialized.
+    	// if(streamResource!=null) streamResource.init();
     }
 
     /* (non-Javadoc)
@@ -205,7 +204,10 @@ public class ObservationsBuffer
     public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
     	// make the request to nextObservations() return null as end of stream
     	waitForData = false;
-    	if(streamResource!=null) streamResource.release(waitForThread, timeoutMs);
+    	//if(streamResource!=null) streamResource.release(waitForThread, timeoutMs);
+
+    	((StreamEventProducer)streamResource).removeStreamEventListener(this);
+
 
     }
 
@@ -280,5 +282,17 @@ public class ObservationsBuffer
         System.out.println("\t\tR: < Iono2");
         return closer;
     }
-
+	/**
+	 * @param approxPosition the approxPosition to set
+	 */
+	public void setApproxPosition(Coordinates approxPosition) {
+		this.approxPosition = approxPosition;
+	}
+    /* (non-Javadoc)
+     * @see org.gogpsproject.ObservationsProducer#getApproxPosition()
+     */
+    @Override
+    public Coordinates getApproxPosition() {
+        return approxPosition;
+    }
 }

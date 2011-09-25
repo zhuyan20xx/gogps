@@ -19,6 +19,8 @@
  */
 package org.gogpsproject;
 
+import java.util.Vector;
+
 
 /**
  * @author Cryms.com
@@ -26,7 +28,7 @@ package org.gogpsproject;
  */
 public interface StreamEventProducer {
 
-	public void setStreamEventListener(StreamEventListener streamEventListener);
-	public StreamEventListener getStreamEventListener();
-
+	public void addStreamEventListener(StreamEventListener streamEventListener);
+	public Vector<StreamEventListener> getStreamEventListeners();
+	public void removeStreamEventListener(StreamEventListener streamEventListener);
 }
