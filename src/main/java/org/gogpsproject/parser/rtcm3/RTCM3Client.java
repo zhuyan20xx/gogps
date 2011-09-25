@@ -48,16 +48,17 @@ import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.StreamEventListener;
+import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.StreamResource;
 import org.gogpsproject.util.Bits;
 import org.gogpsproject.util.InputStreamCounter;
 
-public class RTCM3Client implements Runnable, ObservationsProducer {
+public class RTCM3Client implements Runnable, StreamResource, StreamEventProducer/*,ObservationsProducer*/ {
 
 	private ConnectionSettings settings;
 	private Thread dataThread;
 
-	private boolean waitForData = true;
+	//private boolean waitForData = true;
 
 	private boolean running = false;
 	private boolean askForStop = false;
@@ -76,8 +77,10 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 	private Coordinates approxPosition = null;
 
-	private Vector<Observations> observationsBuffer = new Vector<Observations>();
-	private int obsCursor = 0;
+	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
+
+	//private Vector<Observations> observationsBuffer = new Vector<Observations>();
+	//private int obsCursor = 0;
 
 	private String streamFileLogger = null;
 
@@ -89,6 +92,25 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	public final static int CONNECTION_POLICY_RECONNECT = 1;
 	private int reconnectionPolicy = CONNECTION_POLICY_RECONNECT;
 
+	public final static int EXIT_NEVER = 0;
+	public final static int EXIT_ON_LAST_LISTENER_LEAVE = 1;
+	private int exitPolicy = EXIT_ON_LAST_LISTENER_LEAVE;
+
+
+
+	/**
+	 * @return the exitPolicy
+	 */
+	public int getExitPolicy() {
+		return exitPolicy;
+	}
+
+	/**
+	 * @param exitPolicy the exitPolicy to set
+	 */
+	public void setExitPolicy(int exitPolicy) {
+		this.exitPolicy = exitPolicy;
+	}
 
 	public static RTCM3Client getInstance(String _host, int _port, String _username,
 			String _password, String _mountpoint) throws Exception{
@@ -250,20 +272,22 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		Socket sck = null;
 		PrintWriter out = null;
 
-
 		try {
 			// Socket for reciving data are created
 
 			try {
 				Proxy proxy = Proxy.NO_PROXY;
-				// proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 8888));
+				// proxy = new Proxy(Proxy.Type.SOCKS, new
+				// InetSocketAddress("127.0.0.1", 8888));
 
 				sck = new Socket(proxy);
-				InetSocketAddress dest = new InetSocketAddress(settings.getHost(), settings.getPort());
+				InetSocketAddress dest = new InetSocketAddress(settings
+						.getHost(), settings.getPort());
 				sck.connect(dest);
-				//sck = new Socket(settings.getHost(), settings.getPort());
-				if(debug) System.out.println("Connected to " + settings.getHost() + ":"
-						+ settings.getPort());
+				// sck = new Socket(settings.getHost(), settings.getPort());
+				if (debug)
+					System.out.println("Connected to " + settings.getHost()
+							+ ":" + settings.getPort());
 				running = true;
 
 			} catch (Exception e) {
@@ -275,64 +299,76 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				// } else {
 				// messages.showErrorMessage(settings.getSource(), msg);
 				// }
-				if(!askForStop && reconnectionPolicy == CONNECTION_POLICY_RECONNECT){
+				if (!askForStop
+						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
 					System.out.println("Sleep 10s before retry");
-					Thread.sleep(10*1000);
+					Thread.sleep(10 * 1000);
 					start();
+				} else {
+					for (StreamEventListener sel : streamEventListeners) {
+						sel.streamClosed();
+					}
 				}
 				return;
 			}
-
 
 			// The input and output streams are created
 			out = new PrintWriter(sck.getOutputStream(), true);
 			in = sck.getInputStream();
 			// The data request containing the logon and password are send
 			out.print("GET /" + settings.getSource() + " HTTP/1.1\r\n");
-			out.print("Host: "+settings.getHost()+"\r\n");
-			//out.print("Ntrip-Version: Ntrip/2.0\r\n");
+			out.print("Host: " + settings.getHost() + "\r\n");
+			// out.print("Ntrip-Version: Ntrip/2.0\r\n");
 			out.print("Accept: rtk/rtcm, dgps/rtcm\r\n");
 			out.print("User-Agent: NTRIP goGPSprojectJava\r\n");
-			if(approxPosition!=null){
+			if (approxPosition != null) {
 				approxPosition.computeGeodetic();
-				String hhmmss= (new SimpleDateFormat("HHmmss")).format(new Date());
+				String hhmmss = (new SimpleDateFormat("HHmmss"))
+						.format(new Date());
 
-				int h = (int)approxPosition.getGeodeticHeight();
+				int h = (int) approxPosition.getGeodeticHeight();
 				double lon = approxPosition.getGeodeticLongitude();
 				double lat = approxPosition.getGeodeticLatitude();
 
-				int lon_deg = (int)lon;
+				int lon_deg = (int) lon;
 				double lon_min = (lon - lon_deg) * 60;
 				double lon_nmea = lon_deg * 100 + lon_min;
 				String lonn = (new DecimalFormat("00000.000")).format(lon_nmea);
-				int lat_deg = (int)lat;
+				int lat_deg = (int) lat;
 				double lat_min = (lat - lat_deg) * 60;
 				double lat_nmea = lat_deg * 100 + lat_min;
 				String latn = (new DecimalFormat("0000.000")).format(lat_nmea);
-				ntripGAA = "$GPGGA,"+hhmmss+","+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",4,10,1,"+(h<0?0:h)+",M,1,M,3,0";
-				//String ntripGAA = "$GPGGA,"+hhmmss+".00,"+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",1,10,1.00,"+(h<0?0:h)+",M,37.3,M,,";
-				//ntripGAA = "$GPGGA,214833.00,3500.40000000,N,13900.10000000,E,1,10,1,-17.3,M,,M,,";
+				ntripGAA = "$GPGGA," + hhmmss + "," + latn + ","
+						+ (lat < 0 ? "S" : "N") + "," + lonn + ","
+						+ (lon < 0 ? "W" : "E") + ",4,10,1," + (h < 0 ? 0 : h)
+						+ ",M,1,M,3,0";
+				// String ntripGAA =
+				// "$GPGGA,"+hhmmss+".00,"+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",1,10,1.00,"+(h<0?0:h)+",M,37.3,M,,";
+				// ntripGAA =
+				// "$GPGGA,214833.00,3500.40000000,N,13900.10000000,E,1,10,1,-17.3,M,,M,,";
 
-				ntripGAA = /*"Ntrip-GAA: "+*/ntripGAA+"*"+computeNMEACheckSum(ntripGAA);
+				ntripGAA = /* "Ntrip-GAA: "+ */ntripGAA + "*"
+						+ computeNMEACheckSum(ntripGAA);
 				System.out.println(ntripGAA);
 
-				//out.print(ntripGAA+"\r\n");
+				// out.print(ntripGAA+"\r\n");
 			}
 			out.print("Connection: close\r\n");
-			out.print("Authorization: Basic " + settings.getAuthbase64()+"\r\n");
+			out.print("Authorization: Basic " + settings.getAuthbase64()
+					+ "\r\n");
 
 			// out.println("User-Agent: NTRIP goGps");
 			// out.println("Ntrip-GAA: $GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0*65");
 			// out.println("User-Agent: NTRIP GoGps");
 			// out.println("Accept: */*\r\nConnection: close");
 			out.print("\r\n");
-			if(ntripGAA!=null){
-				out.print(ntripGAA+"\r\n");
+			if (ntripGAA != null) {
+				out.print(ntripGAA + "\r\n");
 				lastNtripGAAsent = System.currentTimeMillis();
 			}
 			out.flush();
-//			System.out.println(" \n %%%%%%%%%%%%%%%%%%%%% \n password >>> "
-//					+ settings.getAuthbase64());
+			// System.out.println(" \n %%%%%%%%%%%%%%%%%%%%% \n password >>> "
+			// + settings.getAuthbase64());
 			// *****************
 			// Reading the data
 
@@ -352,11 +388,12 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 			while (running && state == 0) {
 				int c = in.read();
-				if(debug)System.out.print((char)c);
-				if (c < 0){
+				if (debug)
+					System.out.print((char) c);
+				if (c < 0) {
 					break;
 				}
-				//	break;
+				// break;
 				// tester.write(c);
 				state = transition(state, c);
 				if (hindex > 10) {
@@ -373,25 +410,43 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 					running = false;
 				}
 			}
-			if(!running){
-				for(int i=0;i<header.length;i++)
-					if(debug)System.out.print((char)header[i]);
+			if (!running) {
+				for (int i = 0; i < header.length; i++)
+					if (debug)
+						System.out.print((char) header[i]);
 				int c = in.read();
-				while(c!=-1){
-					if(debug)System.out.println(((int)c)+" "+(char)c);
+				while (c != -1) {
+					if (debug)
+						System.out.println(((int) c) + " " + (char) c);
 
 					c = in.read();
 				}
-				if(debug)System.out.println(((int)c)+" "+(char)c);
+				if (debug)
+					System.out.println(((int) c) + " " + (char) c);
 
-				if(debug)System.out.println();
-				if(debug)System.out.println(settings.getSource()+" invalid header");
+				if (debug)
+					System.out.println();
+				if (debug)
+					System.out
+							.println(settings.getSource() + " invalid header");
+
+				if (!askForStop
+						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
+					System.out.println("Sleep 10s before retry");
+					Thread.sleep(10 * 1000);
+					start();
+				} else {
+					for (StreamEventListener sel : streamEventListeners) {
+						sel.streamClosed();
+					}
+				}
 				return;
 			}
 
 			while (state != 5) {
 				int c = in.read();
-				if(debug)System.out.println(((int)c)+" "+(char)c);
+				if (debug)
+					System.out.println(((int) c) + " " + (char) c);
 				if (c < 0) {
 					break;
 				}
@@ -407,10 +462,23 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			if (running) {
 				// tester.println("<" + settings.getSource() +
 				// ">Header least: OK");
-				if(debug)System.out.println(settings.getSource()+" connected successfully");
+				if (debug)
+					System.out.println(settings.getSource()
+							+ " connected successfully");
 			} else {
 				// showErrorMessage(settings.getSource(), "Error");
-				if(debug)System.out.println(settings.getSource()+" not connected");
+				if (debug)
+					System.out.println(settings.getSource() + " not connected");
+				if (!askForStop
+						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
+					System.out.println("Sleep 10s before retry");
+					Thread.sleep(10 * 1000);
+					start();
+				} else {
+					for (StreamEventListener sel : streamEventListeners) {
+						sel.streamClosed();
+					}
+				}
 				return;
 			}
 			// The read loop is started
@@ -418,18 +486,17 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 			// this.dataThread.sleep(6000);
 			// this.notifyAll();
 
-			FileOutputStream fos= null;
+			FileOutputStream fos = null;
 			try {
-				if(streamFileLogger!=null){
+				if (streamFileLogger != null) {
 					fos = new FileOutputStream(streamFileLogger);
 				}
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
 
-			InputStream isc = (fos==null?in:new InputStreamCounter(in, fos));
-
-
+			InputStream isc = (fos == null ? in : new InputStreamCounter(in,
+					fos));
 
 			readLoop(isc, out);
 			// System.out.println("1");
@@ -442,35 +509,48 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		} finally {
 			// Connection was either terminated or an IOError accured
 
-			if(running){
-				System.out.println(settings.getSource() + " Connection Error: Data is empty");
-			}else{
-				if(debug) System.out.println(settings.getSource() + " Connection closed by client");
+			if (running) {
+				System.out.println(settings.getSource()
+						+ " Connection Error: Data is empty");
+			} else {
+				if (debug)
+					System.out.println(settings.getSource()
+							+ " Connection closed by client");
 			}
-
 
 			running = false;
 
 			// All connections are closed
-			try {
-				if (out != null)
+
+			if (out != null)
+				try {
 					out.close();
-				if (in != null)
+				} catch (Exception ex) {
+				}
+			if (in != null)
+				try {
 					in.close();
-				if (sck != null)
+				} catch (Exception ex) {
+				}
+			if (sck != null)
+				try {
 					sck.close();
-			} catch (IOException ex) {
-			}
+				} catch (Exception ex) {
+				}
 
 			// reconnect if needed
-			if(!askForStop && reconnectionPolicy == CONNECTION_POLICY_RECONNECT){
+			if (!askForStop
+					&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
 				System.out.println("Sleep 10s before retry");
 				try {
-					Thread.sleep(10*1000);
+					Thread.sleep(10 * 1000);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
 				}
 				start();
+			} else {
+				for (StreamEventListener sel : streamEventListeners) {
+					sel.streamClosed();
+				}
 			}
 
 		}
@@ -527,6 +607,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 
 	}
 	public void start() {
+		askForStop = false;
+
 		dataThread = new Thread(this);
 		dataThread.setName("RTCM3Client "+settings.getHost()+" "+settings.getSource());
 		dataThread.start();
@@ -538,8 +620,8 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 		askForStop = true;
 		running = false;
 		// disable waitForData to avoid wait forever in nextObservations()
-		waitForData = false;
-		
+		//waitForData = false;
+
 		if(waitForThread && dataThread!=null){
 			try{
 				dataThread.join(timeoutMs);
@@ -551,7 +633,7 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 				dataThread.interrupt();
 			}
 		}
-		
+
 	}
 
 	/** returns true if the data thread still is alive */
@@ -696,86 +778,92 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	}
 
 	public void addObservation(Observations o){
-		if(debug){
-			System.out.println("\t\t\t\tM > obs "+o.getGpsSize()+" time "+new Date(o.getRefTime().getMsec()));
-			for(int i=0;i<o.getGpsSize();i++){
-				ObservationSet os = o.getGpsByIdx(i);
-				System.out.print(" svid:"+os.getSatID());
-				System.out.print(" codeC:"+os.getCodeC(0));
-				System.out.print(" codeP:"+os.getCodeP(0));
-				System.out.print(" doppl:"+os.getDoppler(0));
-				System.out.print(" LLInd:"+os.getLossLockInd(0));
-				System.out.print(" phase:"+os.getPhase(0));
-				System.out.print(" pseud:"+os.getPseudorange(0));
-				System.out.print(" q.ind:"+os.getQualityInd(0));
-				System.out.println(" s.str:"+os.getSignalStrength(0));
+		if(streamEventListeners!=null && o!=null){
+			for(StreamEventListener sel:streamEventListeners){
+				// TODO clone o
+				sel.addObservations(o);
 			}
 		}
-		observationsBuffer.add(o);
+//		if(debug){
+//			System.out.println("\t\t\t\tM > obs "+o.getGpsSize()+" time "+new Date(o.getRefTime().getMsec()));
+//			for(int i=0;i<o.getGpsSize();i++){
+//				ObservationSet os = o.getGpsByIdx(i);
+//				System.out.print(" svid:"+os.getSatID());
+//				System.out.print(" codeC:"+os.getCodeC(0));
+//				System.out.print(" codeP:"+os.getCodeP(0));
+//				System.out.print(" doppl:"+os.getDoppler(0));
+//				System.out.print(" LLInd:"+os.getLossLockInd(0));
+//				System.out.print(" phase:"+os.getPhase(0));
+//				System.out.print(" pseud:"+os.getPseudorange(0));
+//				System.out.print(" q.ind:"+os.getQualityInd(0));
+//				System.out.println(" s.str:"+os.getSignalStrength(0));
+//			}
+//		}
+//		observationsBuffer.add(o);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#getApproxPosition()
 	 */
-	@Override
+	//@Override
 	public Coordinates getApproxPosition() {
 		return approxPosition;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.ObservationsProducer#getCurrentObservations()
-	 */
-	@Override
-	public Observations getCurrentObservations() {
-		if(obsCursor>=observationsBuffer.size()){
-			if(waitForData){
-				while(obsCursor>=observationsBuffer.size()){
-					if(debug) System.out.print("m");
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {}
-				}
-			}else{
-				return null;
-			}
-		}
-		return observationsBuffer.get(obsCursor);
-	}
+//	/* (non-Javadoc)
+//	 * @see org.gogpsproject.ObservationsProducer#getCurrentObservations()
+//	 */
+//	//@Override
+//	public Observations getCurrentObservations() {
+//		if(obsCursor>=observationsBuffer.size()){
+//			if(waitForData){
+//				while(obsCursor>=observationsBuffer.size()){
+//					if(debug) System.out.print("m");
+//					try {
+//						Thread.sleep(1000);
+//					} catch (InterruptedException e) {}
+//				}
+//			}else{
+//				return null;
+//			}
+//		}
+//		return observationsBuffer.get(obsCursor);
+//	}
 
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#init()
 	 */
-	@Override
+	//@Override
 	public void init() throws Exception {
 		start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.ObservationsProducer#nextObservations()
-	 */
-	@Override
-	public Observations nextObservations() {
-		if(observationsBuffer.size()==0 || (obsCursor+1)>=observationsBuffer.size()){
-			if(waitForData){
-				while(observationsBuffer.size()==0 || (obsCursor+1)>=observationsBuffer.size()){
-					if(debug) System.out.println("\t\t\t\tM cur:"+obsCursor+" pool:"+observationsBuffer.size());
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {}
-				}
-			}else{
-				return null;
-			}
-		}
-		Observations o = observationsBuffer.get(++obsCursor);
-		if(debug) System.out.println("\t\t\t\tM < Obs "+o.getRefTime().getMsec());
-        return o;
-	}
+//	/* (non-Javadoc)
+//	 * @see org.gogpsproject.ObservationsProducer#nextObservations()
+//	 */
+//	//@Override
+//	public Observations nextObservations() {
+//		if(observationsBuffer.size()==0 || (obsCursor+1)>=observationsBuffer.size()){
+//			if(waitForData){
+//				while(observationsBuffer.size()==0 || (obsCursor+1)>=observationsBuffer.size()){
+//					if(debug) System.out.println("\t\t\t\tM cur:"+obsCursor+" pool:"+observationsBuffer.size());
+//					try {
+//						Thread.sleep(1000);
+//					} catch (InterruptedException e) {}
+//				}
+//			}else{
+//				return null;
+//			}
+//		}
+//		Observations o = observationsBuffer.get(++obsCursor);
+//		if(debug) System.out.println("\t\t\t\tM < Obs "+o.getRefTime().getMsec());
+//        return o;
+//	}
 
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#release()
 	 */
-	@Override
+	//@Override
 	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
 		stop(waitForThread, timeoutMs);
 	}
@@ -827,6 +915,45 @@ public class RTCM3Client implements Runnable, ObservationsProducer {
 	 */
 	public int getReconnectionPolicy() {
 		return reconnectionPolicy;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#addStreamEventListener(org.gogpsproject.StreamEventListener)
+	 */
+	@Override
+	public void addStreamEventListener(StreamEventListener streamEventListener) {
+		if(streamEventListener==null) return;
+		if(!streamEventListeners.contains(streamEventListener))
+			this.streamEventListeners.add(streamEventListener);
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#getStreamEventListeners()
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public Vector<StreamEventListener> getStreamEventListeners() {
+		return (Vector<StreamEventListener>) streamEventListeners.clone();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#removeStreamEventListener(org.gogpsproject.StreamEventListener)
+	 */
+	@Override
+	public void removeStreamEventListener(
+			StreamEventListener streamEventListener) {
+		if(streamEventListener==null) return;
+		if(streamEventListeners.contains(streamEventListener))
+			this.streamEventListeners.remove(streamEventListener);
+
+		if(exitPolicy == EXIT_ON_LAST_LISTENER_LEAVE && streamEventListeners.size()==0){
+			try {
+				release(true, 10*1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

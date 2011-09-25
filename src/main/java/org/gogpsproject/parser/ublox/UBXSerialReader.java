@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Vector;
 
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
@@ -44,7 +45,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	//private boolean end = false;
 	private Thread t = null;
 	private boolean stop = false;
-	private StreamEventListener streamEventListener;
+	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
+	//private StreamEventListener streamEventListener;
 	private UBXReader reader;
 
 	public UBXSerialReader(InputStream in,OutputStream out) {
@@ -166,22 +168,55 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if(streamEventListener!=null) streamEventListener.streamClosed();
+		for(StreamEventListener sel:streamEventListeners){
+			sel.streamClosed();
+		}
+		//if(streamEventListener!=null) streamEventListener.streamClosed();
 	}
+
+//	/**
+//	 * @return the streamEventListener
+//	 */
+//	public StreamEventListener getStreamEventListener() {
+//		return streamEventListener;
+//	}
+
+//	/**
+//	 * @param streamEventListener the streamEventListener to set
+//	 */
+//	public void setStreamEventListener(StreamEventListener streamEventListener) {
+//		this.streamEventListener = streamEventListener;
+//		if(this.reader!=null) this.reader.setStreamEventListener(streamEventListener);
+//	}
 
 	/**
 	 * @return the streamEventListener
 	 */
-	public StreamEventListener getStreamEventListener() {
-		return streamEventListener;
+	@SuppressWarnings("unchecked")
+	@Override
+	public Vector<StreamEventListener> getStreamEventListeners() {
+		return (Vector<StreamEventListener>)streamEventListeners.clone();
 	}
-
 	/**
 	 * @param streamEventListener the streamEventListener to set
 	 */
-	public void setStreamEventListener(StreamEventListener streamEventListener) {
-		this.streamEventListener = streamEventListener;
-		if(this.reader!=null) this.reader.setStreamEventListener(streamEventListener);
+	@Override
+	public void addStreamEventListener(StreamEventListener streamEventListener) {
+		if(streamEventListener==null) return;
+		if(!streamEventListeners.contains(streamEventListener))
+			this.streamEventListeners.add(streamEventListener);
+		if(this.reader!=null)
+			this.reader.addStreamEventListener(streamEventListener);
 	}
-
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#removeStreamEventListener(org.gogpsproject.StreamEventListener)
+	 */
+	@Override
+	public void removeStreamEventListener(
+			StreamEventListener streamEventListener) {
+		if(streamEventListener==null) return;
+		if(streamEventListeners.contains(streamEventListener))
+			this.streamEventListeners.remove(streamEventListener);
+		this.reader.removeStreamEventListener(streamEventListener);
+	}
 }
