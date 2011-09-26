@@ -33,6 +33,9 @@ import java.io.IOException;
  */
 public class ObservationSet implements Streamable {
 
+	private final static int STREAM_V = 1;
+
+
 	public final static int L1 = 0;
 	public final static int L2 = 1;
 
@@ -259,6 +262,14 @@ public class ObservationSet implements Streamable {
 			signalStrength[L2] = dai.readFloat();
 			doppler[L2] = dai.readFloat();
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#getStreamVersion()
+	 */
+	@Override
+	public int getStreamVersion() {
+		return STREAM_V;
 	}
 
 }

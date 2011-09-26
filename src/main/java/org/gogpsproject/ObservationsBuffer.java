@@ -19,6 +19,13 @@
  */
 package org.gogpsproject;
 
+import java.beans.Encoder;
+import java.beans.XMLEncoder;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -55,6 +62,11 @@ public class ObservationsBuffer
     private HashMap<Integer,Integer> ephCursors = new HashMap<Integer, Integer>();
 
     private StreamResource streamResource;
+
+    private String fileNameOutLog = null;
+    private FileOutputStream fosOutLog = null;
+    private DataOutputStream outLog = null;//new XMLEncoder(os);
+
 
     /**
     *
@@ -101,7 +113,15 @@ public class ObservationsBuffer
             es.ephs.put(new Integer(eph.getSatID()), eph);
             timeOrderedEphs.add(es);
         }
+        if(outLog!=null){
 
+        	try {
+        		eph.write(outLog);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+        }
     }
 
     /* (non-Javadoc)
@@ -120,6 +140,15 @@ public class ObservationsBuffer
         	System.out.println("new Iono @ "+(iono.getRefTime().getMsec()/60000));
         	timeOrderedIono.add(iono);
         }
+        if(outLog!=null){
+
+        	try {
+        		iono.write(outLog);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+        }
     }
 
     /* (non-Javadoc)
@@ -130,6 +159,15 @@ public class ObservationsBuffer
     	//System.out.println("\tR# > obs "+o.getGpsSize()+" time "+o.getRefTime().getMsec());
         // TODO test if ref time observetions is not already present
         this.timeOrderedObs.add(o);
+        if(outLog!=null){
+
+        	try {
+        		o.write(outLog);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+        }
 
     }
 
@@ -172,6 +210,8 @@ public class ObservationsBuffer
     public void init() throws Exception {
     	// Stream should have been already initialized.
     	// if(streamResource!=null) streamResource.init();
+
+
     }
 
     /* (non-Javadoc)
@@ -202,12 +242,29 @@ public class ObservationsBuffer
      */
     @Override
     public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
+
+    	if(outLog!=null){
+    		try{
+    			outLog.flush();
+    			outLog.close();
+    		}catch (Exception e) {
+				e.printStackTrace();
+			}
+    	}
+    	if(fosOutLog!=null){
+    		try{
+    			fosOutLog.close();
+    		}catch (Exception e) {
+				e.printStackTrace();
+			}
+    	}
+
     	// make the request to nextObservations() return null as end of stream
     	waitForData = false;
     	//if(streamResource!=null) streamResource.release(waitForThread, timeoutMs);
-
-    	((StreamEventProducer)streamResource).removeStreamEventListener(this);
-
+    	if(streamResource!=null && streamResource instanceof StreamEventProducer){
+    		((StreamEventProducer)streamResource).removeStreamEventListener(this);
+    	}
 
     }
 
@@ -295,4 +352,21 @@ public class ObservationsBuffer
     public Coordinates getApproxPosition() {
         return approxPosition;
     }
+	/**
+	 * @param fileNameOutLog the fileNameOutLog to set
+	 * @throws FileNotFoundException
+	 */
+	public void setFileNameOutLog(String fileNameOutLog) throws FileNotFoundException {
+		this.fileNameOutLog = fileNameOutLog;
+		if(fileNameOutLog!=null){
+    		fosOutLog = new FileOutputStream(fileNameOutLog,true);
+    		outLog = new DataOutputStream(fosOutLog);
+    	}
+	}
+	/**
+	 * @return the fileNameOutLog
+	 */
+	public String getFileNameOutLog() {
+		return fileNameOutLog;
+	}
 }

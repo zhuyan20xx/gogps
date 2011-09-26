@@ -31,6 +31,9 @@ import java.io.IOException;
  */
 public class IonoGps implements Streamable{
 
+	private final static int STREAM_V = 1;
+
+
 	/** Bitmask, every bit represenst a GPS SV (1-32). If the bit is set the SV is healthy. */
 	private long health = 0;
 
@@ -415,6 +418,13 @@ public class IonoGps implements Streamable{
 		validKlobuchar = dai.readBoolean();
 		long l = dai.readLong();
 		refTime = new Time(l>0?l:System.currentTimeMillis());
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#getStreamVersion()
+	 */
+	@Override
+	public int getStreamVersion() {
+		return STREAM_V;
 	}
 
 }

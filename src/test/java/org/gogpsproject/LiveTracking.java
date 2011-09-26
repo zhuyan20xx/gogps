@@ -105,6 +105,7 @@ public class LiveTracking {
 
 			ObservationsBuffer masterIn = new ObservationsBuffer(rtcmClient);
 			masterIn.setApproxPosition(initialPosition);
+			masterIn.setFileNameOutLog("./test/masterOut.dat");
 			masterIn.init();
 
 			/******************************************

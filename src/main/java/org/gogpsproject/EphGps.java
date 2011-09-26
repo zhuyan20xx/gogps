@@ -32,6 +32,8 @@ import java.io.IOException;
  * @author ege, Cryms.com
  */
 public class EphGps implements Streamable {
+	private final static int STREAM_V = 1;
+
 	private Time refTime; /* Reference time of the dataset */
 	private int satID; /* Satellite ID number */
 	private int week; /* GPS week number */
@@ -541,5 +543,12 @@ public class EphGps implements Streamable {
 		cic = dai.readDouble();
 		cis = dai.readDouble();
 		fitInt = dai.readDouble();
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#getStreamVersion()
+	 */
+	@Override
+	public int getStreamVersion() {
+		return STREAM_V;
 	}
 }
