@@ -61,6 +61,13 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	//private boolean waitForData = true;
 
 	private boolean running = false;
+	/**
+	 * @return the running
+	 */
+	public boolean isRunning() {
+		return running;
+	}
+
 	private boolean askForStop = false;
 	private HashMap<Integer, Decode> decodeMap;
 

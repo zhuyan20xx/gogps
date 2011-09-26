@@ -32,6 +32,9 @@ import java.util.ArrayList;
  * @author ege, Cryms.com
  */
 public class Observations implements Streamable {
+
+	private final static int STREAM_V = 1;
+
 	private Time refTime; /* Reference time of the dataset */
 	private int eventFlag; /* Event flag */
 //	private ArrayList<Integer> gpsSat; /* Ordered list of visible GPS satellites IDs */
@@ -195,5 +198,12 @@ public class Observations implements Streamable {
 			ObservationSet os = new ObservationSet(dai);
 			gps.add(os);
 		}
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#getStreamVersion()
+	 */
+	@Override
+	public int getStreamVersion() {
+		return STREAM_V;
 	}
 }
