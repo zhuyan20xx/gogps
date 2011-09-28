@@ -82,7 +82,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 	private boolean debug=false;
 
-	private Coordinates approxPosition = null;
+	private Coordinates masterPosition = null;
 
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 
@@ -328,14 +328,14 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			// out.print("Ntrip-Version: Ntrip/2.0\r\n");
 			out.print("Accept: rtk/rtcm, dgps/rtcm\r\n");
 			out.print("User-Agent: NTRIP goGPSprojectJava\r\n");
-			if (approxPosition != null) {
-				approxPosition.computeGeodetic();
+			if (masterPosition != null) {
+				masterPosition.computeGeodetic();
 				String hhmmss = (new SimpleDateFormat("HHmmss"))
 						.format(new Date());
 
-				int h = (int) approxPosition.getGeodeticHeight();
-				double lon = approxPosition.getGeodeticLongitude();
-				double lat = approxPosition.getGeodeticLatitude();
+				int h = (int) masterPosition.getGeodeticHeight();
+				double lon = masterPosition.getGeodeticLongitude();
+				double lat = masterPosition.getGeodeticLatitude();
 
 				int lon_deg = (int) lon;
 				double lon_min = (lon - lon_deg) * 60;
@@ -575,7 +575,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
 			// JP Osaka
 			//Coordinates coordinates = Coordinates.globalXYZInstance(-3749314.940644724,3684015.867703885,3600798.5084946174);
-			rtcm.setApproxPosition(coordinates);
+			rtcm.setMasterPosition(coordinates);
 			rtcm.init();
 
 		} catch (Exception e1) {
@@ -813,8 +813,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	 * @see org.gogpsproject.ObservationsProducer#getApproxPosition()
 	 */
 	//@Override
-	public Coordinates getApproxPosition() {
-		return approxPosition;
+	public Coordinates getMasterPosition() {
+		return masterPosition;
 	}
 
 //	/* (non-Javadoc)
@@ -878,8 +878,11 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	/**
 	 * @param initialPosition the initialPosition to set
 	 */
-	public void setApproxPosition(Coordinates approxPosition) {
-		this.approxPosition = approxPosition;
+	public void setMasterPosition(Coordinates masterPosition) {
+		this.masterPosition = masterPosition;
+		for (StreamEventListener sel : streamEventListeners) {
+			sel.setDefinedPosition(masterPosition);
+		}
 	}
 
 	/**
@@ -932,7 +935,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		if(streamEventListener==null) return;
 		if(!streamEventListeners.contains(streamEventListener))
 			this.streamEventListeners.add(streamEventListener);
-
+		// feed defined position
+		streamEventListener.setDefinedPosition(masterPosition);
 	}
 
 	/* (non-Javadoc)

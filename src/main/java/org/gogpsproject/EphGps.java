@@ -79,8 +79,8 @@ public class EphGps implements Streamable {
 	public EphGps(){
 
 	}
-	public EphGps(DataInputStream dai) throws IOException{
-		read(dai);
+	public EphGps(DataInputStream dai, boolean oldVersion) throws IOException{
+		read(dai,oldVersion);
 	}
 
 	/**
@@ -461,7 +461,8 @@ public class EphGps implements Streamable {
 	@Override
 	public int write(DataOutputStream dos) throws IOException {
 		int size=5;
-		dos.writeUTF("eph"); // 5
+		dos.writeUTF(MESSAGE_EPHEMERIS); // 5
+		dos.writeInt(STREAM_V); size+=4; // 4
 
 		dos.writeLong(refTime==null?-1:refTime.getMsec());  size +=8;
 		dos.write(satID);  size +=1;
@@ -510,45 +511,46 @@ public class EphGps implements Streamable {
 	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
 	 */
 	@Override
-	public void read(DataInputStream dai) throws IOException {
-		long l = dai.readLong();
-		refTime = new Time(l>0?l:System.currentTimeMillis());
-		satID = dai.read();
-		week = dai.readInt();
-		L2Code = dai.readInt();
-		L2Flag = dai.readInt();
-		svAccur = dai.readInt();
-		svHealth = dai.readInt();
-		iode = dai.readInt();
-		iodc = dai.readInt();
-		toc = dai.readDouble();
-		toe = dai.readDouble();
-		af0 = dai.readDouble();
-		af1 = dai.readDouble();
-		af2 = dai.readDouble();
-		tgd = dai.readDouble();
-		rootA = dai.readDouble();
-		e = dai.readDouble();
-		i0 = dai.readDouble();
-		iDot = dai.readDouble();
-		omega = dai.readDouble();
-		omega0 = dai.readDouble();
-		omegaDot = dai.readDouble();
-		M0 = dai.readDouble();
-		deltaN = dai.readDouble();
-		crc = dai.readDouble();
-		crs = dai.readDouble();
-		cuc = dai.readDouble();
-		cus = dai.readDouble();
-		cic = dai.readDouble();
-		cis = dai.readDouble();
-		fitInt = dai.readDouble();
+	public void read(DataInputStream dai, boolean oldVersion) throws IOException {
+		int v=1;
+		if(!oldVersion) v=dai.readInt();
+
+		if(v==1){
+			long l = dai.readLong();
+			refTime = new Time(l>0?l:System.currentTimeMillis());
+			satID = dai.read();
+			week = dai.readInt();
+			L2Code = dai.readInt();
+			L2Flag = dai.readInt();
+			svAccur = dai.readInt();
+			svHealth = dai.readInt();
+			iode = dai.readInt();
+			iodc = dai.readInt();
+			toc = dai.readDouble();
+			toe = dai.readDouble();
+			af0 = dai.readDouble();
+			af1 = dai.readDouble();
+			af2 = dai.readDouble();
+			tgd = dai.readDouble();
+			rootA = dai.readDouble();
+			e = dai.readDouble();
+			i0 = dai.readDouble();
+			iDot = dai.readDouble();
+			omega = dai.readDouble();
+			omega0 = dai.readDouble();
+			omegaDot = dai.readDouble();
+			M0 = dai.readDouble();
+			deltaN = dai.readDouble();
+			crc = dai.readDouble();
+			crs = dai.readDouble();
+			cuc = dai.readDouble();
+			cus = dai.readDouble();
+			cic = dai.readDouble();
+			cis = dai.readDouble();
+			fitInt = dai.readDouble();
+		}else{
+			throw new IOException("Unknown format version:"+v);
+		}
 	}
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.Streamable#getStreamVersion()
-	 */
-	@Override
-	public int getStreamVersion() {
-		return STREAM_V;
-	}
+
 }

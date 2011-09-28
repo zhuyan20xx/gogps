@@ -637,7 +637,7 @@ public class RinexObservationParser implements ObservationsProducer{
 	/**
 	 * @return the approxPos
 	 */
-	public Coordinates getApproxPosition() {
+	public Coordinates getDefinedPosition() {
 		return approxPos;
 	}
 

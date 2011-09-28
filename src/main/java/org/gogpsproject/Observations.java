@@ -51,8 +51,8 @@ public class Observations implements Streamable {
 		this.refTime = time;
 		this.eventFlag = flag;
 	}
-	public Observations(DataInputStream dai) throws IOException{
-		read(dai);
+	public Observations(DataInputStream dai, boolean oldVersion) throws IOException{
+		read(dai, oldVersion);
 	}
 	public void cleanObservations(){
 		if(gps != null)
@@ -162,11 +162,12 @@ public class Observations implements Streamable {
 	}
 
 	public int write(DataOutputStream dos) throws IOException{
-		dos.writeUTF("obs"); // 5
+		dos.writeUTF(MESSAGE_OBSERVATIONS); // 5
+		dos.writeInt(STREAM_V); // 4
 		dos.writeLong(refTime==null?-1:refTime.getMsec()); // 13
 		dos.write(eventFlag); // 14
 		dos.write(gps==null?0:gps.size()); // 15
-		int size=15;
+		int size=19;
 		if(gps!=null){
 			for(int i=0;i<gps.size();i++){
 				size += ((ObservationSet)gps.get(i)).write(dos);
@@ -188,22 +189,24 @@ public class Observations implements Streamable {
 	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
 	 */
 	@Override
-	public void read(DataInputStream dai) throws IOException {
-		refTime = new Time(dai.readLong());
-		eventFlag = dai.read();
-		int size = dai.read();
-		gps = new ArrayList<ObservationSet>(size);
+	public void read(DataInputStream dai, boolean oldVersion) throws IOException {
+		int v=1;
+		if(!oldVersion) v=dai.readInt();
 
-		for(int i=0;i<size;i++){
-			ObservationSet os = new ObservationSet(dai);
-			gps.add(os);
+		if(v==1){
+			refTime = new Time(dai.readLong());
+			eventFlag = dai.read();
+			int size = dai.read();
+			gps = new ArrayList<ObservationSet>(size);
+
+			for(int i=0;i<size;i++){
+				if(!oldVersion) dai.readUTF();
+				ObservationSet os = new ObservationSet(dai, oldVersion);
+				gps.add(os);
+			}
+		}else{
+			throw new IOException("Unknown format version:"+v);
 		}
 	}
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.Streamable#getStreamVersion()
-	 */
-	@Override
-	public int getStreamVersion() {
-		return STREAM_V;
-	}
+
 }

@@ -28,5 +28,5 @@ public interface ObservationsProducer extends StreamResource {
 
 	public Observations getCurrentObservations();
 	public Observations nextObservations();
-	public Coordinates getApproxPosition();
+	public Coordinates getDefinedPosition();
 }

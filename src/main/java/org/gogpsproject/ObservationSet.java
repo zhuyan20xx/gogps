@@ -54,8 +54,8 @@ public class ObservationSet implements Streamable {
 	public ObservationSet(){
 	}
 
-	public ObservationSet(DataInputStream dai) throws IOException{
-		read(dai);
+	public ObservationSet(DataInputStream dai, boolean oldVersion) throws IOException{
+		read(dai,oldVersion);
 	}
 
 	/**
@@ -207,8 +207,11 @@ public class ObservationSet implements Streamable {
 	}
 
 	public int write(DataOutputStream dos) throws IOException{
-		int size = 1;
-		dos.write(satID);		// 1
+		int size = 0;
+		dos.writeUTF(MESSAGE_EPHEMERIS_SET); // 5
+
+		dos.writeInt(STREAM_V); size +=4;
+		dos.write(satID);size +=1;		// 1
 		// L1 data
 		dos.write(qualityInd[L1]);	size+=1;
 		dos.write(lossLockInd[L1]);	size+=1;
@@ -241,35 +244,34 @@ public class ObservationSet implements Streamable {
 	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
 	 */
 	@Override
-	public void read(DataInputStream dai) throws IOException {
-		satID = dai.read();
+	public void read(DataInputStream dai, boolean oldVersion) throws IOException {
+		int v = 1;
+		if(!oldVersion) v = dai.readInt();
 
-		// L1 data
-		qualityInd[L1] = dai.read();
-		lossLockInd[L1] = dai.read();
-		codeC[L1] = dai.readDouble();
-		codeP[L1] = dai.readDouble();
-		phase[L1] = dai.readDouble();
-		signalStrength[L1] = dai.readFloat();
-		doppler[L1] = dai.readFloat();
-		if(dai.readBoolean()){
-			// L2 data
-			qualityInd[L2] = dai.read();
-			lossLockInd[L2] = dai.read();
-			codeC[L2] = dai.readDouble();
-			codeP[L2] = dai.readDouble();
-			phase[L2] = dai.readDouble();
-			signalStrength[L2] = dai.readFloat();
-			doppler[L2] = dai.readFloat();
+		if(v==1){
+			satID = dai.read();
+
+			// L1 data
+			qualityInd[L1] = dai.read();
+			lossLockInd[L1] = dai.read();
+			codeC[L1] = dai.readDouble();
+			codeP[L1] = dai.readDouble();
+			phase[L1] = dai.readDouble();
+			signalStrength[L1] = dai.readFloat();
+			doppler[L1] = dai.readFloat();
+			if(dai.readBoolean()){
+				// L2 data
+				qualityInd[L2] = dai.read();
+				lossLockInd[L2] = dai.read();
+				codeC[L2] = dai.readDouble();
+				codeP[L2] = dai.readDouble();
+				phase[L2] = dai.readDouble();
+				signalStrength[L2] = dai.readFloat();
+				doppler[L2] = dai.readFloat();
+			}
+		}else{
+			throw new IOException("Unknown format version:"+v);
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.Streamable#getStreamVersion()
-	 */
-	@Override
-	public int getStreamVersion() {
-		return STREAM_V;
 	}
 
 }
