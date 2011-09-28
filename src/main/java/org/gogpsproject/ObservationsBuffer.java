@@ -19,9 +19,6 @@
  */
 package org.gogpsproject;
 
-import java.beans.Encoder;
-import java.beans.XMLEncoder;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -49,7 +46,7 @@ public class ObservationsBuffer
         }
     }
 
-    private Coordinates approxPosition = null;
+    private Coordinates definedPosition = null;
 
     private boolean waitForData=true;
 
@@ -67,17 +64,31 @@ public class ObservationsBuffer
     private FileOutputStream fosOutLog = null;
     private DataOutputStream outLog = null;//new XMLEncoder(os);
 
+    private String id = null;
+
+    private long timeoutNextObsWait = -1;
 
     /**
     *
     */
    public ObservationsBuffer() {
-	   this(null);
+	   //this(null);
    }
     /**
+     * @throws FileNotFoundException
      *
      */
-    public ObservationsBuffer(StreamResource streamResource) {
+    public ObservationsBuffer(StreamResource streamResource, String fileNameOutLog) throws FileNotFoundException {
+    	// 1st define outlog
+    	this.setFileNameOutLog(fileNameOutLog);
+    	// 2nd attach source, in case of Master source it will push Master Position into outstream
+    	this.setStreamSource(streamResource);
+    }
+
+    public void setStreamSource(StreamResource streamResource){
+    	if(this.streamResource!=null && this.streamResource instanceof StreamEventProducer){
+    		((StreamEventProducer)streamResource).removeStreamEventListener(this);
+    	}
     	this.streamResource = streamResource;
     	// if resource produces also events register for it
     	if(streamResource!=null && streamResource instanceof StreamEventProducer){
@@ -117,6 +128,7 @@ public class ObservationsBuffer
 
         	try {
         		eph.write(outLog);
+        		outLog.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -134,16 +146,17 @@ public class ObservationsBuffer
         while(c<timeOrderedIono.size() && timeOrderedIono.elementAt(c).getRefTime().getMsec()/60000!=iono.getRefTime().getMsec()/60000) c++;
 
         if(c<timeOrderedIono.size()){
-        	System.out.println("found existing Iono @ "+(iono.getRefTime().getMsec()/60000));
+        	//System.out.println("found existing Iono @ "+(iono.getRefTime().getMsec()/60000));
         	timeOrderedIono.set(c, iono);
         }else{
-        	System.out.println("new Iono @ "+(iono.getRefTime().getMsec()/60000));
+        	//System.out.println("new Iono @ "+(iono.getRefTime().getMsec()/60000));
         	timeOrderedIono.add(iono);
         }
         if(outLog!=null){
 
         	try {
         		iono.write(outLog);
+        		outLog.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -163,6 +176,7 @@ public class ObservationsBuffer
 
         	try {
         		o.write(outLog);
+        		outLog.flush();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -189,7 +203,9 @@ public class ObservationsBuffer
      */
     @Override
     public Observations getCurrentObservations() {
-    	while(waitForData && (timeOrderedObs.size()==0 || obsCursor>=timeOrderedObs.size())){
+    	long begin=System.currentTimeMillis();
+
+    	while(waitForData && (timeOrderedObs.size()==0 || obsCursor>=timeOrderedObs.size()) && (timeoutNextObsWait==-1|| System.currentTimeMillis()-begin<timeoutNextObsWait)){
 			//System.out.print("r");
 			try {
 				Thread.sleep(1000);
@@ -220,8 +236,10 @@ public class ObservationsBuffer
     @Override
     public Observations nextObservations() {
 
-    	while(waitForData && (timeOrderedObs.size()==0 || (obsCursor+1)>=timeOrderedObs.size())){
-			System.out.println("\tR look for :"+(obsCursor+1)+" but pool size is:"+timeOrderedObs.size());
+    	long begin=System.currentTimeMillis();
+
+    	while(waitForData && (timeOrderedObs.size()==0 || (obsCursor+1)>=timeOrderedObs.size()) && (timeoutNextObsWait==-1|| System.currentTimeMillis()-begin<timeoutNextObsWait)){
+			System.out.println((id!=null?id:"")+"\tlook for :"+(obsCursor+1)+" pool size is:"+timeOrderedObs.size());
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {}
@@ -230,7 +248,7 @@ public class ObservationsBuffer
         if(timeOrderedObs.size()>0 && (obsCursor+1) < timeOrderedObs.size()){
         	Observations o = timeOrderedObs.get(++obsCursor);
 
-            System.out.println("\tR < Obs "+o.getRefTime().getMsec());
+            System.out.println((id!=null?id:"")+"\tread obs "+o.getRefTime().getMsec());
             return o;
         }
 
@@ -242,6 +260,8 @@ public class ObservationsBuffer
      */
     @Override
     public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
+    	// make the request to nextObservations() return null as end of stream
+    	waitForData = false;
 
     	if(outLog!=null){
     		try{
@@ -259,8 +279,7 @@ public class ObservationsBuffer
 			}
     	}
 
-    	// make the request to nextObservations() return null as end of stream
-    	waitForData = false;
+
     	//if(streamResource!=null) streamResource.release(waitForThread, timeoutMs);
     	if(streamResource!=null && streamResource instanceof StreamEventProducer){
     		((StreamEventProducer)streamResource).removeStreamEventListener(this);
@@ -332,25 +351,20 @@ public class ObservationsBuffer
                 c++;
             }else{
                 // tester is not closer or not before utcTime
-            	System.out.println("\t\tR: < Iono1");
+            	//System.out.println("\t\tR: < Iono1");
                 return closer;
             }
         }
-        System.out.println("\t\tR: < Iono2");
+        //System.out.println("\t\tR: < Iono2");
         return closer;
     }
-	/**
-	 * @param approxPosition the approxPosition to set
-	 */
-	public void setApproxPosition(Coordinates approxPosition) {
-		this.approxPosition = approxPosition;
-	}
+
     /* (non-Javadoc)
      * @see org.gogpsproject.ObservationsProducer#getApproxPosition()
      */
-    @Override
-    public Coordinates getApproxPosition() {
-        return approxPosition;
+	@Override
+    public Coordinates getDefinedPosition() {
+        return definedPosition;
     }
 	/**
 	 * @param fileNameOutLog the fileNameOutLog to set
@@ -368,5 +382,49 @@ public class ObservationsBuffer
 	 */
 	public String getFileNameOutLog() {
 		return fileNameOutLog;
+	}
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventListener#setDefinedPosition(org.gogpsproject.Coordinates)
+	 */
+	@Override
+	public void setDefinedPosition(Coordinates definedPosition) {
+		System.out.println((id!=null?id:"")+" got defined position: "+definedPosition);
+
+		this.definedPosition = definedPosition;
+
+		if(outLog!=null){
+
+        	try {
+        		definedPosition.write(outLog);
+        		outLog.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+        }
+	}
+	/**
+	 * @param id the id to set
+	 */
+	public void setId(String id) {
+		this.id = id;
+	}
+	/**
+	 * @return the id
+	 */
+	public String getId() {
+		return id;
+	}
+	/**
+	 * @param timeoutNextObsWait the timeoutNextObsWait to set
+	 */
+	public void setTimeoutNextObsWait(long timeoutNextObsWait) {
+		this.timeoutNextObsWait = timeoutNextObsWait;
+	}
+	/**
+	 * @return the timeoutNextObsWait
+	 */
+	public long getTimeoutNextObsWait() {
+		return timeoutNextObsWait;
 	}
 }

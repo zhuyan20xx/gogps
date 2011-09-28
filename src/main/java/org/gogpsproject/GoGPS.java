@@ -301,13 +301,13 @@ public class GoGPS implements Runnable{
 
 							// Select satellites available for double differences
 							roverPos.selectSatellitesDoubleDiff(obsR,
-									obsM, masterIn.getApproxPosition());
+									obsM, masterIn.getDefinedPosition());
 
 							if (roverPos.getSatAvailNumber() >= 4)
 								// Compute code double differences positioning
 								// (epoch-by-epoch solution)
 								roverPos.codeDoubleDifferences(obsR,
-										obsM, masterIn.getApproxPosition());
+										obsM, masterIn.getDefinedPosition());
 							else
 								// Discard Bancroft positioning
 								roverPos.setXYZ(0, 0, 0);
@@ -411,7 +411,7 @@ public class GoGPS implements Runnable{
 						if (roverPos.isValidXYZ()) {
 
 							// Initialize Kalman filter
-							roverPos.kalmanFilterInit(obsR, obsM, masterIn.getApproxPosition());
+							roverPos.kalmanFilterInit(obsR, obsM, masterIn.getDefinedPosition());
 
 							kalmanInitialized = true;
 
@@ -423,7 +423,7 @@ public class GoGPS implements Runnable{
 
 						// Do a Kalman filter loop
 						try{
-							roverPos.kalmanFilterLoop(obsR,obsM, masterIn.getApproxPosition());
+							roverPos.kalmanFilterLoop(obsR,obsM, masterIn.getDefinedPosition());
 						}catch(Exception e){
 							e.printStackTrace();
 							valid = false;

@@ -19,6 +19,10 @@
  *
  */
 package org.gogpsproject;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import org.ejml.simple.SimpleMatrix;
 
 /**
@@ -28,7 +32,8 @@ import org.ejml.simple.SimpleMatrix;
  *
  * @author ege, Cryms.com
  */
-public class Coordinates {
+public class Coordinates implements Streamable{
+	private final static int STREAM_V = 1;
 
 	// Global systems
 	private SimpleMatrix ecef = null; /* Earth-Centered, Earth-Fixed (X, Y, Z) */
@@ -224,5 +229,62 @@ public class Coordinates {
 	 */
 	public void setRefTime(Time refTime) {
 		this.refTime = refTime;
+	}
+
+	public int write(DataOutputStream dos) throws IOException{
+		int size=0;
+		dos.writeUTF(MESSAGE_COORDINATES); size+=5;// 5
+		dos.writeInt(STREAM_V); size+=4; // 4
+
+		dos.writeLong(refTime==null?-1:refTime.getMsec()); size+=8; // 8
+
+		for(int i=0;i<3;i++){
+			dos.writeDouble(ecef.get(i));  size+=8;
+		}
+		for(int i=0;i<3;i++){
+			dos.writeDouble(enu.get(i));  size+=8;
+		}
+		for(int i=0;i<3;i++){
+			dos.writeDouble(geod.get(i));  size+=8;
+		}
+
+		return size;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
+	 */
+	@Override
+	public void read(DataInputStream dai, boolean oldVersion) throws IOException {
+		int v = dai.readInt();
+
+		if(v == 1){
+			long l = dai.readLong();
+			refTime = l==-1?null:new Time(l);
+			for(int i=0;i<3;i++){
+				ecef.set(i, dai.readDouble());
+			}
+			for(int i=0;i<3;i++){
+				enu.set(i, dai.readDouble());
+			}
+			for(int i=0;i<3;i++){
+				geod.set(i, dai.readDouble());
+			}
+		}else{
+			throw new IOException("Unknown format version:"+v);
+		}
+
+
+
+	}
+
+	public String toString(){
+		String lineBreak = System.getProperty("line.separator");
+
+		String out= "Coord ECEF: X:"+getX()+" Y:"+getY()+" Z:"+getZ()+lineBreak;
+		out +=      "       ENU: E:"+getE()+" N:"+getN()+" U:"+getU()+lineBreak;
+		out +=      "      GEOD: Lon:"+getGeodeticLongitude()+" Lat:"+getGeodeticLatitude()+" H:"+getGeodeticHeight()+lineBreak;
+
+		return out;
 	}
 }

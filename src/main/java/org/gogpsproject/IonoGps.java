@@ -82,8 +82,8 @@ public class IonoGps implements Streamable{
 	public IonoGps(){
 
 	}
-	public IonoGps(DataInputStream dai) throws IOException{
-		read(dai);
+	public IonoGps(DataInputStream dai, boolean oldVersion) throws IOException{
+		read(dai,oldVersion);
 	}
 
 	/**
@@ -370,7 +370,8 @@ public class IonoGps implements Streamable{
 	@Override
 	public int write(DataOutputStream dos) throws IOException {
 		int size=5;
-		dos.writeUTF("ion"); // 5
+		dos.writeUTF(MESSAGE_IONO); // 5
+		dos.writeInt(STREAM_V); size +=4;
 		dos.writeLong(health); size +=8;
 		dos.writeDouble(utcA1); size +=8;
 		dos.writeDouble(utcA0); size +=8;
@@ -397,34 +398,36 @@ public class IonoGps implements Streamable{
 	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
 	 */
 	@Override
-	public void read(DataInputStream dai) throws IOException {
-		health = dai.readLong();
-		utcA1 = dai.readDouble();
-		utcA0 = dai.readDouble();
-		utcTOW = dai.readLong();
-		utcWNT = dai.readInt();
-		utcLS = dai.readInt();
-		utcWNF = dai.readInt();
-		utcDN = dai.readInt();
-		utcLSF = dai.readInt();
-		for(int i=0;i<alpha.length;i++){
-			alpha[i] = dai.readFloat();
+	public void read(DataInputStream dai, boolean oldVersion) throws IOException {
+		int v=1;
+		if(!oldVersion) v=dai.readInt();
+
+		if(v==1){
+
+			health = dai.readLong();
+			utcA1 = dai.readDouble();
+			utcA0 = dai.readDouble();
+			utcTOW = dai.readLong();
+			utcWNT = dai.readInt();
+			utcLS = dai.readInt();
+			utcWNF = dai.readInt();
+			utcDN = dai.readInt();
+			utcLSF = dai.readInt();
+			for(int i=0;i<alpha.length;i++){
+				alpha[i] = dai.readFloat();
+			}
+			for(int i=0;i<beta.length;i++){
+				beta[i] = dai.readFloat();
+			}
+			validHealth = dai.readBoolean();
+			validUTC = dai.readBoolean();
+			validKlobuchar = dai.readBoolean();
+			long l = dai.readLong();
+			refTime = new Time(l>0?l:System.currentTimeMillis());
+		}else{
+			throw new IOException("Unknown format version:"+v);
 		}
-		for(int i=0;i<beta.length;i++){
-			beta[i] = dai.readFloat();
-		}
-		validHealth = dai.readBoolean();
-		validUTC = dai.readBoolean();
-		validKlobuchar = dai.readBoolean();
-		long l = dai.readLong();
-		refTime = new Time(l>0?l:System.currentTimeMillis());
 	}
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.Streamable#getStreamVersion()
-	 */
-	@Override
-	public int getStreamVersion() {
-		return STREAM_V;
-	}
+
 
 }

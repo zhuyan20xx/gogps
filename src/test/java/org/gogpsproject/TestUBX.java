@@ -19,36 +19,32 @@
  */
 
 package org.gogpsproject;
-
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.PortInUseException;
 
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
 import org.gogpsproject.ObservationsBuffer;
-import org.gogpsproject.Time;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
+@SuppressWarnings("restriction")
 public class TestUBX {
 
 	public static int speed = 9600;
 	private static UBXSerialConnection ubxSerialConn;
-	private static boolean resend_active = false;
-
 	/**
 	 * @param args
 	 */
 
+	@SuppressWarnings("unchecked")
 	public static HashSet<CommPortIdentifier> getAvailableSerialPorts() {
 		HashSet<CommPortIdentifier> h = new HashSet<CommPortIdentifier>();
-		Enumeration thePorts = CommPortIdentifier.getPortIdentifiers();
+		Enumeration<CommPortIdentifier> thePorts = CommPortIdentifier.getPortIdentifiers();
 		while (thePorts.hasMoreElements()) {
-			CommPortIdentifier com = (CommPortIdentifier) thePorts
-					.nextElement();
+			CommPortIdentifier com = (CommPortIdentifier) thePorts.nextElement();
 			switch (com.getPortType()) {
 			case CommPortIdentifier.PORT_SERIAL:
 				try {
@@ -90,7 +86,8 @@ public class TestUBX {
 
 
 		ubxSerialConn = new UBXSerialConnection(port, speed);
-		ObservationsBuffer rover = new ObservationsBuffer(ubxSerialConn);
+		ObservationsBuffer rover = new ObservationsBuffer();
+		rover.setStreamSource(ubxSerialConn);
 
 		try {
 			rover.init();

@@ -47,7 +47,7 @@ public class Test {
 			c.computeGeodetic();
 			System.out.println("lat "+c.getGeodeticLatitude());
 			System.out.println("lon "+c.getGeodeticLongitude());
-			client.setApproxPosition(c);
+			client.setMasterPosition(c);
 
 			client.start();
 		} catch (NumberFormatException e) {

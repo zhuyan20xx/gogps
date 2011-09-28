@@ -32,4 +32,6 @@ public interface StreamEventListener {
 	public void addIonospheric(IonoGps iono);
 	public void addEphemeris(EphGps eph);
 
+	public void setDefinedPosition(Coordinates definedPosition);
+
 }
