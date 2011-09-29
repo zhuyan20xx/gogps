@@ -56,15 +56,15 @@ public class Observations implements Streamable {
 	}
 	public void cleanObservations(){
 		if(gps != null)
-			for (int i=0;i<gps.size();i++)
+			for (int i=gps.size()-1;i>=0;i--)
 				if(gps.get(i)==null || Double.isNaN(gps.get(i).getPseudorange(0)))
 					gps.remove(i);
 		if(glo != null)
-			for (int i=0;i<glo.size();i++)
+			for (int i=glo.size()-1;i>=0;i--)
 				if(glo.get(i)==null || Double.isNaN(glo.get(i).getPseudorange(0)))
 					glo.remove(i);
 		if(sbs != null)
-			for (int i=0;i<sbs.size();i++)
+			for (int i=sbs.size()-1;i>=0;i--)
 				if(sbs.get(i)==null || Double.isNaN(sbs.get(i).getPseudorange(0)))
 					sbs.remove(i);
 	}
