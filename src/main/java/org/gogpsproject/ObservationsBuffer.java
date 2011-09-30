@@ -239,7 +239,7 @@ public class ObservationsBuffer
     	long begin=System.currentTimeMillis();
 
     	while(waitForData && (timeOrderedObs.size()==0 || (obsCursor+1)>=timeOrderedObs.size()) && (timeoutNextObsWait==-1|| System.currentTimeMillis()-begin<timeoutNextObsWait)){
-			System.out.println((id!=null?id:"")+"\tlook for :"+(obsCursor+1)+" pool size is:"+timeOrderedObs.size());
+			//System.out.println((id!=null?id:"")+"\tlook for :"+(obsCursor+1)+" pool size is:"+timeOrderedObs.size());
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {}
@@ -248,7 +248,7 @@ public class ObservationsBuffer
         if(timeOrderedObs.size()>0 && (obsCursor+1) < timeOrderedObs.size()){
         	Observations o = timeOrderedObs.get(++obsCursor);
 
-            System.out.println((id!=null?id:"")+"\tread obs "+o.getRefTime().getMsec());
+            //System.out.println((id!=null?id:"")+"\tread obs "+o.getRefTime().getMsec());
             return o;
         }
 
@@ -388,7 +388,7 @@ public class ObservationsBuffer
 	 */
 	@Override
 	public void setDefinedPosition(Coordinates definedPosition) {
-		System.out.println((id!=null?id:"")+" got defined position: "+definedPosition);
+		//System.out.println((id!=null?id:"")+" got defined position: "+definedPosition);
 
 		this.definedPosition = definedPosition;
 
