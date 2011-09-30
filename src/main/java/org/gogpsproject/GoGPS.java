@@ -156,6 +156,8 @@ public class GoGPS implements Runnable{
 
 	private Vector<PositionConsumer> positionConsumers = new Vector<PositionConsumer>();
 
+
+	private boolean debug = false;
 	/**
 	 * Instantiates a new go gps.
 	 *
@@ -207,13 +209,13 @@ public class GoGPS implements Runnable{
 				//try{
 					// If there are at least four satellites
 					if (obsR.getGpsSize() >= 4) { // gps.length
-						System.out.println("OK "+obsR.getGpsSize()+" satellites");
+						if(debug) System.out.println("OK "+obsR.getGpsSize()+" satellites");
 
 						// Compute approximate positioning by Bancroft algorithm
 						roverPos.bancroft(obsR);
 
 						// If an approximate position was computed
-						System.out.println("Valid Bancroft position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
+						if(debug) System.out.println("Valid Bancroft position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
 						if (roverPos.isValidXYZ()) {
 							// Select available satellites
 							roverPos.selectSatellitesStandalone(obsR);
@@ -226,7 +228,7 @@ public class GoGPS implements Runnable{
 								roverPos.setXYZ(0, 0, 0);
 						}
 
-						System.out.println("Valid LS position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
+						if(debug)System.out.println("Valid LS position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
 						if (roverPos.isValidXYZ()) {
 							if(!validPosition){
 								notifyPositionConsumerEvent(PositionConsumer.EVENT_START_OF_TRACK);
@@ -238,7 +240,7 @@ public class GoGPS implements Runnable{
 									coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
 									notifyPositionConsumerAddCoordinate(coord);
 								}
-								System.out.println("-------------------- "+roverPos.getpDop());
+								if(debug)System.out.println("-------------------- "+roverPos.getpDop());
 								if(stopAtDopThreshold>0.0 && roverPos.getpDop()<stopAtDopThreshold){
 									return coord;
 								}
@@ -324,7 +326,7 @@ public class GoGPS implements Runnable{
 									coord.setRefTime(new Time(obsR.getRefTime().getMsec()));
 									notifyPositionConsumerAddCoordinate(coord);
 								}
-								System.out.println("-------------------- "+roverPos.getpDop());
+								if(debug)System.out.println("-------------------- "+roverPos.getpDop());
 							}
 						}
 					}
@@ -366,7 +368,7 @@ public class GoGPS implements Runnable{
 			Observations obsM = masterIn.nextObservations();
 
 			while (obsR != null && obsM != null) {
-				System.out.println("R:"+obsR.getRefTime().getMsec()+" M:"+obsM.getRefTime().getMsec());
+				if(debug)System.out.println("R:"+obsR.getRefTime().getMsec()+" M:"+obsM.getRefTime().getMsec());
 
 				timeRead = System.currentTimeMillis();
 
@@ -402,7 +404,7 @@ public class GoGPS implements Runnable{
 					boolean valid = true;
 					if (!kalmanInitialized && obsR.getGpsSize() >= 4) {
 
-						System.out.print("Try to init with bancroft ");
+						if(debug)System.out.print("Try to init with bancroft ");
 
 						// Compute approximate positioning by Bancroft algorithm
 						roverPos.bancroft(obsR);
@@ -415,9 +417,9 @@ public class GoGPS implements Runnable{
 
 							kalmanInitialized = true;
 
-							System.out.println("OK");
+							if(debug)System.out.println("OK");
 						}else{
-							System.out.println("....nope");
+							if(debug)System.out.println("....nope");
 						}
 					} else if (kalmanInitialized) {
 
@@ -447,13 +449,13 @@ public class GoGPS implements Runnable{
 					}
 					//System.out.println("--------------------");
 
-					System.out.println("-- Get next epoch ---------------------------------------------------");
+					if(debug)System.out.println("-- Get next epoch ---------------------------------------------------");
 					// get next epoch
 					obsR = roverIn.nextObservations();
 					obsM = masterIn.nextObservations();
 
 				}else{
-					System.out.println("Missing M or R obs ");
+					if(debug)System.out.println("Missing M or R obs ");
 				}
 			}
 
@@ -465,12 +467,12 @@ public class GoGPS implements Runnable{
 
 		int elapsedTimeSec = (int) Math.floor(depRead / 1000);
 		int elapsedTimeMillisec = (int) (depRead - elapsedTimeSec * 1000);
-		System.out.println("\nElapsed time (read): " + elapsedTimeSec
+		if(debug)System.out.println("\nElapsed time (read): " + elapsedTimeSec
 				+ " seconds " + elapsedTimeMillisec + " milliseconds.");
 
 		elapsedTimeSec = (int) Math.floor(depProc / 1000);
 		elapsedTimeMillisec = (int) (depProc - elapsedTimeSec * 1000);
-		System.out.println("\nElapsed time (proc): " + elapsedTimeSec
+		if(debug)System.out.println("\nElapsed time (proc): " + elapsedTimeSec
 				+ " seconds " + elapsedTimeMillisec + " milliseconds.");
 
 	}
@@ -911,5 +913,19 @@ public class GoGPS implements Runnable{
 		}
 
 		notifyPositionConsumerEvent(PositionConsumer.EVENT_GOGPS_THREAD_ENDED);
+	}
+
+	/**
+	 * @param debug the debug to set
+	 */
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+
+	/**
+	 * @return the debug
+	 */
+	public boolean isDebug() {
+		return debug;
 	}
 }

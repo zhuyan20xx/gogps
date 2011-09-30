@@ -139,23 +139,24 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				mountpoints.add(s.get(j));
 			}
 		}
+		boolean ldebug = false;
 		if(_mountpoint == null){
-			System.out.println("Available Mountpoints:");
+			if(ldebug) System.out.println("Available Mountpoints:");
 		}
 		for (int j = 0; j < mountpoints.size(); j++) {
 			if(_mountpoint == null){
-				System.out.println("\t[" + mountpoints.get(j)+"]");
+				if(ldebug) System.out.println("\t[" + mountpoints.get(j)+"]");
 			}else{
-				System.out.print("\t[" + mountpoints.get(j)+"]["+_mountpoint+"]");
+				if(ldebug) System.out.print("\t[" + mountpoints.get(j)+"]["+_mountpoint+"]");
 				if(_mountpoint.equalsIgnoreCase(mountpoints.get(j))){
 					settings.setSource(mountpoints.get(j));
-					System.out.print(" found");
+					if(ldebug) System.out.print(" found");
 				}
 			}
-			System.out.println();
+			if(ldebug) System.out.println();
 		}
 		if(settings.getSource() == null){
-			System.out.println("Select a valid mountpoint!");
+			if(ldebug) System.out.println("Select a valid mountpoint!");
 			return null;
 		}
 		return net;
@@ -299,7 +300,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 			} catch (Exception e) {
 
-				System.out.println("Connection to " + settings.getHost() + ":"
+				if (debug) System.out.println("Connection to " + settings.getHost() + ":"
 						+ settings.getPort() + " failed: \n  " + e);
 				// if (messages == null) {
 				// tester.println("<" + settings.getSource() + ">" + msg);
@@ -308,7 +309,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				// }
 				if (!askForStop
 						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
-					System.out.println("Sleep 10s before retry");
+					if (debug) System.out.println("Sleep 10s before retry");
 					Thread.sleep(10 * 1000);
 					start();
 				} else {
@@ -356,7 +357,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 				ntripGAA = /* "Ntrip-GAA: "+ */ntripGAA + "*"
 						+ computeNMEACheckSum(ntripGAA);
-				System.out.println(ntripGAA);
+				if (debug)System.out.println(ntripGAA);
 
 				// out.print(ntripGAA+"\r\n");
 			}
@@ -434,8 +435,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				if (debug)
 					System.out.println();
 				if (debug)
-					System.out
-							.println(settings.getSource() + " invalid header");
+					System.out.println(settings.getSource() + " invalid header");
 
 				if (!askForStop
 						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
@@ -478,7 +478,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 					System.out.println(settings.getSource() + " not connected");
 				if (!askForStop
 						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
-					System.out.println("Sleep 10s before retry");
+					if (debug)System.out.println("Sleep 10s before retry");
 					Thread.sleep(10 * 1000);
 					start();
 				} else {
@@ -517,7 +517,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			// Connection was either terminated or an IOError accured
 
 			if (running) {
-				System.out.println(settings.getSource()
+				if (debug)System.out.println(settings.getSource()
 						+ " Connection Error: Data is empty");
 			} else {
 				if (debug)
@@ -548,7 +548,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			// reconnect if needed
 			if (!askForStop
 					&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
-				System.out.println("Sleep 10s before retry");
+				if (debug)System.out.println("Sleep 10s before retry");
 				try {
 					Thread.sleep(10 * 1000);
 				} catch (InterruptedException e) {
@@ -636,7 +636,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				ie.printStackTrace();
 			}
 			if(dataThread.isAlive()){
-				System.out.println("Killing thread "+dataThread.getName());
+				if (debug)System.out.println("Killing thread "+dataThread.getName());
 				dataThread.interrupt();
 			}
 		}
