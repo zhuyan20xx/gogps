@@ -19,7 +19,10 @@
  */
 package org.gogpsproject;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -426,5 +429,44 @@ public class ObservationsBuffer
 	 */
 	public long getTimeoutNextObsWait() {
 		return timeoutNextObsWait;
+	}
+
+	public void readFromLog(String logFilename) throws IOException{
+		FileInputStream fis = new FileInputStream(logFilename);
+		DataInputStream dis = new DataInputStream(fis);
+		String msg = null;
+		try{
+			msg=dis.readUTF();
+			while(msg!=null){
+				System.out.println("Msg:["+msg+"]");
+				if(msg.equalsIgnoreCase(Streamable.MESSAGE_OBSERVATIONS)){
+					Observations o = new Observations(dis,false);
+					addObservations(o);
+				}else
+				if(msg.equalsIgnoreCase(Streamable.MESSAGE_EPHEMERIS)){
+					EphGps eph = new EphGps(dis,false);
+					addEphemeris(eph);
+				}else
+				if(msg.equalsIgnoreCase(Streamable.MESSAGE_OBSERVATIONS_SET)){
+					ObservationSet eps = new ObservationSet(dis,false);
+					// nothing to do with ?
+				}else
+				if(msg.equalsIgnoreCase(Streamable.MESSAGE_IONO)){
+					IonoGps iono = new IonoGps(dis,false);
+					addIonospheric(iono);
+				}else
+				if(msg.equalsIgnoreCase(Streamable.MESSAGE_COORDINATES)){
+					Coordinates c = Coordinates.readFromStream(dis,false);
+					setDefinedPosition(c);
+				}else{
+					System.out.println("Unknow Msg:["+msg+"]");
+				}
+
+				msg=dis.readUTF();
+			}
+		}catch(EOFException eof){
+
+		}
+		System.out.println("End");
 	}
 }

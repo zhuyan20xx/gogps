@@ -208,7 +208,7 @@ public class ObservationSet implements Streamable {
 
 	public int write(DataOutputStream dos) throws IOException{
 		int size = 0;
-		dos.writeUTF(MESSAGE_EPHEMERIS_SET); // 5
+		dos.writeUTF(MESSAGE_OBSERVATIONS_SET); // 5
 
 		dos.writeInt(STREAM_V); size +=4;
 		dos.write(satID);size +=1;		// 1
