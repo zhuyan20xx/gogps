@@ -21,8 +21,6 @@
 package org.gogpsproject.parser.rtcm3;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,21 +30,17 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.util.Date;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.gogpsproject.Coordinates;
-import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
-import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.StreamResource;
@@ -174,6 +168,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		decodeMap.put(new Integer(1005), new Decode1005Msg(this));
 		decodeMap.put(new Integer(1006), new Decode1006Msg(this));
 		decodeMap.put(new Integer(1007), new Decode1007Msg(this));
+		decodeMap.put(new Integer(1008), new Decode1008Msg(this));
 		decodeMap.put(new Integer(1012), new Decode1012Msg());
 	}
 
@@ -431,8 +426,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				if (debug)
 					System.out.println(((int) c) + " " + (char) c);
 
-				if (debug)
-					System.out.println();
+				//if (debug)
+					//System.out.println();
 				if (debug)
 					System.out.println(settings.getSource() + " invalid header");
 
@@ -756,7 +751,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 				header = true;
 				// setBits(in,1);
-				if(debug) System.out.println(" dati :" + Bits.bitsToStr(bits));
+				//if(debug) System.out.println(" dati :" + Bits.bitsToStr(bits));
 			}
 
 			if(System.currentTimeMillis()-lastNtripGAAsent > ntripGAAsendDelay){
