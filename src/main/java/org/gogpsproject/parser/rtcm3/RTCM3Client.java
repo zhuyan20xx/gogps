@@ -83,6 +83,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	private boolean debug=false;
 
 	private Coordinates masterPosition = null;
+	private AntennaDescriptor antennaDescriptor = null;
 
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 
@@ -156,7 +157,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			if(ldebug) System.out.println();
 		}
 		if(settings.getSource() == null){
-			if(ldebug) System.out.println("Select a valid mountpoint!");
+			System.out.println("Select a valid mountpoint!");
 			return null;
 		}
 		return net;
@@ -170,8 +171,9 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		decodeMap = new HashMap<Integer, Decode>();
 
 		decodeMap.put(new Integer(1004), new Decode1004Msg(this));
-		decodeMap.put(new Integer(1005), new Decode1005Msg());
-		decodeMap.put(new Integer(1007), new Decode1007Msg());
+		decodeMap.put(new Integer(1005), new Decode1005Msg(this));
+		decodeMap.put(new Integer(1006), new Decode1006Msg(this));
+		decodeMap.put(new Integer(1007), new Decode1007Msg(this));
 		decodeMap.put(new Integer(1012), new Decode1012Msg());
 	}
 
@@ -289,19 +291,16 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				// InetSocketAddress("127.0.0.1", 8888));
 
 				sck = new Socket(proxy);
-				InetSocketAddress dest = new InetSocketAddress(settings
-						.getHost(), settings.getPort());
+				InetSocketAddress dest = new InetSocketAddress(settings.getHost(), settings.getPort());
 				sck.connect(dest);
 				// sck = new Socket(settings.getHost(), settings.getPort());
 				if (debug)
-					System.out.println("Connected to " + settings.getHost()
-							+ ":" + settings.getPort());
+					System.out.println("Connected to " + settings.getHost() + ":" + settings.getPort());
 				running = true;
 
 			} catch (Exception e) {
 
-				if (debug) System.out.println("Connection to " + settings.getHost() + ":"
-						+ settings.getPort() + " failed: \n  " + e);
+				if (debug) System.out.println("Connection to " + settings.getHost() + ":" + settings.getPort() + " failed: \n  " + e);
 				// if (messages == null) {
 				// tester.println("<" + settings.getSource() + ">" + msg);
 				// } else {
@@ -727,7 +726,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 							index++;
 						}
 					}
-					messagelength = Bits.bitsToUInt(Bits.subset(bits, 6, 10));
+					messagelength = (int)Bits.bitsToUInt(Bits.subset(bits, 6, 10));
 					if(debug){
 						System.out.println();
 						System.out.println("Debug message length : " + messagelength);
@@ -739,7 +738,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 			if (messagelength > 0) {
 				setBits(in, messagelength);
-				int msgtype = Bits.bitsToUInt(Bits.subset(bits, 0, 12));
+				int msgtype = (int)Bits.bitsToUInt(Bits.subset(bits, 0, 12));
 
 				if(debug) System.out.println("message type : " + msgtype);
 				messagelength = 0;
@@ -748,6 +747,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				if(dec!=null){
 					dec.decode(bits, System.currentTimeMillis());
 				}else{
+					System.err.println("missing message parser "+msgtype);
 					// missing message parser
 				}
 
@@ -879,6 +879,10 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	 * @param initialPosition the initialPosition to set
 	 */
 	public void setMasterPosition(Coordinates masterPosition) {
+		if(debug){
+			masterPosition.computeGeodetic();
+			System.out.println("Master Position : " + masterPosition);
+		}
 		this.masterPosition = masterPosition;
 		for (StreamEventListener sel : streamEventListeners) {
 			sel.setDefinedPosition(masterPosition);
@@ -965,6 +969,21 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * @param antennaDescriptor the antennaDescriptor to set
+	 */
+	public void setAntennaDescriptor(AntennaDescriptor antennaDescriptor) {
+		if(debug) System.out.println("Antenna Descriptor : " + antennaDescriptor);
+		this.antennaDescriptor = antennaDescriptor;
+	}
+
+	/**
+	 * @return the antennaDescriptor
+	 */
+	public AntennaDescriptor getAntennaDescriptor() {
+		return antennaDescriptor;
 	}
 
 }

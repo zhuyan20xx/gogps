@@ -48,22 +48,22 @@ public class Decode1004Msg implements Decode {
 
 		int start = 12;
 		//header.setStationID(Bits.bitsToUInt(Bits.subset(bits, start, 12)));
-		int DF003 = Bits.bitsToUInt(Bits.subset(bits, start, 12));
+		int DF003 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 12));
 		start += 12;
 		//header.setEpochTime(Bits.bitsToUInt(Bits.subset(bits, start, 30)));
-		int DF004 = Bits.bitsToUInt(Bits.subset(bits, start, 30));
+		long DF004 = Bits.bitsToUInt(Bits.subset(bits, start, 30));
 		start += 30;
 		//header.setGNSSFlag(Bits.bitsToUInt(Bits.subset(bits, start, 1)));
 		boolean DF005 = (Bits.bitsToUInt(Bits.subset(bits, start, 1))==1);
 		start += 1;
 		//header.setNumberGPS(Bits.bitsToUInt(Bits.subset(bits, start, 5)));
-		int DF006 = Bits.bitsToUInt(Bits.subset(bits, start, 5));
+		int DF006 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 5));
 		start += 5;
 		//header.setDivergenceSmooth(Bits.bitsToUInt(Bits.subset(bits, start, 11)));
 		boolean DF007 = (Bits.bitsToUInt(Bits.subset(bits, start, 1))==1);
 		start += 1;
 		//header.setSmouthInterval(Bits.bitsToUInt(Bits.subset(bits, start, 3)));
-		int DF008 = Bits.bitsToUInt(Bits.subset(bits, start, 3));
+		int DF008 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 3));
 		start += 3;
 		//System.out.println(header);
 		long weekTS = getWeekTS(DF004, referenceTS);
@@ -74,29 +74,29 @@ public class Decode1004Msg implements Decode {
 
 
 		for (int i = 0; i < DF006 /*header.getNumberGPS()*/; i++) {
-			int DF009 = Bits.bitsToUInt(Bits.subset(bits, start, 6));
+			int DF009 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 6));
 			start += 6;
 			boolean DF010 = (Bits.bitsToUInt(Bits.subset(bits, start, 1))==1);
 			start += 1;
-			int DF011 = Bits.bitsToUInt(Bits.subset(bits,start, 24));
+			long DF011 = Bits.bitsToUInt(Bits.subset(bits,start, 24));
 			start += 24;
-			int DF012 = Bits.bitsTwoComplement(Bits.subset(bits, start, 20));
+			long DF012 = Bits.bitsTwoComplement(Bits.subset(bits, start, 20));
 			start += 20;
-			int DF013 = Bits.bitsToUInt(Bits.subset(bits, start,7));
+			int DF013 = (int)Bits.bitsToUInt(Bits.subset(bits, start,7));
 			start += 7;
-			int DF014 = Bits.bitsToUInt(Bits.subset(bits, start, 8));
+			int DF014 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 8));
 			start += 8;
-			int DF015 = Bits.bitsToUInt(Bits.subset(bits, start, 8));
+			int DF015 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 8));
 			start += 8;
-			int DF016 = Bits.bitsToUInt(Bits.subset(bits, start, 2));
+			int DF016 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 2));
 			start += 2;
-			int DF017 = Bits.bitsTwoComplement(Bits.subset(bits,start, 14));
+			int DF017 = (int)Bits.bitsTwoComplement(Bits.subset(bits,start, 14));
 			start += 14;
-			int DF018 = Bits.bitsTwoComplement(Bits.subset(bits,start, 20));
+			long DF018 = Bits.bitsTwoComplement(Bits.subset(bits,start, 20));
 			start += 20;
-			int DF019 = Bits.bitsToUInt(Bits.subset(bits, start, 7));
+			int DF019 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 7));
 			start += 7;
-			int DF020 = Bits.bitsToUInt(Bits.subset(bits, start, 8));
+			int DF020 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 8));
 			start += 8;
 
 			ObservationSet os = new ObservationSet();

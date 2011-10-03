@@ -22,13 +22,13 @@ package org.gogpsproject.parser.rtcm3;
 public class GlonassHeader {
 
 	private int stationid; // 12
-	private int epochTime; // 27
+	private long epochTime; // 27
 	private int flag; // 1
 	private int numberOfSatellites; // 5
 	private int smoothIndicator; // 1
 	private int smoothInterval; // 3
 
-	public int getEpochTime() {
+	public long getEpochTime() {
 		return epochTime;
 	}
 
@@ -52,7 +52,7 @@ public class GlonassHeader {
 		return stationid;
 	}
 
-	public void setEpochTime(int epochTime) {
+	public void setEpochTime(long epochTime) {
 		this.epochTime = epochTime;
 	}
 

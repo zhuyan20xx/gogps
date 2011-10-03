@@ -23,21 +23,21 @@ package org.gogpsproject.parser.rtcm3;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.util.Bits;
 
-public class Decode1005Msg implements Decode {
+public class Decode1006Msg implements Decode {
 
 
 	private RTCM3Client client;
-	public Decode1005Msg(RTCM3Client client) {
+	public Decode1006Msg(RTCM3Client client) {
 		this.client = client;
 	}
 
 
 	public void decode(boolean[] bits, long referenceTS) {
 		int start = 12;
-		//System.out.println("Debug : Decode 1005");
+		//System.out.println("Debug : Decode 1006");
 		StationaryAntenna stationaryantenne = new StationaryAntenna();
 
-		stationaryantenne.setStationID((int)Bits.bitsToUInt(Bits.subset(bits, start,12)));
+		stationaryantenne.setStationID((int)Bits.bitsToUInt(Bits.subset(bits, start, 12)));
 		start += 12;
 		stationaryantenne.setItrl((int)Bits.bitsToUInt(Bits.subset(bits, start, 6)));
 		start += 6;
@@ -49,18 +49,23 @@ public class Decode1005Msg implements Decode {
 		start += 1;
 		stationaryantenne.setRstationIndicator((int)Bits.bitsToUInt(Bits.subset(bits, start, 1)));
 		start += 1;
-		stationaryantenne.setAntennaRefPointX(Bits.bitsTwoComplement(Bits.subset(bits, start, 38)));
+		//System.out.println("x"+Bits.bitsToStr(Bits.subset(bits, start, 38)));
+		stationaryantenne.setAntennaRefPointX(Bits.bitsTwoComplement(Bits.subset(bits, start, 38)) * 0.0001);
 		start += 38;
 		stationaryantenne.setSreceiverOscillator((int)Bits.bitsToUInt(Bits.subset(bits, start, 1)));
 		start += 1;
 		stationaryantenne.setReserved1((int)Bits.bitsToUInt(Bits.subset(bits, start, 1)));
 		start += 1;
-		stationaryantenne.setAntennaRefPointY(Bits.bitsTwoComplement(Bits.subset(bits, start, 38)));
+		//System.out.println("y"+Bits.bitsToStr(Bits.subset(bits, start, 38)));
+		stationaryantenne.setAntennaRefPointY(Bits.bitsTwoComplement(Bits.subset(bits, start, 38)) * 0.0001);
 		start += 38;
 		stationaryantenne.setReserved2((int)Bits.bitsToUInt(Bits.subset(bits, start, 2)));
 		start += 2;
-		stationaryantenne.setAntennaRefPointZ(Bits.bitsTwoComplement(Bits.subset(bits, start, 38)));
+		//System.out.println("z"+Bits.bitsToStr(Bits.subset(bits, start, 38)));
+		stationaryantenne.setAntennaRefPointZ(Bits.bitsTwoComplement(Bits.subset(bits, start, 38)) * 0.0001);
 		start += 38;
+		stationaryantenne.setAntennaHeight(Bits.bitsToUInt(Bits.subset(bits, start, 16)) * 0.0001);
+		start += 16;
 
 		Coordinates c = Coordinates.globalXYZInstance(stationaryantenne.getAntennaRefPointX(), stationaryantenne.getAntennaRefPointY(), stationaryantenne.getAntennaRefPointZ());
 		client.setMasterPosition(c);

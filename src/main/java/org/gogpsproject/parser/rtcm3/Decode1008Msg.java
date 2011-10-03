@@ -22,10 +22,10 @@ package org.gogpsproject.parser.rtcm3;
 
 import org.gogpsproject.util.Bits;
 
-public class Decode1007Msg implements Decode {
+public class Decode1008Msg implements Decode {
 
 	private RTCM3Client client;
-	public Decode1007Msg(RTCM3Client client) {
+	public Decode1008Msg(RTCM3Client client) {
 		this.client = client;
 	}
 
@@ -33,6 +33,7 @@ public class Decode1007Msg implements Decode {
 		AntennaDescriptor antenna = new AntennaDescriptor();
 		int start = 12;
 		String desc = "";
+		String serial = "";
 		antenna.setStationID((int)Bits.bitsToUInt(Bits.subset(bits, start, 12)));
 		start += 12;
 		int cnt = (int)Bits.bitsToUInt(Bits.subset(bits, start, 8));
@@ -45,6 +46,15 @@ public class Decode1007Msg implements Decode {
 		antenna.setAntennaDescriptor(desc);
 		antenna.setSetupID((int)Bits.bitsToUInt(Bits.subset(bits, start, 8)));
 		start += 8;
+
+		cnt = (int)Bits.bitsToUInt(Bits.subset(bits, start, 8));
+		start += 8;
+		for (int i = 0; i < cnt; i++) {
+			char value = (char) Bits.bitsToUInt(Bits.subset(bits, start, 8));
+			serial += Character.toString(value);
+			start += 8;
+		}
+		antenna.setAntennaSerial(serial);
 
 		client.setAntennaDescriptor(antenna);
 		//System.out.println(antenna);

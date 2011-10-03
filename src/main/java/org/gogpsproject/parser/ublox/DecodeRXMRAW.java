@@ -83,7 +83,7 @@ public class DecodeRXMRAW {
 				indice++;
 			}
 		}
-		int tow = Bits.bitsTwoComplement(bits);
+		long tow = Bits.bitsTwoComplement(bits);
 		//System.out.println("Gps TOW " + tow + " ms");
 
 		bits = new boolean[8 * 2];
@@ -95,7 +95,7 @@ public class DecodeRXMRAW {
 				indice++;
 			}
 		}
-		int week = Bits.bitsTwoComplement(bits);
+		int week = (int)Bits.bitsTwoComplement(bits);
 		//System.out.println("Week :  " + week );
 
 		bits = new boolean[8];
@@ -106,7 +106,7 @@ public class DecodeRXMRAW {
 			indice++;
 		}
 
-		int numSV = Bits.bitsToUInt(bits);
+		int numSV = (int)Bits.bitsToUInt(bits);
 		//System.out.println("NumSV :  " + numSV + " S ");
 
 		bits = new boolean[8];
@@ -190,7 +190,7 @@ public class DecodeRXMRAW {
 				bits[indice] = temp1[i];
 				indice++;
 			}
-			os.setSatID(Bits.bitsToUInt(bits));
+			os.setSatID((int)Bits.bitsToUInt(bits));
 //			System.out.print (" SatID: "
 //					+ os.getSatID() + "  ");
 

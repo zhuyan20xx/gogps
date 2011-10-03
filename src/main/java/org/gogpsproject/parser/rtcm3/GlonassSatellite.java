@@ -40,7 +40,7 @@ public class GlonassSatellite {
 	private int satID;
 	private int l1code;
 	private int satFrequency;
-	private int l1pseudorange;
+	private long l1pseudorange;
 	private double l1phaserange;
 	private int l1locktime;
 	private int l1psedorangemod;
@@ -71,7 +71,7 @@ public class GlonassSatellite {
 		return l1psedorangemod;
 	}
 
-	public int getL1pseudorange() {
+	public long getL1pseudorange() {
 		return l1pseudorange;
 	}
 
@@ -123,7 +123,7 @@ public class GlonassSatellite {
 		this.l1psedorangemod = l1psedorangemod;
 	}
 
-	public void setL1pseudorange(int l1pseudorange) {
+	public void setL1pseudorange(long l1pseudorange) {
 		this.l1pseudorange = l1pseudorange;
 	}
 
