@@ -38,14 +38,14 @@ public class TestRTCM3 {
 	 * @param args
 	 */
 
-	
+
 
 	public static void main(String[] args) {
-		
+
 
 
 		try {
-			RTCM3Client rtcm = RTCM3Client.getInstance("www.euref-ip.net", 80, args[0],args[1], "ZIM20");
+			RTCM3Client rtcm = RTCM3Client.getInstance(args[0], Integer.parseInt(args[1]), args[2],args[3], args[4]);
 			//RTCM3Client rtcm = RTCM3Client.getInstance("ntrip.jenoba.jp", 80, args[0],args[1], "JVR30");
 			rtcm.setDebug(true);
 			// Ntrip-GAA: $GPGGA,183836,3435.524,N,13530.231,E,4,10,1,164,M,1,M,3,0*69
@@ -75,7 +75,7 @@ public class TestRTCM3 {
 //			e.printStackTrace();
 //		}
 
-	
+
 	}
 
 }

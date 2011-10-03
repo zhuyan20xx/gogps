@@ -98,7 +98,7 @@ public class DecodeAIDEPH {
 		boolean bits[] = new boolean[bytes.length*8];
 		for (int j = 3; j >= 0; j--) {
 			boolean[] temp1 = Bits.intToBits(Bits.getUInt(bytes[j]), 8);
-			how=Bits.bitsToUInt(temp1);
+			how=(int)Bits.bitsToUInt(temp1);
 			//System.out.print((sf1d[b]<=0xf?"0":"")+Integer.toHexString(sf1d[b])+" ");
 			for(int i=0;i<8;i++){
 				//System.out.println(" "+(b*8*4+((3-j)*8)+i)+" ");
@@ -126,7 +126,7 @@ public class DecodeAIDEPH {
 		for(int b=0;b<sf1d.length;b++){
 			for (int j = 3; j >= 0; j--) {
 				boolean[] temp1 = Bits.intToBits(Bits.getUInt(bytes[b*4+j]), 8);
-				sf1d[b]=Bits.bitsToUInt(temp1);
+				sf1d[b]=(int)Bits.bitsToUInt(temp1);
 				//System.out.print((sf1d[b]<=0xf?"0":"")+Integer.toHexString(sf1d[b])+" ");
 				for(int i=0;i<8;i++){
 					//System.out.println(" "+(b*8*4+((3-j)*8)+i)+" ");
@@ -138,12 +138,12 @@ public class DecodeAIDEPH {
 
 		//eph.setWeek(Bits.bitsToUInt(Bits.subset(bits, 9, 10)));
 //		System.out.println();
-		eph.setWeek(Bits.bitsToUInt(Bits.subset(bits, 8, 10)));
-		eph.setL2Code(Bits.bitsToUInt(Bits.subset(bits, 18, 2)));
-		eph.setSvAccur(Bits.bitsToUInt(Bits.subset(bits, 20, 4)));
-		eph.setSvHealth(Bits.bitsToUInt(Bits.subset(bits, 24, 6)));
-		eph.setIodc(Bits.bitsToUInt(Bits.concat(Bits.subset(bits, 30, 2), Bits.subset(bits, 5*32+8, 8))));
-		eph.setL2Flag(Bits.bitsToUInt(Bits.subset(bits, 1*32+8, 1)));
+		eph.setWeek((int)Bits.bitsToUInt(Bits.subset(bits, 8, 10)));
+		eph.setL2Code((int)Bits.bitsToUInt(Bits.subset(bits, 18, 2)));
+		eph.setSvAccur((int)Bits.bitsToUInt(Bits.subset(bits, 20, 4)));
+		eph.setSvHealth((int)Bits.bitsToUInt(Bits.subset(bits, 24, 6)));
+		eph.setIodc((int)Bits.bitsToUInt(Bits.concat(Bits.subset(bits, 30, 2), Bits.subset(bits, 5*32+8, 8))));
+		eph.setL2Flag((int)Bits.bitsToUInt(Bits.subset(bits, 1*32+8, 1)));
 		eph.setTgd(Bits.bitsTwoComplement(Bits.subset(bits, 4*32+24, 8))*TWO_P_M31);
 		eph.setToc(Bits.bitsToUInt(Bits.subset(bits, 5*32+16, 16))*TWO_P_4);
 		eph.setAf2(Bits.bitsTwoComplement(Bits.subset(bits, 6*32+8, 8))*TWO_P_M55);
@@ -172,7 +172,7 @@ public class DecodeAIDEPH {
 		for(int b=0;b<sf2d.length;b++){
 			for (int j = 3; j >= 0; j--) {
 				boolean[] temp1 = Bits.intToBits(Bits.getUInt(bytes[b*4+j]), 8);
-				sf2d[b]=Bits.bitsToUInt(temp1);
+				sf2d[b]=(int)Bits.bitsToUInt(temp1);
 				for(int i=0;i<8;i++){
 					//System.out.println(" "+(b*8*4+((3-j)*8)+i)+" ");
 					bits[b*8*4+((3-j)*8)+i] = temp1[i];
@@ -182,7 +182,7 @@ public class DecodeAIDEPH {
 		}
 		baos.write(bytes);
 
-		int IODE2 = Bits.bitsToUInt(Bits.subset(bits, 8, 8));
+		int IODE2 = (int)Bits.bitsToUInt(Bits.subset(bits, 8, 8));
 		eph.setCrs(Bits.bitsTwoComplement(Bits.subset(bits, 16, 16))*TWO_P_M5);
 		eph.setDeltaN(Bits.bitsTwoComplement(Bits.subset(bits, 1*32+8, 16)) * PI * TWO_P_M43);
 		eph.setM0(Bits.bitsTwoComplement( Bits.concat(Bits.subset(bits, 1*32+24, 8), Bits.subset(bits, 2*32+8, 24)) ) * PI * TWO_P_M31);
@@ -215,7 +215,7 @@ public class DecodeAIDEPH {
 		for(int b=0;b<sf3d.length;b++){
 			for (int j = 3; j >= 0; j--) {
 				boolean[] temp1 = Bits.intToBits(Bits.getUInt(bytes[b*4+j]), 8);
-				sf3d[b]=Bits.bitsToUInt(temp1);
+				sf3d[b]=(int)Bits.bitsToUInt(temp1);
 				//System.out.print((sf3d[b]<=0xf?"0":"")+Integer.toHexString(sf3d[b])+" ");
 				for(int i=0;i<8;i++){
 					//System.out.println(" "+(b*8*4+((3-j)*8)+i)+" ");
@@ -232,7 +232,7 @@ public class DecodeAIDEPH {
 		eph.setCrc(Bits.bitsTwoComplement(Bits.subset(bits, 4*32+8, 16)) * TWO_P_M5);
 		eph.setOmega(Bits.bitsTwoComplement( Bits.concat(Bits.subset(bits, 4*32+24, 8), Bits.subset(bits, 5*32+8, 24)) ) * PI * TWO_P_M31);
 		eph.setOmegaDot(Bits.bitsTwoComplement(Bits.subset(bits, 6*32+8, 24)) * TWO_P_M43);
-		int IODE3 = Bits.bitsToUInt(Bits.subset(bits, 7*32+8, 8));
+		int IODE3 = (int)Bits.bitsToUInt(Bits.subset(bits, 7*32+8, 8));
 		eph.setiDot(Bits.bitsTwoComplement(Bits.subset(bits, 7*32+16, 14)) * TWO_P_M43);
 
 //		System.out.println();

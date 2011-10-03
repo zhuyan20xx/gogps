@@ -22,16 +22,12 @@ package org.gogpsproject.parser.rtcm3;
 public class AntennaDescriptor {
 
 	private int stationID;
-	private int decriptorCounterN;
 	private String antennaDescriptor;
 	private int setupID;
+	private String antennaSerial;
 
 	public String getAntennaDescriptor() {
 		return antennaDescriptor;
-	}
-
-	public int getDecriptorCounterN() {
-		return decriptorCounterN;
 	}
 
 	public int getSetupID() {
@@ -46,10 +42,6 @@ public class AntennaDescriptor {
 		this.antennaDescriptor = antennaDescriptor;
 	}
 
-	public void setDecriptorCounterN(int decriptorCounterN) {
-		this.decriptorCounterN = decriptorCounterN;
-	}
-
 	public void setSetupID(int setupID) {
 		this.setupID = setupID;
 	}
@@ -61,8 +53,21 @@ public class AntennaDescriptor {
 	@Override
 	public String toString() {
 		return "AntennaDescriptor [antennaDescriptor=" + antennaDescriptor
-				+ ", decriptorCounterN=" + decriptorCounterN + ", setupID="
-				+ setupID + ", stationID=" + stationID + "]";
+				+ ", setupID=" + setupID + ", stationID=" + stationID + " antennaSerial=" + antennaSerial + "]";
+	}
+
+	/**
+	 * @return the antennaSerial
+	 */
+	public String getAntennaSerial() {
+		return antennaSerial;
+	}
+
+	/**
+	 * @param antennaSerial the antennaSerial to set
+	 */
+	public void setAntennaSerial(String antennaSerial) {
+		this.antennaSerial = antennaSerial;
 	}
 
 }

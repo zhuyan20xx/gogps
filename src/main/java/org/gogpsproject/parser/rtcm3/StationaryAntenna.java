@@ -33,6 +33,8 @@ public class StationaryAntenna {
 	private double antennaRefPointY; // antenna reference point ECEF-y
 	private int reserved2;
 	private double antennaRefPointZ; // antenna reference point ECEF-Y
+	private double antennaHeight;
+
 
 	public double getAntennaRefPointX() {
 		return antennaRefPointX;
@@ -141,6 +143,20 @@ public class StationaryAntenna {
 				+ rgalileoIndicator + ", rstationIndicator="
 				+ rstationIndicator + ", sreceiverOscillator="
 				+ sreceiverOscillator + ", stationID=" + stationID + "]";
+	}
+
+	/**
+	 * @param antennaHeight the antennaHeight to set
+	 */
+	public void setAntennaHeight(double antennaHeight) {
+		this.antennaHeight = antennaHeight;
+	}
+
+	/**
+	 * @return the antennaHeight
+	 */
+	public double getAntennaHeight() {
+		return antennaHeight;
 	}
 
 }

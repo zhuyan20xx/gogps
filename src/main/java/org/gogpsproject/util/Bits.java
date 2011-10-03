@@ -40,12 +40,12 @@ public class Bits {
 //
 //		return result;
 //	}
-	public static int bitsToUInt(boolean[] bits) {
-		int result = 0;
+	public static long bitsToUInt(boolean[] bits) {
+		long result = 0;
 
 
 
-		int pow2 = 1;
+		long pow2 = 1;
 		for (int i = bits.length-1; i >= 0; i--) {
 			if (bits[i]) {
 				result = result + pow2 ;//(int) java.lang.Math.pow(2, (bits.length - i - 1));
@@ -91,8 +91,8 @@ public class Bits {
 		return result;
 	}
 
-	public static int bitsTwoComplement(boolean[] bits) {
-		int result;
+	public static long bitsTwoComplement(boolean[] bits) {
+		long result;
 
 		if (!bits[0]) {
 			// If the most significant bit are 0 then the integer is positive
@@ -105,7 +105,7 @@ public class Bits {
 			for (int i = 0; i < bits.length; i++) {
 				b[i] = !bits[i];
 			}
-			result = -(bitsToUInt(b) + 1);
+			result = -1 * (bitsToUInt(b) + 1);
 		}
 
 		return result;
