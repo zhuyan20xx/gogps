@@ -391,7 +391,7 @@ public class ObservationsBuffer
 	 */
 	@Override
 	public void setDefinedPosition(Coordinates definedPosition) {
-		//System.out.println((id!=null?id:"")+" got defined position: "+definedPosition);
+		System.out.println((id!=null?id:"")+" got defined position: "+definedPosition);
 
 		this.definedPosition = definedPosition;
 
