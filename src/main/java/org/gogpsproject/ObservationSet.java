@@ -213,8 +213,8 @@ public class ObservationSet implements Streamable {
 		dos.writeInt(STREAM_V); size +=4;
 		dos.write(satID);size +=1;		// 1
 		// L1 data
-		dos.write(qualityInd[L1]);	size+=1;
-		dos.write(lossLockInd[L1]);	size+=1;
+		dos.write((byte)qualityInd[L1]);	size+=1;
+		dos.write((byte)lossLockInd[L1]);	size+=1;
 		dos.writeDouble(codeC[L1]); size+=8;
 		dos.writeDouble(codeP[L1]); size+=8;
 		dos.writeDouble(phase[L1]); size+=8;
@@ -229,8 +229,8 @@ public class ObservationSet implements Streamable {
 		if(!Float.isNaN(doppler[L2])) hasL2 = true;
 		dos.writeBoolean(hasL2); size+=1;
 		if(hasL2){
-			dos.write(qualityInd[L2]);	size+=1;
-			dos.write(lossLockInd[L2]);	size+=1;
+			dos.write((byte)qualityInd[L2]);	size+=1;
+			dos.write((byte)lossLockInd[L2]);	size+=1;
 			dos.writeDouble(codeC[L2]); size+=8;
 			dos.writeDouble(codeP[L2]); size+=8;
 			dos.writeDouble(phase[L2]); size+=8;
@@ -252,8 +252,10 @@ public class ObservationSet implements Streamable {
 			satID = dai.read();
 
 			// L1 data
-			qualityInd[L1] = dai.read();
-			lossLockInd[L1] = dai.read();
+			qualityInd[L1] = (int)dai.read();
+			if(qualityInd[L1]==255) qualityInd[L1] = -1;
+			lossLockInd[L1] = (int)dai.read();
+			if(lossLockInd[L1]==255) lossLockInd[L1] = -1;
 			codeC[L1] = dai.readDouble();
 			codeP[L1] = dai.readDouble();
 			phase[L1] = dai.readDouble();
@@ -261,8 +263,10 @@ public class ObservationSet implements Streamable {
 			doppler[L1] = dai.readFloat();
 			if(dai.readBoolean()){
 				// L2 data
-				qualityInd[L2] = dai.read();
-				lossLockInd[L2] = dai.read();
+				qualityInd[L2] = (int)dai.read();
+				if(qualityInd[L2]==255) qualityInd[L2] = -1;
+				lossLockInd[L2] = (int)dai.read();
+				if(lossLockInd[L2]==255) lossLockInd[L2] = -1;
 				codeC[L2] = dai.readDouble();
 				codeP[L2] = dai.readDouble();
 				phase[L2] = dai.readDouble();

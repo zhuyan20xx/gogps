@@ -49,6 +49,8 @@ public class ObservationsBuffer
         }
     }
 
+    private boolean debug = false;
+
     private Coordinates definedPosition = null;
 
     private boolean waitForData=true;
@@ -175,6 +177,9 @@ public class ObservationsBuffer
     	//System.out.println("\tR# > obs "+o.getGpsSize()+" time "+o.getRefTime().getMsec());
         // TODO test if ref time observetions is not already present
         this.timeOrderedObs.add(o);
+        //System.out.println("---------------------------------------------");
+        //System.out.println(o);
+
         if(outLog!=null){
 
         	try {
@@ -391,7 +396,7 @@ public class ObservationsBuffer
 	 */
 	@Override
 	public void setDefinedPosition(Coordinates definedPosition) {
-		System.out.println((id!=null?id:"")+" got defined position: "+definedPosition);
+		if(debug) System.out.println((id!=null?id:"")+" got defined position: "+definedPosition);
 
 		this.definedPosition = definedPosition;
 
@@ -430,33 +435,35 @@ public class ObservationsBuffer
 	public long getTimeoutNextObsWait() {
 		return timeoutNextObsWait;
 	}
-
 	public void readFromLog(String logFilename) throws IOException{
+		readFromLog(logFilename,false);
+	}
+	public void readFromLog(String logFilename,boolean oldversion) throws IOException{
 		FileInputStream fis = new FileInputStream(logFilename);
 		DataInputStream dis = new DataInputStream(fis);
 		String msg = null;
 		try{
 			msg=dis.readUTF();
 			while(msg!=null){
-				System.out.println("Msg:["+msg+"]");
+				if(debug) System.out.println("Msg:["+msg+"]");
 				if(msg.equalsIgnoreCase(Streamable.MESSAGE_OBSERVATIONS)){
-					Observations o = new Observations(dis,false);
+					Observations o = new Observations(dis,oldversion);
 					addObservations(o);
 				}else
 				if(msg.equalsIgnoreCase(Streamable.MESSAGE_EPHEMERIS)){
-					EphGps eph = new EphGps(dis,false);
+					EphGps eph = new EphGps(dis,oldversion);
 					addEphemeris(eph);
 				}else
 				if(msg.equalsIgnoreCase(Streamable.MESSAGE_OBSERVATIONS_SET)){
-					ObservationSet eps = new ObservationSet(dis,false);
+					ObservationSet eps = new ObservationSet(dis,oldversion);
 					// nothing to do with ?
 				}else
 				if(msg.equalsIgnoreCase(Streamable.MESSAGE_IONO)){
-					IonoGps iono = new IonoGps(dis,false);
+					IonoGps iono = new IonoGps(dis,oldversion);
 					addIonospheric(iono);
 				}else
 				if(msg.equalsIgnoreCase(Streamable.MESSAGE_COORDINATES)){
-					Coordinates c = Coordinates.readFromStream(dis,false);
+					Coordinates c = Coordinates.readFromStream(dis,oldversion);
 					setDefinedPosition(c);
 				}else{
 					System.out.println("Unknow Msg:["+msg+"]");
@@ -465,8 +472,21 @@ public class ObservationsBuffer
 				msg=dis.readUTF();
 			}
 		}catch(EOFException eof){
-
+			// ok
 		}
-		System.out.println("End");
+		this.streamClosed();
+		if(debug) System.out.println("End");
+	}
+	/**
+	 * @param debug the debug to set
+	 */
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+	/**
+	 * @return the debug
+	 */
+	public boolean isDebug() {
+		return debug;
 	}
 }
