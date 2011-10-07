@@ -499,13 +499,13 @@ public class RinexObservationParser implements ObservationsProducer{
 					}
 				} catch (NumberFormatException e) {
 				}
-			} else if (typeOrder[k] == 6) { // ** SNR on L1
+			} else if (typeOrder[k] == 6) { // S1 ** SNR on L1
 
 				String snrS = line.substring(j, j + 14).trim();
 				if (snrS.length() != 0) {
 					o.setSignalStrength(0,Float.parseFloat(snrS));
 				}
-			} else if (typeOrder[k] == 7) { // ** SNR on L2
+			} else if (typeOrder[k] == 7) { // S2 ** SNR on L2
 
 				String snrS = line.substring(j, j + 14).trim();
 				if (snrS.length() != 0) {

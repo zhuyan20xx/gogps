@@ -22,7 +22,10 @@ package org.gogpsproject;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * <p>
@@ -32,6 +35,10 @@ import java.util.ArrayList;
  * @author ege, Cryms.com
  */
 public class Observations implements Streamable {
+
+	SimpleDateFormat sdfHeader = new SimpleDateFormat("dd-MMM-yy HH:mm:ss");
+	DecimalFormat dfX4 = new DecimalFormat("0.0000");
+
 
 	private final static int STREAM_V = 1;
 
@@ -176,14 +183,26 @@ public class Observations implements Streamable {
 		return size;
 	}
 	public String toString(){
+
 		String lineBreak = System.getProperty("line.separator");
 
-		String out= " GPS Time:"+getRefTime().getGpsTime()+" evt:"+eventFlag+lineBreak;
+		String out= " GPS Time:"+getRefTime().getGpsTime()+" "+sdfHeader.format(new Date(getRefTime().getMsec()))+" evt:"+eventFlag+lineBreak;
 		for(int i=0;i<getGpsSize();i++){
 			ObservationSet os = getGpsByIdx(i);
-			out+="  Sat:"+os.getSatID()+"\tC:"+os.getCodeC(0)+" P:"+os.getCodeP(0)+" Ph:"+os.getPhase(0)+" Ps:"+os.getPseudorange(0)+" Dp:"+os.getDoppler(0)+" Ss:"+os.getSignalStrength(0)+lineBreak;
+			out+="  Sat:"+os.getSatID()+"\tC:"+fd(os.getCodeC(0))
+				+" cP:"+fd(os.getCodeP(0))
+				+" Ph:"+fd(os.getPhase(0))
+				+" Dp:"+fd(os.getDoppler(0))
+				+" Ss:"+fd(os.getSignalStrength(0))
+				+" LL:"+fd(os.getLossLockInd(0))
+				+" LL2:"+fd(os.getLossLockInd(1))
+				+lineBreak;
 		}
 		return out;
+	}
+
+	private String fd(double n){
+		return Double.isNaN(n)?"NaN":dfX4.format(n);
 	}
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.Streamable#read(java.io.DataInputStream)
