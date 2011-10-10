@@ -17,3 +17,5 @@ syntax: regexp
 ^sp3-cache$
 syntax: regexp
 ^rnp-cache$
+syntax: regexp
+^src/test/java/org/gogpsproject/PersonalConvertToRinex\.java$
