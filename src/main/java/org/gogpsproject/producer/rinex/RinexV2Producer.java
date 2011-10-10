@@ -17,7 +17,7 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.gogpsproject.producer;
+package org.gogpsproject.producer.rinex;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -26,8 +26,10 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.Vector;
 
 import org.gogpsproject.Coordinates;
@@ -38,7 +40,7 @@ import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 /**
  * <p>
- *
+ * Produces Rinex 2 as StreamEventListener
  * </p>
  *
  * @author Lorenzo Patocchi cryms.com
@@ -48,7 +50,7 @@ import org.gogpsproject.StreamEventListener;
  * @author Lorenzo
  *
  */
-public class RinexProducer implements StreamEventListener {
+public class RinexV2Producer implements StreamEventListener {
 
 	private String outFilename;
 	private boolean headerWritten;
@@ -62,7 +64,18 @@ public class RinexProducer implements StreamEventListener {
 	private FileOutputStream fos = null;
 	private PrintStream ps = null;
 
-	public RinexProducer(String outFilename, boolean needApproxPos){
+	private ArrayList<Type> typeConfig = new ArrayList<Type>();
+
+	private SimpleDateFormat sdfHeader = new SimpleDateFormat("dd-MMM-yy HH:mm:ss");
+	private DecimalFormat dfX3 = new DecimalFormat("0.000");
+	private DecimalFormat dfX7 = new DecimalFormat("0.0000000");
+	private DecimalFormat dfX = new DecimalFormat("0");
+	private DecimalFormat dfXX = new DecimalFormat("00");
+	private DecimalFormat dfX4 = new DecimalFormat("0.0000");
+
+	private final static TimeZone TZ = TimeZone.getTimeZone("UTC");
+
+	public RinexV2Producer(String outFilename, boolean needApproxPos){
 		this.outFilename = outFilename;
 		this.needApproxPos = needApproxPos;
 
@@ -72,6 +85,18 @@ public class RinexProducer implements StreamEventListener {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+
+		// set default type config
+		// C1    P1    P2    L1    L2    D1    D2   S1   S2
+		typeConfig.add(new Type(Type.C,1));
+		typeConfig.add(new Type(Type.P,1));
+		typeConfig.add(new Type(Type.P,2));
+		typeConfig.add(new Type(Type.L,1));
+		typeConfig.add(new Type(Type.L,2));
+		typeConfig.add(new Type(Type.D,1));
+		typeConfig.add(new Type(Type.D,2));
+		typeConfig.add(new Type(Type.S,1));
+		typeConfig.add(new Type(Type.S,2));
 
 	}
 
@@ -158,10 +183,7 @@ public class RinexProducer implements StreamEventListener {
 	}
 
 	private void writeHeader(Coordinates approxPosition,Observations firstObservation) throws IOException{
-		SimpleDateFormat sdfHeader = new SimpleDateFormat("dd-MMM-yy HH:mm:ss");
-		DecimalFormat dfX7 = new DecimalFormat("0.0000000");
-		DecimalFormat dfX4 = new DecimalFormat("0.0000");
-		DecimalFormat dfX = new DecimalFormat("0");
+
 //	          2              OBSERVATION DATA    G (GPS)             RINEX VERSION / TYPE
 //	     CCRINEXO V2.4.1 LH  Bernese             28-APR-08 17:51     PGM / RUN BY / DATE
 //	     TPS2RIN 1.40        GEOMATICA/IREALP    28-APR-08 12:59     COMMENT
@@ -181,7 +203,7 @@ public class RinexProducer implements StreamEventListener {
 //	       2008     4    28    12     0    0.000000                  TIME OF FIRST OBS
 //	                                                                 END OF HEADER
 		writeLine (sf("",5)+sf("2",15)+sf("OBSERVATION DATA",20)+sf("G (GPS)",20)+se("RINEX VERSION / TYPE",20), false);
-		appendLine(sf("goGPS-java",20)+sf("",20)+sf(sdfHeader.format(new Date()).toUpperCase(),20)+se("PGM / RUN BY / DATE",20));
+		appendLine(sf("goGPS-java",20)+sf("",20)+sf(sdfHeader.format(Calendar.getInstance(TZ).getTime()).toUpperCase(),20)+se("PGM / RUN BY / DATE",20));
 		appendLine(sf("",20*3)+se("MARKER NAME",20));
 		appendLine(sf("",20*3)+se("MARKER NUMBER",20));
 		appendLine(sf("",20*3)+se("OBSERVER / AGENCY",20));
@@ -192,11 +214,21 @@ public class RinexProducer implements StreamEventListener {
 		}
 		appendLine(sp(dfX4.format(0.0),14,1)+sp(dfX4.format(0.0),14,1)+sp(dfX4.format(0.0),14,1)+sf("",18)+se("ANTENNA: DELTA H/E/N",20));
 		appendLine(sp(dfX.format(1),6,1)+sp(dfX.format(1),6,1)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",12)+se("WAVELENGTH FACT L1/2",20));
-		appendLine(sp(dfX.format(7),6,1)+sp("C1",6,1)+sp("P1",6,1)+sp("P2",6,1)+sp("L1",6,1)+sp("L2",6,1)+sp("D1",6,1)+sp("D2",6,1)+sp("S1",6,1)+sp("S2",6,1)+se("# / TYPES OF OBSERV",20));
+
+		String line = "";
+		int cols=60;
+		line += sp(dfX.format(typeConfig.size()),6,1); cols -= 6;
+		for(Type t:typeConfig){
+			line += sp(t.toString(),6,1);cols -= 6;
+		}
+		line += se("",cols);
+		line += se("# / TYPES OF OBSERV",20);
+
+		appendLine(line);
 		appendLine(sp(dfX.format(1),6,1)+sf("",60-1*6)+se("INTERVAL",20));
 
 		if(firstObservation!=null){
-			Calendar c = Calendar.getInstance();
+			Calendar c = Calendar.getInstance(TZ);
 			c.setTimeInMillis(firstObservation.getRefTime().getMsec());
 			appendLine(sp(dfX.format(c.get(Calendar.YEAR)),6,1)
 					+sp(dfX.format(c.get(Calendar.MONTH)+1),6,1)
@@ -211,7 +243,23 @@ public class RinexProducer implements StreamEventListener {
 	}
 
 
-//	 10  3  2 13 20  0.0000000  0 12G11G13G32G04G20G17G23R15R20R21R05R04
+/**
+	 * @return the typeConfig
+	 */
+	public ArrayList<Type> getTypeConfig() {
+		return (ArrayList<Type>)typeConfig.clone();
+	}
+
+	/**
+	 * @param typeConfig the typeConfig to set
+	 * @throws Exception if header has been already written in file, is not permitted to change config in middle.
+	 */
+	public void setTypeConfig(ArrayList<Type> typeConfig) throws Exception {
+		if(headerWritten) throw new Exception("Header already written.");
+		this.typeConfig = typeConfig;
+	}
+
+	//	 10  3  2 13 20  0.0000000  0 12G11G13G32G04G20G17G23R15R20R21R05R04
 //	  24501474.376                    24501481.324   128756223.92705 100329408.23106
 //	        42.000          21.000
 //	  20630307.428                    20630311.680   108413044.43906  84477784.53807
@@ -238,12 +286,7 @@ public class RinexProducer implements StreamEventListener {
 //	        40.000          37.000
 	private void writeObservation(Observations o) throws IOException{
 		//System.out.println(o);
-		DecimalFormat dfX3 = new DecimalFormat("0.000");
-		DecimalFormat dfX5 = new DecimalFormat("0.00000");
-		DecimalFormat dfX7 = new DecimalFormat("0.0000000");
-		DecimalFormat dfX = new DecimalFormat("0");
-		DecimalFormat dfXX = new DecimalFormat("00");
-		Calendar c = Calendar.getInstance();
+		Calendar c = Calendar.getInstance(TZ);
 		c.setTimeInMillis(o.getRefTime().getMsec());
 
 		String line = "";
@@ -265,34 +308,42 @@ public class RinexProducer implements StreamEventListener {
 		}
 		writeLine(line, true);
 
-		// C1    P1    P2    L1    L2    D1    D2   S1   S2
 		for(int i=0;i<gpsSize;i++){
 			ObservationSet os = o.getGpsByIdx(i);
 			line = "";
-			line += Double.isNaN(os.getCodeC(0))?sf("",16):sp(dfX3.format(os.getCodeC(0)),14,1)+"  "; // C1
-			line += Double.isNaN(os.getCodeP(0))?sf("",16):sp(dfX3.format(os.getCodeP(0)),14,1)+"  "; // P1
-			line += Double.isNaN(os.getCodeP(1))?sf("",16):sp(dfX3.format(os.getCodeP(1)),14,1)+"  "; // P2
-
-			line += Double.isNaN(os.getPhase(0))?sf("",14):sp(dfX3.format(os.getPhase(0)),14,1); // L1
-			line += os.getLossLockInd(0)<0?" ":dfX.format(os.getLossLockInd(0)); // L1 Loss of Lock
-			line += " ";//Float.isNaN(os.getSignalStrength(0))?" ":sp(dfX.format(os.getSignalStrength(0)/6),1,0); // L1 signal strengt
-
-			line += Double.isNaN(os.getPhase(1))?sf("",14):sp(dfX3.format(os.getPhase(1)),14,1); // L2
-			line += os.getLossLockInd(1)<0?" ":dfX.format(os.getLossLockInd(1)); // L2 Loss of Lock
-			line += " ";//Float.isNaN(os.getSignalStrength(1))?" ":sp(dfX.format(os.getSignalStrength(1)/6),1,0); // L2 signal strengt
-
-			writeLine(line, true);
-			line = "";
-
-			line += Float.isNaN(os.getDoppler(0))?sf("",16):sp(dfX3.format(os.getDoppler(0)),14,1)+"  "; // D1
-			line += Float.isNaN(os.getDoppler(1))?sf("",16):sp(dfX3.format(os.getDoppler(1)),14,1)+"  "; // D2
-			line += Float.isNaN(os.getSignalStrength(0))?sf("",16):sp(dfX3.format(os.getSignalStrength(0)),14,1)+"  "; // S1
-			line += Float.isNaN(os.getSignalStrength(1))?sf("",16):sp(dfX3.format(os.getSignalStrength(1)),14,1)+"  "; // S2
-
+			int cnt=0;
+			for(Type t:typeConfig){
+				switch(t.getType()){
+				case Type.C:
+					line += Double.isNaN(os.getCodeC(t.getFrequency()-1))?sf("",16):sp(dfX3.format(os.getCodeC(t.getFrequency()-1)),14,1)+"  ";
+					break;
+				case Type.P:
+					line += Double.isNaN(os.getCodeP(t.getFrequency()-1))?sf("",16):sp(dfX3.format(os.getCodeP(t.getFrequency()-1)),14,1)+"  ";
+					break;
+				case Type.L:
+					line += Double.isNaN(os.getPhase(t.getFrequency()-1))?sf("",14):sp(dfX3.format(os.getPhase(t.getFrequency()-1)),14,1); // L
+					line += os.getLossLockInd(t.getFrequency()-1)<0?" ":dfX.format(os.getLossLockInd(t.getFrequency()-1)); // L1 Loss of Lock Indicator
+					line += os.getSignalStrengthInd(t.getFrequency()-1)<0?" ":dfX.format(os.getSignalStrengthInd(t.getFrequency()-1)); // L1 Signal Strength Indicator
+					break;
+				case Type.D:
+					line += Float.isNaN(os.getDoppler(t.getFrequency()-1))?sf("",16):sp(dfX3.format(os.getDoppler(t.getFrequency()-1)),14,1)+"  ";
+					break;
+				case Type.S:
+					line += Float.isNaN(os.getSignalStrength(t.getFrequency()-1))?sf("",16):sp(dfX3.format(os.getSignalStrength(t.getFrequency()-1)),14,1)+"  ";
+					break;
+				}
+				cnt++;
+				if(cnt==5){
+					writeLine(line, true);
+					line = "";
+					cnt = 0;
+				}
+			}
 			writeLine(line, true);
 		}
 
 	}
+
 	// space end
 	private String se(String in, int max){
 		return sf(in,max,0);

@@ -30,6 +30,7 @@ import java.util.Vector;
 import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
+import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 @SuppressWarnings("restriction")
 public class TestRTCM3 {
@@ -53,8 +54,21 @@ public class TestRTCM3 {
 			Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
 			// JP Osaka
 			//Coordinates coordinates = Coordinates.globalXYZInstance(-3749314.940644724,3684015.867703885,3600798.5084946174);
-			rtcm.setMasterPosition(coordinates);
+			rtcm.setVirtualReferenceStationPosition(coordinates);
 			rtcm.init();
+
+			// log rinex format
+			RinexV2Producer rinexOut = new RinexV2Producer("./data/test-rinex.11o",true);
+			rtcm.addStreamEventListener(rinexOut);
+
+
+			ObservationsBuffer ob = new ObservationsBuffer(rtcm,"./data/test-rtcm.dat");
+			ob.init();
+
+
+			Thread.sleep(60*1000);
+
+			rtcm.release(true, 10*1000);
 
 		} catch (Exception e1) {
 			e1.printStackTrace();

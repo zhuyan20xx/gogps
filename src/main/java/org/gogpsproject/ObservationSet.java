@@ -45,11 +45,29 @@ public class ObservationSet implements Streamable {
 	private double[] codeC = {Double.NaN,Double.NaN};			/* C Coarse/Acquisition (C/A) code [m] */
 	private double[] codeP = {Double.NaN,Double.NaN};			/* P Code Pseudorange [m] */
 	private double[] phase = {Double.NaN,Double.NaN};			/* L Carrier Phase [cycle] */
-	private float[] signalStrength = {Float.NaN,Float.NaN};	/* C/N0 (signal strength) [dBHz] */
-	private float[] doppler = {Float.NaN,Float.NaN};		/* Doppler value [Hz] */
+	private float[] signalStrength = {Float.NaN,Float.NaN};		/* C/N0 (signal strength) [dBHz] */
+	private float[] doppler = {Float.NaN,Float.NaN};			/* Doppler value [Hz] */
 
 	private int[] qualityInd = {-1,-1};	/* Nav Measurements Quality Ind. ublox proprietary? */
-	private int[] lossLockInd = {-1,-1};   /* Loss of lock indicator (RINEX definition) */
+
+	/*
+	 * Loss of lock indicator (LLI). Range: 0-7
+	 *  0 or blank: OK or not known
+	 *  Bit 0 set : Lost lock between previous and current observation: cycle slip possible
+	 *  Bit 1 set : Opposite wavelength factor to the one defined for the satellite by a previous WAVELENGTH FACT L1/2 line. Valid for the current epoch only.
+	 *  Bit 2 set : Observation under Antispoofing (may suffer from increased noise)
+	 * Bits 0 and 1 for phase only.
+	 */
+	private int[] lossLockInd = {-1,-1};
+
+	/*
+	 * Signal strength indicator projected into interval 1-9:
+	 *  1: minimum possible signal strength
+ 	 *  5: threshold for good S/N ratio
+ 	 *  9: maximum possible signal strength
+ 	 * 0 or blank: not known, don't care
+	 */
+	private int[] signalStrengthInd = {-1,-1};
 
 	public ObservationSet(){
 	}
@@ -276,6 +294,20 @@ public class ObservationSet implements Streamable {
 		}else{
 			throw new IOException("Unknown format version:"+v);
 		}
+	}
+
+	/**
+	 * @param signalStrengthInd the signalStrengthInd to set
+	 */
+	public void setSignalStrengthInd(int i,int signalStrengthInd) {
+		this.signalStrengthInd[i] = signalStrengthInd;
+	}
+
+	/**
+	 * @return the signalStrengthInd
+	 */
+	public int getSignalStrengthInd(int i) {
+		return signalStrengthInd[i];
 	}
 
 }
