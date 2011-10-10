@@ -22,14 +22,7 @@ package org.gogpsproject;
 import java.io.IOException;
 
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
-import org.gogpsproject.producer.RinexProducer;
-/**
- * <p>
- *
- * </p>
- *
- * @author Lorenzo Patocchi cryms.com
- */
+import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 /**
  * @author Lorenzo
@@ -53,7 +46,7 @@ public class TestRinexProducer {
 			Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
 			// JP Osaka
 			//Coordinates coordinates = Coordinates.globalXYZInstance(-3749314.940644724,3684015.867703885,3600798.5084946174);
-			rtcm.setMasterPosition(coordinates);
+			rtcm.setVirtualReferenceStationPosition(coordinates);
 			rtcm.setStreamFileLogger("data\\rtcm-stream.dat");
 			rtcm.init();
 
@@ -100,7 +93,7 @@ public class TestRinexProducer {
 		System.out.println("RINEX");
 		System.out.println("RINEX");
 		System.out.println("RINEX");
-		RinexProducer rp = new RinexProducer("data\\20111003-004754-master.o11", true);
+		RinexV2Producer rp = new RinexV2Producer("data\\20111003-004754-master.o11", true);
 		rp.setDefinedPosition(masterIn.getDefinedPosition());
 
 		Observations o = masterIn.nextObservations();

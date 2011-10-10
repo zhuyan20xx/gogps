@@ -22,15 +22,7 @@ package org.gogpsproject;
 import java.io.IOException;
 import java.util.Calendar;
 
-import org.gogpsproject.parser.rtcm3.RTCM3Client;
-import org.gogpsproject.producer.RinexProducer;
-/**
- * <p>
- *
- * </p>
- *
- * @author Lorenzo Patocchi cryms.com
- */
+import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 /**
  * @author Lorenzo
@@ -53,13 +45,13 @@ public class ConvertToRinex {
 
 		ObservationsBuffer masterIn = new ObservationsBuffer();
 		try {
-			masterIn.readFromLog(inFile,true);
+			masterIn.readFromLog(inFile,false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
 		System.out.println("RINEX");
-		RinexProducer rp = new RinexProducer(outFile, args!=null&&args.length>=p+1&&args[p++].startsWith("y"));
+		RinexV2Producer rp = new RinexV2Producer(outFile, args!=null&&args.length>=p+1&&args[p++].startsWith("y"));
 		rp.setDefinedPosition(masterIn.getDefinedPosition());
 
 		Observations o = masterIn.nextObservations();

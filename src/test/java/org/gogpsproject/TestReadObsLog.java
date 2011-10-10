@@ -23,19 +23,12 @@ import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.PortInUseException;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Vector;
+
 
 import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.rinex.RinexNavigation;
-import org.gogpsproject.parser.rinex.RinexNavigationParser;
-import org.gogpsproject.parser.rinex.RinexObservationParser;
-import org.gogpsproject.parser.rtcm3.RTCM3Client;
-import org.gogpsproject.parser.ublox.UBXSerialConnection;
 import org.gogpsproject.producer.KmlProducer;
 
 @SuppressWarnings("restriction")
@@ -55,8 +48,8 @@ public class TestReadObsLog {
 		try {
 			long start = System.currentTimeMillis();
 
-			String master = "data\\20111003-004754-master.dat";
-			String rover = "data\\20111003-004754-rover.dat";
+			String master = "P:\\Multimedia\\Dropbox\\GoGPS project\\misurazioni Cryms\\Misurazioni CAB1\\20111006-010011-master.dat";
+			String rover = "P:\\Multimedia\\Dropbox\\GoGPS project\\misurazioni Cryms\\Misurazioni CAB1\\20111006-010011-rover.dat";
 
 			System.out.println("MASTER");
 			ObservationsBuffer masterIn = new ObservationsBuffer();
@@ -69,8 +62,8 @@ public class TestReadObsLog {
 			roverIn.readFromLog(rover);
 
 			System.out.println("NAV");
-			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
-			NavigationProducer navigationIn = new RinexNavigationParser(new File("data\\VirA275W.11n"));
+			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+			//NavigationProducer navigationIn = new RinexNavigationParser(new File("data\\VirA275W.11n"));
 
 			roverIn.streamClosed();
 			//masterIn.streamClosed();
@@ -82,7 +75,7 @@ public class TestReadObsLog {
 			Date date = new Date();
 			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 			String date1 = sdf1.format(date);
-			String outPath = "./test/" + date1 + ".kml";
+			String outPath = "P:\\Multimedia\\Dropbox\\GoGPS project\\misurazioni Cryms\\Misurazioni CAB1\\20111006-010011.kml";
 			KmlProducer kml = new KmlProducer(outPath, goodDopThreshold, timeSapleDelaySec);
 
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);

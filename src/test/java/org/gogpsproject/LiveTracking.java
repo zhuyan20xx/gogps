@@ -98,7 +98,7 @@ public class LiveTracking {
 			RTCM3Client rtcmClient = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0].trim(), args[1].trim(), "swiposGISGEO_LV03LN02");
 //			RTCM3Client masterIn = RTCM3Client.getInstance("ntrip.jenoba.jp", 2101, args[0].trim(), args[1].trim(), "JVR30");
 			//navigationIn = new RinexNavigation(RinexNavigation.IGN_NAVIGATION_HOURLY_ZIM2);
-			rtcmClient.setMasterPosition(initialPosition);
+			rtcmClient.setVirtualReferenceStationPosition(initialPosition);
 			rtcmClient.setReconnectionPolicy(RTCM3Client.CONNECTION_POLICY_RECONNECT);
 			rtcmClient.setExitPolicy(RTCM3Client.EXIT_ON_LAST_LISTENER_LEAVE);
 			rtcmClient.init();

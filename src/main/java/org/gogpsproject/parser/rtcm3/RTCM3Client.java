@@ -47,7 +47,7 @@ import org.gogpsproject.StreamResource;
 import org.gogpsproject.util.Bits;
 import org.gogpsproject.util.InputStreamCounter;
 
-public class RTCM3Client implements Runnable, StreamResource, StreamEventProducer/*,ObservationsProducer*/ {
+public class RTCM3Client implements Runnable, StreamResource, StreamEventProducer {
 
 	private ConnectionSettings settings;
 	private Thread dataThread;
@@ -76,6 +76,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 	private boolean debug=false;
 
+	private Coordinates virtualReferenceStationPosition = null;
 	private Coordinates masterPosition = null;
 	private AntennaDescriptor antennaDescriptor = null;
 
@@ -116,6 +117,10 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 	public static RTCM3Client getInstance(String _host, int _port, String _username,
 			String _password, String _mountpoint) throws Exception{
+		return getInstance(_host, _port, _username, _password, _mountpoint, false);
+	}
+	public static RTCM3Client getInstance(String _host, int _port, String _username,
+			String _password, String _mountpoint, boolean ldebug) throws Exception{
 
 		ArrayList<String> s = new ArrayList<String>();
 		ConnectionSettings settings = new ConnectionSettings(_host, _port, _username, _password);
@@ -134,7 +139,6 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				mountpoints.add(s.get(j));
 			}
 		}
-		boolean ldebug = false;
 		if(_mountpoint == null){
 			if(ldebug) System.out.println("Available Mountpoints:");
 		}
@@ -156,7 +160,17 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		}
 		return net;
 	}
+	public static RTCM3Client getVRSInstance(String _host, int _port, String _username,
+			String _password, String _mountpoint, Coordinates vrsPosition) throws Exception{
+		return getVRSInstance(_host, _port, _username, _password, _mountpoint, vrsPosition, false);
+	}
+	public static RTCM3Client getVRSInstance(String _host, int _port, String _username,
+			String _password, String _mountpoint, Coordinates vrsPosition, boolean debug) throws Exception{
 
+		RTCM3Client rtcm = getInstance(_host, _port, _username, _password, _mountpoint, debug);
+		rtcm.setVirtualReferenceStationPosition(vrsPosition);
+		return rtcm;
+	}
 	public RTCM3Client(ConnectionSettings settings) {
 		super();
 		running = false;
@@ -323,14 +337,14 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			// out.print("Ntrip-Version: Ntrip/2.0\r\n");
 			out.print("Accept: rtk/rtcm, dgps/rtcm\r\n");
 			out.print("User-Agent: NTRIP goGPSprojectJava\r\n");
-			if (masterPosition != null) {
-				masterPosition.computeGeodetic();
+			if (virtualReferenceStationPosition != null) {
+				virtualReferenceStationPosition.computeGeodetic();
 				String hhmmss = (new SimpleDateFormat("HHmmss"))
 						.format(new Date());
 
-				int h = (int) masterPosition.getGeodeticHeight();
-				double lon = masterPosition.getGeodeticLongitude();
-				double lat = masterPosition.getGeodeticLatitude();
+				int h = (int) virtualReferenceStationPosition.getGeodeticHeight();
+				double lon = virtualReferenceStationPosition.getGeodeticLongitude();
+				double lat = virtualReferenceStationPosition.getGeodeticLatitude();
 
 				int lon_deg = (int) lon;
 				double lon_min = (lon - lon_deg) * 60;
@@ -558,40 +572,6 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 	}
 
-	public static void main(String args[]){
-
-		try {
-			RTCM3Client rtcm = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0],args[1], "swiposGISGEO_LV03LN02");
-			//RTCM3Client rtcm = RTCM3Client.getInstance("ntrip.jenoba.jp", 80, args[0],args[1], "JVR30");
-			rtcm.setDebug(true);
-			// Ntrip-GAA: $GPGGA,183836,3435.524,N,13530.231,E,4,10,1,164,M,1,M,3,0*69
-			// CH Manno
-			Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
-			// JP Osaka
-			//Coordinates coordinates = Coordinates.globalXYZInstance(-3749314.940644724,3684015.867703885,3600798.5084946174);
-			rtcm.setMasterPosition(coordinates);
-			rtcm.init();
-
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-
-//		System.out.println(computeNMEACheckSum("$GPGGA,200530,4600,N,00857,E,4,10,1,200,M,1,M,3,0"));
-//
-//		File f = new File("./data/rtcm.out");
-//		try {
-//			FileInputStream fis = new FileInputStream(f);
-//			RTCM3Client cl = new RTCM3Client(null);
-//			cl.go = true;
-//			cl.debug = true;
-//			cl.readLoop(fis);
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-
-	}
 	private static String computeNMEACheckSum(String msg){
 		// perform NMEA checksum calculation
 		int chk = 0;
@@ -935,7 +915,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		if(!streamEventListeners.contains(streamEventListener))
 			this.streamEventListeners.add(streamEventListener);
 		// feed defined position
-		streamEventListener.setDefinedPosition(masterPosition);
+		if(masterPosition!=null)
+			streamEventListener.setDefinedPosition(masterPosition);
 	}
 
 	/* (non-Javadoc)
@@ -979,6 +960,21 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	 */
 	public AntennaDescriptor getAntennaDescriptor() {
 		return antennaDescriptor;
+	}
+
+	/**
+	 * @param virtualReferenceStationPosition the virtualReferenceStationPosition to set
+	 */
+	public void setVirtualReferenceStationPosition(
+			Coordinates virtualReferenceStationPosition) {
+		this.virtualReferenceStationPosition = virtualReferenceStationPosition;
+	}
+
+	/**
+	 * @return the virtualReferenceStationPosition
+	 */
+	public Coordinates getVirtualReferenceStationPosition() {
+		return virtualReferenceStationPosition;
 	}
 
 }

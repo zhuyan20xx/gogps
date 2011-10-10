@@ -53,7 +53,8 @@ public class RinexObservationParser implements ObservationsProducer{
 
 	private int nTypes; /* Number of observation types */
 	private int[] typeOrder; /* Order of observation data */
-	private boolean hasSField = false; /* S* field (SNR) is present */
+	private boolean hasS1Field = false; /* S1 field (SNR) is present */
+	private boolean hasS2Field = false; /* S2 field (SNR) is present */
 	private Time timeFirstObs; /* Time of first observation set */
 
 	private Coordinates approxPos; /* Approximate position (X, Y, Z) [m] */
@@ -472,7 +473,8 @@ public class RinexObservationParser implements ObservationsProducer{
 						try{
 							// Signal Strength
 							int ss = Integer.parseInt(line.substring(j+15, j + 16));
-							if (!hasSField)
+							o.setSignalStrengthInd(0, ss);
+							if (!hasS1Field)
 								o.setSignalStrength(0,ss * 6);
 						}catch(Exception ignore){}
 					}
@@ -493,7 +495,8 @@ public class RinexObservationParser implements ObservationsProducer{
 						try{
 							// Signal Strength
 							int ss = Integer.parseInt(line.substring(j+15, j + 16));
-							if (!hasSField)
+							o.setSignalStrengthInd(1, ss);
+							if (!hasS2Field)
 								o.setSignalStrength(1,ss * 6);
 						}catch(Exception ignore){}
 					}
@@ -560,10 +563,10 @@ public class RinexObservationParser implements ObservationsProducer{
 				typeOrder[i] = 5;
 			} else if (type.equals("S1")) {
 				typeOrder[i] = 6;
-				hasSField = true;
+				hasS1Field = true;
 			} else if (type.equals("S2")) {
 				typeOrder[i] = 7;
-				hasSField = true;
+				hasS2Field = true;
 			} else if (type.equals("D1")) {
 				typeOrder[i] = 8;
 			} else if (type.equals("D2")) {
