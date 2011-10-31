@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -42,7 +42,7 @@ import org.gogpsproject.Time;
  * Class for parsing RINEX observation files
  * </p>
  *
- * @author ege, Cryms.com
+ * @author Eugenio Realini, Cryms.com
  */
 public class RinexObservationParser implements ObservationsProducer{
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -29,7 +29,7 @@ import java.io.IOException;
  * Set of observations for one epoch and one satellite
  * </p>
  *
- * @author ege, Cryms.com
+ * @author Eugenio Realini, Cryms.com
  */
 public class ObservationSet implements Streamable {
 

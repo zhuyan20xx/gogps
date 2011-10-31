@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Lorenzo Patocchi. All Rights Reserved.
+ * Copyright (c) 2011 Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -25,7 +25,7 @@ import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 /**
- * @author Lorenzo
+ * @author Lorenzo Patocchi, cryms.com
  *
  */
 public class TestRinexProducer {
