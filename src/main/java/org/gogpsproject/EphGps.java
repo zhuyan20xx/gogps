@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -29,7 +29,7 @@ import java.io.IOException;
  * GPS broadcast ephemerides
  * </p>
  *
- * @author ege, Cryms.com
+ * @author Eugenio Realini, Cryms.com
  */
 public class EphGps implements Streamable {
 	private final static int STREAM_V = 1;

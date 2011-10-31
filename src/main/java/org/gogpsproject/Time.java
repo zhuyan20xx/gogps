@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -34,7 +34,7 @@ import java.util.TimeZone;
  * Class for unifying time representations
  * </p>
  *
- * @author ege, Cryms.com
+ * @author Eugenio Realini, Cryms.com
  */
 public class Time {
 	private long msec; /* time in milliseconds since January 1, 1970 (UNIX standard) */

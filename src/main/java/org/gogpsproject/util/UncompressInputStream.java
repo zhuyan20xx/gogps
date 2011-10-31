@@ -1,5 +1,3 @@
-
-package org.gogpsproject.util;
 /*
  * @(#)UncompressInputStream.java			0.3-3 06/05/2001
  *
@@ -32,6 +30,8 @@ package org.gogpsproject.util;
  *
  *  copied into org.gogpsproject.parser.sp3 to make it usable (int HTTPClient package is private)
  */
+
+package org.gogpsproject.util;
 
 
 import java.io.IOException;

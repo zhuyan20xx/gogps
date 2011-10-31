@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Lorenzo Patocchi. All Rights Reserved.
+ * Copyright (c) 2011 Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -23,11 +23,11 @@ package org.gogpsproject.producer.rinex;
  * This class holds the data Type config to output in Rinex
  * </p>
  *
- * @author Lorenzo Patocchi cryms.com
+ * @author Lorenzo Patocchi, cryms.com Patocchi cryms.com
  */
 
 /**
- * @author Lorenzo
+ * @author Lorenzo Patocchi, cryms.com
  *
  */
 class Type{

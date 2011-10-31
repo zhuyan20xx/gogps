@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -32,7 +32,7 @@ import java.util.Date;
  * Observations class
  * </p>
  *
- * @author ege, Cryms.com
+ * @author Eugenio Realini, Cryms.com
  */
 public class Observations implements Streamable {
 
