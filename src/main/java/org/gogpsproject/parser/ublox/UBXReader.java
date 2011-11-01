@@ -67,8 +67,8 @@ public class UBXReader implements StreamEventProducer {
 						Observations o = decodegps.decode(null);
 						if(streamEventListeners!=null && o!=null){
 							for(StreamEventListener sel:streamEventListeners){
-								// TODO clone o
-								sel.addObservations(o);
+								Observations oc = (Observations)o.clone();
+								sel.addObservations(oc);
 							}
 						}
 						return o;

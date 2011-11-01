@@ -762,8 +762,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	public void addObservation(Observations o){
 		if(streamEventListeners!=null && o!=null){
 			for(StreamEventListener sel:streamEventListeners){
-				// TODO clone o
-				sel.addObservations(o);
+				Observations oc = (Observations)o.clone();
+				sel.addObservations(oc);
 			}
 		}
 //		if(debug){
