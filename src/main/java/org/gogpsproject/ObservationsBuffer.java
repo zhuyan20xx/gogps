@@ -119,11 +119,11 @@ public class ObservationsBuffer
         while(c<timeOrderedEphs.size() && timeOrderedEphs.elementAt(c).refTime.getMsec()/60000!=eph.getRefTime().getMsec()/60000) c++;
 
         if(c<timeOrderedEphs.size()){
-            //System.out.println("found existing EphSet for "+eph.getSatID()+" @ "+(eph.getRefTime().getMsec()/60000));
+            if(debug)System.out.println("found existing EphSet for "+eph.getSatID()+" @ "+(eph.getRefTime().getMsec()/60000));
             // existing set
             timeOrderedEphs.elementAt(c).ephs.put(new Integer(eph.getSatID()), eph);
         }else{
-            //System.out.println("new EphSet for "+eph.getSatID()+" @ "+(eph.getRefTime().getMsec()/60000));
+            if(debug)System.out.println("new EphSet for "+eph.getSatID()+" @ "+(eph.getRefTime().getMsec()/60000));
             // new set
             EphSet es = new EphSet(eph.getRefTime());
             es.ephs.put(new Integer(eph.getSatID()), eph);
@@ -174,7 +174,10 @@ public class ObservationsBuffer
      */
     @Override
     public void addObservations(Observations o) {
-    	//System.out.println("\tR# > obs "+o.getGpsSize()+" time "+o.getRefTime().getMsec());
+    	if(debug){
+    		System.out.println("obs "+o.getGpsSize()+" time "+o.getRefTime().getMsec());
+    		System.out.println(o);
+    	}
         // TODO test if ref time observetions is not already present
         this.timeOrderedObs.add(o);
         //System.out.println("---------------------------------------------");

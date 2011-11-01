@@ -84,10 +84,14 @@ public class TestGoGPS {
 //			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 //			/* Locarno, Switzerland */
-			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/locarno1_rover_RINEX.obs"));
-			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirA061N.10o"));
-			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirA061N.10n"));
-			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+			//ObservationsProducer roverIn = new UBXFileReader(new File("P:/eclipse.eriadne/goGPS-tests/data/ubx-partito.out"));
+
+			//ObservationsProducer roverIn = new RinexObservationParser(new File("P:/eclipse.eriadne/goGPS-tests/data/ubx-partito.out.11o"));
+
+			ObservationsProducer roverIn = new RinexObservationParser(new File("P:/eclipse.eriadne/goGPS-tests/test/roverOut-2011-11-01_142805-partito.11o"));
+			ObservationsProducer masterIn = new RinexObservationParser(new File("P:/eclipse.eriadne/goGPS-tests/test/masterOut-2011-11-01_142805-partito.11o"));
+			//NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirA061N.10n"));
+			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.IGN_NAVIGATION_HOURLY_ZIM2);
 			goodDopThreshold = 2.0;
 
 			/* Faido */

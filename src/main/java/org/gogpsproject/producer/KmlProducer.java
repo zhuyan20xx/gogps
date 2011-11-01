@@ -19,15 +19,13 @@
  */
 package org.gogpsproject.producer;
 
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
-import org.gogpsproject.Coordinates;
 import org.gogpsproject.PositionConsumer;
 import org.gogpsproject.RoverPosition;
 /**
@@ -49,18 +47,37 @@ public class KmlProducer implements PositionConsumer {
 	private SimpleDateFormat timeKML = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
 	private String filename = null;
-	private FileWriter out = null;
 	private String timeline = null;
 	private int num = 0;
 
 	private boolean goodDop = false;
 	private double goodDopThreshold = 0.0;
-	private int timeSapleDelaySec = 1;
+	private int timeSapleDelaySec = 0;
+
+	private String circleColorLine = "FFCC99";
+	private String circleOpacity = "88";
+	private int circlePixelWidth = 2;
+
+	private String goodColorLine = "00ff00";
+	private String goodOpacity = "ff";
+	private int goodLinePixelWidth = 3;
+	private String worstColorLine = "0000ff";
+	private String worstOpacity = "ff";
+	private int worstLinePixelWidth = 3;
+
+	private ArrayList<RoverPosition> positions = new ArrayList<RoverPosition>();
 
 	public KmlProducer(String filename, double goodDopTreshold, int timeSapleDelaySec) throws IOException{
 		this.filename = filename;
 		this.goodDopThreshold = goodDopTreshold;
 		this.timeSapleDelaySec = timeSapleDelaySec;
+
+		goodDop = false;
+		FileWriter out = startOfTrack();
+		if(out!=null){
+
+			endOfTrack(out);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -68,7 +85,30 @@ public class KmlProducer implements PositionConsumer {
 	 */
 	@Override
 	public void addCoordinate(RoverPosition coord) {
-		if(out==null) return;
+		System.out.println("Lon:"+g.format(coord.getGeodeticLongitude()) + " " // geod.get(0)
+				+"Lat:"+ g.format(coord.getGeodeticLatitude()) + " " // geod.get(1)
+				+"H:"+ f.format(coord.getGeodeticHeight()) + "\t" // geod.get(2)
+				+"P:"+ coord.getpDop()+" "
+				+"H:"+ coord.gethDop()+" "
+				+"V:"+ coord.getvDop()+" ");//geod.get(2)
+
+		positions.add(coord);
+
+		goodDop = false;
+		FileWriter out = startOfTrack();
+		if(out!=null){
+			for(RoverPosition pos: positions){
+				writeCoordinate(pos, out);
+			}
+			endOfTrack(out);
+		}
+	}
+
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.producer.PositionConsumer#addCoordinate(org.gogpsproject.Coordinates)
+	 */
+	public void writeCoordinate(RoverPosition coord,FileWriter out) {
 		try {
 			boolean prevDopResponse = goodDop;
 			goodDop = coord.getpDop()<goodDopThreshold;
@@ -77,7 +117,7 @@ public class KmlProducer implements PositionConsumer {
 						"  <Placemark>\n"+
 						"    <name></name>\n"+
 						"    <description></description>\n"+
-						"    <styleUrl>#SMExport_3_"+(goodDop?"ff00ff00":"ff0000e6")+"_fffefefe</styleUrl>\n"+
+						"    <styleUrl>#LineStyle_"+(goodDop?"good":"worst")+"</styleUrl>\n"+
 						"    <LineString>\n"+
 						"      <tessellate>1</tessellate>\n"+
 						"      <coordinates>\n");
@@ -87,25 +127,20 @@ public class KmlProducer implements PositionConsumer {
 			String lat = g.format(coord.getGeodeticLatitude());
 			String h = f.format(coord.getGeodeticHeight());
 
-			out.write(lon + "," // geod.get(0)
-					+ lat + "," // geod.get(1)
+			out.write(lon + ", " // geod.get(0)
+					+ lat + ", " // geod.get(1)
 					+ h + " \n"); // geod.get(2)
 			out.flush();
 
 			String t = timeKML.format(new Date(coord.getRefTime().getMsec()));
-			System.out.print("T:" + t);
+//			System.out.print("T:" + t);
 //			System.out.print(" Lon:" + lon);//geod.get(0)
 //			System.out.print(" Lat:" + lat);//geod.get(1)
 			String dopLabel = "DOP";
 			if (coord.getDopType() == RoverPosition.DOP_TYPE_KALMAN)
 				dopLabel = "KDOP";
-			System.out.println("Lon:"+lon + " " // geod.get(0)
-					+"Lat:"+ lat + " " // geod.get(1)
-					+"H:"+ h + "\t" + dopLabel + " " // geod.get(2)
-					+"P:"+ coord.getpDop()+" "
-					+"H:"+ coord.gethDop()+" "
-					+"V:"+ coord.getvDop()+" ");//geod.get(2)
-			if((num++)%timeSapleDelaySec==0){
+
+			if(timeSapleDelaySec>0 && (num++)%timeSapleDelaySec==0){
 
 				timeline += "\n";
 				timeline += "<Placemark>"+
@@ -127,42 +162,49 @@ public class KmlProducer implements PositionConsumer {
 		}
 	}
 
-
-
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.producer.PositionConsumer#startOfTrack()
 	 */
-	public void startOfTrack() {
-		timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
+	public FileWriter startOfTrack() {
+		if(timeSapleDelaySec>0)timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
 		try {
-			out = new FileWriter(filename);
+			FileWriter out = new FileWriter(filename);
 
 			out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
 				"<Document xmlns:kml=\"http://earth.google.com/kml/2.1\">\n"+
-				"  <Style id=\"SMExport_3_ff0000e6_fffefefe\"><LineStyle><color>ff0000e6</color><width>3</width></LineStyle><PolyStyle><color>fffefefe</color></PolyStyle></Style>\n"+
-				"  <Style id=\"SMExport_3_ff00ff00_fffefefe\"><LineStyle><color>ff00ff00</color><width>3</width></LineStyle><PolyStyle><color>fffefefe</color></PolyStyle></Style>\n"+
+				"  <Style id=\"LineStyle_worst\"><LineStyle><color>"+worstOpacity+worstColorLine+"</color><width>"+worstLinePixelWidth+"</width></LineStyle><PolyStyle><color>"+worstOpacity+worstColorLine+"</color></PolyStyle></Style>\n"+
+				"  <Style id=\"LineStyle_good\"><LineStyle><color>"+goodOpacity+goodColorLine+"</color><width>"+goodLinePixelWidth+"</width></LineStyle><PolyStyle><color>"+goodOpacity+goodColorLine+"</color></PolyStyle></Style>\n"+
+				"  <Style id=\"CircleStyle\"><LineStyle><color>"+circleOpacity+circleColorLine+"</color><width>"+circlePixelWidth+"</width></LineStyle><PolyStyle><color>"+circleOpacity+circleColorLine+"</color></PolyStyle></Style>\n"+
 				"  <Style id=\"dot-icon\"><IconStyle><Icon><href>http://www.eriadne.org/icons/MapPointer.png</href></Icon></IconStyle></Style>\n"+
-				"  <Placemark>\n"+
+				"  <Folder><Placemark>\n"+
 				"    <name></name>\n"+
 				"    <description></description>\n"+
-				"    <styleUrl>#SMExport_3_"+(goodDop?"ff00ff00":"ff0000e6")+"_fffefefe</styleUrl>\n"+
+				"    <styleUrl>#LineStyle_"+(goodDop?"good":"worst")+"</styleUrl>\n"+
 				"    <LineString>\n"+
 				"      <tessellate>1</tessellate>\n"+
 				"      <coordinates>\n");
 			out.flush();
+			return out;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.producer.PositionConsumer#endOfTrack()
 	 */
-	public void endOfTrack() {
+	public void endOfTrack(FileWriter out) {
 		if(out!=null){
 			// Write KML footer part
 			try {
-				out.write("</coordinates></LineString></Placemark>"+timeline+"</Folder></Document>\n");
+				String circle = null;
+				if(positions.size()>0){
+					RoverPosition last = positions.get(positions.size()-1);
+					circle = generateCircle(last.getGeodeticLatitude(), last.getGeodeticLongitude(), last.getGeodeticHeight(), 90, last.getpDop());
+				}
+
+				out.write("</coordinates></LineString></Placemark></Folder>"+(timeline==null?"":timeline+"</Folder>")+(circle!=null?circle:"")+"</Document>\n");
 				// Close FileWriter
 				out.close();
 			} catch (IOException e) {
@@ -177,23 +219,24 @@ public class KmlProducer implements PositionConsumer {
 	 */
 	@Override
 	public void event(int event) {
-		if(event == EVENT_START_OF_TRACK){
-			startOfTrack();
-		}
-		if(event == EVENT_END_OF_TRACK){
-			endOfTrack();
-		}
+//		if(event == EVENT_START_OF_TRACK){
+//			startOfTrack();
+//		}
+//		if(event == EVENT_END_OF_TRACK){
+//			endOfTrack();
+//		}
 	}
 
-	void GenCircle(double centerlat_form, double centerlong_form,
-			int num_points, double radius_form, String outputFile) {
-		double lat1, long1, lat2, long2;
-		double dlat, dlong, d_rad;
-		double a, c, d;
+	private String generateCircle(double centerlat_form, double centerlong_form, double height, int num_points, double radius_form) {
+		double lat1, long1;
+		double d_rad;
+		double d;
 		double delta_pts;
 		double radial, lat_rad, dlon_rad, lon_rad;
 
-		double degreeToRadian = Math.PI / 180.0;
+//		double degreeToRadian = Math.PI / 180.0;
+
+		String result = "";
 
 		// convert coordinates to radians
 		lat1 = Math.toRadians(centerlat_form);
@@ -205,41 +248,122 @@ public class KmlProducer implements PositionConsumer {
 		d = radius_form;
 		d_rad = d / 6378137;
 
-		try {
-			File fileOutput = new File(outputFile);
-			BufferedWriter writer = new BufferedWriter(new FileWriter(
-					fileOutput));
+		result = "<Folder>\n<name>Circle</name>\n<visibility>1</visibility>\n<Placemark>\n<name></name>\n<styleUrl>CircleStyle</styleUrl>\n<LinearRing>\n<coordinates>\n";
+		// System.out.write(c);
+		// System.out.println(c);
 
-			writer.write("<Document>\n<name>$Document</name>\n<Folder>\n<name>$Folder</name>\n<visibility>1</visibility>\n<Placemark>\n<name>$Circle_name</name>\n<visibility>$visibility</visibility>\n<Style>\n<geomColor>$geomColor1$geomColor2</geomColor>\n<geomScale>$geomScale</geomScale></Style>\n<LineString>\n<coordinates>\n");
-			// System.out.write(c);
-			// System.out.println(c);
+		delta_pts = 360/(double)num_points;
 
-			// loop through the array and write path linestrings
-			for (int i = 0; i <= num_points; i++) {
-				// delta_pts = 360/(double)num_points;
-				// radial = Math.toRadians((double)i*delta_pts);
-				radial = Math.toRadians((double) i);
+		// loop through the array and write path linestrings
+		for (int i = 0; i < num_points; i++) {
+			radial = Math.toRadians((double)i*delta_pts);
+			//radial = Math.toRadians((double) i);
 
-				// This algorithm is limited to distances such that dlon <pi/2
-				lat_rad = Math.asin(Math.sin(lat1) * Math.cos(d_rad)
-						+ Math.cos(lat1) * Math.sin(d_rad) * Math.cos(radial));
-				dlon_rad = Math.atan2(Math.sin(radial) * Math.sin(d_rad)
-						* Math.cos(lat1), Math.cos(d_rad) - Math.sin(lat1)
-						* Math.sin(lat_rad));
-				lon_rad = ((long1 + dlon_rad + Math.PI) % (2 * Math.PI))
-						- Math.PI;
+			// This algorithm is limited to distances such that dlon <pi/2
+			lat_rad = Math.asin(Math.sin(lat1) * Math.cos(d_rad)
+					+ Math.cos(lat1) * Math.sin(d_rad) * Math.cos(radial));
+			dlon_rad = Math.atan2(Math.sin(radial) * Math.sin(d_rad)
+					* Math.cos(lat1), Math.cos(d_rad) - Math.sin(lat1)
+					* Math.sin(lat_rad));
+			lon_rad = ((long1 + dlon_rad + Math.PI) % (2 * Math.PI))
+					- Math.PI;
 
-				// write results
-				writer.write(Math.toDegrees(lon_rad) + ", ");
-				writer.write(Math.toDegrees(lat_rad) + ", 0");
-				writer.write('\n');
-			}
-			// output footer
-			writer.write("</coordinates>\n</LineString>\n</Placemark>\n</Folder>\n</Document>");
-
-			writer.close();
-		} catch (IOException e) {
-			return;
+			// write results
+			result += "" + Math.toDegrees(lon_rad) + ",";
+			result += "" + Math.toDegrees(lat_rad) + ",";
+			result += "" + height + "\n";
 		}
+		// output footer
+		result += "</coordinates>\n</LinearRing>\n</Placemark>\n</Folder>";
+
+		return result;
+	}
+
+	private String reverse(String string){
+		return new StringBuffer(string).reverse().toString();
+	}
+
+	/**
+	 * @return the goodColorLine in hex format RRGGBB
+	 */
+	public String getGoodColorLine() {
+		return reverse(goodColorLine);
+	}
+
+	/**
+	 * @param goodColorLine the goodColorLine to set in hex format RRGGBB
+	 */
+	public void setGoodColorLine(String goodColorLine) {
+		this.goodColorLine = reverse(goodColorLine);
+	}
+
+	/**
+	 * @return the goodOpacity in hex format (range 00..FF)
+	 */
+	public String getGoodOpacity() {
+		return goodOpacity;
+	}
+
+	/**
+	 * @param goodOpacity the goodOpacity to set in hex format (range 00..FF)
+	 */
+	public void setGoodOpacity(String goodOpacity) {
+		this.goodOpacity = goodOpacity;
+	}
+
+	/**
+	 * @return the goodLinePixelWidth
+	 */
+	public int getGoodLinePixelWidth() {
+		return goodLinePixelWidth;
+	}
+
+	/**
+	 * @param goodLinePixelWidth the goodLinePixelWidth to set
+	 */
+	public void setGoodLinePixelWidth(int goodLinePixelWidth) {
+		this.goodLinePixelWidth = goodLinePixelWidth;
+	}
+
+	/**
+	 * @return the worstColorLine in hex format RRGGBB
+	 */
+	public String getWorstColorLine() {
+		return reverse(worstColorLine);
+	}
+
+	/**
+	 * @param worstColorLine the worstColorLine to set in hex format RRGGBB
+	 */
+	public void setWorstColorLine(String worstColorLine) {
+		this.worstColorLine = reverse(worstColorLine);
+	}
+
+	/**
+	 * @return the worstOpacity in hex format (range 00..FF)
+	 */
+	public String getWorstOpacity() {
+		return worstOpacity;
+	}
+
+	/**
+	 * @param worstOpacity the worstOpacity to set in hex format (range 00..FF)
+	 */
+	public void setWorstOpacity(String worstOpacity) {
+		this.worstOpacity = worstOpacity;
+	}
+
+	/**
+	 * @return the worstLinePixelWidth
+	 */
+	public int getWorstLinePixelWidth() {
+		return worstLinePixelWidth;
+	}
+
+	/**
+	 * @param worstLinePixelWidth the worstLinePixelWidth to set
+	 */
+	public void setWorstLinePixelWidth(int worstLinePixelWidth) {
+		this.worstLinePixelWidth = worstLinePixelWidth;
 	}
 }

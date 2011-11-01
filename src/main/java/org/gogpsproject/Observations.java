@@ -19,6 +19,8 @@
  *
  */
 package org.gogpsproject;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -53,6 +55,19 @@ public class Observations implements Streamable {
 	private ArrayList<ObservationSet> glo; /* GLONASS observations */
 	private ArrayList<ObservationSet> sbs; /* SBAS observations */
 
+	public Object clone(){
+		try{
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			this.write(new DataOutputStream(baos));
+			DataInputStream dis = new DataInputStream(new ByteArrayInputStream(baos.toByteArray()));
+			baos.reset();
+			dis.readUTF();
+			return new Observations(dis, false);
+		}catch(IOException ioe){
+			ioe.printStackTrace();
+		}
+		return null;
+	}
 
 	public Observations(Time time, int flag){
 		this.refTime = time;
@@ -76,6 +91,7 @@ public class Observations implements Streamable {
 					sbs.remove(i);
 	}
 	public int getGpsSize(){
+		if(gps == null) return 0;
 		int nsat = 0;
 		for(int i=0;i<gps.size();i++)
 			if(gps.get(i)!=null) nsat++;
@@ -85,9 +101,9 @@ public class Observations implements Streamable {
 		return gps.get(idx);
 	}
 	public ObservationSet getGpsByID(Integer satID){
-		if(gps == null) return null;
+		if(gps == null || satID==null) return null;
 		for(int i=0;i<gps.size();i++)
-			if(gps.get(i)!=null && gps.get(i).getSatID()==satID) return gps.get(i);
+			if(gps.get(i)!=null && gps.get(i).getSatID()==satID.intValue()) return gps.get(i);
 		return null;
 	}
 	public Integer getGpsSatID(int idx){

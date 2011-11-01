@@ -46,21 +46,21 @@ public class LiveTracking {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int dynamicModel = GoGPS.DYN_MODEL_STATIC;//CONST_SPEED;
+		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
 		try{
 			// Get current time
 			long start = System.currentTimeMillis();
 
 			// Realtime
 			if(args.length<2){
-				System.out.println("GoGPS <rtcm_user> <rtcm_pass> [<ubx_user> <ubx_pass>]");
+				System.out.println("GoGPS <rtcm_user> <rtcm_pass> <ubx_user> <ubx_pass> <com>");
 				return;
 			}
 
 			/******************************************
 			 * ROVER & NAVIGATION uBlox
 			 */
-			UBXSerialConnection ubxSerialConn = new UBXSerialConnection("COM10", 9600);
+			UBXSerialConnection ubxSerialConn = new UBXSerialConnection(args[4], 9600);
 			ubxSerialConn.init();
 
 			ObservationsBuffer roverIn = new ObservationsBuffer(ubxSerialConn,"./test/roverOut.dat");
@@ -107,6 +107,10 @@ public class LiveTracking {
 			masterIn.init();
 
 
+			Date date = new Date();
+			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+			String date1 = sdf1.format(date);
+
 			/******************************************
 			 * compute precise position in Kalman filter mode
 			 */
@@ -114,11 +118,8 @@ public class LiveTracking {
 			goGPS.setDynamicModel(dynamicModel);
 
 			// set Output
-			Date date = new Date();
-			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-			String date1 = sdf1.format(date);
-			String outPath = "./test/" + date1 + ".kml";
-			KmlProducer kml = new KmlProducer(outPath, 2.5, 10);
+			String outPath = "test/" + date1 + ".kml";
+			KmlProducer kml = new KmlProducer(outPath, 2.5, 0);
 			goGPS.addPositionConsumerListener(kml);
 
 			// goGPS.runCodeDoubleDifferences();
@@ -128,8 +129,13 @@ public class LiveTracking {
 			// run in background
 			goGPS.runThreadMode(GoGPS.RUN_MODE_KALMAN_FILTER);
 
+			ArrayList<String> kmlFiles = new ArrayList<String>();
+			kmlFiles.add(date1 + ".kml");
+			initLiveKML(kmlFiles, initialPosition);
+
+
 			// wait for 1 minutes
-			Thread.sleep(60*1000);
+			Thread.sleep(120*1000);
 
 			System.out.println();
 			System.out.println();
@@ -175,5 +181,85 @@ public class LiveTracking {
 		}
 	}
 
+	public static void initLiveKML(ArrayList<String> files, Coordinates initialPosition){
+		String line = "";
+		line += "<?xml version=\"1.0\" standalone=\"yes\"?>\n";
+		line += "<kml creator=\"goGPS-j\" xmlns=\"http://earth.google.com/kml/2.2\">\n";
+		line += "  <Document>\n";
+		line += "    <open>1</open>\n";
+
+		for(String file:files){
+			String url = /*"file:///"+*/file.replaceAll("\\\\", "/");
+			line += "    <NetworkLink>\n";
+			line += "      <name>goGPS</name>\n";
+			line += "      <Link id=\"ID\">\n";
+			line += "        <href>"+url+"</href>\n";
+			line += "        <refreshMode>onInterval</refreshMode>\n";
+			line += "        <refreshInterval>1.0</refreshInterval>\n";
+			line += "      </Link>\n";
+			line += "    </NetworkLink>\n";
+		}
+
+		line += "    <Placemark>\n";
+		line += "      <name>Starting location</name>\n";
+		line += "      <visibility>0</visibility>\n";
+		line += "      <Point>\n";
+		line += "        <altitudeMode>clampedToGround</altitudeMode>\n";
+		line += "        <coordinates>"+initialPosition.getGeodeticLongitude()+","+initialPosition.getGeodeticLatitude()+","+(initialPosition.getGeodeticHeight())+"</coordinates>\n";
+		line += "      </Point>\n";
+		line += "      <Snippet></Snippet>\n";
+		line += "      <Style>\n";
+		line += "        <IconStyle>\n";
+		line += "          <Icon>\n";
+		line += "            <href>http://maps.google.com/mapfiles/kml/pal2/icon10.png</href>\n";
+		line += "          </Icon>\n";
+		line += "          <colorMode>normal</colorMode>\n";
+		line += "          <scale>0.50</scale>\n";
+		line += "        </IconStyle>\n";
+		line += "      </Style>\n";
+		line += "      <description></description>\n";
+		line += "      <LookAt>\n";
+		line += "        <longitude>"+initialPosition.getGeodeticLongitude()+"</longitude>\n";
+		line += "        <latitude>"+initialPosition.getGeodeticLatitude()+"</latitude>\n";
+		line += "        <altitude>0</altitude>\n";
+		line += "        <range>120</range>\n";
+		line += "        <tilt>30</tilt>\n";
+		line += "        <heading>0</heading>\n";
+		line += "      </LookAt>\n";
+		line += "    </Placemark>\n";
+		line += "  </Document>\n";
+		line += "</kml>";
+
+		String url = "test/livekml.kml";
+		try {
+			FileWriter out = new FileWriter(url);
+
+			out.write(line);
+			out.flush();
+			out.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Process process;
+		try {
+			process = Runtime.getRuntime().exec(new String[] { (String) "cmd.exe",
+					"/c",
+					"start",
+					"\"\"",
+					'"' + url + '"' });
+//			process = Runtime.getRuntime().exec(new String[] { (String) "C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe",
+///*					"/c",
+//					"start",
+//					"\"\"",*/
+//					'"' + (new File(url)).getAbsolutePath() + '"' });
+			process.waitFor();
+			process.exitValue();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+	}
 
 }
