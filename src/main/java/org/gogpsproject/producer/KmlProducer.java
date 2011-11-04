@@ -36,7 +36,7 @@ import org.gogpsproject.RoverPosition;
  * @author Lorenzo Patocchi cryms.com
  */
 
-public class KmlProducer implements PositionConsumer {
+public class KmlProducer implements PositionConsumer, Runnable {
 
 	/** The f. */
 	private static DecimalFormat f = new DecimalFormat("0.000");
@@ -64,6 +64,9 @@ public class KmlProducer implements PositionConsumer {
 	private String worstColorLine = "0000ff";
 	private String worstOpacity = "ff";
 	private int worstLinePixelWidth = 3;
+	private boolean debug=false;
+
+	private Thread t = null;
 
 	private ArrayList<RoverPosition> positions = new ArrayList<RoverPosition>();
 
@@ -78,6 +81,8 @@ public class KmlProducer implements PositionConsumer {
 
 			endOfTrack(out);
 		}
+		t = new Thread(this);
+		t.start();
 	}
 
 	/* (non-Javadoc)
@@ -85,7 +90,7 @@ public class KmlProducer implements PositionConsumer {
 	 */
 	@Override
 	public void addCoordinate(RoverPosition coord) {
-		System.out.println("Lon:"+g.format(coord.getGeodeticLongitude()) + " " // geod.get(0)
+		if(debug) System.out.println("Lon:"+g.format(coord.getGeodeticLongitude()) + " " // geod.get(0)
 				+"Lat:"+ g.format(coord.getGeodeticLatitude()) + " " // geod.get(1)
 				+"H:"+ f.format(coord.getGeodeticHeight()) + "\t" // geod.get(2)
 				+"P:"+ coord.getpDop()+" "
@@ -94,14 +99,7 @@ public class KmlProducer implements PositionConsumer {
 
 		positions.add(coord);
 
-		goodDop = false;
-		FileWriter out = startOfTrack();
-		if(out!=null){
-			for(RoverPosition pos: positions){
-				writeCoordinate(pos, out);
-			}
-			endOfTrack(out);
-		}
+
 	}
 
 
@@ -222,9 +220,10 @@ public class KmlProducer implements PositionConsumer {
 //		if(event == EVENT_START_OF_TRACK){
 //			startOfTrack();
 //		}
-//		if(event == EVENT_END_OF_TRACK){
-//			endOfTrack();
-//		}
+		if(event == EVENT_END_OF_TRACK){
+			// finish writing
+			t = null;
+		}
 	}
 
 	private String generateCircle(double centerlat_form, double centerlong_form, double height, int num_points, double radius_form) {
@@ -365,5 +364,51 @@ public class KmlProducer implements PositionConsumer {
 	 */
 	public void setWorstLinePixelWidth(int worstLinePixelWidth) {
 		this.worstLinePixelWidth = worstLinePixelWidth;
+	}
+
+	/**
+	 * @param debug the debug to set
+	 */
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+
+	/**
+	 * @return the debug
+	 */
+	public boolean isDebug() {
+		return debug;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run() {
+		int last = 0;
+		try {
+			while(t!=null && Thread.currentThread()==t){
+				if(last != positions.size()){ // check if we have more data to write
+					last = positions.size();
+
+					goodDop = false;
+					FileWriter out = startOfTrack();
+					if(out!=null){
+						for(RoverPosition pos: (ArrayList<RoverPosition>) positions.clone()){
+							writeCoordinate(pos, out);
+						}
+						endOfTrack(out);
+					}
+
+				}
+
+				Thread.sleep(1000);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	public void cleanStop(){
+		t=null;
 	}
 }
