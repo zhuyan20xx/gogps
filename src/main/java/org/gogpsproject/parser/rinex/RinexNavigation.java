@@ -36,6 +36,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.gogpsproject.Coordinates;
+import org.gogpsproject.EphGps;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.StreamResource;
@@ -133,6 +134,24 @@ public class RinexNavigation implements NavigationProducer {
 
 		return null;
 	}
+	public EphGps findEph(long utcTime, int satID) {
+		long reqestedTime = utcTime;
+		EphGps eph = null;
+		int maxBack = 12;
+		while(eph==null && (maxBack--)>0){
+
+			RinexNavigationParser rnp = getRNPByTimestamp(reqestedTime);
+
+			if(rnp!=null){
+				if(rnp.isTimestampInEpocsRange(utcTime)){
+					eph = rnp.findEph(utcTime, satID);
+				}
+			}
+			if(eph==null) reqestedTime -= (1L*3600L*1000L);
+		}
+
+		return eph;
+	}
 	private RinexNavigationParser getRNPByTimestamp(long utcTime) {
 
 		RinexNavigationParser rnp = null;
@@ -163,8 +182,8 @@ public class RinexNavigation implements NavigationProducer {
 						Thread.sleep(1000*10);
 					} catch (InterruptedException ee) {}
 				} catch (FileNotFoundException e) {
-					//System.out.println("Try with previous time by 6h");
-					reqTime = reqTime - (6L*3600L*1000L);
+					//System.out.println("Try with previous time by 1h");
+					reqTime = reqTime - (1L*3600L*1000L);
 				}  catch (IOException e) {
 					e.printStackTrace();
 					System.out.println("Try in 10s");
@@ -295,5 +314,6 @@ public class RinexNavigation implements NavigationProducer {
 	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
 		waitForData = false;
 	}
+
 
 }

@@ -21,6 +21,9 @@ package org.gogpsproject.parser.ublox;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -77,6 +80,11 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 	private long requestSecondDelay = 15*60; // 15 min
 
 	private boolean debug = false;
+    private String fileNameOutLog = null;
+    private FileOutputStream fosOutLog = null;
+    private DataOutputStream outLog = null;//new XMLEncoder(os);
+
+
 	/**
 	 * @param args
 	 */
@@ -84,11 +92,13 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 		UBXAssistNow agps = new UBXAssistNow(args[0], args[1], CMD_AID/*, "8.92", "46.03"*/);
 
 		try {
-			agps.requestSecondDelay = 60;
+			//agps.requestSecondDelay = 60;
+			agps.setDebug(true);
+			agps.setFileNameOutLog("./data/assistnow.dat");
 
 			agps.init();
 
-			Thread.sleep(3*60*1000);
+			Thread.sleep(60*60*1000);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}finally{
@@ -402,12 +412,31 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 							if(msg != null){
 								//System.out.println("msg "+msg.getClass().getName());
 								if(msg instanceof EphGps){
-									if(debug) System.out.println("Ephemeris for SatID:"+((EphGps)msg).getSatID()+" "+(new Date(((EphGps)msg).getRefTime().getMsec())));
+									if(debug){
+										System.out.println("Ephemeris for SatID:"+((EphGps)msg).getSatID()+" time:"+(new Date(((EphGps)msg).getRefTime().getMsec())));
+									}
 									ephs.add((EphGps)msg);
+
+									if(outLog!=null){
+							        	try {
+							        		((EphGps)msg).write(outLog);
+							        		outLog.flush();
+										} catch (IOException e) {
+											e.printStackTrace();
+										}
+							        }
 								}
 								if(msg instanceof IonoGps){
 									if(debug) System.out.println("Iono "+(new Date(((IonoGps)msg).getRefTime().getMsec())));
 									ionos.add((IonoGps)msg);
+									if(outLog!=null){
+							        	try {
+							        		((IonoGps)msg).write(outLog);
+							        		outLog.flush();
+										} catch (IOException e) {
+											e.printStackTrace();
+										}
+							        }
 								}
 							}else{
 								if(debug) System.out.println("msg unknown");
@@ -458,5 +487,23 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 	 */
 	public boolean isDebug() {
 		return debug;
+	}
+
+	/**
+	 * @param fileNameOutLog the fileNameOutLog to set
+	 * @throws FileNotFoundException
+	 */
+	public void setFileNameOutLog(String fileNameOutLog) throws FileNotFoundException {
+		this.fileNameOutLog = fileNameOutLog;
+		if(fileNameOutLog!=null){
+    		fosOutLog = new FileOutputStream(fileNameOutLog,true);
+    		outLog = new DataOutputStream(fosOutLog);
+    	}
+	}
+	/**
+	 * @return the fileNameOutLog
+	 */
+	public String getFileNameOutLog() {
+		return fileNameOutLog;
 	}
 }

@@ -54,6 +54,7 @@ import org.gogpsproject.Time;
 /**
  * @author Lorenzo Patocchi
  *
+ * Still incomplete
  */
 public class SP3Parser implements NavigationProducer{
 

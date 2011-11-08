@@ -23,6 +23,10 @@ import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.PortInUseException;
 
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
@@ -31,10 +35,26 @@ import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
 @SuppressWarnings("restriction")
-public class TestUBX {
+public class TestUBX implements StreamEventListener{
 
 	public static int speed = 9600;
 	private static UBXSerialConnection ubxSerialConn;
+    private String fileNameOutLog = null;
+    private FileOutputStream fosOutLog = null;
+    private DataOutputStream outLog = null;//new XMLEncoder(os);
+
+
+    public TestUBX(){
+    	this.fileNameOutLog = "./data/aphemeris.dat";
+		if(fileNameOutLog!=null){
+    		try {
+				fosOutLog = new FileOutputStream(fileNameOutLog,true);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+    		outLog = new DataOutputStream(fosOutLog);
+    	}
+    }
 	/**
 	 * @param args
 	 */
@@ -86,14 +106,23 @@ public class TestUBX {
 
 
 		ubxSerialConn = new UBXSerialConnection(port, speed);
-		ObservationsBuffer rover = new ObservationsBuffer();
-		rover.setStreamSource(ubxSerialConn);
-
 		try {
-			rover.init();
+			ubxSerialConn.init();
+//			ObservationsBuffer rover = new ObservationsBuffer();
+//			rover.setStreamSource(ubxSerialConn);
+	//
+//			try {
+//				rover.init();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+			TestUBX test = new TestUBX();
+			ubxSerialConn.addStreamEventListener(test);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 
 
 
@@ -106,6 +135,58 @@ public class TestUBX {
 		// }
 		//
 		// }
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventListener#addEphemeris(org.gogpsproject.EphGps)
+	 */
+	@Override
+	public void addEphemeris(EphGps eph) {
+		System.out.println("EPH "+eph);
+		if(outLog!=null){
+        	try {
+        		eph.write(outLog);
+        		outLog.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+        }
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventListener#addIonospheric(org.gogpsproject.IonoGps)
+	 */
+	@Override
+	public void addIonospheric(IonoGps iono) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventListener#addObservations(org.gogpsproject.Observations)
+	 */
+	@Override
+	public void addObservations(Observations o) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventListener#setDefinedPosition(org.gogpsproject.Coordinates)
+	 */
+	@Override
+	public void setDefinedPosition(Coordinates definedPosition) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventListener#streamClosed()
+	 */
+	@Override
+	public void streamClosed() {
+		// TODO Auto-generated method stub
 
 	}
 
