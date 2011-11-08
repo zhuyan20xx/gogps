@@ -38,15 +38,15 @@ import org.gogpsproject.util.UnsignedOperation;
 
 public class DecodeAIDEPH {
 
-	private final static int TWO_P_4 = 16; // 2^4
-	private final static double TWO_P_M5 = 0.03125; // 2^-5
+	private final static double TWO_P_4   = 16.0; // 2^4
+	private final static double TWO_P_M5  = 0.03125; // 2^-5
 	private final static double TWO_P_M19 = 0.0000019073486328125; // 2^-19
 	private final static double TWO_P_M29 = 0.00000000186264514923095703125; // 2^-29
 	private final static double TWO_P_M31 = 0.0000000004656612873077392578125; // 2^-31
 	private final static double TWO_P_M33 = 1.16415321826934814453125e-10; // 2^-33
 	private final static double TWO_P_M43 = 1.136868377216160297393798828125e-13; // 2^-43
 	private final static double TWO_P_M55 = 2.7755575615628913510590791702271e-17; // 2^-55
-	private final static double PI = 3.141592653589793238462643383279502884197169399375105820974944592;
+	private final static double PI        = 3.141592653589793238462643383279502884197169399375105820974944592;
 
 	InputStream in;
 

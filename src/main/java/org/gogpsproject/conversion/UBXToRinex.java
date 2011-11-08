@@ -17,17 +17,21 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.gogpsproject;
+package org.gogpsproject.conversion;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 
+import org.gogpsproject.Observations;
+import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 /**
  * @author Lorenzo Patocchi, cryms.com
+ *
+ * Converts UBX binary file to RINEX
  *
  */
 public class UBXToRinex {
@@ -36,6 +40,12 @@ public class UBXToRinex {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+
+		if(args.length<1){
+			System.out.println("UBXToRinex <ubx file> [y|n] (y=master n=rover=default)");
+			return;
+		}
+
 		Calendar c = Calendar.getInstance();
 		int yy = c.get(Calendar.YEAR)-2000;
 		int p=0;

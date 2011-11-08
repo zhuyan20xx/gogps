@@ -39,6 +39,7 @@ import java.util.TimeZone;
 public class Time {
 	private long msec; /* time in milliseconds since January 1, 1970 (UNIX standard) */
 	private double fraction; /* fraction of millisecond */
+	private static DateFormat df = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
 
 	private Calendar gc = null;
 
@@ -74,7 +75,6 @@ public class Time {
 
 		long dateTime = 0;
 
-		DateFormat df = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
 
 		// Set GMT time zone
 		TimeZone zone = TimeZone.getTimeZone("GMT Time");
@@ -231,5 +231,9 @@ public class Time {
 
 	public Object clone(){
 		return new Time(this.msec,this.fraction);
+	}
+
+	public String toString(){
+		return df.format(gc.getTime())+" "+gc.getTime();
 	}
 }

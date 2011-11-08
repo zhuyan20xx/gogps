@@ -45,6 +45,7 @@ import org.gogpsproject.util.UncompressInputStream;
 /**
  * @author Lorenzo Patocchi, cryms.com
  *
+ * Still incomplete
  */
 public class SP3Navigation implements NavigationProducer {
 

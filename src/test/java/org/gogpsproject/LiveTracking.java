@@ -73,6 +73,7 @@ public class LiveTracking {
 //				String lat="35";
 				String lon=null;
 				String lat=null;
+				// UBXAssistNow actually needs broadcast ephemeris from a receiver to produce valid ephemeris
 				navigationIn = new UBXAssistNow( args[2], args[3], cmd/*, lon, lat*/);
 				try {
 					navigationIn.init();

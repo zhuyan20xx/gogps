@@ -26,7 +26,7 @@ import org.ejml.simple.SimpleMatrix;
  *
  * </p>
  *
- * @author Lorenzo Patocchi cryms.com
+ * @author Eugenio Realini, Lorenzo Patocchi (code architecture)
  */
 
 public abstract class EphemerisSystem {
