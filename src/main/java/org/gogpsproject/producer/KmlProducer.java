@@ -125,9 +125,9 @@ public class KmlProducer implements PositionConsumer, Runnable {
 			String lat = g.format(coord.getGeodeticLatitude());
 			String h = f.format(coord.getGeodeticHeight());
 
-			out.write(lon + ", " // geod.get(0)
-					+ lat + ", " // geod.get(1)
-					+ h + " \n"); // geod.get(2)
+			out.write(lon + "," // geod.get(0)
+					+ lat + "," // geod.get(1)
+					+ h + "\n"); // geod.get(2)
 			out.flush();
 
 			String t = timeKML.format(new Date(coord.getRefTime().getMsec()));
