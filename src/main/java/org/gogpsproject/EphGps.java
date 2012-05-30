@@ -49,6 +49,7 @@ public class EphGps implements Streamable {
 
 	private double toc; /* clock data reference time */
 	private double toe; /* ephemeris reference time */
+	private double tom; /* transmission time of message */
 
 	/* satellite clock parameters */
 	private double af0;
@@ -214,6 +215,18 @@ public class EphGps implements Streamable {
 	 */
 	public void setToe(double toe) {
 		this.toe = toe;
+	}
+	/**
+	 * @return the tom
+	 */
+	public double getTom() {
+		return tom;
+	}
+	/**
+	 * @param tom the tom to set
+	 */
+	public void setTom(double tom) {
+		this.tom = tom;
 	}
 	/**
 	 * @return the af0

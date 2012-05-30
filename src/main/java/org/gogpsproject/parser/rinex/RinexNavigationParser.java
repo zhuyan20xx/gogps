@@ -342,7 +342,9 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 									// Convert String to UNIX standard time in
 									// milliseconds
 									//timeEph.msec = Time.dateStringToTime(dT);
-									eph.setRefTime(new Time(dT));
+									Time toc = new Time(dT);
+									eph.setRefTime(toc);
+									eph.setToc(toc.getGpsWeekSec());
 
 									// sets Iono reference time
 									if(iono!=null && iono.getRefTime()==null) iono.setRefTime(new Time(dT));
@@ -455,7 +457,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 							} else if (i == 7) { // LINE 8
 
 								sub = line.substring(0, 22).replace('D', 'e');
-								eph.setToc(Double.parseDouble(sub.trim()));
+								eph.setTom(Double.parseDouble(sub.trim()));
 
 								if (len > 22) {
 									sub = line.substring(22, 41).replace('D', 'e');
