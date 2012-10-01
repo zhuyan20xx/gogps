@@ -46,7 +46,7 @@ public class TestGoGPS {
 	public static void main(String[] args) {
 		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
 		double goodDopThreshold = 2.5;
-		int timeSapleDelaySec = 1;
+		int timeSampleDelaySec = 1;
 		try{
 			// Get current time
 			long start = System.currentTimeMillis();
@@ -109,7 +109,7 @@ public class TestGoGPS {
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/VirManno-21-11-2010.10o"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/VirManno-21-11-2010.10n"));
 //			goodDopTreshold = 0.02;
-//			timeSapleDelaySec = 100;
+//			timeSampleDelaySec = 100;
 
 			// 1st init
 			navigationIn.init();
@@ -121,7 +121,7 @@ public class TestGoGPS {
 			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 			String date1 = sdf1.format(date);
 			String outPath = "./test/" + date1 + ".kml";
-			KmlProducer kml = new KmlProducer(outPath, goodDopThreshold, timeSapleDelaySec);
+			KmlProducer kml = new KmlProducer(outPath, goodDopThreshold, timeSampleDelaySec);
 
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
 			goGPS.addPositionConsumerListener(kml);
