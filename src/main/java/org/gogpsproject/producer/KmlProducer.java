@@ -52,7 +52,7 @@ public class KmlProducer implements PositionConsumer, Runnable {
 
 	private boolean goodDop = false;
 	private double goodDopThreshold = 0.0;
-	private int timeSapleDelaySec = 0;
+	private int timeSampleDelaySec = 0;
 
 	private String circleColorLine = "FFCC99";
 	private String circleOpacity = "88";
@@ -70,10 +70,10 @@ public class KmlProducer implements PositionConsumer, Runnable {
 
 	private ArrayList<RoverPosition> positions = new ArrayList<RoverPosition>();
 
-	public KmlProducer(String filename, double goodDopTreshold, int timeSapleDelaySec) throws IOException{
+	public KmlProducer(String filename, double goodDopTreshold, int timeSampleDelaySec) throws IOException{
 		this.filename = filename;
 		this.goodDopThreshold = goodDopTreshold;
-		this.timeSapleDelaySec = timeSapleDelaySec;
+		this.timeSampleDelaySec = timeSampleDelaySec;
 
 		goodDop = false;
 		FileWriter out = startOfTrack();
@@ -138,7 +138,7 @@ public class KmlProducer implements PositionConsumer, Runnable {
 			if (coord.getDopType() == RoverPosition.DOP_TYPE_KALMAN)
 				dopLabel = "KDOP";
 
-			if(timeSapleDelaySec>0 && (num++)%timeSapleDelaySec==0){
+			if(timeSampleDelaySec>0 && (num++)%timeSampleDelaySec==0){
 
 				timeline += "\n";
 				timeline += "<Placemark>"+
@@ -164,7 +164,7 @@ public class KmlProducer implements PositionConsumer, Runnable {
 	 * @see org.gogpsproject.producer.PositionConsumer#startOfTrack()
 	 */
 	public FileWriter startOfTrack() {
-		if(timeSapleDelaySec>0)timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
+		if(timeSampleDelaySec>0)timeline = "<Folder><open>1</open><Style><ListStyle><listItemType>checkHideChildren</listItemType></ListStyle></Style>";
 		try {
 			FileWriter out = new FileWriter(filename);
 
