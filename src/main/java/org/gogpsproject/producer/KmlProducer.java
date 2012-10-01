@@ -391,7 +391,7 @@ public class KmlProducer implements PositionConsumer, Runnable {
 				if(last != positions.size()){ // check if we have more data to write
 					last = positions.size();
 
-					goodDop = false;
+//					goodDop = false;
 					FileWriter out = startOfTrack();
 					if(out!=null){
 						for(RoverPosition pos: (ArrayList<RoverPosition>) positions.clone()){
@@ -403,6 +403,21 @@ public class KmlProducer implements PositionConsumer, Runnable {
 				}
 
 				Thread.sleep(1000);
+			}
+
+			//flush the last coordinates
+			if(last != positions.size()){ // check if we have more data to write
+				last = positions.size();
+
+//				goodDop = false;
+				FileWriter out = startOfTrack();
+				if(out!=null){
+					for(RoverPosition pos: (ArrayList<RoverPosition>) positions.clone()){
+						writeCoordinate(pos, out);
+					}
+					endOfTrack(out);
+				}
+
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
