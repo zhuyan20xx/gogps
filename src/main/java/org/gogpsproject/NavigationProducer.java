@@ -30,8 +30,8 @@ package org.gogpsproject;
  */
 public interface NavigationProducer extends StreamResource{
 
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError);
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError);
 
-	public IonoGps getIono(long utcTime);
+	public IonoGps getIono(long unixTime);
 
 }

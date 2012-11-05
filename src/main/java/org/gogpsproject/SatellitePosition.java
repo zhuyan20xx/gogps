@@ -31,14 +31,14 @@ public class SatellitePosition extends Coordinates{
 	private int satID; /* Satellite ID number */
 	private double satelliteClockError; /* Correction due to satellite clock error in seconds*/
 	//private double range;
-	private long utcTime;
+	private long unixTime;
 	private boolean predicted;
 	private boolean maneuver;
 
-	public SatellitePosition(long utcTime, int satID, double x, double y, double z) {
+	public SatellitePosition(long unixTime, int satID, double x, double y, double z) {
 		super();
 
-		this.utcTime = utcTime;
+		this.unixTime = unixTime;
 		this.satID = satID;
 
 		this.setXYZ(x, y, z);
@@ -76,7 +76,7 @@ public class SatellitePosition extends Coordinates{
 	 * @return the time
 	 */
 	public long getUtcTime() {
-		return utcTime;
+		return unixTime;
 	}
 
 	/**
@@ -112,7 +112,7 @@ public class SatellitePosition extends Coordinates{
 	}
 
 	public Object clone(){
-		SatellitePosition sp = new SatellitePosition(this.utcTime,this.satID,this.getX(),this.getY(),this.getZ());
+		SatellitePosition sp = new SatellitePosition(this.unixTime,this.satID,this.getX(),this.getY(),this.getZ());
 		sp.maneuver = this.maneuver;
 		sp.predicted = this.predicted;
 		sp.satelliteClockError = this.satelliteClockError;

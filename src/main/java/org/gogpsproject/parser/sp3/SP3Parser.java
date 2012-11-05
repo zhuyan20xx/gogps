@@ -372,12 +372,12 @@ public class SP3Parser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double obsPseudorange, double receiverClockError) {
-		if(isTimestampInEpocsRange(utcTime)){
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double obsPseudorange, double receiverClockError) {
+		if(isTimestampInEpocsRange(unixTime)){
 			for(int i=0;i<epocTimestamps.size();i++){
-				if(epocTimestamps.get(i).getMsec()<=utcTime && utcTime < epocTimestamps.get(i).getMsec()+epochInterval){
+				if(epocTimestamps.get(i).getMsec()<=unixTime && unixTime < epocTimestamps.get(i).getMsec()+epochInterval){
 					SatellitePosition sp = (SatellitePosition) epocs.get(i).get("G"+(satID<10?"0":"")+satID).clone();
-					double tGPS = getClockCorrection(utcTime, sp.getSatelliteClockError(), obsPseudorange);
+					double tGPS = getClockCorrection(unixTime, sp.getSatelliteClockError(), obsPseudorange);
 
 					return sp;
 				}
@@ -390,9 +390,9 @@ public class SP3Parser implements NavigationProducer{
 	 * @param eph
 	 * @return Clock-corrected GPS time
 	 */
-	private double getClockCorrection(long utcTime, double timeCorrection, double obsPseudorange) {
+	private double getClockCorrection(long unixTime, double timeCorrection, double obsPseudorange) {
 
-		long gpsTime = (new Time(utcTime)).getGpsTime();
+		long gpsTime = (new Time(unixTime)).getGpsTime();
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 
@@ -447,7 +447,7 @@ public class SP3Parser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getIono(int)
 	 */
 	@Override
-	public IonoGps getIono(long utcTime) {
+	public IonoGps getIono(long unixTime) {
 		return null;
 	}
 
