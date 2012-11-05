@@ -121,12 +121,12 @@ public class RinexNavigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
 
-		RinexNavigationParser rnp = getRNPByTimestamp(utcTime);
+		RinexNavigationParser rnp = getRNPByTimestamp(unixTime);
 		if(rnp!=null){
-			if(rnp.isTimestampInEpocsRange(utcTime)){
-				return rnp.getGpsSatPosition(utcTime, satID, range, receiverClockError);
+			if(rnp.isTimestampInEpocsRange(unixTime)){
+				return rnp.getGpsSatPosition(unixTime, satID, range, receiverClockError);
 			}else{
 				return null;
 			}
@@ -134,34 +134,34 @@ public class RinexNavigation implements NavigationProducer {
 
 		return null;
 	}
-	public EphGps findEph(long utcTime, int satID) {
-		long reqestedTime = utcTime;
+	public EphGps findEph(long unixTime, int satID) {
+		long requestedTime = unixTime;
 		EphGps eph = null;
 		int maxBack = 12;
 		while(eph==null && (maxBack--)>0){
 
-			RinexNavigationParser rnp = getRNPByTimestamp(reqestedTime);
+			RinexNavigationParser rnp = getRNPByTimestamp(requestedTime);
 
 			if(rnp!=null){
-				if(rnp.isTimestampInEpocsRange(utcTime)){
-					eph = rnp.findEph(utcTime, satID);
+				if(rnp.isTimestampInEpocsRange(unixTime)){
+					eph = rnp.findEph(unixTime, satID);
 				}
 			}
-			if(eph==null) reqestedTime -= (1L*3600L*1000L);
+			if(eph==null) requestedTime -= (1L*3600L*1000L);
 		}
 
 		return eph;
 	}
-	private RinexNavigationParser getRNPByTimestamp(long utcTime) {
+	private RinexNavigationParser getRNPByTimestamp(long unixTime) {
 
 		RinexNavigationParser rnp = null;
-		long reqTime = utcTime;
+		long reqTime = unixTime;
 		boolean retrievable = true;
 
 		do{
 			// found none, retrieve from urltemplate
 			Time t = new Time(reqTime);
-			//System.out.println("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
+			//System.out.println("request: "+unixTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
 
 			String url = t.formatTemplate(urltemplate);
 
@@ -293,9 +293,9 @@ public class RinexNavigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getIono(int)
 	 */
 	@Override
-	public IonoGps getIono(long utcTime) {
-		RinexNavigationParser rnp = getRNPByTimestamp(utcTime);
-		if(rnp!=null) return rnp.getIono(utcTime);
+	public IonoGps getIono(long unixTime) {
+		RinexNavigationParser rnp = getRNPByTimestamp(unixTime);
+		if(rnp!=null) return rnp.getIono(unixTime);
 		return null;
 	}
 

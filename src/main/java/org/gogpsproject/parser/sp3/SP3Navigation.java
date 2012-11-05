@@ -110,17 +110,17 @@ public class SP3Navigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
 
 		SP3Parser sp3p = null;
-		long reqTime = utcTime;
+		long reqTime = unixTime;
 
 		boolean retrievable = true;
 
 		do{
 			// found none, retrieve from urltemplate
 			Time t = new Time(reqTime);
-			//System.out.print("request: "+utcTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
+			//System.out.print("request: "+unixTime+" "+(new Date(t.getMsec()))+" week:"+t.getGpsWeek()+" "+t.getGpsWeekDay());
 
 			String url = urltemplate.replaceAll("\\$\\{wwww\\}", (new DecimalFormat("0000")).format(t.getGpsWeek()));
 			url = url.replaceAll("\\$\\{d\\}", (new DecimalFormat("0")).format(t.getGpsWeekDay()));
@@ -145,8 +145,8 @@ public class SP3Navigation implements NavigationProducer {
 					if(sp3p != null){
 						pool.put(url, sp3p);
 						// file exist, look for epoch
-						if(sp3p.isTimestampInEpocsRange(utcTime)){
-							return sp3p.getGpsSatPosition(utcTime, satID, range, receiverClockError);
+						if(sp3p.isTimestampInEpocsRange(unixTime)){
+							return sp3p.getGpsSatPosition(unixTime, satID, range, receiverClockError);
 						}else{
 							return null;
 						}
@@ -258,7 +258,7 @@ public class SP3Navigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getIono(int)
 	 */
 	@Override
-	public IonoGps getIono(long utcTime) {
+	public IonoGps getIono(long unixTime) {
 		return null;//iono[i];
 	}
 

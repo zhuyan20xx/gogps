@@ -490,23 +490,23 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 
 
 	/**
-	 * @param utcTime
+	 * @param unixTime
 	 * @param satID
 	 * @return Reference ephemeris set for given time and satellite
 	 */
-	public EphGps findEph(long utcTime, int satID) {
+	public EphGps findEph(long unixTime, int satID) {
 
 		long dt = 0;
 		long dtMin = 0;
 		EphGps refEph = null;
 
-		//long gpsTime = (new Time(utcTime)).getGpsTime();
+		//long gpsTime = (new Time(unixTime)).getGpsTime();
 
 		for (int i = 0; i < eph.size(); i++) {
 			// Find ephemeris sets for given satellite
 			if (eph.get(i).getSatID() == satID) {
 				// Compare current time and ephemeris reference time
-				dt = Math.abs(eph.get(i).getRefTime().getMsec() - utcTime /*getGpsTime() - gpsTime*/);
+				dt = Math.abs(eph.get(i).getRefTime().getMsec() - unixTime /*getGpsTime() - gpsTime*/);
 				// If it's the first round, set the minimum time difference and
 				// select the first ephemeris set candidate
 				if (refEph == null) {
@@ -534,7 +534,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 //	public void setIono(int i, double val){
 //		this.iono[i] = val;
 //	}
-	public IonoGps getIono(long utcTime){
+	public IonoGps getIono(long unixTime){
 		return iono;
 	}
 //	/**
@@ -598,10 +598,10 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 //		this.leaps = leaps;
 //	}
 
-	public boolean isTimestampInEpocsRange(long utcTime){
+	public boolean isTimestampInEpocsRange(long unixTime){
 		return eph.size()>0 &&
-		eph.get(0).getRefTime().getMsec() <= utcTime /*&&
-		utcTime <= eph.get(eph.size()-1).getRefTime().getMsec() missing interval +epochInterval*/;
+		eph.get(0).getRefTime().getMsec() <= unixTime /*&&
+		unixTime <= eph.get(eph.size()-1).getRefTime().getMsec() missing interval +epochInterval*/;
 	}
 
 
@@ -609,13 +609,13 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
-		EphGps eph = findEph(utcTime, satID);
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
+		EphGps eph = findEph(unixTime, satID);
 
 		if (eph != null) {
-			SatellitePosition sp = computePositionGps(utcTime,satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
-			return sp;// new SatellitePosition(eph, utcTime, satID, range);
+			return sp;// new SatellitePosition(eph, unixTime, satID, range);
 		}
 		return null;
 	}

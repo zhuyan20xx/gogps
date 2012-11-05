@@ -283,36 +283,36 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID,
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID,
 			double range, double receiverClockError) {
-		EphGps eph = findEph(utcTime, satID);
+		EphGps eph = findEph(unixTime, satID);
 
 		if (eph != null) {
-			SatellitePosition sp = computePositionGps(utcTime,satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
-			return sp;// new SatellitePosition(eph, utcTime, satID, range);
+			return sp;// new SatellitePosition(eph, unixTime, satID, range);
 		}
 		return null;
 	}
 
 	/**
-	 * @param utcTime
+	 * @param unixTime
 	 * @param satID
 	 * @return Reference ephemeris set for given time and satellite
 	 */
-	public EphGps findEph(long utcTime, int satID) {
+	public EphGps findEph(long unixTime, int satID) {
 
 		long dt = 0;
 		long dtMin = 0;
 		EphGps refEph = null;
 
-		//long gpsTime = (new Time(utcTime)).getGpsTime();
+		//long gpsTime = (new Time(unixTime)).getGpsTime();
 
 		for (int i = 0; i < ephs.size(); i++) {
 			// Find ephemeris sets for given satellite
 			if (ephs.get(i).getSatID() == satID) {
 				// Compare current time and ephemeris reference time
-				dt = Math.abs(ephs.get(i).getRefTime().getMsec() - utcTime );
+				dt = Math.abs(ephs.get(i).getRefTime().getMsec() - unixTime );
 				// If it's the first round, set the minimum time difference and
 				// select the first ephemeris set candidate
 				if (refEph == null) {
@@ -334,18 +334,18 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 	 * @see org.gogpsproject.NavigationProducer#getIono(long)
 	 */
 	@Override
-	public IonoGps getIono(long utcTime) {
+	public IonoGps getIono(long unixTime) {
 		long dt = 0;
 		long dtMin = 0;
 		IonoGps refIono = null;
 
-		//long gpsTime = (new Time(utcTime)).getGpsTime();
+		//long gpsTime = (new Time(unixTime)).getGpsTime();
 
 		for (int i = 0; i < ionos.size(); i++) {
 			// Find ionospheric sets for given satellite
 
 			// Compare current time and ionospheric reference time
-			dt = Math.abs(ionos.get(i).getRefTime().getMsec() - utcTime );
+			dt = Math.abs(ionos.get(i).getRefTime().getMsec() - unixTime );
 			// If it's the first round, set the minimum time difference and
 			// select the first ionospheric set candidate
 			if (refIono == null) {

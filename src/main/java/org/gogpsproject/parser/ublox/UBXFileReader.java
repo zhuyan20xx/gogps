@@ -149,11 +149,11 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
 		EphGps eph = ephs.get(new Integer(satID));
 
 		if (eph != null) {
-			SatellitePosition sp = computePositionGps(utcTime,satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
 			return sp;
 		}
 		return null ;
@@ -163,7 +163,7 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 	 * @see org.gogpsproject.NavigationProducer#getIono(long)
 	 */
 	@Override
-	public IonoGps getIono(long utcTime) {
+	public IonoGps getIono(long unixTime) {
 		return iono;
 	}
 

@@ -302,9 +302,9 @@ public class ObservationsBuffer
      * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
      */
     @Override
-    public SatellitePosition getGpsSatPosition(long utcTime, int satID, double range, double receiverClockError) {
+    public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
     	if(timeOrderedEphs.size()==0 ||
-                utcTime < timeOrderedEphs.elementAt(0).refTime.getMsec()
+                unixTime < timeOrderedEphs.elementAt(0).refTime.getMsec()
                 ){
     		//System.out.println("\tR: sat pos not found for "+satID);
     		return null;
@@ -317,23 +317,23 @@ public class ObservationsBuffer
         int c = getEphCursor(satID);
         while(c<timeOrderedEphs.size()){
         	EphSet tester = timeOrderedEphs.elementAt(c);
-            if((closer == null || utcTime-closer.refTime.getMsec() > utcTime-tester.refTime.getMsec()) &&
-            		utcTime-tester.refTime.getMsec()>0){
-                //tester is closer and before utcTime, keep as new closer and update cursor
+            if((closer == null || unixTime-closer.refTime.getMsec() > unixTime-tester.refTime.getMsec()) &&
+            		unixTime-tester.refTime.getMsec()>0){
+                //tester is closer and before unixTime, keep as new closer and update cursor
             	if(tester.ephs.containsKey(ID)){
             		closer = tester;
             		setEphCursor(satID, c);
             	}
                 c++;
             }else{
-                // tester is not closer or not before utcTime
+                // tester is not closer or not before unixTime
                 break;
             }
         }
         if(closer !=null){
         	EphGps eph = closer.ephs.get(ID);
 
-        	SatellitePosition sp = computePositionGps(utcTime,satID, eph, range, receiverClockError);
+        	SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
         	//System.out.println("\tR: < sat pos "+ID);
 			return sp;
         }
@@ -345,9 +345,9 @@ public class ObservationsBuffer
      * @see org.gogpsproject.NavigationProducer#getIono(long)
      */
     @Override
-    public IonoGps getIono(long utcTime) {
+    public IonoGps getIono(long unixTime) {
         if(timeOrderedIono.size()==0 ||
-                utcTime < timeOrderedIono.elementAt(0).getRefTime().getMsec()
+                unixTime < timeOrderedIono.elementAt(0).getRefTime().getMsec()
                 ) return null;
         IonoGps closer = timeOrderedIono.elementAt(ionoCursor);
 
@@ -355,13 +355,13 @@ public class ObservationsBuffer
         int c = ionoCursor;
         while(c<timeOrderedIono.size()){
             IonoGps tester = timeOrderedIono.elementAt(c);
-            if(utcTime-closer.getRefTime().getMsec() > utcTime-tester.getRefTime().getMsec() && utcTime-tester.getRefTime().getMsec()>0){
-                //tester is closer and before utcTime, keep as new closer and update cursor
+            if(unixTime-closer.getRefTime().getMsec() > unixTime-tester.getRefTime().getMsec() && unixTime-tester.getRefTime().getMsec()>0){
+                //tester is closer and before unixTime, keep as new closer and update cursor
                 closer = tester;
                 ionoCursor = c;
                 c++;
             }else{
-                // tester is not closer or not before utcTime
+                // tester is not closer or not before unixTime
             	//System.out.println("\t\tR: < Iono1");
                 return closer;
             }

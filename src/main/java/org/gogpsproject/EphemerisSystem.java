@@ -38,13 +38,13 @@ public abstract class EphemerisSystem {
 	 * @param range
 	 * @param approxPos
 	 */
-	protected SatellitePosition computePositionGps(long utcTime,int satID, EphGps eph, double obsPseudorange, double receiverClockError) {
+	protected SatellitePosition computePositionGps(long unixTime,int satID, EphGps eph, double obsPseudorange, double receiverClockError) {
 
 		// Compute satellite clock error
-		double satelliteClockError = computeSatelliteClockError(utcTime, eph, obsPseudorange);
+		double satelliteClockError = computeSatelliteClockError(unixTime, eph, obsPseudorange);
 
 		// Compute clock corrected transmission time
-		double tGPS = computeClockCorrectedTransmissionTime(utcTime, satelliteClockError, obsPseudorange);
+		double tGPS = computeClockCorrectedTransmissionTime(unixTime, satelliteClockError, obsPseudorange);
 
 		// Compute eccentric anomaly
 		double Ek = computeEccentricAnomaly(tGPS, eph);
@@ -82,13 +82,13 @@ public abstract class EphemerisSystem {
 		// Fill in the satellite position matrix
 		//this.coord.ecef = new SimpleMatrix(data);
 		//this.coord = Coordinates.globalXYZInstance(new SimpleMatrix(data));
-		SatellitePosition sp = new SatellitePosition(utcTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
+		SatellitePosition sp = new SatellitePosition(unixTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
 				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
 				y1 * Math.sin(ik));
 		sp.setSatelliteClockError(satelliteClockError);
 
 		// Apply the correction due to the Earth rotation during signal travel time
-		SimpleMatrix R = computeEarthRotationCorrection(utcTime, receiverClockError, tGPS);
+		SimpleMatrix R = computeEarthRotationCorrection(unixTime, receiverClockError, tGPS);
 		sp.setSMMultXYZ(R);
 
 		return sp;
@@ -117,14 +117,14 @@ public abstract class EphemerisSystem {
 	/**
 	 * @param traveltime
 	 */
-	protected SimpleMatrix computeEarthRotationCorrection(long utcTime, double receiverClockError, double transmissionTime) {
+	protected SimpleMatrix computeEarthRotationCorrection(long unixTime, double receiverClockError, double transmissionTime) {
 
 		// Computation of signal travel time
 		// SimpleMatrix diff = satellitePosition.minusXYZ(approxPos);//this.coord.minusXYZ(approxPos);
 		// double rho2 = Math.pow(diff.get(0), 2) + Math.pow(diff.get(1), 2)
 		// 		+ Math.pow(diff.get(2), 2);
 		// double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
-		long receptionTime = (new Time(utcTime)).getGpsTime();
+		long receptionTime = (new Time(unixTime)).getGpsTime();
 		double traveltime = receptionTime + receiverClockError - transmissionTime;
 
 		// Compute rotation angle
@@ -155,9 +155,9 @@ public abstract class EphemerisSystem {
 	 * @param eph
 	 * @return Clock-corrected GPS transmission time
 	 */
-	protected double computeClockCorrectedTransmissionTime(long utcTime, double satelliteClockError, double obsPseudorange) {
+	protected double computeClockCorrectedTransmissionTime(long unixTime, double satelliteClockError, double obsPseudorange) {
 
-		long gpsTime = (new Time(utcTime)).getGpsTime();
+		long gpsTime = (new Time(unixTime)).getGpsTime();
 
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
@@ -169,8 +169,8 @@ public abstract class EphemerisSystem {
 	 * @param eph
 	 * @return Satellite clock error
 	 */
-	protected double computeSatelliteClockError(long utcTime, EphGps eph, double obsPseudorange){
-		long gpsTime = (new Time(utcTime)).getGpsTime();
+	protected double computeSatelliteClockError(long unixTime, EphGps eph, double obsPseudorange){
+		long gpsTime = (new Time(unixTime)).getGpsTime();
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 
