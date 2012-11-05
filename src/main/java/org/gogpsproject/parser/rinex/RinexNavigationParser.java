@@ -520,6 +520,12 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 				}
 			}
 		}
+		
+		//check satellite health
+		if (refEph.getSvHealth() != 0) {
+			refEph = null;
+		}
+		
 		return refEph;
 	}
 
