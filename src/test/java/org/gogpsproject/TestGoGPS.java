@@ -33,6 +33,7 @@ import org.gogpsproject.parser.sp3.SP3Navigation;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.KmlProducer;
+import org.gogpsproject.producer.TxtProducer;
 
 /**
  * @author Eugenio Realini, Cryms.com
@@ -116,14 +117,17 @@ public class TestGoGPS {
 			roverIn.init();
 			masterIn.init();
 
-			// Name KML file name using Timestamp
+			// Name output files name using Timestamp
 			Date date = new Date();
 			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 			String date1 = sdf1.format(date);
-			String outPath = "./test/" + date1 + ".kml";
-			KmlProducer kml = new KmlProducer(outPath, goodDopThreshold, timeSampleDelaySec);
+			String outPathTxt = "./test/" + date1 + ".txt";
+			String outPathKml = "./test/" + date1 + ".kml";
+			TxtProducer txt = new TxtProducer(outPathTxt);
+			KmlProducer kml = new KmlProducer(outPathKml, goodDopThreshold, timeSampleDelaySec);
 
 			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
+			goGPS.addPositionConsumerListener(txt);
 			goGPS.addPositionConsumerListener(kml);
 			goGPS.setDynamicModel(dynamicModel);
 			//goGPS.runCodeStandalone();
