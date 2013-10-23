@@ -721,8 +721,9 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				Decode dec = decodeMap.get(new Integer(msgtype));
 				if(dec!=null){
 					dec.decode(bits, System.currentTimeMillis());
+					System.out.println("RTCM message "+msgtype+" received and decoded");
 				}else{
-					System.err.println("missing message parser "+msgtype);
+					//System.err.println("missing RTCM message parser "+msgtype);
 					// missing message parser
 				}
 

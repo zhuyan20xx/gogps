@@ -52,29 +52,38 @@ public class LiveTracking {
 			long start = System.currentTimeMillis();
 
 			// Realtime
-			if(args.length<2){
-				System.out.println("GoGPS <rtcm_user> <rtcm_pass> <ubx_user> <ubx_pass> <com>");
+			if(args.length<3){
+				System.out.println("GoGPS <com_port> <ntrip_url> <ntrip_user> <ntrip_pass> <ntrip_port> <ntrip_mountpoint> <ubx_user> <ubx_pass>");
 				return;
 			}
+			
+			String comPort = args[0];
+			String NTRIPurl = args[1];
+			String NTRIPuser = args[2];
+			String NTRIPpass = args[3];
+			int NTRIPport = Integer.parseInt(args[4]);
+			String NTRIPmountpoint = args[5];
 
 			/******************************************
 			 * ROVER & NAVIGATION uBlox
 			 */
-			UBXSerialConnection ubxSerialConn = new UBXSerialConnection(args[4], 9600);
+			UBXSerialConnection ubxSerialConn = new UBXSerialConnection(comPort, 9600);
 			ubxSerialConn.init();
 
 			ObservationsBuffer roverIn = new ObservationsBuffer(ubxSerialConn,"./test/roverOut.dat");
 			NavigationProducer navigationIn = roverIn;
 			roverIn.init();
 
-			if(args.length>3){
+			if(args.length>6){
+				String assistNowUser = args[6];
+				String assistNowPass = args[7];
 				String cmd="aid";
 //				String lon="135";
 //				String lat="35";
 				String lon=null;
 				String lat=null;
 				// UBXAssistNow actually needs broadcast ephemeris from a receiver to produce valid ephemeris
-				navigationIn = new UBXAssistNow( args[2], args[3], cmd/*, lon, lat*/);
+				navigationIn = new UBXAssistNow(assistNowUser, assistNowPass, cmd/*, lon, lat*/);
 				try {
 					navigationIn.init();
 				} catch (Exception e) {
@@ -96,8 +105,7 @@ public class LiveTracking {
 			/******************************************
 			 * MASTER RTCM/RINEX
 			 */
-			RTCM3Client rtcmClient = RTCM3Client.getInstance("www3.swisstopo.ch", 8080, args[0].trim(), args[1].trim(), "swiposGISGEO_LV03LN02");
-//			RTCM3Client masterIn = RTCM3Client.getInstance("ntrip.jenoba.jp", 2101, args[0].trim(), args[1].trim(), "JVR30");
+			RTCM3Client rtcmClient = RTCM3Client.getInstance(NTRIPurl.trim(), NTRIPport, NTRIPuser.trim(), NTRIPpass.trim(), NTRIPmountpoint.trim());
 			//navigationIn = new RinexNavigation(RinexNavigation.IGN_NAVIGATION_HOURLY_ZIM2);
 			rtcmClient.setVirtualReferenceStationPosition(initialPosition);
 			rtcmClient.setReconnectionPolicy(RTCM3Client.CONNECTION_POLICY_RECONNECT);
@@ -106,7 +114,6 @@ public class LiveTracking {
 
 			ObservationsBuffer masterIn = new ObservationsBuffer(rtcmClient,"./test/masterOut.dat");
 			masterIn.init();
-
 
 			Date date = new Date();
 			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");

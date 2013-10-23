@@ -24,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
 import org.gogpsproject.StreamEventListener;
@@ -54,8 +56,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	}
 	public UBXSerialReader(InputStream in,OutputStream out,StreamEventListener streamEventListener) {
 		FileOutputStream fos= null;
+		
+		Date date = new Date();
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		String date1 = sdf1.format(date);
+		
 		try {
-			fos = new FileOutputStream("./data/ubx.out");
+			fos = new FileOutputStream("./test/"+ date1 + ".ubx");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -86,6 +93,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		}
 		// outputStream.write(clear.getBytes());
 		// outputStream.flush();
+		System.out.println("Enabling RXM-RAW messages");
 		MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_RXM, MessageType.RXM_RAW, true);
 		out.write(msgcfg.getByte());
 		out.flush();
@@ -113,15 +121,15 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		int data = 0;
 		long aidEphTS = System.currentTimeMillis();
 		long aidHuiTS = System.currentTimeMillis();
-
+		long sysOutTS = System.currentTimeMillis();
 
 		try {
 			int msg[] = {};
-			System.out.println("Poll AID HUI");
+			System.out.println("Polling AID-HUI message");
 			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 			out.write(msgcfg.getByte());
 			out.flush();
-			System.out.println("Poll AID EPH");
+			System.out.println("Polling AID-EPH message");
 			msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 			out.write(msgcfg.getByte());
 			out.flush();
@@ -130,8 +138,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			in.start();
 			while (!stop) {
 				if(in.available()>0){
+					data = in.read();
 					try{
-						data = in.read();
 						if(data == 0xB5){
 							reader.readMessagge();
 						}else{
@@ -148,21 +156,28 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 					} catch (InterruptedException e) {}
 				}
 				long curTS = System.currentTimeMillis();
-				if(curTS-aidEphTS > 10*1000){
-					System.out.println("Poll AID EPH");
+				if(curTS-aidEphTS > 30*1000){
+					System.out.println("Polling AID-EPH message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidEphTS = curTS;
-
-					System.out.println("BPS:"+in.getCurrentBps()+" bytes:"+in.getCounter());
 				}
-				if(curTS-aidHuiTS > 60*1000){
-					System.out.println("Poll AID HUI");
+				if(curTS-aidHuiTS > 120*1000){
+					System.out.println("Polling AID-HUI message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidHuiTS = curTS;
+				}
+				
+				Date date = new Date();
+				SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				String date1 = sdf1.format(date);
+				
+				if (curTS-sysOutTS > 5*1000) {
+					System.out.println(date1+" -- Logging from COM port at "+in.getCurrentBps()+" Bps -- Total: "+in.getCounter()+" bytes");
+					sysOutTS = curTS;
 				}
 			}
 		} catch (IOException e) {
