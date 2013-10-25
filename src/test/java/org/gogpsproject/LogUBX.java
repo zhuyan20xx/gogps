@@ -19,6 +19,8 @@
  *
  */
 package org.gogpsproject;
+import java.util.Vector;
+
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
 /**
@@ -34,12 +36,16 @@ public class LogUBX {
 		try{
 
 			if(args.length<1){
-				System.out.println("Usage example: GoGPS <COM11>");
+				System.out.println("Usage example: goGPS_UBX_logger <COM10> <COM16>");
+				
+				UBXSerialConnection.getPortList();
 				return;
 			}
-
-			UBXSerialConnection ubxSerialConn = new UBXSerialConnection(args[0], 9600);
-			ubxSerialConn.init();
+			
+			for (int a = 0; a < args.length; a++) {
+				UBXSerialConnection ubxSerialConn = new UBXSerialConnection(args[a], 9600);
+				ubxSerialConn.init();
+			}
 
 		}catch(Exception e){
 			e.printStackTrace();
