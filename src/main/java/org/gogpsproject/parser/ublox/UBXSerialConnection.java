@@ -98,7 +98,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 				inputStream = serialPort.getInputStream();
 				outputStream = serialPort.getOutputStream();
 
-				ubxReader = new UBXSerialReader(inputStream,outputStream);
+				ubxReader = new UBXSerialReader(inputStream,outputStream,portName);
 				//ubxReader.setStreamEventListener(streamEventListener);
 				ubxReader.start();
 

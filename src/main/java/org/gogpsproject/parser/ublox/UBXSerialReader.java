@@ -50,11 +50,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 	//private StreamEventListener streamEventListener;
 	private UBXReader reader;
+	private String COMPort;
 
-	public UBXSerialReader(InputStream in,OutputStream out) {
-		this(in,out,null);
+	public UBXSerialReader(InputStream in,OutputStream out, String COMPort) {
+		this(in,out,COMPort,null);
+		this.COMPort = COMPort;
 	}
-	public UBXSerialReader(InputStream in,OutputStream out,StreamEventListener streamEventListener) {
+	public UBXSerialReader(InputStream in,OutputStream out,String COMPort,StreamEventListener streamEventListener) {
 		FileOutputStream fos= null;
 		
 		Date date = new Date();
@@ -62,7 +64,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		String date1 = sdf1.format(date);
 		
 		try {
-			fos = new FileOutputStream("./test/"+ date1 + ".ubx");
+			fos = new FileOutputStream("./test/"+ COMPort+ "_" + date1 + ".ubx");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -93,7 +95,12 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		}
 		// outputStream.write(clear.getBytes());
 		// outputStream.flush();
-		System.out.println("Enabling RXM-RAW messages");
+		
+		Date date = new Date();
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String date1 = sdf1.format(date);
+		
+		System.out.println(date1+" - "+COMPort+" - Enabling RXM-RAW messages");
 		MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_RXM, MessageType.RXM_RAW, true);
 		out.write(msgcfg.getByte());
 		out.flush();
@@ -124,12 +131,16 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		long sysOutTS = System.currentTimeMillis();
 
 		try {
+			Date date = new Date();
+			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String date1 = sdf1.format(date);
+			
 			int msg[] = {};
-			System.out.println("Polling AID-HUI message");
+			System.out.println(date1+" - "+COMPort+" - Polling AID-HUI message");
 			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 			out.write(msgcfg.getByte());
 			out.flush();
-			System.out.println("Polling AID-EPH message");
+			System.out.println(date1+" - "+COMPort+" - Polling AID-EPH message");
 			msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 			out.write(msgcfg.getByte());
 			out.flush();
@@ -156,27 +167,27 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 					} catch (InterruptedException e) {}
 				}
 				long curTS = System.currentTimeMillis();
+				
+				date = new Date();
+				sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				date1 = sdf1.format(date);
+				
 				if(curTS-aidEphTS > 30*1000){
-					System.out.println("Polling AID-EPH message");
+					System.out.println(date1+" - "+COMPort+" - Polling AID-EPH message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidEphTS = curTS;
 				}
 				if(curTS-aidHuiTS > 120*1000){
-					System.out.println("Polling AID-HUI message");
+					System.out.println(date1+" - "+COMPort+" - Polling AID-HUI message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidHuiTS = curTS;
 				}
-				
-				Date date = new Date();
-				SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				String date1 = sdf1.format(date);
-				
 				if (curTS-sysOutTS > 5*1000) {
-					System.out.println(date1+" -- Logging from COM port at "+in.getCurrentBps()+" Bps -- Total: "+in.getCounter()+" bytes");
+					System.out.println(date1+" - "+COMPort+" - Logging at "+in.getCurrentBps()+" Bps -- Total: "+in.getCounter()+" bytes");
 					sysOutTS = curTS;
 				}
 			}
