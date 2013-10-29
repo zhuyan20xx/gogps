@@ -19,9 +19,12 @@
  *
  */
 package org.gogpsproject;
-import java.util.Vector;
-
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
+
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 
 /**
  * @author Eugenio Realini, Cryms.com
@@ -33,17 +36,36 @@ public class LogUBX {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		try{
+		ArgumentParser parser = ArgumentParsers.newArgumentParser("LogUBX")
+				.defaultHelp(true)
+				.description("Log binary streams from one or more u-blox receivers connected to COM ports.");
+		parser.addArgument("-e", "--eph")
+				//.choices("true", "false").setDefault("false")
+				.help("Request and log ephemerides");
+		parser.addArgument("-i", "--ion")
+				//.choices("true", "false").setDefault("false")
+				.help("Request and log ionospheric parameters");
+		parser.addArgument("port").nargs("*")
+				.help("Ports connected to u-blox receivers");
+		Namespace ns = null;
+		try {
+			ns = parser.parseArgs(args);
+		} catch (ArgumentParserException e) {
+			parser.handleError(e);
+			System.exit(1);
+		}
 
-			if(args.length<1){
-				System.out.println("Usage example: goGPS_UBX_logger <COM10> <COM16>");
-				
-				UBXSerialConnection.getPortList();
-				return;
-			}
+		try{
 			
-			for (int a = 0; a < args.length; a++) {
-				UBXSerialConnection ubxSerialConn = new UBXSerialConnection(args[a], 9600);
+//			if(args.length<1){
+//				System.out.println("Usage example: logubx -lognav -lognmea <COM10> <COM16>");
+//				
+//				UBXSerialConnection.getPortList();
+//				return;
+//			}
+			
+			for (String portId : ns.<String> getList("port")) {
+				UBXSerialConnection ubxSerialConn = new UBXSerialConnection(portId, 9600);
 				ubxSerialConn.init();
 			}
 
