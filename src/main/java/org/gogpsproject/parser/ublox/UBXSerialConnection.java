@@ -22,6 +22,7 @@ package org.gogpsproject.parser.ublox;
 
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -45,6 +46,8 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 
 	private String portName;
 	private int speed;
+	private boolean enableEphemeris = true;
+	private boolean enableIonosphere = true;
 
 	public UBXSerialConnection(String portName, int speed) {
 		this.portName = portName;
@@ -100,6 +103,8 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 
 				ubxReader = new UBXSerialReader(inputStream,outputStream,portName);
 				//ubxReader.setStreamEventListener(streamEventListener);
+				ubxReader.enableAidEphMsg(this.enableEphemeris);
+				ubxReader.enableAidHuiMsg(this.enableIonosphere);
 				ubxReader.start();
 
 				connected = true;
@@ -179,4 +184,19 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 		ubxReader.removeStreamEventListener(streamEventListener);
 	}
 
+	public void enableEphemeris(Boolean enableEph) {
+		if(ubxReader!=null){
+			ubxReader.enableAidEphMsg(enableEph);
+		} else {
+			this.enableEphemeris = enableEph;
+		}
+	}
+
+	public void enableIonoParam(Boolean enableIon) {
+		if(ubxReader!=null){
+			ubxReader.enableAidHuiMsg(enableIon);
+		} else {
+			this.enableIonosphere = enableIon;
+		}
+	}
 }

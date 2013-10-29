@@ -51,6 +51,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	//private StreamEventListener streamEventListener;
 	private UBXReader reader;
 	private String COMPort;
+	private boolean MsgAidEphEnabled = false;
+	private boolean MsgAidHuiEnabled = false;
 
 	public UBXSerialReader(InputStream in,OutputStream out, String COMPort) {
 		this(in,out,COMPort,null);
@@ -104,14 +106,6 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_RXM, MessageType.RXM_RAW, true);
 		out.write(msgcfg.getByte());
 		out.flush();
-		msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, true);
-		out.write(msgcfg.getByte());
-		out.flush();
-		msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, true);
-		out.write(msgcfg.getByte());
-		out.flush();
-
-		//System.out.println("3");
 	}
 	public void stop(boolean waitForThread, long timeoutMs){
 		stop = true;
@@ -129,6 +123,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		long aidEphTS = System.currentTimeMillis();
 		long aidHuiTS = System.currentTimeMillis();
 		long sysOutTS = System.currentTimeMillis();
+		MsgConfiguration msgcfg = null;
 
 		try {
 			Date date = new Date();
@@ -136,16 +131,19 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			String date1 = sdf1.format(date);
 			
 			int msg[] = {};
-			System.out.println(date1+" - "+COMPort+" - Polling AID-HUI message");
-			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
-			out.write(msgcfg.getByte());
-			out.flush();
-			System.out.println(date1+" - "+COMPort+" - Polling AID-EPH message");
-			msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
-			out.write(msgcfg.getByte());
-			out.flush();
+			if (this.MsgAidHuiEnabled) {
+				System.out.println(date1+" - "+COMPort+" - AID-HUI message polling enabled");
+				msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
+				out.write(msgcfg.getByte());
+				out.flush();
+			}
+			if (this.MsgAidEphEnabled) {
+				System.out.println(date1+" - "+COMPort+" - AID-EPH message polling enabled");
+				msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
+				out.write(msgcfg.getByte());
+				out.flush();
+			}
 
-			//System.out.println();
 			in.start();
 			while (!stop) {
 				if(in.available()>0){
@@ -172,21 +170,21 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 				sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 				date1 = sdf1.format(date);
 				
-				if(curTS-aidEphTS > 30*1000){
+				if(this.MsgAidEphEnabled && curTS-aidEphTS > 30*1000){
 					System.out.println(date1+" - "+COMPort+" - Polling AID-EPH message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidEphTS = curTS;
 				}
-				if(curTS-aidHuiTS > 120*1000){
+				if(this.MsgAidHuiEnabled && curTS-aidHuiTS > 120*1000){
 					System.out.println(date1+" - "+COMPort+" - Polling AID-HUI message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidHuiTS = curTS;
 				}
-				if (curTS-sysOutTS > 5*1000) {
+				if (curTS-sysOutTS > 1*1000) {
 					System.out.println(date1+" - "+COMPort+" - Logging at "+in.getCurrentBps()+" Bps -- Total: "+in.getCounter()+" bytes");
 					sysOutTS = curTS;
 				}
@@ -244,5 +242,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		if(streamEventListeners.contains(streamEventListener))
 			this.streamEventListeners.remove(streamEventListener);
 		this.reader.removeStreamEventListener(streamEventListener);
+	}
+	
+	public void enableAidEphMsg(Boolean enableEph) {
+		this.MsgAidEphEnabled = enableEph;
+	}
+	
+	public void enableAidHuiMsg(Boolean enableIon) {
+		this.MsgAidHuiEnabled = enableIon;
 	}
 }

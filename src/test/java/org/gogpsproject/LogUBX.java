@@ -22,6 +22,8 @@ package org.gogpsproject;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.annotation.Arg;
+import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -39,14 +41,17 @@ public class LogUBX {
 		ArgumentParser parser = ArgumentParsers.newArgumentParser("LogUBX")
 				.defaultHelp(true)
 				.description("Log binary streams from one or more u-blox receivers connected to COM ports.");
-		parser.addArgument("-e", "--eph")
-				//.choices("true", "false").setDefault("false")
-				.help("Request and log ephemerides");
-		parser.addArgument("-i", "--ion")
-				//.choices("true", "false").setDefault("false")
-				.help("Request and log ionospheric parameters");
+		parser.addArgument("-e", "--ephemeris")
+				.action(Arguments.storeTrue())
+				.help("Request and log ephemeris (AID-EPH message)");
+		parser.addArgument("-i", "--ionosphere")
+				.action(Arguments.storeTrue())
+				.help("Request and log ionospheric parameters (AID-HUI message)");
+		parser.addArgument("-n", "--nmea")
+				.choices("GGA", "GSV", "RMC").setDefault("false")
+				.help("Enable and log NMEA sentences");
 		parser.addArgument("port").nargs("*")
-				.help("Ports connected to u-blox receivers");
+				.help("COM port(s) connected to u-blox receivers (e.g. COM3 COM10)");
 		Namespace ns = null;
 		try {
 			ns = parser.parseArgs(args);
@@ -56,16 +61,15 @@ public class LogUBX {
 		}
 
 		try{
-			
-//			if(args.length<1){
-//				System.out.println("Usage example: logubx -lognav -lognmea <COM10> <COM16>");
-//				
-//				UBXSerialConnection.getPortList();
-//				return;
-//			}
+			if(ns.getList("port").size()<1){
+				UBXSerialConnection.getPortList();
+				return;
+			}
 			
 			for (String portId : ns.<String> getList("port")) {
 				UBXSerialConnection ubxSerialConn = new UBXSerialConnection(portId, 9600);
+				ubxSerialConn.enableEphemeris((Boolean) ns.get("ephemeris"));
+				ubxSerialConn.enableIonoParam((Boolean) ns.get("ionosphere"));
 				ubxSerialConn.init();
 			}
 

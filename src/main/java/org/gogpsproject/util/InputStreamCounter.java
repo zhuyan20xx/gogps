@@ -160,7 +160,11 @@ public class InputStreamCounter extends InputStream{
 	}
 
 	public int getCurrentBps(){
+		try {
 		return (int) ((counter-markCount) / ((System.currentTimeMillis()-markTS)/1000L));
+		} catch (ArithmeticException e) {
+			return 0;
+		}
 	}
 
 	public long stop(){
