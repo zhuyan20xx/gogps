@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
@@ -59,18 +60,18 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		this.COMPort = COMPort;
 	}
 	public UBXSerialReader(InputStream in,OutputStream out,String COMPort,StreamEventListener streamEventListener) {
-		FileOutputStream fos= null;
+		FileOutputStream fos_ubx= null;
 		
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 		String date1 = sdf1.format(date);
 		
 		try {
-			fos = new FileOutputStream("./test/"+ COMPort+ "_" + date1 + ".ubx");
+			fos_ubx = new FileOutputStream("./test/"+ COMPort+ "_" + date1 + ".ubx");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		this.in = new InputStreamCounter(in,fos);
+		this.in = new InputStreamCounter(in,fos_ubx);
 		this.out = out;
 		this.reader = new UBXReader(this.in,streamEventListener);
 	}
@@ -99,7 +100,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		// outputStream.flush();
 		
 		Date date = new Date();
-		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
 		
 		System.out.println(date1+" - "+COMPort+" - Enabling RXM-RAW messages");
@@ -124,11 +125,24 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		long aidHuiTS = System.currentTimeMillis();
 		long sysOutTS = System.currentTimeMillis();
 		MsgConfiguration msgcfg = null;
+		FileOutputStream fos_tim = null;
+		PrintStream ps = null;
+		
+		Date date = new Date();
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		String date1 = sdf1.format(date);
+		
+		try {
+			fos_tim = new FileOutputStream("./test/"+ COMPort+ "_" + date1 + "_systime.txt");
+			ps = new PrintStream(fos_tim);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 
 		try {
-			Date date = new Date();
-			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String date1 = sdf1.format(date);
+			date = new Date();
+			sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+			date1 = sdf1.format(date);
 			
 			int msg[] = {};
 			if (this.MsgAidHuiEnabled) {
@@ -150,7 +164,16 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 					data = in.read();
 					try{
 						if(data == 0xB5){
-							reader.readMessagge();
+							Object o = reader.readMessage();
+							try {
+								if(o.getClass().toString().equals("class org.gogpsproject.Observations")) {
+									date = new Date();
+									sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+									date1 = sdf1.format(date);
+									ps.println(date1);
+								}
+							} catch (NullPointerException e) {
+							}
 						}else{
 							//no warning, may be NMEA
 							//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
@@ -167,7 +190,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 				long curTS = System.currentTimeMillis();
 				
 				date = new Date();
-				sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 				date1 = sdf1.format(date);
 				
 				if(this.MsgAidEphEnabled && curTS-aidEphTS > 30*1000){

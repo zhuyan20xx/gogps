@@ -49,7 +49,7 @@ public class UBXReader implements StreamEventProducer {
 		addStreamEventListener(eventListener);
 	}
 
-	public Object readMessagge() throws IOException, UBXException{
+	public Object readMessage() throws IOException, UBXException{
 
 //		int data = in.read();
 //		if(data == 0xB5){

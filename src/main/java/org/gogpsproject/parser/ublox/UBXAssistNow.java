@@ -408,7 +408,7 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 					int data = is.read();
 					if(data == 0xB5){
 						try {
-							Object msg = reader.readMessagge();
+							Object msg = reader.readMessage();
 							if(msg != null){
 								//System.out.println("msg "+msg.getClass().getName());
 								if(msg instanceof EphGps){
