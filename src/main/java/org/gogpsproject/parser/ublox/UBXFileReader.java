@@ -106,7 +106,7 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 				try{
 					int data = in.read();
 					if(data == 0xB5){
-						Object o = reader.readMessagge();
+						Object o = reader.readMessage();
 						if(o instanceof Observations){
 							return (Observations)o;
 						}else

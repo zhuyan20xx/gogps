@@ -41,6 +41,9 @@ public class LogUBX {
 		ArgumentParser parser = ArgumentParsers.newArgumentParser("LogUBX")
 				.defaultHelp(true)
 				.description("Log binary streams from one or more u-blox receivers connected to COM ports.");
+		parser.addArgument("-s", "--showCOMports")
+				.action(Arguments.storeTrue())
+				.help("Display available COM ports");
 		parser.addArgument("-e", "--ephemeris")
 				.action(Arguments.storeTrue())
 				.help("Request and log ephemeris (AID-EPH message)");
@@ -61,8 +64,12 @@ public class LogUBX {
 		}
 
 		try{
-			if(ns.getList("port").size()<1){
+			
+			if ((Boolean) ns.get("showCOMports")) {
 				UBXSerialConnection.getPortList();
+				return;
+			} else if (ns.<String> getList("port").isEmpty()) {
+				parser.printHelp();
 				return;
 			}
 			
