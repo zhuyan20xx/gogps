@@ -57,10 +57,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 
 	public UBXSerialReader(InputStream in,OutputStream out, String COMPort) {
 		this(in,out,COMPort,null);
-		this.COMPort = COMPort;
+		this.COMPort = padCOMSpaces(COMPort);
 	}
+	
 	public UBXSerialReader(InputStream in,OutputStream out,String COMPort,StreamEventListener streamEventListener) {
+		
 		FileOutputStream fos_ubx= null;
+		COMPort = padCOMSpaces(COMPort);
 		
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
@@ -273,5 +276,12 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	
 	public void enableAidHuiMsg(Boolean enableIon) {
 		this.MsgAidHuiEnabled = enableIon;
+	}
+	
+	private String padCOMSpaces(String COMPortIn) {
+		if (COMPortIn.substring(0, 3).equals("COM") && COMPortIn.length() == 4) {
+			COMPortIn = COMPortIn + " ";
+		}
+		return COMPortIn;
 	}
 }
