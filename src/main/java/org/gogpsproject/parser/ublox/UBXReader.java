@@ -58,11 +58,12 @@ public class UBXReader implements StreamEventProducer {
 
 				data = in.read(); // Class
 				boolean parsed = false;
-				if (data == 0x02) {
+				if (data == 0x02) { // RXM
 					data = in.read(); // ID
-					if (data == 0x10) { // RXM
+					if (data == 0x10) { // RAW
 						// RMX-RAW
 						DecodeRXMRAW decodegps = new DecodeRXMRAW(in);
+						parsed = true;
 
 						Observations o = decodegps.decode(null);
 						if(streamEventListeners!=null && o!=null){
@@ -80,11 +81,11 @@ public class UBXReader implements StreamEventProducer {
 						if (data == 0x02) { // HUI
 							// AID-HUI (sat. Health / UTC / Ionosphere)
 							DecodeAIDHUI decodegps = new DecodeAIDHUI(in);
+							parsed = true;
 
 							IonoGps iono = decodegps.decode();
 							if(streamEventListeners!=null && iono!=null){
 								for(StreamEventListener sel:streamEventListeners){
-									// TODO clone iono
 									sel.addIonospheric(iono);
 								}
 							}
@@ -93,11 +94,11 @@ public class UBXReader implements StreamEventProducer {
 						if (data == 0x31) { // EPH
 							// AID-EPH (ephemerides)
 							DecodeAIDEPH decodegps = new DecodeAIDEPH(in);
+							parsed = true;
 
 							EphGps eph = decodegps.decode();
 							if(streamEventListeners!=null && eph!=null){
 								for(StreamEventListener sel:streamEventListeners){
-									// TODO clone eph
 									sel.addEphemeris(eph);
 								}
 							}
@@ -106,7 +107,6 @@ public class UBXReader implements StreamEventProducer {
 						}
 					}catch(UBXException ubxe){
 						//System.out.println(ubxe);
-						parsed = true;
 					}
 				}else{
 					in.skip(1); // ID
@@ -121,7 +121,6 @@ public class UBXReader implements StreamEventProducer {
 					int len = length[0]*256+length[1];
 					//System.out.println("skip "+len);
 					in.skip(len+2);
-
 				}
 			}else{
 				System.out.println("Wrong Sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
