@@ -34,7 +34,7 @@ import org.gogpsproject.StreamEventProducer;
  * Read and parse UBX messages
  * </p>
  *
- * @author Lorenzo Patocchi cryms.com
+ * @author Lorenzo Patocchi cryms.com, Eugenio Realini
  */
 public class UBXReader implements StreamEventProducer {
 	private InputStream in;
@@ -109,7 +109,7 @@ public class UBXReader implements StreamEventProducer {
 						//System.out.println(ubxe);
 					}
 				}else{
-					in.skip(1); // ID
+					in.read(); // ID
 				}
 				if(!parsed){
 
@@ -120,7 +120,9 @@ public class UBXReader implements StreamEventProducer {
 
 					int len = length[0]*256+length[1];
 					//System.out.println("skip "+len);
-					in.skip(len+2);
+					for (int b = 0; b < len+2; b++) {
+						in.read();
+					}
 				}
 			}else{
 				System.out.println("Wrong Sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");

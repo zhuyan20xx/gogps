@@ -73,7 +73,9 @@ public class DecodeAIDEPH {
 
 		int len = length[0]*256+length[1];
 		if(len == 8){
-			in.skip(len+2);
+			for (int b = 0; b < len+2; b++) {
+				in.read();
+			}
 			return null;
 		}
 
