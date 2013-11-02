@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Vector;
 
 import org.gogpsproject.StreamEventListener;
@@ -38,7 +39,7 @@ import org.gogpsproject.util.InputStreamCounter;
  *
  * </p>
  *
- * @author Lorenzo Patocchi cryms.com
+ * @author Lorenzo Patocchi cryms.com, Eugenio Realini
  */
 
 public class UBXSerialReader implements Runnable,StreamEventProducer {
@@ -54,6 +55,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	private String COMPort;
 	private boolean MsgAidEphEnabled = false;
 	private boolean MsgAidHuiEnabled = false;
+	private List<String> RequestedNmeaMsgs;
 
 	public UBXSerialReader(InputStream in,OutputStream out, String COMPort) {
 		this(in,out,COMPort,null);
@@ -83,29 +85,43 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		t = new Thread(this);
 		t.setName("UBXSerialReader");
 		t.start();
+		
+		Date date = new Date();
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		String date1 = sdf1.format(date);
 
-		//System.out.println("1");
-		int nmea[] = { MessageType.NMEA_GGA, MessageType.NMEA_GLL, MessageType.NMEA_GSA, MessageType.NMEA_GSV, MessageType.NMEA_RMC, MessageType.NMEA_VTG, MessageType.NMEA_GRS,
+		int nmeaAll[] = { MessageType.NMEA_GGA, MessageType.NMEA_GLL, MessageType.NMEA_GSA, MessageType.NMEA_GSV, MessageType.NMEA_RMC, MessageType.NMEA_VTG, MessageType.NMEA_GRS,
 				MessageType.NMEA_GST, MessageType.NMEA_ZDA, MessageType.NMEA_GBS, MessageType.NMEA_DTM };
-		for (int i = 0; i < nmea.length; i++) {
-			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_NMEA, nmea[i], false);
+		for (int i = 0; i < nmeaAll.length; i++) {
+			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_NMEA, nmeaAll[i], false);
 			out.write(msgcfg.getByte());
 			out.flush();
 		}
-		//System.out.println("2");
+
+		int nmeaRequested[];
+		if (RequestedNmeaMsgs.isEmpty()) {
+			System.out.println(date1+" - "+COMPort+" - Disabling NMEA messages");
+		} else {
+			nmeaRequested = new int[RequestedNmeaMsgs.size()];
+			for (int n = 0; n < RequestedNmeaMsgs.size(); n++) {
+				MessageType msgtyp = new MessageType("NMEA", RequestedNmeaMsgs.get(n));
+				nmeaRequested[n] = msgtyp.getIdOut();
+			}
+			for (int i = 0; i < nmeaRequested.length; i++) {
+				System.out.println(date1+" - "+COMPort+" - Enabling NMEA "+RequestedNmeaMsgs.get(i)+" messages");
+				MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_NMEA, nmeaRequested[i], true);
+				out.write(msgcfg.getByte());
+				out.flush();
+			}
+		}
+
 		int pubx[] = { MessageType.PUBX_A, MessageType.PUBX_B, MessageType.PUBX_C, MessageType.PUBX_D };
 		for (int i = 0; i < pubx.length; i++) {
 			MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_PUBX, pubx[i], false);
 			out.write(msgcfg.getByte());
 			out.flush();
 		}
-		// outputStream.write(clear.getBytes());
-		// outputStream.flush();
-		
-		Date date = new Date();
-		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		String date1 = sdf1.format(date);
-		
+
 		System.out.println(date1+" - "+COMPort+" - Enabling RXM-RAW messages");
 		MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_RXM, MessageType.RXM_RAW, true);
 		out.write(msgcfg.getByte());
@@ -196,21 +212,21 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 				sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 				date1 = sdf1.format(date);
 				
-				if(this.MsgAidEphEnabled && curTS-aidEphTS > 30*1000){
+				if(this.MsgAidEphEnabled && curTS-aidEphTS >= 30*1000){
 					System.out.println(date1+" - "+COMPort+" - Polling AID-EPH message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidEphTS = curTS;
 				}
-				if(this.MsgAidHuiEnabled && curTS-aidHuiTS > 120*1000){
+				if(this.MsgAidHuiEnabled && curTS-aidHuiTS >= 120*1000){
 					System.out.println(date1+" - "+COMPort+" - Polling AID-HUI message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidHuiTS = curTS;
 				}
-				if (curTS-sysOutTS > 1*1000) {
+				if (curTS-sysOutTS >= 1*1000) {
 					System.out.println(date1+" - "+COMPort+" - Logging at "+in.getCurrentBps()+" Bps -- Total: "+in.getCounter()+" bytes");
 					sysOutTS = curTS;
 				}
@@ -276,6 +292,10 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	
 	public void enableAidHuiMsg(Boolean enableIon) {
 		this.MsgAidHuiEnabled = enableIon;
+	}
+	
+	public void enableNmeaMsg(List<String> nmeaList) {
+		this.RequestedNmeaMsgs = nmeaList;
 	}
 	
 	private String padCOMSpaces(String COMPortIn) {
