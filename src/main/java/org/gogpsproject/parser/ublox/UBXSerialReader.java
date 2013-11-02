@@ -70,7 +70,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		String date1 = sdf1.format(date);
 		
 		try {
-			fos_ubx = new FileOutputStream("./test/"+ COMPort+ "_" + date1 + ".ubx");
+			fos_ubx = new FileOutputStream("./test/"+ COMPort.trim()+ "_" + date1 + ".ubx");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -136,7 +136,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		String date1 = sdf1.format(date);
 		
 		try {
-			fos_tim = new FileOutputStream("./test/"+ COMPort+ "_" + date1 + "_systime.txt");
+			fos_tim = new FileOutputStream("./test/"+ COMPort.trim()+ "_" + date1 + "_systime.txt");
 			ps = new PrintStream(fos_tim);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
