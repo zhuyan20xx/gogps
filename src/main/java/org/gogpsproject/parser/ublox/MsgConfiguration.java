@@ -48,8 +48,8 @@ public class MsgConfiguration {
 		msg.addElement(new Integer(uBloxPrefix2));
 		msg.addElement(new Integer(0x06)); // CFG
 		msg.addElement(new Integer(0x01)); // MSG
-		msg.addElement(new Integer(3)); // lenght low
-		msg.addElement(new Integer(0)); // lenght hi
+		msg.addElement(new Integer(3)); // length low
+		msg.addElement(new Integer(0)); // length hi
 		msg.addElement(new Integer(classid));
 		msg.addElement(new Integer(msgval));
 		msg.addElement(new Integer(enable?0x01:0x00));
