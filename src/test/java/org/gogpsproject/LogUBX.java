@@ -54,6 +54,9 @@ public class LogUBX {
 				.metavar("NMEA_ID")
 				.nargs("+")
 				.help("Enable and log NMEA sentences. NMEA_ID must be replaced by an existing 3-letter NMEA sentence code (for example: -n GGA GSV RMC)");
+		parser.addArgument("-t", "--timetag")
+				.action(Arguments.storeTrue())
+				.help("Log the system time when RXM-RAW messages are received");
 		parser.addArgument("port").nargs("*")
 				.help("COM port(s) connected to u-blox receivers (e.g. COM3 COM10)");
 		Namespace ns = null;
@@ -78,6 +81,7 @@ public class LogUBX {
 				UBXSerialConnection ubxSerialConn = new UBXSerialConnection(portId, 9600);
 				ubxSerialConn.enableEphemeris(ns.getBoolean("ephemeris"));
 				ubxSerialConn.enableIonoParam(ns.getBoolean("ionosphere"));
+				ubxSerialConn.enableTimetag(ns.getBoolean("timetag"));
 				ubxSerialConn.enableNmeaSentences(ns.<String> getList("nmea"));
 				ubxSerialConn.init();
 			}

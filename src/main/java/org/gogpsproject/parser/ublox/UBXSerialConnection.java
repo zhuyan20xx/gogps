@@ -48,6 +48,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	private int speed;
 	private boolean enableEphemeris = true;
 	private boolean enableIonosphere = true;
+	private boolean enableTimetag = true;
 	private List<String> enableNmeaList;
 
 	public UBXSerialConnection(String portName, int speed) {
@@ -106,6 +107,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 				//ubxReader.setStreamEventListener(streamEventListener);
 				ubxReader.enableAidEphMsg(this.enableEphemeris);
 				ubxReader.enableAidHuiMsg(this.enableIonosphere);
+				ubxReader.enableSysTimeLog(this.enableTimetag);
 				ubxReader.enableNmeaMsg(this.enableNmeaList);
 				ubxReader.start();
 
@@ -208,5 +210,13 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 			} else {
 				this.enableNmeaList = nmeaList;
 			}
+	}
+
+	public void enableTimetag(Boolean enableTim) {
+		if(ubxReader!=null){
+			ubxReader.enableSysTimeLog(enableTim);
+		} else {
+			this.enableTimetag = enableTim;
+		}
 	}
 }

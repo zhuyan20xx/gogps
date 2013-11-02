@@ -55,6 +55,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	private String COMPort;
 	private boolean MsgAidEphEnabled = false;
 	private boolean MsgAidHuiEnabled = false;
+	private boolean SysTimeLogEnabled = false;
 	private List<String> RequestedNmeaMsgs;
 
 	public UBXSerialReader(InputStream in,OutputStream out, String COMPort) {
@@ -99,20 +100,23 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		}
 
 		int nmeaRequested[];
-		if (RequestedNmeaMsgs.isEmpty()) {
-			System.out.println(date1+" - "+COMPort+" - Disabling NMEA messages");
-		} else {
-			nmeaRequested = new int[RequestedNmeaMsgs.size()];
-			for (int n = 0; n < RequestedNmeaMsgs.size(); n++) {
-				MessageType msgtyp = new MessageType("NMEA", RequestedNmeaMsgs.get(n));
-				nmeaRequested[n] = msgtyp.getIdOut();
+		try {
+			if (RequestedNmeaMsgs.isEmpty()) {
+				System.out.println(date1+" - "+COMPort+" - Disabling NMEA messages");
+			} else {
+				nmeaRequested = new int[RequestedNmeaMsgs.size()];
+				for (int n = 0; n < RequestedNmeaMsgs.size(); n++) {
+					MessageType msgtyp = new MessageType("NMEA", RequestedNmeaMsgs.get(n));
+					nmeaRequested[n] = msgtyp.getIdOut();
+				}
+				for (int i = 0; i < nmeaRequested.length; i++) {
+					System.out.println(date1+" - "+COMPort+" - Enabling NMEA "+RequestedNmeaMsgs.get(i)+" messages");
+					MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_NMEA, nmeaRequested[i], true);
+					out.write(msgcfg.getByte());
+					out.flush();
+				}
 			}
-			for (int i = 0; i < nmeaRequested.length; i++) {
-				System.out.println(date1+" - "+COMPort+" - Enabling NMEA "+RequestedNmeaMsgs.get(i)+" messages");
-				MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_NMEA, nmeaRequested[i], true);
-				out.write(msgcfg.getByte());
-				out.flush();
-			}
+		} catch (NullPointerException e) {
 		}
 
 		int pubx[] = { MessageType.PUBX_A, MessageType.PUBX_B, MessageType.PUBX_C, MessageType.PUBX_D };
@@ -146,23 +150,26 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		MsgConfiguration msgcfg = null;
 		FileOutputStream fos_tim = null;
 		PrintStream ps = null;
-		
+
 		Date date = new Date();
-		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 		String date1 = sdf1.format(date);
+		String date2 = sdf2.format(date);
 		
-		try {
-			fos_tim = new FileOutputStream("./test/"+ COMPort.trim()+ "_" + date1 + "_systime.txt");
-			ps = new PrintStream(fos_tim);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		if (this.SysTimeLogEnabled) {
+			System.out.println(date1+" - "+COMPort+" - System time logging enabled");
+			try {
+				fos_tim = new FileOutputStream("./test/"+ COMPort.trim()+ "_" + date2 + "_systime.txt");
+				ps = new PrintStream(fos_tim);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		} else {
+			System.out.println(date1+" - "+COMPort+" - System time logging disabled");
 		}
 
 		try {
-			date = new Date();
-			sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-			date1 = sdf1.format(date);
-			
 			int msg[] = {};
 			if (this.MsgAidHuiEnabled) {
 				System.out.println(date1+" - "+COMPort+" - AID-HUI message polling enabled");
@@ -185,7 +192,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 						if(data == 0xB5){
 							Object o = reader.readMessage();
 							try {
-								if(o.getClass().toString().equals("class org.gogpsproject.Observations")) {
+								if(this.SysTimeLogEnabled && o.getClass().toString().equals("class org.gogpsproject.Observations")) {
 									date = new Date();
 									sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 									date1 = sdf1.format(date);
@@ -292,6 +299,10 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	
 	public void enableAidHuiMsg(Boolean enableIon) {
 		this.MsgAidHuiEnabled = enableIon;
+	}
+	
+	public void enableSysTimeLog(Boolean enableTim) {
+		this.SysTimeLogEnabled = enableTim;
 	}
 	
 	public void enableNmeaMsg(List<String> nmeaList) {
