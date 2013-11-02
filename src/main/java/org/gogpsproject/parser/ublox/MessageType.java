@@ -149,6 +149,10 @@ public class MessageType {
 	public MessageType(int mclass, int msgtype) {
 		getMsg(mclass, msgtype);
 	}
+	
+	public MessageType(String mclass, String msgtype) {
+		getMsg(mclass, msgtype);
+	}
 
 	public int getClassOut() {
 		return classOut;
@@ -272,7 +276,7 @@ public class MessageType {
 				}
 
 			case CLASS_CFG:
-				setClassOut(06);
+				setClassOut(0x06);
 				switch (msgtype) {
 				case CFG_PRT:
 					setIdOut(0x00);
@@ -479,6 +483,324 @@ public class MessageType {
 					return 0;
 				case PUBX_D:
 					setIdOut(0x04);
+					return 0;
+				}
+				// return 0;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return 1;
+
+	}
+	
+	private int getMsg(String mclass, String msgtype) {
+		try {
+			if (mclass.equals("NAV")) {
+				setClassOut(CLASS_NAV);
+				if (msgtype.equals("POSECEF")) {
+					setIdOut(NAV_POSECEF);
+					return 0;
+				} else if (msgtype.equals("POSLLH")) {
+					setIdOut(NAV_POSLLH);
+					return 0;
+				} else if (msgtype.equals("POSUTM")) {
+					setIdOut(NAV_POSUTM);
+					return 0;
+				} else if (msgtype.equals("DOP")) {
+					setIdOut(NAV_DOP);
+					return 0;
+				} else if (msgtype.equals("STATUS")) {
+					setIdOut(NAV_STATUS);
+					return 0;
+				} else if (msgtype.equals("SOL")) {
+					setIdOut(NAV_SOL);
+					return 0;
+				} else if (msgtype.equals("VELECEF")) {
+					setIdOut(NAV_VELECEF);
+					return 0;
+				} else if (msgtype.equals("VELNED")) {
+					setIdOut(NAV_VELNED);
+					return 0;
+				} else if (msgtype.equals("TIMEGPS")) {
+					setIdOut(NAV_TIMEGPS);
+					return 0;
+				} else if (msgtype.equals("TIMEUTC")) {
+					setIdOut(NAV_TIMEUTC);
+					return 0;
+				} else if (msgtype.equals("CLOCK")) {
+					setIdOut(NAV_CLOCK);
+					return 0;
+				} else if (msgtype.equals("SVINFO")) {
+					setIdOut(NAV_SVINFO);
+					return 0;
+				} else if (msgtype.equals("DGPS")) {
+					setIdOut(NAV_DGPS);
+					return 0;
+				} else if (msgtype.equals("SBAS")) {
+					setIdOut(NAV_SBAS);
+					return 0;
+				} else if (msgtype.equals("EKFSTATUS")) {
+					setIdOut(NAV_EKFSTATUS);
+					return 0;
+				}
+			} else if (mclass.equals("RXM")) {
+				setClassOut(CLASS_RXM);
+				if (msgtype.equals("RAW")) {
+					setIdOut(RXM_RAW);
+					return 0;
+				} else if (msgtype.equals("SVSI")) {
+					setIdOut(RXM_SVSI);
+					return 0;
+				} else if (msgtype.equals("SFRB")) {
+					setIdOut(RXM_SFRB);
+					return 0;
+				} else if (msgtype.equals("ALM")) {
+					setIdOut(RXM_ALM);
+					return 0;
+				} else if (msgtype.equals("EPH")) {
+					setIdOut(RXM_EPH);
+					return 0;
+				} else if (msgtype.equals("POSREQ")) {
+					setIdOut(RXM_POSREQ);
+					return 0;
+				} else if (msgtype.equals("PMREQ")) {
+					setIdOut(RXM_PMREQ);
+					return 0;
+				}
+
+			} else if (mclass.equals("INF")) {
+				setClassOut(CLASS_INF);
+				if (msgtype.equals("ERROR")) {
+					setIdOut(INF_ERROR);
+					return 0;
+				} else if (msgtype.equals("WARNING")) {
+					setIdOut(INF_WARNING);
+					return 0;
+				} else if (msgtype.equals("NOTICE")) {
+					setIdOut(INF_NOTICE);
+					return 0;
+				} else if (msgtype.equals("TEST")) {
+					setIdOut(INF_TEST);
+					return 0;
+				} else if (msgtype.equals("DEBUG")) {
+					setIdOut(INF_DEBUG);
+					return 0;
+				} else if (msgtype.equals("USER")) {
+					setIdOut(INF_USER);
+					return 0;
+				}
+			} else if (mclass.equals("ACK")) {
+				setClassOut(CLASS_ACK);
+				if (msgtype.equals("ACK")) {
+					setIdOut(ACK_ACK);
+					return 0;
+				} else if (msgtype.equals("NAK")) {
+					setIdOut(ACK_NAK);
+					return 0;
+				}
+
+			} else if (mclass.equals("CFG")) {
+				setClassOut(CLASS_CFG);
+				if (msgtype.equals("PRT")) {
+					setIdOut(CFG_PRT);
+					return 0;
+				} else if (msgtype.equals("USB")) {
+					setIdOut(CFG_USB);
+					return 0;
+				} else if (msgtype.equals("MSG")) {
+					setIdOut(CFG_MSG);
+					return 0;
+				} else if (msgtype.equals("NMEA")) {
+					setIdOut(CFG_NMEA);
+					return 0;
+				} else if (msgtype.equals("RATE")) {
+					setIdOut(CFG_RATE);
+					return 0;
+				} else if (msgtype.equals("CFG")) {
+					setIdOut(CFG_CFG);
+					return 0;
+				} else if (msgtype.equals("TP")) {
+					setIdOut(CFG_TP);
+					return 0;
+				} else if (msgtype.equals("NAV2")) {
+					setIdOut(CFG_NAV2);
+					return 0;
+				} else if (msgtype.equals("DAT")) {
+					setIdOut(CFG_DAT);
+					return 0;
+				} else if (msgtype.equals("INF")) {
+					setIdOut(CFG_INF);
+					return 0;
+				} else if (msgtype.equals("RST")) {
+					setIdOut(CFG_RST);
+					return 0;
+				} else if (msgtype.equals("RXM")) {
+					setIdOut(CFG_RXM);
+					return 0;
+				} else if (msgtype.equals("ANT")) {
+					setIdOut(CFG_ANT);
+					return 0;
+				} else if (msgtype.equals("FXN")) {
+					setIdOut(CFG_FXN);
+					return 0;
+				} else if (msgtype.equals("SBAS")) {
+					setIdOut(CFG_SBAS);
+					return 0;
+				} else if (msgtype.equals("LIC")) {
+					setIdOut(CFG_LIC);
+					return 0;
+				} else if (msgtype.equals("TM")) {
+					setIdOut(CFG_TM);
+					return 0;
+				} else if (msgtype.equals("TM2")) {
+					setIdOut(CFG_TM2);
+					return 0;
+				} else if (msgtype.equals("TMODE")) {
+					setIdOut(CFG_TMODE);
+					return 0;
+				} else if (msgtype.equals("EKF")) {
+					setIdOut(CFG_EKF);
+					return 0;
+				}
+
+			} else if (mclass.equals("UPD")) {
+				setClassOut(CLASS_UPD);
+				if (msgtype.equals("DOWNL")) {
+					setIdOut(UPD_DOWNL);
+					return 0;
+				} else if (msgtype.equals("UPLOAD")) {
+					setIdOut(UPD_UPLOAD);
+					return 0;
+				} else if (msgtype.equals("EXEC")) {
+					setIdOut(UPD_EXEC);
+					return 0;
+				} else if (msgtype.equals("MEMCPY")) {
+					setIdOut(UPD_MEMCPY);
+					return 0;
+				}
+
+			} else if (mclass.equals("MON")) {
+				setClassOut(CLASS_MON);
+				if (msgtype.equals("SCHD")) {
+					setIdOut(MON_SCHD);
+					return 0;
+				} else if (msgtype.equals("IO")) {
+					setIdOut(MON_IO);
+					return 0;
+				} else if (msgtype.equals("MSGPP")) {
+					setIdOut(MON_MSGPP);
+					return 0;
+				} else if (msgtype.equals("RXBUF")) {
+					setIdOut(MON_RXBUF);
+					return 0;
+				} else if (msgtype.equals("TXBUF")) {
+					setIdOut(MON_TXBUF);
+					return 0;
+				} else if (msgtype.equals("HW")) {
+					setIdOut(MON_HW);
+					return 0;
+				} else if (msgtype.equals("IPC")) {
+					setIdOut(MON_IPC);
+					return 0;
+				} else if (msgtype.equals("USB")) {
+					setIdOut(MON_USB);
+					return 0;
+				} else if (msgtype.equals("VER")) {
+					setIdOut(MON_VER);
+					return 0;
+				} else if (msgtype.equals("EXCEPT")) {
+					setIdOut(MON_EXCEPT);
+					return 0;
+				}
+
+			} else if (mclass.equals("AID")) {
+				setClassOut(CLASS_AID);
+				if (msgtype.equals("REQ")) {
+					setIdOut(AID_REQ);
+					return 0;
+				} else if (msgtype.equals("DATA")) {
+					setIdOut(AID_DATA);
+					return 0;
+				} else if (msgtype.equals("INI")) {
+					setIdOut(AID_INI);
+					return 0;
+				} else if (msgtype.equals("HUI")) {
+					setIdOut(AID_HUI);
+					return 0;
+				} else if (msgtype.equals("ALM")) {
+					setIdOut(AID_ALM);
+					return 0;
+				} else if (msgtype.equals("EPH")) {
+					setIdOut(AID_EPH);
+					return 0;
+				}
+
+			} else if (mclass.equals("TIM")) {
+				setClassOut(CLASS_TIM);
+				if (msgtype.equals("TM")) {
+					setIdOut(TIM_TM);
+					return 0;
+				} else if (msgtype.equals("TM2")) {
+					setIdOut(TIM_TM2);
+					return 0;
+				} else if (msgtype.equals("TP")) {
+					setIdOut(TIM_TP);
+					return 0;
+				} else if (msgtype.equals("SVIN")) {
+					setIdOut(TIM_SVIN);
+					return 0;
+				}
+			} else if (mclass.equals("NMEA")) {
+				setClassOut(CLASS_NMEA);
+				if (msgtype.equals("GGA")) {
+					setIdOut(NMEA_GGA);
+					return 0;
+				} else if (msgtype.equals("GLL")) {
+					setIdOut(NMEA_GLL);
+					return 0;
+				} else if (msgtype.equals("GSA")) {
+					setIdOut(NMEA_GSA);
+					return 0;
+				} else if (msgtype.equals("GSV")) {
+					setIdOut(NMEA_GSV);
+					return 0;
+				} else if (msgtype.equals("RMC")) {
+					setIdOut(NMEA_RMC);
+					return 0;
+				} else if (msgtype.equals("VTG")) {
+					setIdOut(NMEA_VTG);
+					return 0;
+				} else if (msgtype.equals("GRS")) {
+					setIdOut(NMEA_GRS);
+					return 0;
+				} else if (msgtype.equals("GST")) {
+					setIdOut(NMEA_GST);
+					return 0;
+				} else if (msgtype.equals("ZDA")) {
+					setIdOut(NMEA_ZDA);
+					return 0;
+				} else if (msgtype.equals("GBS")) {
+					setIdOut(NMEA_GBS);
+					return 0;
+				} else if (msgtype.equals("DTM")) {
+					setIdOut(NMEA_DTM);
+					return 0;
+				}
+
+			} else if (mclass.equals("PUBX")) {
+				setClassOut(CLASS_PUBX);
+				if (msgtype.equals("A")) {
+					setIdOut(PUBX_A);
+					return 0;
+				} else if (msgtype.equals("B")) {
+					setIdOut(PUBX_B);
+					return 0;
+				} else if (msgtype.equals("C")) {
+					setIdOut(PUBX_C);
+					return 0;
+				} else if (msgtype.equals("D")) {
+					setIdOut(PUBX_D);
 					return 0;
 				}
 				// return 0;

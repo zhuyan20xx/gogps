@@ -27,13 +27,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Vector;
 
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.StreamResource;
 
-@SuppressWarnings("restriction")
 public class UBXSerialConnection  implements StreamResource, StreamEventProducer{
 	private InputStream inputStream;
 	private OutputStream outputStream;
@@ -48,6 +48,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	private int speed;
 	private boolean enableEphemeris = true;
 	private boolean enableIonosphere = true;
+	private List<String> enableNmeaList;
 
 	public UBXSerialConnection(String portName, int speed) {
 		this.portName = portName;
@@ -105,6 +106,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 				//ubxReader.setStreamEventListener(streamEventListener);
 				ubxReader.enableAidEphMsg(this.enableEphemeris);
 				ubxReader.enableAidHuiMsg(this.enableIonosphere);
+				ubxReader.enableNmeaMsg(this.enableNmeaList);
 				ubxReader.start();
 
 				connected = true;
@@ -198,5 +200,13 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 		} else {
 			this.enableIonosphere = enableIon;
 		}
+	}
+	
+	public void enableNmeaSentences(List<String> nmeaList) {
+			if(ubxReader!=null){
+				ubxReader.enableNmeaMsg(nmeaList);
+			} else {
+				this.enableNmeaList = nmeaList;
+			}
 	}
 }
