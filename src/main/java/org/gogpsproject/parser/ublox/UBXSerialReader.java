@@ -105,7 +105,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
 		
-		System.out.println(date1+" - "+COMPort+" - Setting measurement rate at "+measRate+" Hz");
+		System.out.println(date1+" - "+COMPort+" - Measurement rate set at "+measRate+" Hz");
 		RateConfiguration ratecfg = new RateConfiguration(1000/measRate, 1, 1);
 		out.write(ratecfg.getByte());
 		out.flush();
