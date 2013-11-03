@@ -19,6 +19,7 @@
  */
 package org.gogpsproject.parser.ublox;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,6 +59,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	private boolean MsgAidHuiEnabled = false;
 	private boolean SysTimeLogEnabled = false;
 	private List<String> RequestedNmeaMsgs;
+	private String dateFile;
+	private String outputDir = "./out";
 
 	public UBXSerialReader(InputStream in,OutputStream out, String COMPort) {
 		this(in,out,COMPort,null);
@@ -68,13 +71,23 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		
 		FileOutputStream fos_ubx= null;
 		COMPort = padCOMSpaces(COMPort);
+
+		File file = new File(outputDir);
+		if(!file.exists() || !file.isDirectory()){
+		    boolean wasDirectoryMade = file.mkdirs();
+		    if(wasDirectoryMade)System.out.println("Directory "+outputDir+" created");
+		    else System.out.println("Could not create directory "+outputDir);
+		}
 		
 		Date date = new Date();
-		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
+		SimpleDateFormat sdfFile = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		dateFile = sdfFile.format(date);
 		
 		try {
-			fos_ubx = new FileOutputStream("./test/"+ COMPort.trim()+ "_" + date1 + ".ubx");
+			System.out.println(date1+" - "+COMPort+" - Logging stream in "+outputDir+"/"+ COMPort.trim()+ "_" + dateFile + ".ubx");
+			fos_ubx = new FileOutputStream(outputDir+"/"+ COMPort.trim()+ "_" + dateFile + ".ubx");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -108,7 +121,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		int nmeaRequested[];
 		try {
 			if (RequestedNmeaMsgs.isEmpty()) {
-				System.out.println(date1+" - "+COMPort+" - Disabling NMEA messages");
+				System.out.println(date1+" - "+COMPort+" - NMEA messages disabled");
 			} else {
 				nmeaRequested = new int[RequestedNmeaMsgs.size()];
 				for (int n = 0; n < RequestedNmeaMsgs.size(); n++) {
@@ -116,7 +129,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 					nmeaRequested[n] = msgtyp.getIdOut();
 				}
 				for (int i = 0; i < nmeaRequested.length; i++) {
-					System.out.println(date1+" - "+COMPort+" - Enabling NMEA "+RequestedNmeaMsgs.get(i)+" messages");
+					System.out.println(date1+" - "+COMPort+" - NMEA "+RequestedNmeaMsgs.get(i)+" messages enabled");
 					MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_NMEA, nmeaRequested[i], true);
 					out.write(msgcfg.getByte());
 					out.flush();
@@ -132,7 +145,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			out.flush();
 		}
 
-		System.out.println(date1+" - "+COMPort+" - Enabling RXM-RAW messages");
+		System.out.println(date1+" - "+COMPort+" - RXM-RAW messages enabled");
 		MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_RXM, MessageType.RXM_RAW, true);
 		out.write(msgcfg.getByte());
 		out.flush();
@@ -159,14 +172,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-		SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 		String date1 = sdf1.format(date);
-		String date2 = sdf2.format(date);
 		
 		if (this.SysTimeLogEnabled) {
 			System.out.println(date1+" - "+COMPort+" - System time logging enabled");
 			try {
-				fos_tim = new FileOutputStream("./test/"+ COMPort.trim()+ "_" + date2 + "_systime.txt");
+				System.out.println(date1+" - "+COMPort+" - Logging system time in "+outputDir+"/"+ COMPort.trim()+ "_" + dateFile + "_systime.txt");
+				fos_tim = new FileOutputStream(outputDir+"/"+ COMPort.trim()+ "_" + dateFile + "_systime.txt");
 				ps = new PrintStream(fos_tim);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
