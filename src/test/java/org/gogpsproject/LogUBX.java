@@ -43,6 +43,10 @@ public class LogUBX {
 		parser.addArgument("-s", "--showCOMports")
 				.action(Arguments.storeTrue())
 				.help("Display available COM ports");
+		parser.addArgument("-r", "--rate")
+		.choices(1, 2, 5, 10).setDefault(1)
+		.type(Integer.class)
+		.help("Set the measurement rate (in Hz)");
 		parser.addArgument("-e", "--ephemeris")
 				.action(Arguments.storeTrue())
 				.help("Request and log ephemeris (AID-EPH message)");
@@ -50,7 +54,7 @@ public class LogUBX {
 				.action(Arguments.storeTrue())
 				.help("Request and log ionospheric parameters (AID-HUI message)");
 		parser.addArgument("-n", "--nmea")
-				.choices("GGA", "GSV", "RMC", "GSA", "GLL", "GST", "GRS", "GBS", "DTM", "VTG", "ZDA", "TXT").setDefault()
+				.choices("GGA", "GSV", "RMC", "GSA", "GLL", "GST", "GRS", "GBS", "DTM", "VTG", "ZDA").setDefault()
 				.metavar("NMEA_ID")
 				.nargs("+")
 				.help("Enable and log NMEA sentences. NMEA_ID must be replaced by an existing 3-letter NMEA sentence code (for example: -n GGA GSV RMC)");
@@ -79,6 +83,7 @@ public class LogUBX {
 			
 			for (String portId : ns.<String> getList("port")) {
 				UBXSerialConnection ubxSerialConn = new UBXSerialConnection(portId, 9600);
+				ubxSerialConn.setMeasurementRate((Integer) ns.get("rate"));
 				ubxSerialConn.enableEphemeris(ns.getBoolean("ephemeris"));
 				ubxSerialConn.enableIonoParam(ns.getBoolean("ionosphere"));
 				ubxSerialConn.enableTimetag(ns.getBoolean("timetag"));
