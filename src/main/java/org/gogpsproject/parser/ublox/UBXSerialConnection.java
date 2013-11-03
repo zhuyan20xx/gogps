@@ -46,6 +46,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 
 	private String portName;
 	private int speed;
+	private int setMeasurementRate = 1;
 	private boolean enableEphemeris = true;
 	private boolean enableIonosphere = true;
 	private boolean enableTimetag = true;
@@ -105,6 +106,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 
 				ubxReader = new UBXSerialReader(inputStream,outputStream,portName);
 				//ubxReader.setStreamEventListener(streamEventListener);
+				ubxReader.setRate(this.setMeasurementRate);
 				ubxReader.enableAidEphMsg(this.enableEphemeris);
 				ubxReader.enableAidHuiMsg(this.enableIonosphere);
 				ubxReader.enableSysTimeLog(this.enableTimetag);
@@ -186,6 +188,14 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	public void removeStreamEventListener(
 			StreamEventListener streamEventListener) {
 		ubxReader.removeStreamEventListener(streamEventListener);
+	}
+	
+	public void setMeasurementRate(int measRate) {
+		if(ubxReader!=null){
+			ubxReader.setRate(measRate);
+		} else {
+			this.setMeasurementRate = measRate;
+		}
 	}
 
 	public void enableEphemeris(Boolean enableEph) {

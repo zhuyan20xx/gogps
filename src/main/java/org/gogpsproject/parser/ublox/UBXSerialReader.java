@@ -53,6 +53,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	//private StreamEventListener streamEventListener;
 	private UBXReader reader;
 	private String COMPort;
+	private int measRate = 1;
 	private boolean MsgAidEphEnabled = false;
 	private boolean MsgAidHuiEnabled = false;
 	private boolean SysTimeLogEnabled = false;
@@ -90,6 +91,11 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
+		
+		System.out.println(date1+" - "+COMPort+" - Setting measurement rate at "+measRate+" Hz");
+		RateConfiguration ratecfg = new RateConfiguration(1000/measRate, 1, 1);
+		out.write(ratecfg.getByte());
+		out.flush();
 
 		int nmeaAll[] = { MessageType.NMEA_GGA, MessageType.NMEA_GLL, MessageType.NMEA_GSA, MessageType.NMEA_GSV, MessageType.NMEA_RMC, MessageType.NMEA_VTG, MessageType.NMEA_GRS,
 				MessageType.NMEA_GST, MessageType.NMEA_ZDA, MessageType.NMEA_GBS, MessageType.NMEA_DTM };
@@ -291,6 +297,10 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		if(streamEventListeners.contains(streamEventListener))
 			this.streamEventListeners.remove(streamEventListener);
 		this.reader.removeStreamEventListener(streamEventListener);
+	}
+	
+	public void setRate(int measRate) {
+		this.measRate = measRate;
 	}
 	
 	public void enableAidEphMsg(Boolean enableEph) {
