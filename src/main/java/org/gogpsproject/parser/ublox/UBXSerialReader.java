@@ -252,7 +252,12 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 					aidHuiTS = curTS;
 				}
 				if (curTS-sysOutTS >= 1*1000) {
-					System.out.println(date1+" - "+COMPort+" - Logging at "+in.getCurrentBps()+" Bps -- Total: "+in.getCounter()+" bytes");
+					int bps = in.getCurrentBps();
+					if (bps != 0) {
+						System.out.println(date1+" - "+COMPort+" - Logging at "+String.format("%4d", bps)+" Bps -- Total: "+in.getCounter()+" bytes");
+					} else {
+						System.out.println(date1+" - "+COMPort+" - Started logging...  -- Total: "+in.getCounter()+" bytes");
+					}
 					sysOutTS = curTS;
 				}
 			}
