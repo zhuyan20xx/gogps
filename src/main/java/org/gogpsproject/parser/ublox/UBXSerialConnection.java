@@ -47,8 +47,8 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	private String portName;
 	private int speed;
 	private int setMeasurementRate = 1;
-	private boolean enableEphemeris = true;
-	private boolean enableIonosphere = true;
+	private int setEphemerisRate = 30;
+	private int setIonosphereRate = 120;
 	private boolean enableTimetag = true;
 	private List<String> enableNmeaList;
 
@@ -107,8 +107,8 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 				ubxReader = new UBXSerialReader(inputStream,outputStream,portName);
 				//ubxReader.setStreamEventListener(streamEventListener);
 				ubxReader.setRate(this.setMeasurementRate);
-				ubxReader.enableAidEphMsg(this.enableEphemeris);
-				ubxReader.enableAidHuiMsg(this.enableIonosphere);
+				ubxReader.enableAidEphMsg(this.setEphemerisRate);
+				ubxReader.enableAidHuiMsg(this.setIonosphereRate);
 				ubxReader.enableSysTimeLog(this.enableTimetag);
 				ubxReader.enableNmeaMsg(this.enableNmeaList);
 				ubxReader.start();
@@ -198,19 +198,19 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 		}
 	}
 
-	public void enableEphemeris(Boolean enableEph) {
+	public void enableEphemeris(Integer ephRate) {
 		if(ubxReader!=null){
-			ubxReader.enableAidEphMsg(enableEph);
+			ubxReader.enableAidEphMsg(ephRate);
 		} else {
-			this.enableEphemeris = enableEph;
+			this.setEphemerisRate = ephRate;
 		}
 	}
 
-	public void enableIonoParam(Boolean enableIon) {
+	public void enableIonoParam(Integer ionRate) {
 		if(ubxReader!=null){
-			ubxReader.enableAidHuiMsg(enableIon);
+			ubxReader.enableAidHuiMsg(ionRate);
 		} else {
-			this.enableIonosphere = enableIon;
+			this.setIonosphereRate = ionRate;
 		}
 	}
 	
