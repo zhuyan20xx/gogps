@@ -189,13 +189,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 
 		try {
 			int msg[] = {};
-			if (msgAidHuiRate != 0) {
+			if (msgAidHuiRate > 0) {
 				System.out.println(date1+" - "+COMPort+" - AID-HUI message polling enabled (rate: "+msgAidHuiRate+"s)");
 				msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 				out.write(msgcfg.getByte());
 				out.flush();
 			}
-			if (msgAidEphRate != 0) {
+			if (msgAidEphRate > 0) {
 				System.out.println(date1+" - "+COMPort+" - AID-EPH message polling enabled (rate: "+msgAidEphRate+"s)");
 				msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 				out.write(msgcfg.getByte());
@@ -237,14 +237,14 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 				sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 				date1 = sdf1.format(date);
 				
-				if(msgAidEphRate != 0 && curTS-aidEphTS >= msgAidEphRate*1000){
+				if(msgAidEphRate > 0 && curTS-aidEphTS >= msgAidEphRate*1000){
 					System.out.println(date1+" - "+COMPort+" - Polling AID-EPH message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidEphTS = curTS;
 				}
-				if(msgAidHuiRate != 0 && curTS-aidHuiTS >= msgAidHuiRate*1000){
+				if(msgAidHuiRate > 0 && curTS-aidHuiTS >= msgAidHuiRate*1000){
 					System.out.println(date1+" - "+COMPort+" - Polling AID-HUI message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 					out.write(msgcfg.getByte());
