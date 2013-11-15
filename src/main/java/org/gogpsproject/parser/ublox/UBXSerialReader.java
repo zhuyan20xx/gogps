@@ -190,13 +190,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		try {
 			int msg[] = {};
 			if (msgAidHuiRate != 0) {
-				System.out.println(date1+" - "+COMPort+" - AID-HUI message polling enabled");
+				System.out.println(date1+" - "+COMPort+" - AID-HUI message polling enabled (rate: "+msgAidHuiRate+"s)");
 				msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 				out.write(msgcfg.getByte());
 				out.flush();
 			}
 			if (msgAidEphRate != 0) {
-				System.out.println(date1+" - "+COMPort+" - AID-EPH message polling enabled");
+				System.out.println(date1+" - "+COMPort+" - AID-EPH message polling enabled (rate: "+msgAidEphRate+"s)");
 				msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 				out.write(msgcfg.getByte());
 				out.flush();
@@ -256,7 +256,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 					if (bps != 0) {
 						System.out.println(date1+" - "+COMPort+" - Logging at "+String.format("%4d", bps)+" Bps -- Total: "+in.getCounter()+" bytes");
 					} else {
-						System.out.println(date1+" - "+COMPort+" - Started logging...  -- Total: "+in.getCounter()+" bytes");
+						System.out.println(date1+" - "+COMPort+" - Log starting...     -- Total: "+in.getCounter()+" bytes");
 					}
 					sysOutTS = curTS;
 				}
