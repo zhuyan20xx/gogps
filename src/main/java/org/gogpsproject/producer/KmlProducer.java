@@ -25,6 +25,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import org.gogpsproject.PositionConsumer;
 import org.gogpsproject.RoverPosition;
@@ -38,10 +39,7 @@ import org.gogpsproject.RoverPosition;
 
 public class KmlProducer implements PositionConsumer, Runnable {
 
-	/** The f. */
 	private static DecimalFormat f = new DecimalFormat("0.000");
-
-	/** The g. */
 	private static DecimalFormat g = new DecimalFormat("0.00000000");
 
 	private SimpleDateFormat timeKML = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -75,6 +73,8 @@ public class KmlProducer implements PositionConsumer, Runnable {
 		this.goodDopThreshold = goodDopTreshold;
 		this.timeSampleDelaySec = timeSampleDelaySec;
 
+		Locale.setDefault(new Locale("en", "US"));
+
 		goodDop = false;
 		FileWriter out = startOfTrack();
 		if(out!=null){
@@ -98,8 +98,6 @@ public class KmlProducer implements PositionConsumer, Runnable {
 				+"V:"+ coord.getvDop()+" ");//geod.get(2)
 
 		positions.add(coord);
-
-
 	}
 
 
