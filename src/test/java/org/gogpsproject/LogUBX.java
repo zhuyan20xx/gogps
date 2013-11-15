@@ -19,6 +19,8 @@
  *
  */
 package org.gogpsproject;
+import java.util.Vector;
+
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -76,13 +78,22 @@ public class LogUBX {
 		}
 
 		try{
-			
+
 			if ((Boolean) ns.get("showCOMports")) {
-				UBXSerialConnection.getPortList();
+				UBXSerialConnection.getPortList(true);
 				return;
 			} else if (ns.<String> getList("port").isEmpty()) {
 				parser.printHelp();
 				return;
+			}
+			
+			Vector<String> availablePorts = UBXSerialConnection.getPortList(false);
+			for (String portId : ns.<String> getList("port")) {
+				if (!availablePorts.contains(portId)) {
+					System.out.println("Error: port "+portId+" is not available.");
+					UBXSerialConnection.getPortList(true);
+					return;
+				}
 			}
 			
 			for (String portId : ns.<String> getList("port")) {

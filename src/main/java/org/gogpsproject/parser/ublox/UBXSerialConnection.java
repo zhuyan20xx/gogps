@@ -58,7 +58,7 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	}
 
 	@SuppressWarnings("unchecked")
-	public static Vector<String> getPortList() {
+	public static Vector<String> getPortList(boolean showList) {
 		Enumeration<CommPortIdentifier> portList;
 		Vector<String> portVect = new Vector<String>();
 		portList = CommPortIdentifier.getPortIdentifiers();
@@ -70,9 +70,11 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 				portVect.add(portId.getName());
 			}
 		}
-		System.out.println("Found the following ports:");
-		for (int i = 0; i < portVect.size(); i++) {
-			System.out.println(portVect.elementAt(i));
+		if (showList) {
+			System.out.println("Found the following ports:");
+			for (int i = 0; i < portVect.size(); i++) {
+				System.out.println(portVect.elementAt(i));
+			}
 		}
 
 		return portVect;

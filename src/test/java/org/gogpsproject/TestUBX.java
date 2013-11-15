@@ -86,7 +86,7 @@ public class TestUBX implements StreamEventListener{
 	public static void main(String[] args) {
 
 
-		Vector<String> ports = UBXSerialConnection.getPortList();
+		Vector<String> ports = UBXSerialConnection.getPortList(false);
 		if (ports.size() > 0) {
 			System.out.println("the following serial ports have been detected:");
 		} else {
