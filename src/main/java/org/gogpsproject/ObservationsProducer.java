@@ -27,6 +27,6 @@ package org.gogpsproject;
 public interface ObservationsProducer extends StreamResource {
 
 	public Observations getCurrentObservations();
-	public Observations nextObservations();
+	public Observations getNextObservations();
 	public Coordinates getDefinedPosition();
 }

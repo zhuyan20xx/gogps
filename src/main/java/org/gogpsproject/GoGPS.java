@@ -203,7 +203,7 @@ public class GoGPS implements Runnable{
 		roverPos = new ReceiverPosition(this);
 
 		try {
-			Observations obsR = roverIn.nextObservations();
+			Observations obsR = roverIn.getNextObservations();
 			while (obsR!=null) { // buffStreamObs.ready()
 
 				//try{
@@ -251,7 +251,7 @@ public class GoGPS implements Runnable{
 //					System.out.println("Could not complete due to "+e);
 //					e.printStackTrace();
 //				}
-				obsR = roverIn.nextObservations();
+				obsR = roverIn.getNextObservations();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -271,23 +271,23 @@ public class GoGPS implements Runnable{
 		roverPos = new ReceiverPosition(this);
 
 		try {
-			Observations obsR = roverIn.nextObservations();
-			Observations obsM = masterIn.nextObservations();
+			Observations obsR = roverIn.getNextObservations();
+			Observations obsM = masterIn.getNextObservations();
 
 			while (obsR != null && obsM != null) {
 
 				// Discard master epochs if correspondent rover epochs are
 				// not available
-				long obsRtime = obsR.getRefTime().getGpsTime();
-				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getGpsTime()) {
-					obsM = masterIn.nextObservations();
+				long obsRtime = obsR.getRefTime().getRoundedGpsTime();
+				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getRoundedGpsTime()) {
+					obsM = masterIn.getNextObservations();
 				}
 
 				// Discard rover epochs if correspondent master epochs are
 				// not available
-				long obsMtime = obsM.getRefTime().getGpsTime();
-				while (obsM!=null && obsR!=null && obsR.getRefTime().getGpsTime() < obsMtime) {
-					obsR = roverIn.nextObservations();
+				long obsMtime = obsM.getRefTime().getRoundedGpsTime();
+				while (obsM!=null && obsR!=null && obsR.getRefTime().getRoundedGpsTime() < obsMtime) {
+					obsR = roverIn.getNextObservations();
 				}
 
 
@@ -332,8 +332,8 @@ public class GoGPS implements Runnable{
 					}
 				}
 				// get next epoch
-				obsR = roverIn.nextObservations();
-				obsM = masterIn.nextObservations();
+				obsR = roverIn.getNextObservations();
+				obsM = masterIn.getNextObservations();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -364,8 +364,8 @@ public class GoGPS implements Runnable{
 			timeRead = System.currentTimeMillis() - timeRead;
 			depRead = depRead + timeRead;
 
-			Observations obsR = roverIn.nextObservations();
-			Observations obsM = masterIn.nextObservations();
+			Observations obsR = roverIn.getNextObservations();
+			Observations obsM = masterIn.getNextObservations();
 
 			while (obsR != null && obsM != null) {
 				if(debug)System.out.println("R:"+obsR.getRefTime().getMsec()+" M:"+obsM.getRefTime().getMsec());
@@ -376,12 +376,12 @@ public class GoGPS implements Runnable{
 				// not available
 //				Observations obsR = roverIn.nextObservations();
 //				Observations obsM = masterIn.nextObservations();
-				long obsRtime = obsR.getRefTime().getGpsTime();
+				long obsRtime = obsR.getRefTime().getRoundedGpsTime();
 				//System.out.println("look for M "+obsRtime);
-				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getGpsTime()) {
+				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getRoundedGpsTime()) {
 //					masterIn.skipDataObs();
 //					masterIn.parseEpochObs();
-					obsM = masterIn.nextObservations();
+					obsM = masterIn.getNextObservations();
 				}
 				//System.out.println("found M "+obsRtime);
 
@@ -390,7 +390,7 @@ public class GoGPS implements Runnable{
 				long obsMtime = obsM.getRefTime().getGpsTime();
 				//System.out.println("look for R "+obsMtime);
 				while (obsM!=null && obsR!=null && obsR.getRefTime().getGpsTime() < obsMtime) {
-					obsR = roverIn.nextObservations();
+					obsR = roverIn.getNextObservations();
 				}
 				//System.out.println("found R "+obsMtime);
 
@@ -451,8 +451,8 @@ public class GoGPS implements Runnable{
 
 					if(debug)System.out.println("-- Get next epoch ---------------------------------------------------");
 					// get next epoch
-					obsR = roverIn.nextObservations();
-					obsM = masterIn.nextObservations();
+					obsR = roverIn.getNextObservations();
+					obsM = masterIn.getNextObservations();
 
 				}else{
 					if(debug)System.out.println("Missing M or R obs ");

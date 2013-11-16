@@ -96,10 +96,10 @@ public class TestRinexProducer {
 		RinexV2Producer rp = new RinexV2Producer("data\\20111003-004754-master.o11", true);
 		rp.setDefinedPosition(masterIn.getDefinedPosition());
 
-		Observations o = masterIn.nextObservations();
+		Observations o = masterIn.getNextObservations();
 		while(o!=null){
 			rp.addObservations(o);
-			o = masterIn.nextObservations();
+			o = masterIn.getNextObservations();
 		}
 		System.out.println("END");
 

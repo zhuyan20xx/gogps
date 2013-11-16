@@ -33,5 +33,7 @@ public interface StreamEventListener {
 	public void addEphemeris(EphGps eph);
 
 	public void setDefinedPosition(Coordinates definedPosition);
-
+	
+	public Observations getCurrentObservations();
+	public void pointToNextObservations();
 }

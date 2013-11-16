@@ -44,7 +44,8 @@ public class Time {
 	private Calendar gc = null;
 
 	{
-		gc = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"));
+		gc = GregorianCalendar.getInstance();
+		gc.setTimeZone(gc.getTimeZone());
 	}
 
 	public Time(long msec){
@@ -182,6 +183,12 @@ public class Time {
 
 	public long getGpsTime(){
 		return unixToGpsTime(msec);
+	}
+	
+	public long getRoundedGpsTime(){
+		long tow = unixToGpsTime(msec);
+		tow = (tow+499)/1000*1000;
+		return tow;
 	}
 //
 //	private static double unixToGpsTime(double time) {

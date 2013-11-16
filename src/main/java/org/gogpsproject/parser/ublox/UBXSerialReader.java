@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
+import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.util.InputStreamCounter;
@@ -86,7 +87,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		dateFile = sdfFile.format(date);
 		
 		try {
-			System.out.println(date1+" - "+COMPort+" - Logging stream in "+outputDir+"/"+ COMPort.trim()+ "_" + dateFile + ".ubx");
+			System.out.println(date1+" - "+COMPort+" - Logging UBX stream in "+outputDir+"/"+ COMPort.trim()+ "_" + dateFile + ".ubx");
 			fos_ubx = new FileOutputStream(outputDir+"/"+ COMPort.trim()+ "_" + dateFile + ".ubx");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -180,6 +181,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 				System.out.println(date1+" - "+COMPort+" - Logging system time in "+outputDir+"/"+ COMPort.trim()+ "_" + dateFile + "_systime.txt");
 				fos_tim = new FileOutputStream(outputDir+"/"+ COMPort.trim()+ "_" + dateFile + "_systime.txt");
 				ps = new PrintStream(fos_tim);
+				ps.println("GPS time                      System time");
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -213,8 +215,18 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 								if(this.SysTimeLogEnabled && o.getClass().toString().equals("class org.gogpsproject.Observations")) {
 									date = new Date();
 									sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-									date1 = sdf1.format(date);
-									ps.println(date1);
+									String dateSys = sdf1.format(date);
+									String dateGps = null;
+									
+									if(streamEventListeners!=null && o!=null){
+										for(StreamEventListener sel:streamEventListeners){
+											Observations co = sel.getCurrentObservations();
+											dateGps = sdf1.format(new Date(co.getRefTime().getMsec()));
+											ps.println(dateGps +"       "+dateSys);
+											
+										    sel.pointToNextObservations();
+										}
+									}
 								}
 							} catch (NullPointerException e) {
 							}

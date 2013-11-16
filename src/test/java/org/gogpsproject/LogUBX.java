@@ -19,6 +19,7 @@
  *
  */
 package org.gogpsproject;
+import java.util.Locale;
 import java.util.Vector;
 
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
@@ -39,6 +40,10 @@ public class LogUBX {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		//force dot as decimal separator
+		Locale.setDefault(new Locale("en", "US"));
+		
 		ArgumentParser parser = ArgumentParsers.newArgumentParser("LogUBX")
 				.defaultHelp(true)
 				.description("Log binary streams from one or more u-blox receivers connected to COM ports.");
@@ -97,13 +102,17 @@ public class LogUBX {
 			}
 			
 			for (String portId : ns.<String> getList("port")) {
+				
 				UBXSerialConnection ubxSerialConn = new UBXSerialConnection(portId, 9600);
+				
 				ubxSerialConn.setMeasurementRate((Integer) ns.get("rate"));
 				ubxSerialConn.enableEphemeris((Integer) ns.get("ephemeris"));
 				ubxSerialConn.enableIonoParam((Integer) ns.get("ionosphere"));
 				ubxSerialConn.enableTimetag(ns.getBoolean("timetag"));
 				ubxSerialConn.enableNmeaSentences(ns.<String> getList("nmea"));
 				ubxSerialConn.init();
+				
+				new ObservationsBuffer(ubxSerialConn, null);
 			}
 
 		}catch(Exception e){

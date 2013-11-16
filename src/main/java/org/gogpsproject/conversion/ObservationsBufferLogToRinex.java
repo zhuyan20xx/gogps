@@ -60,10 +60,10 @@ public class ObservationsBufferLogToRinex {
 		RinexV2Producer rp = new RinexV2Producer(outFile, args!=null&&args.length>=p+1&&args[p++].startsWith("y"));
 		rp.setDefinedPosition(masterIn.getDefinedPosition());
 
-		Observations o = masterIn.nextObservations();
+		Observations o = masterIn.getNextObservations();
 		while(o!=null){
 			rp.addObservations(o);
-			o = masterIn.nextObservations();
+			o = masterIn.getNextObservations();
 		}
 		rp.streamClosed();
 		System.out.println("END");

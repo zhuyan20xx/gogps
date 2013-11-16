@@ -24,11 +24,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.TimeZone;
 import java.util.Vector;
 
@@ -73,7 +71,7 @@ public class RinexV2Producer implements StreamEventListener {
 	private DecimalFormat dfXX = new DecimalFormat("00");
 	private DecimalFormat dfX4 = new DecimalFormat("0.0000");
 
-	private final static TimeZone TZ = TimeZone.getTimeZone("UTC");
+	private final static TimeZone TZ = TimeZone.getTimeZone("GMT");
 
 	public RinexV2Producer(String outFilename, boolean needApproxPos){
 		this.outFilename = outFilename;
@@ -412,5 +410,17 @@ public class RinexV2Producer implements StreamEventListener {
 		}
 
 
+	}
+
+	@Override
+	public Observations getCurrentObservations() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void pointToNextObservations() {
+		// TODO Auto-generated method stub
+		
 	}
 }

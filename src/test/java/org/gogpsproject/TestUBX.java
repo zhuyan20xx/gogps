@@ -31,7 +31,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Vector;
 
-import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
 @SuppressWarnings("restriction")
@@ -188,6 +187,16 @@ public class TestUBX implements StreamEventListener{
 	public void streamClosed() {
 		// TODO Auto-generated method stub
 
+	}
+	@Override
+	public Observations getCurrentObservations() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public void pointToNextObservations() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
