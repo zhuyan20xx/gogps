@@ -62,8 +62,8 @@ public class ObservationCompare {
 		}
 
 
-		Observations o1 = oIn1.nextObservations();
-		Observations o2 = oIn2.nextObservations();
+		Observations o1 = oIn1.getNextObservations();
+		Observations o2 = oIn2.getNextObservations();
 		while(o1!=null && o2!=null){
 			//r=1 m=2
 
@@ -73,7 +73,7 @@ public class ObservationCompare {
 //				masterIn.skipDataObs();
 //				masterIn.parseEpochObs();
 				System.out.println("Skip o2 "+o2.getRefTime().getGpsTime());
-				o2 = oIn2.nextObservations();
+				o2 = oIn2.getNextObservations();
 			}
 			//System.out.println("found M "+o1time);
 
@@ -83,7 +83,7 @@ public class ObservationCompare {
 			//System.out.println("look for R "+o2time);
 			while (o2!=null && o1!=null && o1.getRefTime().getGpsTime() < o2time) {
 				System.out.println("Skip o1 "+o1.getRefTime().getGpsTime());
-				o1 = oIn1.nextObservations();
+				o1 = oIn1.getNextObservations();
 			}
 			//System.out.println("found R "+o2time);
 
@@ -111,8 +111,8 @@ public class ObservationCompare {
 					}
 				}
 			}
-			o1 = oIn1.nextObservations();
-			o2 = oIn2.nextObservations();
+			o1 = oIn1.getNextObservations();
+			o2 = oIn2.getNextObservations();
 
 		}
 		System.out.println("END");

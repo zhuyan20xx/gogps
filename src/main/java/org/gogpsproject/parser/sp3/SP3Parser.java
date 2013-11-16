@@ -270,7 +270,7 @@ public class SP3Parser implements NavigationProducer{
 
 		try {
 			Calendar c = Calendar.getInstance();
-			c.setTimeZone(TimeZone.getTimeZone("UTC"));
+			c.setTimeZone(TimeZone.getTimeZone("GMT"));
 
 			epocs = new ArrayList<HashMap<String,SatellitePosition>>();
 			epocTimestamps = new ArrayList<Time>();

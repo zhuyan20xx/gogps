@@ -174,7 +174,7 @@ public class RinexObservationParser implements ObservationsProducer{
 	/**
 	 * Parse one observation epoch single/double line
 	 */
-	public Observations nextObservations() {
+	public Observations getNextObservations() {
 
 		try {
 			if(!hasMoreObservations()) return null;

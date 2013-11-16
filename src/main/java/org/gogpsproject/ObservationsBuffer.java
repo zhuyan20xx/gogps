@@ -229,6 +229,16 @@ public class ObservationsBuffer
     		return null;
     	}
     }
+    
+    
+    /* (non-Javadoc)
+     * @see org.gogpsproject.ObservationsProducer#getCurrentObservations()
+     */
+    @Override
+    public void pointToNextObservations() {
+
+    	obsCursor++;
+    }
 
     /* (non-Javadoc)
      * @see org.gogpsproject.ObservationsProducer#init()
@@ -245,7 +255,7 @@ public class ObservationsBuffer
      * @see org.gogpsproject.ObservationsProducer#nextObservations()
      */
     @Override
-    public Observations nextObservations() {
+    public Observations getNextObservations() {
 
     	long begin=System.currentTimeMillis();
 

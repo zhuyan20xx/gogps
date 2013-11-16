@@ -100,7 +100,7 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 	 * @see org.gogpsproject.ObservationsProducer#nextObservations()
 	 */
 	@Override
-	public Observations nextObservations() {
+	public Observations getNextObservations() {
 		try{
 			while(in.available()>0){
 				try{
