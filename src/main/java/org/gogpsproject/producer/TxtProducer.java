@@ -26,8 +26,6 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Locale;
-
 import org.gogpsproject.PositionConsumer;
 import org.gogpsproject.RoverPosition;
 /**
@@ -55,8 +53,6 @@ public class TxtProducer implements PositionConsumer, Runnable {
 
 	public TxtProducer(String filename) throws IOException{
 		this.filename = filename;
-		
-		Locale.setDefault(new Locale("en", "US"));
 
 		writeHeader();
 
