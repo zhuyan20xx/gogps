@@ -20,18 +20,10 @@
  */
 package org.gogpsproject;
 import java.io.*;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.text.*;
-
-import org.gogpsproject.parser.rinex.RinexNavigation;
 import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
-import org.gogpsproject.parser.rtcm3.RTCM3Client;
-import org.gogpsproject.parser.sp3.SP3Navigation;
-import org.gogpsproject.parser.ublox.UBXSerialConnection;
-import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.KmlProducer;
 import org.gogpsproject.producer.TxtProducer;
 
@@ -45,6 +37,10 @@ public class TestGoGPS {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		//force dot as decimal separator
+		Locale.setDefault(new Locale("en", "US"));
+		
 		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
 		double goodDopThreshold = 2.5;
 		int timeSampleDelaySec = 1;

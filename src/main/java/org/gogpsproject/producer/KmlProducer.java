@@ -25,8 +25,6 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Locale;
-
 import org.gogpsproject.PositionConsumer;
 import org.gogpsproject.RoverPosition;
 /**
@@ -72,8 +70,6 @@ public class KmlProducer implements PositionConsumer, Runnable {
 		this.filename = filename;
 		this.goodDopThreshold = goodDopTreshold;
 		this.timeSampleDelaySec = timeSampleDelaySec;
-
-		Locale.setDefault(new Locale("en", "US"));
 
 		goodDop = false;
 		FileWriter out = startOfTrack();
