@@ -239,7 +239,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 				}else{
 					// no bytes to read, wait 1 msec
 					try {
-						Thread.sleep(1);
+						Thread.sleep(5);
 					} catch (InterruptedException e) {}
 				}
 				long curTS = System.currentTimeMillis();
