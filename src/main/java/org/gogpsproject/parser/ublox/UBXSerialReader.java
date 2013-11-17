@@ -205,19 +205,18 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			}
 
 			in.start();
+			sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+			String dateSys = null;
+			String dateGps = null;
 			while (!stop) {
 				if(in.available()>0){
+					dateSys = sdf1.format(new Date());
 					data = in.read();
 					try{
 						if(data == 0xB5){
 							Object o = reader.readMessage();
 							try {
 								if(this.SysTimeLogEnabled && o.getClass().toString().equals("class org.gogpsproject.Observations")) {
-									date = new Date();
-									sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-									String dateSys = sdf1.format(date);
-									String dateGps = null;
-									
 									if(streamEventListeners!=null && o!=null){
 										for(StreamEventListener sel:streamEventListeners){
 											Observations co = sel.getCurrentObservations();
@@ -238,26 +237,22 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 						ubxe.printStackTrace();
 					}
 				}else{
-					// no bytes to read, wait a while
+					// no bytes to read, wait 1 msec
 					try {
-						Thread.sleep(10);
+						Thread.sleep(1);
 					} catch (InterruptedException e) {}
 				}
 				long curTS = System.currentTimeMillis();
 				
-				date = new Date();
-				sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-				date1 = sdf1.format(date);
-				
 				if(msgAidEphRate > 0 && curTS-aidEphTS >= msgAidEphRate*1000){
-					System.out.println(date1+" - "+COMPort+" - Polling AID-EPH message");
+					System.out.println(dateSys+" - "+COMPort+" - Polling AID-EPH message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_EPH, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
 					aidEphTS = curTS;
 				}
 				if(msgAidHuiRate > 0 && curTS-aidHuiTS >= msgAidHuiRate*1000){
-					System.out.println(date1+" - "+COMPort+" - Polling AID-HUI message");
+					System.out.println(dateSys+" - "+COMPort+" - Polling AID-HUI message");
 					msgcfg = new MsgConfiguration(MessageType.CLASS_AID, MessageType.AID_HUI, msg);
 					out.write(msgcfg.getByte());
 					out.flush();
@@ -266,9 +261,9 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 				if (curTS-sysOutTS >= 1*1000) {
 					int bps = in.getCurrentBps();
 					if (bps != 0) {
-						System.out.println(date1+" - "+COMPort+" - Logging at "+String.format("%4d", bps)+" Bps -- Total: "+in.getCounter()+" bytes");
+						System.out.println(dateSys+" - "+COMPort+" - Logging at "+String.format("%4d", bps)+" Bps -- Total: "+in.getCounter()+" bytes");
 					} else {
-						System.out.println(date1+" - "+COMPort+" - Log starting...     -- Total: "+in.getCounter()+" bytes");
+						System.out.println(dateSys+" - "+COMPort+" - Log starting...     -- Total: "+in.getCounter()+" bytes");
 					}
 					sysOutTS = curTS;
 				}
