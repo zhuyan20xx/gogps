@@ -208,6 +208,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 			String dateSys = null;
 			String dateGps = null;
+			boolean msgReceived = false;
 			while (!stop) {
 				if(in.available()>0){
 					dateSys = sdf1.format(new Date());
@@ -224,6 +225,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 											ps.println(dateGps +"       "+dateSys);
 											
 										    sel.pointToNextObservations();
+										    
+										    msgReceived = true;
 										}
 									}
 								}
@@ -258,7 +261,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 					out.flush();
 					aidHuiTS = curTS;
 				}
-				if (curTS-sysOutTS >= 1*1000) {
+				if (msgReceived/*curTS-sysOutTS >= 1*1000*/) {
 					int bps = in.getCurrentBps();
 					if (bps != 0) {
 						System.out.println(dateSys+" - "+COMPort+" - Logging at "+String.format("%4d", bps)+" Bps -- Total: "+in.getCounter()+" bytes");
@@ -266,6 +269,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 						System.out.println(dateSys+" - "+COMPort+" - Log starting...     -- Total: "+in.getCounter()+" bytes");
 					}
 					sysOutTS = curTS;
+					msgReceived = false;
 				}
 			}
 		} catch (IOException e) {
