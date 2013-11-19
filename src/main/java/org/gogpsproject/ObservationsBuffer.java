@@ -72,6 +72,8 @@ public class ObservationsBuffer
     private String id = null;
 
     private long timeoutNextObsWait = -1;
+    
+    private int bufferSizeLimit = 20;
 
     /**
     *
@@ -178,10 +180,19 @@ public class ObservationsBuffer
     		System.out.println("obs "+o.getGpsSize()+" time "+o.getRefTime().getMsec());
     		System.out.println(o);
     	}
-        // TODO test if ref time observetions is not already present
+        // TODO test if ref time observations is not already present
         this.timeOrderedObs.add(o);
         //System.out.println("---------------------------------------------");
         //System.out.println(o);
+        
+        //limit the observations buffer to bufferSizeLimit
+        if (this.timeOrderedObs.size() > bufferSizeLimit) {
+        	int sizeToBeTrimmed = this.timeOrderedObs.size() - bufferSizeLimit;
+        	for (int i = 0; i < sizeToBeTrimmed; i++) {
+        		this.timeOrderedObs.removeElementAt(i);
+        	}
+        	obsCursor = obsCursor - sizeToBeTrimmed;
+        }
 
         if(outLog!=null){
 
