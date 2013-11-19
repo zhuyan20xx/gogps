@@ -47,8 +47,8 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	private String portName;
 	private int speed;
 	private int setMeasurementRate = 1;
-	private int setEphemerisRate = 30;
-	private int setIonosphereRate = 120;
+	private int setEphemerisRate = 10;
+	private int setIonosphereRate = 60;
 	private boolean enableTimetag = true;
 	private List<String> enableNmeaList;
 
