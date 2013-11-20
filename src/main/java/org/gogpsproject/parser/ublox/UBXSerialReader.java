@@ -217,16 +217,18 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 						if(data == 0xB5){
 							Object o = reader.readMessage();
 							try {
-								if(this.SysTimeLogEnabled && o.getClass().toString().equals("class org.gogpsproject.Observations")) {
+								if(o.getClass().toString().equals("class org.gogpsproject.Observations")) {
 									if(streamEventListeners!=null && o!=null){
 										for(StreamEventListener sel:streamEventListeners){
 											Observations co = sel.getCurrentObservations();
-											dateGps = sdf1.format(new Date(co.getRefTime().getMsec()));
-											ps.println(dateGps +"       "+dateSys);
-											
 										    sel.pointToNextObservations();
-										    
+
 										    msgReceived = true;
+
+										    if (this.SysTimeLogEnabled) {
+										    	dateGps = sdf1.format(new Date(co.getRefTime().getMsec()));
+										    	ps.println(dateGps +"       "+dateSys);
+										    }
 										}
 									}
 								}
