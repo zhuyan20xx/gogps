@@ -72,6 +72,12 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		
 		FileOutputStream fos_ubx= null;
 		COMPort = padCOMSpaces(COMPort);
+		
+		String COMPortStr = COMPort;
+		String [] tokens = COMPort.split("/");
+		if (tokens.length > 0) {
+			COMPortStr = tokens[tokens.length-1].trim();	//for Linux /dev/tty* ports
+		}
 
 		File file = new File(outputDir);
 		if(!file.exists() || !file.isDirectory()){
@@ -87,8 +93,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		dateFile = sdfFile.format(date);
 		
 		try {
-			System.out.println(date1+" - "+COMPort+" - Logging UBX stream in "+outputDir+"/"+ COMPort.trim()+ "_" + dateFile + ".ubx");
-			fos_ubx = new FileOutputStream(outputDir+"/"+ COMPort.trim()+ "_" + dateFile + ".ubx");
+			System.out.println(date1+" - "+COMPort+" - Logging UBX stream in "+outputDir+"/"+ COMPortStr+ "_" + dateFile + ".ubx");
+			fos_ubx = new FileOutputStream(outputDir+"/"+COMPortStr+ "_" + dateFile + ".ubx");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -166,7 +172,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		int data = 0;
 		long aidEphTS = System.currentTimeMillis();
 		long aidHuiTS = System.currentTimeMillis();
-		long sysOutTS = System.currentTimeMillis();
+		//long sysOutTS = System.currentTimeMillis();
 		MsgConfiguration msgcfg = null;
 		FileOutputStream fos_tim = null;
 		PrintStream ps = null;
@@ -175,11 +181,17 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
 		
+		String COMPortStr = COMPort;
+		String [] tokens = COMPort.split("/");
+		if (tokens.length > 0) {
+			COMPortStr = tokens[tokens.length-1].trim();	//for Linux /dev/tty* ports
+		}
+		
 		if (SysTimeLogEnabled) {
 			System.out.println(date1+" - "+COMPort+" - System time logging enabled");
 			try {
-				System.out.println(date1+" - "+COMPort+" - Logging system time in "+outputDir+"/"+ COMPort.trim()+ "_" + dateFile + "_systime.txt");
-				fos_tim = new FileOutputStream(outputDir+"/"+ COMPort.trim()+ "_" + dateFile + "_systime.txt");
+				System.out.println(date1+" - "+COMPort+" - Logging system time in "+outputDir+"/"+COMPortStr+ "_" + dateFile + "_systime.txt");
+				fos_tim = new FileOutputStream(outputDir+"/"+COMPortStr+ "_" + dateFile + "_systime.txt");
 				ps = new PrintStream(fos_tim);
 				ps.println("GPS time                      System time");
 			} catch (FileNotFoundException e) {
@@ -270,7 +282,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 					} else {
 						System.out.println(dateSys+" - "+COMPort+" - Log starting...     -- Total: "+in.getCounter()+" bytes");
 					}
-					sysOutTS = curTS;
+					//sysOutTS = curTS;
 					msgReceived = false;
 				}
 			}
