@@ -18,10 +18,11 @@
  *
  *
  */
-package org.gogpsproject;
+package org.gogpsproject.apps;
 import java.util.Locale;
 import java.util.Vector;
 
+import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
