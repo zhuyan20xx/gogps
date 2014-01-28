@@ -34,6 +34,11 @@ public class NVSException extends Exception {
 
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -9199014444784010570L;
+
+	/**
 	 * @param message
 	 */
 	public NVSException(String message) {

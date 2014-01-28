@@ -19,8 +19,10 @@
  */
 package org.gogpsproject.parser.nvs;
 
+
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -45,70 +47,40 @@ import org.gogpsproject.StreamResource;
  * @author Daisuke Yoshida OCU
  */
 
-public class NVSFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
+public class NVSFileReader  {
+	
 
-	private InputStream in;
+	private static InputStream in;
 	private NVSReader reader;
-	private File file;
+//	private File file;
 	private Observations obs = null;
 	private IonoGps iono = null;
 	// TODO support past times, now keep only last broadcast data
 	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
 
-	public NVSFileReader(File file) {
-		this.file = file;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.ObservationsProducer#getApproxPosition()
-	 */
-	@Override
-	public Coordinates getDefinedPosition() {
-		Coordinates coord = Coordinates.globalXYZInstance(0.0, 0.0, 0.0); //new Coordinates(new SimpleMatrix(3, 1));
-		//coord.setXYZ(0.0, 0.0, 0.0 );
-		coord.computeGeodetic();
-		// TODO should return null?
-		return coord;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.ObservationsProducer#getCurrentObservations()
-	 */
-	@Override
-	public Observations getCurrentObservations() {
-		return obs;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.ObservationsProducer#hasMoreObservations()
-	 */
-	public boolean hasMoreObservations() throws IOException {
-		return in.available()>0;
-	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#init()
 	 */
-	@Override
-	public void init() throws Exception {
-		this.in = new FileInputStream(file);
+	public static void main(String[] args) throws FileNotFoundException {
+		//public void init() throws Exception {
 
-		this.reader = new NVSReader(in, null);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.gogpsproject.ObservationsProducer#nextObservations()
-	 */
-	@Override
-	public Observations nextObservations() {
+	    String file = "./data/rc.rin";   
+	    FileInputStream in = new FileInputStream(file);
+	    
+		NVSReader reader = new NVSReader(in, null);
+		
 		try{
 			while(in.available()>0){
 				try{
 					int data = in.read();
-					if(data == 0xB5){
+					if(data == 0x10){
+						//System.out.println("<DLE>");
 						Object o = reader.readMessagge();
+				
+						/*
 						if(o instanceof Observations){
-							return (Observations)o;
+							//return (Observations)o;
 						}else
 						if(o instanceof IonoGps){
 							iono = (IonoGps)o;
@@ -118,24 +90,111 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 							EphGps e = (EphGps)o;
 							ephs.put(new Integer(e.getSatID()), e);
 						}
+						*/
+						
 					}else{
 						//no warning, may be NMEA
 						//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 					}
-				}catch(NVSException ubxe){
-					System.err.println(ubxe);
+				}catch(NVSException nvse){
+					System.err.println(nvse);
 //					ubxe.printStackTrace();
 				}
 			}
 		}catch(IOException e){
 			e.printStackTrace();
 		}
-		return null;
+		//return null;
 	}
+		
+		
+		
+
+}
+/*	
+	public NVSFileReader(File file) {
+		this.file = file;
+	}
+*/
+	
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#getApproxPosition()
+	 */
+	/*
+	@Override
+	
+	public Coordinates getDefinedPosition() {
+		Coordinates coord = Coordinates.globalXYZInstance(0.0, 0.0, 0.0); //new Coordinates(new SimpleMatrix(3, 1));
+		//coord.setXYZ(0.0, 0.0, 0.0 );
+		coord.computeGeodetic();
+		// TODO should return null?
+		return coord;
+	}
+*/
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#getCurrentObservations()
+	 */
+	/*
+	@Override
+	public Observations getCurrentObservations() {
+		return obs;
+	}
+*/
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#hasMoreObservations()
+	 */
+	/*
+	public boolean hasMoreObservations() throws IOException {
+		return in.available()>0;
+	}
+*/
+	
+
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.ObservationsProducer#nextObservations()
+	 */
+	//@Override
+	//public Observations getNextObservations() {
+//	public void getNextObservations() {
+//
+//		try{
+//			while(in.available()>0){
+//				try{
+//					int data = in.read();
+//					if(data == 0xf7){
+//						System.out.println("f7");
+//						Object o = reader.readMessagge();
+//						
+//						if(o instanceof Observations){
+//							//return (Observations)o;
+//						}else
+//						if(o instanceof IonoGps){
+//							iono = (IonoGps)o;
+//						}
+//						if(o instanceof EphGps){
+//
+//							EphGps e = (EphGps)o;
+//							ephs.put(new Integer(e.getSatID()), e);
+//						}
+//					}else{
+//						//no warning, may be NMEA
+//						//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+//					}
+//				}catch(NVSException ubxe){
+//					System.err.println(ubxe);
+////					ubxe.printStackTrace();
+//				}
+//			}
+//		}catch(IOException e){
+//			e.printStackTrace();
+//		}
+//		//return null;
+//	}
 
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#release()
 	 */
+	/*
 	@Override
 	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
 		try {
@@ -144,10 +203,11 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 			e.printStackTrace();
 		}
 	}
-
+*/
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
+	/*
 	@Override
 	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
 		EphGps eph = ephs.get(new Integer(satID));
@@ -158,14 +218,23 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 		}
 		return null ;
 	}
-
+*/
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.NavigationProducer#getIono(long)
 	 */
-	@Override
-	public IonoGps getIono(long unixTime) {
-		return iono;
-	}
+//	
+//	@Override
+//	public IonoGps getIono(long unixTime) {
+//		return iono;
+//	}
+//
+//	@Override
+//	public void init() throws Exception {
+//		// TODO Auto-generated method stub
+//		
+//	}
 
 
-}
+	
+	
+
