@@ -229,7 +229,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 						if(data == 0xB5){
 							Object o = reader.readMessage();
 							try {
-								if(o.getClass().toString().equals("class org.gogpsproject.Observations")) {
+								if(o instanceof Observations){
 									if(streamEventListeners!=null && o!=null){
 										for(StreamEventListener sel:streamEventListeners){
 											Observations co = sel.getCurrentObservations();
@@ -246,7 +246,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 								}
 							} catch (NullPointerException e) {
 							}
-						}else{
+						}else if(data == 0x24){
+							System.out.println("NMEA detected");
 							//no warning, may be NMEA
 							//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 						}
