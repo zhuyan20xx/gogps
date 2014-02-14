@@ -175,7 +175,9 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		//long sysOutTS = System.currentTimeMillis();
 		MsgConfiguration msgcfg = null;
 		FileOutputStream fos_tim = null;
-		PrintStream ps = null;
+		FileOutputStream fos_nmea = null;
+		PrintStream psSystime = null;
+		PrintStream psNmea = null;
 
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -192,13 +194,23 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			try {
 				System.out.println(date1+" - "+COMPort+" - Logging system time in "+outputDir+"/"+COMPortStr+ "_" + dateFile + "_systime.txt");
 				fos_tim = new FileOutputStream(outputDir+"/"+COMPortStr+ "_" + dateFile + "_systime.txt");
-				ps = new PrintStream(fos_tim);
-				ps.println("GPS time                      System time");
+				psSystime = new PrintStream(fos_tim);
+				psSystime.println("GPS time                      System time");
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
 		} else {
 			System.out.println(date1+" - "+COMPort+" - System time logging disabled");
+		}
+		
+		if (!RequestedNmeaMsgs.isEmpty()) {
+			try {
+				System.out.println(date1+" - "+COMPort+" - Logging NMEA sentences in "+outputDir+"/"+COMPortStr+ "_" + dateFile + "_NMEA.txt");
+				fos_nmea = new FileOutputStream(outputDir+"/"+COMPortStr+ "_" + dateFile + "_NMEA.txt");
+				psNmea = new PrintStream(fos_nmea);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
 		}
 
 		try {
@@ -221,10 +233,15 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			String dateSys = null;
 			String dateGps = null;
 			boolean msgReceived = false;
+			boolean truncatedNmea = false;
 			while (!stop) {
 				if(in.available()>0){
 					dateSys = sdf1.format(new Date());
-					data = in.read();
+					if (!truncatedNmea) {
+						data = in.read();
+					}else{
+						truncatedNmea = false;
+					}
 					try{
 						if(data == 0xB5){
 							Object o = reader.readMessage();
@@ -239,15 +256,33 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 
 										    if (this.SysTimeLogEnabled) {
 										    	dateGps = sdf1.format(new Date(co.getRefTime().getMsec()));
-										    	ps.println(dateGps +"       "+dateSys);
+										    	psSystime.println(dateGps +"       "+dateSys);
 										    }
 										}
 									}
 								}
 							} catch (NullPointerException e) {
 							}
-						}else if(data == 0x24){
-							System.out.println("NMEA detected");
+						}else if(data == 0x24 && !RequestedNmeaMsgs.isEmpty()){
+							psNmea.print((char) data);
+							data = in.read();
+							if(data == 0x47) {
+								psNmea.print((char) data);
+								data = in.read();
+								if(data == 0x50) {
+									psNmea.print((char) data);
+									data = in.read();
+									while (data != 0x0A && data != 0xB5) {
+										//System.out.print((char) data);
+										psNmea.print((char) data);
+										data = in.read();
+									}
+									psNmea.print((char) 0x0A);
+									if (data == 0xB5) {
+										truncatedNmea = true;
+									}
+								}
+							}
 							//no warning, may be NMEA
 							//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 						}

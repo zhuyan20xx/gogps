@@ -38,7 +38,7 @@ import org.gogpsproject.StreamEventProducer;
 public class UBXReader implements StreamEventProducer {
 	private InputStream in;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
-//	private StreamEventListener streamEventListener;
+	//	private StreamEventListener streamEventListener;
 
 	public UBXReader(InputStream is){
 		this(is,null);
@@ -50,30 +50,30 @@ public class UBXReader implements StreamEventProducer {
 
 	public Object readMessage() throws IOException, UBXException{
 
-//		int data = in.read();
-//		if(data == 0xB5){
-			int data = in.read();
-			if(data == 0x62){
+	//	int data = in.read();
+	//	if(data == 0xB5){
+		int data = in.read();
+		if(data == 0x62){
 
-				data = in.read(); // Class
-				boolean parsed = false;
-				if (data == 0x02) { // RXM
-					data = in.read(); // ID
-					if (data == 0x10) { // RAW
-						// RMX-RAW
-						DecodeRXMRAW decodegps = new DecodeRXMRAW(in);
-						parsed = true;
+			data = in.read(); // Class
+			boolean parsed = false;
+			if (data == 0x02) { // RXM
+				data = in.read(); // ID
+				if (data == 0x10) { // RAW
+					// RMX-RAW
+					DecodeRXMRAW decodegps = new DecodeRXMRAW(in);
+					parsed = true;
 
-						Observations o = decodegps.decode(null);
-						if(streamEventListeners!=null && o!=null){
-							for(StreamEventListener sel:streamEventListeners){
-								Observations oc = (Observations)o.clone();
-								sel.addObservations(oc);
-							}
+					Observations o = decodegps.decode(null);
+					if(streamEventListeners!=null && o!=null){
+						for(StreamEventListener sel:streamEventListeners){
+							Observations oc = (Observations)o.clone();
+							sel.addObservations(oc);
 						}
-						return o;
 					}
-				}else
+					return o;
+				}
+			}else
 				if (data == 0x0B) { // AID
 					data = in.read(); // ID
 					try{
@@ -90,47 +90,47 @@ public class UBXReader implements StreamEventProducer {
 							}
 							return iono;
 						}else
-						if (data == 0x31) { // EPH
-							// AID-EPH (ephemerides)
-							DecodeAIDEPH decodegps = new DecodeAIDEPH(in);
-							parsed = true;
+							if (data == 0x31) { // EPH
+								// AID-EPH (ephemerides)
+								DecodeAIDEPH decodegps = new DecodeAIDEPH(in);
+								parsed = true;
 
-							EphGps eph = decodegps.decode();
-							if(streamEventListeners!=null && eph!=null){
-								for(StreamEventListener sel:streamEventListeners){
-									sel.addEphemeris(eph);
+								EphGps eph = decodegps.decode();
+								if(streamEventListeners!=null && eph!=null){
+									for(StreamEventListener sel:streamEventListeners){
+										sel.addEphemeris(eph);
+									}
 								}
-							}
-							return eph;
+								return eph;
 
-						}
+							}
 					}catch(UBXException ubxe){
 						//System.out.println(ubxe);
 					}
 				}else{
 					in.read(); // ID
 				}
-				if(!parsed){
+			if(!parsed){
 
-					// read non parsed message length
-					int[] length = new int[2];
-					length[1] = in.read();
-					length[0] = in.read();
+				// read non parsed message length
+				int[] length = new int[2];
+				length[1] = in.read();
+				length[0] = in.read();
 
-					int len = length[0]*256+length[1];
-					//System.out.println("skip "+len);
-					for (int b = 0; b < len+2; b++) {
-						in.read();
-					}
+				int len = length[0]*256+length[1];
+				//System.out.println("skip "+len);
+				for (int b = 0; b < len+2; b++) {
+					in.read();
 				}
-			}else{
-				System.out.println("Wrong Sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 			}
-//		}else{
-//			//no warning, may be NMEA
-//			//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
-//		}
-			return null;
+		}else{
+			System.out.println("Wrong Sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+		}
+	//	}else{
+	//		//no warning, may be NMEA
+	//		//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+	//	}
+		return null;
 	}
 	/**
 	 * @return the streamEventListener
