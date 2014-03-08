@@ -75,22 +75,17 @@ public class DecodeF7 {
 		String mantStr; 
 		double mantInt2;
 		double crs;
-	
 		
-		/*  Crs, 4 bytes  */
+			
+		/*  Crs, 4 bytes  */		
 		bytes = new byte[4];
 		in.read(bytes, 0, bytes.length);
-		
-		String binCrs = "";
-		for (int j = 3; j >= 0; j--) {   // for little endian
-	//		boolean[] temp1 = Bits.intToBits(bytes[j], 8);
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-		//	System.out.println("CRS"+ j + ": " + bytes[j] );
-		//	System.out.println("CRS"+ j + ": " + temp0 );
-			binCrs =  binCrs + temp0  ;
-		}
-		//System.out.println("binCRS: " + binCrs );
+		long longCrs = Bits.byteToLong(bytes);
+		//System.out.println("longCrs: "+ longCrs);
+		String binCrs = Long.toBinaryString(longCrs);
+		binCrs = String.format("%32s",binCrs).replace(' ', '0');
+		//System.out.println("binCrs: "+ binCrs);
+				
 		signStr = binCrs.substring(0,1);
         signInt = Integer.parseInt(signStr, 2);
         espStr = binCrs.substring(1,9);
@@ -105,13 +100,10 @@ public class DecodeF7 {
         /*  Dn, 4 bytes  */
 		bytes = new byte[4];
 		in.read(bytes, 0, bytes.length);
+		long longDn = Bits.byteToLong(bytes);
+		String binDn = Long.toBinaryString(longDn);
+		binDn = String.format("%32s",binDn).replace(' ', '0');
 		
-		String binDn = "";
-		for (int j = 3; j >= 0; j--) {	 // for little endian
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-			binDn =  binDn + temp0  ;
-		}
 		signStr = binDn.substring(0,1);
         signInt = Integer.parseInt(signStr, 2);
         espStr = binDn.substring(1,9);
@@ -126,37 +118,16 @@ public class DecodeF7 {
         /*  M0, 8 bytes  */
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
-		
-		String binM0 = "";
-		for (int j = 7; j >= 0; j--) {	  // for little endian
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-			binM0 =  binM0 + temp0  ;
-		}
-		signStr = binM0.substring(0,1);
-        signInt = Integer.parseInt(signStr, 2);
-        espStr = binM0.substring(1,12);
-        espInt = Integer.parseInt(espStr, 2);
-        mantStr = binM0.substring(12,64);
-        mantInt = Long.parseLong(mantStr, 2);
-       // mantInt = Double.parseDouble(mantStr); 
-//        mantInt = (double) (mantInt / Math.pow(2, 52));
-        mantInt2 = mantInt / Math.pow(2, 52);
-//        double m0 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt));
-        double m0 = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
-        System.out.println("M0: "+ m0);
-        
+		double m0 = Bits.byteToIEEE754Double(bytes);
+		System.out.println("M0: "+ m0);		
         
         /*  Cuc, 4 bytes  */
 		bytes = new byte[4];
 		in.read(bytes, 0, bytes.length);
+		long longCuc = Bits.byteToLong(bytes);
+		String binCuc = Long.toBinaryString(longCuc);
+		binCuc = String.format("%32s",binCuc).replace(' ', '0');
 		
-		String binCuc = "";
-		for (int j = 3; j >= 0; j--) {	 // for little endian
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-			binCuc =  binCuc + temp0  ;
-		}
 		signStr = binCuc.substring(0,1);
         signInt = Integer.parseInt(signStr, 2);
         espStr = binCuc.substring(1,9);
@@ -170,38 +141,17 @@ public class DecodeF7 {
         
         /*  E, 8 bytes  */
 		bytes = new byte[8];
-		in.read(bytes, 0, bytes.length);
-		
-		String binE = "";
-		for (int j = 7; j >= 0; j--) {	  // for little endian
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-			binE =  binE + temp0  ;
-		}
-		signStr = binE.substring(0,1);
-        signInt = Integer.parseInt(signStr, 2);
-        espStr = binE.substring(1,12);
-        espInt = Integer.parseInt(espStr, 2);
-        mantStr = binE.substring(12,64);
-        mantInt = Long.parseLong(mantStr, 2);
-       // mantInt = Double.parseDouble(mantStr); 
-//        mantInt = (double) (mantInt / Math.pow(2, 52));
-        mantInt2 = mantInt / Math.pow(2, 52);
-//        double m0 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt));
-        double e = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
-        System.out.println("E: "+ e);
-        
+		in.read(bytes, 0, bytes.length);	
+		double e = Bits.byteToIEEE754Double(bytes);
+		System.out.println("E: "+ e);		
         
         /*  Cus, 4 bytes  */
 		bytes = new byte[4];
 		in.read(bytes, 0, bytes.length);
+		long longCus = Bits.byteToLong(bytes);
+		String binCus = Long.toBinaryString(longCus);
+		binCus = String.format("%32s",binCus).replace(' ', '0');
 		
-		String binCus = "";
-		for (int j = 3; j >= 0; j--) {	 // for little endian
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-			binCus =  binCus + temp0  ;
-		}
 		signStr = binCus.substring(0,1);
         signInt = Integer.parseInt(signStr, 2);
         espStr = binCus.substring(1,9);
@@ -216,61 +166,24 @@ public class DecodeF7 {
         /*  SqrtA, 8 bytes  */
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
-		
-		String binSqrtA = "";
-		for (int j = 7; j >= 0; j--) {	  // for little endian
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-			binSqrtA =  binSqrtA + temp0  ;
-		}
-		signStr = binSqrtA.substring(0,1);
-        signInt = Integer.parseInt(signStr, 2);
-        espStr = binSqrtA.substring(1,12);
-        espInt = Integer.parseInt(espStr, 2);
-        mantStr = binSqrtA.substring(12,64);
-        mantInt = Long.parseLong(mantStr, 2);
-       // mantInt = Double.parseDouble(mantStr); 
-//        mantInt = (double) (mantInt / Math.pow(2, 52));
-        mantInt2 = mantInt / Math.pow(2, 52);
-//        double m0 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt));
-        double sqrtA = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
-        System.out.println("SqrtA: "+ sqrtA);
-        
+		double sqrtA = Bits.byteToIEEE754Double(bytes);
+		System.out.println("SqrtA: "+ sqrtA);
+	
         
         /*  Toe, 8 bytes  */
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
-		
-		String binToe = "";
-		for (int j = 7; j >= 0; j--) {	  // for little endian
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-			binToe =  binToe + temp0  ;
-		}
-		signStr = binToe.substring(0,1);
-        signInt = Integer.parseInt(signStr, 2);
-        espStr = binToe.substring(1,12);
-        espInt = Integer.parseInt(espStr, 2);
-        mantStr = binToe.substring(12,64);
-        mantInt = Long.parseLong(mantStr, 2);
-       // mantInt = Double.parseDouble(mantStr); 
-//        mantInt = (double) (mantInt / Math.pow(2, 52));
-        mantInt2 = mantInt / Math.pow(2, 52);
-//        double m0 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt));
-        double toe = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
-        System.out.println("Toe: "+ toe);
-        
+		double toe = Bits.byteToIEEE754Double(bytes);
+		System.out.println("Toe: "+ toe);
+		  
         
         /*  Cic, 4 bytes  */
 		bytes = new byte[4];
 		in.read(bytes, 0, bytes.length);
+		long longCic = Bits.byteToLong(bytes);
+		String binCic = Long.toBinaryString(longCic);
+		binCic = String.format("%32s",binCic).replace(' ', '0');
 		
-		String binCic = "";
-		for (int j = 3; j >= 0; j--) {	 // for little endian
-			String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-			temp0 = String.format("%8s",temp0).replace(' ', '0');
-			binCic =  binCic + temp0  ;
-		}
 		signStr = binCic.substring(0,1);
         signInt = Integer.parseInt(signStr, 2);
         espStr = binCic.substring(1,9);
