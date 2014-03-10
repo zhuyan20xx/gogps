@@ -36,11 +36,12 @@ import org.gogpsproject.util.Bits;
 import org.gogpsproject.util.UnsignedOperation;
 
 
-public class DecodeF7 {
+public class Decode4A {
+
 
 	InputStream in;
 
-	public DecodeF7(InputStream _in) {
+	public Decode4A(InputStream _in) {
 		in = _in;
 	}
 
