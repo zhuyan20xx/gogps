@@ -64,13 +64,14 @@ public class NVSReader implements StreamEventProducer {
 			}else
 			if (data == 0xf5){
 				System.out.println("F5h");
-
+				DecodeF5 decodeF5 = new DecodeF5(in);
+				Observations o = decodeF5.decode();
 				
 			}else
 			if (data == 0x4a){
 				System.out.println("4Ah");
 				Decode4A decode4A = new Decode4A(in);
-				EphGps o = decode4A.decode();
+				IonoGps o = decode4A.decode();
 
 				
 			}else
