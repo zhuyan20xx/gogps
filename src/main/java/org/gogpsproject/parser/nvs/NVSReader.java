@@ -69,11 +69,13 @@ public class NVSReader implements StreamEventProducer {
 			}else
 			if (data == 0x4a){
 				System.out.println("4Ah");
+				Decode4A decode4A = new Decode4A(in);
+				EphGps o = decode4A.decode();
 
 				
 			}else
-			if (data == 0x64){
-				System.out.println("64h");
+			if (data == 0x62){
+				System.out.println("62h");
 
 //				boolean parsed = false;
 //				if (data == 0x02) {
