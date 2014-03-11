@@ -52,16 +52,22 @@ public class DecodeF5 {
 		
 		if(in.markSupported()){
 		    
-		    in.mark(0); //マーク位置に読み込み位置設定
+		    in.mark(0); // To rewind in.read point 
 
 		    while(in.available()>0){
 				
 				int data = in.read();
 				if(data == 0x10){
 					data = in.read();
-					if(data == 0xf7 || data == 0xf5 || data == 0x4a || data == 0x62 ){
-						leng = this.in.available();
-						System.out.println("Length2: "+ leng);	
+					if(data == 0xf7 || data == 0xf5 || data == 0x4a || data == 0x62 || data == 0xf6 || data == 0xd5 || data == 0xe5 || data == 0x6f || data == 0x63 || data == 0x64 || data == 0x69 || data == 0x6a || data == 0x6b  ){
+						int leng2 = this.in.available();
+						System.out.println("Length2: "+ leng2);
+						
+						leng = (leng - leng2) * 8 ;
+						nsv = (leng - 216) / 240;  // To calculate the number of satellites
+						// 27*8 bits = 216, 30*8 bits = 240
+						System.out.println("Num of Satellite: "+ nsv);
+						
 					break;
 					}
 				}	
@@ -71,24 +77,7 @@ public class DecodeF5 {
 		else
 		    System.out.println("mark is not supported, use BufferedInputStream");
 		
-		//in.mark(0);
-	    in.reset();
-		
-
-			
-	
-		
-//		int[] length = new int[2];
-//		length[1] = in.read();
-//		length[0] = in.read();
-//		
-//		//int len = length[0]*256+length[1];
-//		System.out.println("Length1: "+ length[1]);
-//		System.out.println("Length0: "+ length[0]);
-
-		
-		//nsv = (length - 216) / 240; // 27*8 bits = 216, 30*8 bits = 240
-		//System.out.println("Num of Satellite: "+ nsv);
+	    in.reset(); // To return to in.mark point  
 		
 	}
 
@@ -128,18 +117,18 @@ public class DecodeF5 {
 		int timeCorrection = in.read();
 		System.out.println("Time_Correction: "+ timeCorrection);	
 		
-	//	for(int i=0; i< nsv; i++){
+		for(int i=0; i< nsv; i++){
 		
 				/* Signal Type, 2 bytes */
-//				int signalType = in.read();
-//				System.out.println("Signal_Type: "+ signalType);
+				int signalType = in.read();
+				System.out.println("Signal_Type: "+ signalType);
 		
 				/* Signal Type, 2 bytes */
-//				int signalType = in.read();
-//				System.out.println("Signal_Type: "+ signalType);
+				//int signalType = in.read();
+			//	System.out.println("Signal_Type: "+ signalType);
 				
 				
-	//	}
+		}
 		
 		return null;
 		
