@@ -39,7 +39,6 @@ import org.gogpsproject.util.UnsignedOperation;
 
 public class Decode4A {
 
-
 	InputStream in;
 
 	public Decode4A(InputStream _in) {
