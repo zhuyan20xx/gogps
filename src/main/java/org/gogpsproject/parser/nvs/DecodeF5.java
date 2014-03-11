@@ -119,13 +119,47 @@ public class DecodeF5 {
 		
 		for(int i=0; i< nsv; i++){
 		
-				/* Signal Type, 2 bytes */
+				/* Signal Type, 2 bytes, 01: GLONASS, 02: GPS, 04: SBAS */
 				int signalType = in.read();
 				System.out.println("Signal_Type: "+ signalType);
 		
-				/* Signal Type, 2 bytes */
-				//int signalType = in.read();
-			//	System.out.println("Signal_Type: "+ signalType);
+				/* Satellite Number, 2 bytes */
+				int satID = in.read();
+				System.out.println("Satellite Number: "+ satID);
+				
+				/* A carrier Number for GLONASS, 2 bytes */
+				int carrierNum = in.read();
+				System.out.println("Carrier Number: "+ carrierNum);
+				
+				/* SNR (dB-Hz) */
+				int snr = in.read();
+				System.out.println("SNR: "+ snr);
+				
+				/*  Carrier Phase (cycles), 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double carrierPhase = Bits.byteToIEEE754Double(bytes);
+				System.out.println("Carrier Phase: "+ carrierPhase);	
+				
+				/*  Pseudo Range (ms), 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double pseudoRange = Bits.byteToIEEE754Double(bytes);
+				System.out.println("Pseudo Range: "+ pseudoRange);
+				
+				/*  Doppler Frequency(Hz), 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double dopperFrequency = Bits.byteToIEEE754Double(bytes);
+				System.out.println("Doppler Frequency: "+ dopperFrequency);
+				
+				/* Raw Data Flags */
+				int rawDataFlags = in.read();
+				System.out.println("Raw Data Flags: "+ rawDataFlags);
+				
+				/* Reserved */
+				int reserved = in.read();
+				System.out.println("reserved: "+ reserved);
 				
 				
 		}
