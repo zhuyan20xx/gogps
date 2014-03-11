@@ -22,6 +22,7 @@ package org.gogpsproject.parser.nvs;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,10 +66,12 @@ public class NVSFileReader  {
 	public static void main(String[] args) throws FileNotFoundException {
 		//public void init() throws Exception {
 
-	    String file = "./data/rc.rin";   
-	    FileInputStream in = new FileInputStream(file);
-	    
-		NVSReader reader = new NVSReader(in, null);
+	    String file = "./data/rc.rin"; 
+	    //String file = "./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover_00.bin";
+	    FileInputStream ins = new FileInputStream(file);
+	    BufferedInputStream in = new BufferedInputStream(ins);
+
+	    NVSReader reader = new NVSReader(in, null);
 		
 		try{
 			while(in.available()>0){

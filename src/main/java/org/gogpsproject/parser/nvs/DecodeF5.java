@@ -36,23 +36,110 @@ import org.gogpsproject.util.UnsignedOperation;
 
 
 public class DecodeF5 {
+	
 	private InputStream in;
 
 //	private int[] fdata;
 //	private int[] fbits;
 //	private boolean end = true;
 
-	public DecodeF5(InputStream in) {
+	int nsv;
+	
+	public DecodeF5(InputStream in) throws IOException {
 		this.in = in;
+		int leng = this.in.available();
+		System.out.println("Length: "+ leng);
+		
+		if(in.markSupported()){
+		    
+		    in.mark(0); //マーク位置に読み込み位置設定
 
+		    while(in.available()>0){
+				
+				int data = in.read();
+				if(data == 0x10){
+					data = in.read();
+					if(data == 0xf7 || data == 0xf5 || data == 0x4a || data == 0x62 ){
+						leng = this.in.available();
+						System.out.println("Length2: "+ leng);	
+					break;
+					}
+				}	
+		    }	
+		
+		}
+		else
+		    System.out.println("mark is not supported, use BufferedInputStream");
+		
+		//in.mark(0);
+	    in.reset();
+		
+
+			
+	
+		
+//		int[] length = new int[2];
+//		length[1] = in.read();
+//		length[0] = in.read();
+//		
+//		//int len = length[0]*256+length[1];
+//		System.out.println("Length1: "+ length[1]);
+//		System.out.println("Length0: "+ length[0]);
+
+		
+		//nsv = (length - 216) / 240; // 27*8 bits = 216, 30*8 bits = 240
+		//System.out.println("Num of Satellite: "+ nsv);
+		
 	}
 
 	public Observations decode() throws IOException, NVSException {
-		// parse little Endian data
+		
+		byte bytes[];
 		
 		
+		//System.out.println("Num of Satellite: "+ nsv);
 		
-		System.out.println("F5: " );  
+		
+		/*  TOW_UTC, 8 bytes  */
+		bytes = new byte[8];
+		in.read(bytes, 0, bytes.length);
+		double utc = Bits.byteToIEEE754Double(bytes);
+		System.out.println("TOW_UTC: "+ utc);			        
+	
+		/*  Week Number, 2 bytes  */
+		bytes = new byte[2];
+		in.read(bytes, 0, bytes.length);
+		long weekN = Bits.byteToLong(bytes);
+		System.out.println("Week No.: " + weekN);
+		
+		/*  GPS Time Shift, 8 bytes  */
+		bytes = new byte[8];
+		in.read(bytes, 0, bytes.length);
+		double gpsTimeShift = Bits.byteToIEEE754Double(bytes);
+		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
+		
+		/*  GLONASS Time Shift, 8 bytes  */
+		bytes = new byte[8];
+		in.read(bytes, 0, bytes.length);
+		double glonassTimeShift = Bits.byteToIEEE754Double(bytes);
+		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
+		
+		/* Time Correction, 2 bytes */
+		int timeCorrection = in.read();
+		System.out.println("Time_Correction: "+ timeCorrection);	
+		
+	//	for(int i=0; i< nsv; i++){
+		
+				/* Signal Type, 2 bytes */
+//				int signalType = in.read();
+//				System.out.println("Signal_Type: "+ signalType);
+		
+				/* Signal Type, 2 bytes */
+//				int signalType = in.read();
+//				System.out.println("Signal_Type: "+ signalType);
+				
+				
+	//	}
 		
 		return null;
 		
