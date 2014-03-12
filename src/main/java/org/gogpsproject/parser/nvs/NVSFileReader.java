@@ -20,13 +20,23 @@
 package org.gogpsproject.parser.nvs;
 
 
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
+import java.io.OutputStreamWriter;
+
+
+
+
 
 import org.ejml.simple.SimpleMatrix;
 import org.gogpsproject.Constants;
@@ -66,14 +76,47 @@ public class NVSFileReader  {
 	public static void main(String[] args) throws FileNotFoundException {
 		//public void init() throws Exception {
 
+	    
 	    String file = "./data/rc.rin"; 
+	    String file2 = "./data/output.txt";  // after deleting double <DLE> data
 	    //String file = "./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover_00.bin";
-	    FileInputStream ins = new FileInputStream(file);
-	    BufferedInputStream in = new BufferedInputStream(ins);
 
-	    NVSReader reader = new NVSReader(in, null);
+	    /* for deleting double <DLE> data  */
+		FileInputStream ins0 = new FileInputStream(file);
+	    BufferedInputStream in0 = new BufferedInputStream(ins0);
+//	    DataInputStream in0 = new DataInputStream(inb0);
+	    
+//	    FileInputStream ins = new FileInputStream(file);
+//	    BufferedInputStream in = new BufferedInputStream(ins);
+//	    DataInputStream in = new DataInputStream(inb);
+//	    NVSReader reader = new NVSReader(in, null);
+	    
+	    /* for deleting double <DLE> data  */
+	    FileOutputStream outf = new FileOutputStream(file2);
+	//	DataOutputStream out = new DataOutputStream(outf);	
+		BufferedOutputStream out = new BufferedOutputStream(outf);	
 		
-		try{
+		try{		
+			while(in0.available()>0){   // To remove double <DLE> 
+						int contents = in0.read();
+					    out.write(contents);
+						if(contents == 0x10){
+							contents = in0.read();
+							if(contents == 0x10){
+								continue;	
+							}else{
+								out.write(contents);								
+							}										
+						}	
+			}								
+			out.close();
+			
+		        /* after deleting double <DLE> data */
+				FileInputStream ins = new FileInputStream(file2);
+			    BufferedInputStream in = new BufferedInputStream(ins);
+				
+			    NVSReader reader = new NVSReader(in, null);		
+		 
 			while(in.available()>0){
 				try{
 					int data = in.read();
@@ -104,6 +147,9 @@ public class NVSFileReader  {
 //					ubxe.printStackTrace();
 				}
 			}
+			
+			in.close();
+			
 		}catch(IOException e){
 			e.printStackTrace();
 		}
