@@ -39,21 +39,13 @@ import org.gogpsproject.util.UnsignedOperation;
 public class DecodeF5 {
 	
 	private InputStream in;
-	//private OutputStream out;
-	
-
-	
-	
-//	private int[] fdata;
-//	private int[] fbits;
-//	private boolean end = true;
 
 	int nsv;
 	
 	public DecodeF5(InputStream in) throws IOException {
 		this.in = in;
 		int leng = this.in.available();
-		System.out.println("Length: "+ leng);
+		//System.out.println("Length: "+ leng);
 		
 	
 		// To calculate the number of satellites
@@ -73,8 +65,9 @@ public class DecodeF5 {
 	//							System.out.println("Length2: "+ leng2);					
 								leng = (leng - leng2) * 8 ;
 								nsv = (leng - 216) / 240;  // To calculate the number of satellites
-								// 27*8 bits = 216, 30*8 bits = 240
-								System.out.println("Num of Satellite: "+ nsv);
+								/* 27*8 bits = 216, 30*8 bits = 240 */
+								
+								//System.out.println("Num of Satellite: "+ nsv);
 								break;
 						}					
 					}
@@ -108,160 +101,117 @@ public class DecodeF5 {
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
 		double utc = Bits.byteToIEEE754Double(bytes);
-		System.out.println("TOW_UTC: "+ utc);			        
 	
 		/*  Week Number, 2 bytes  */
 		bytes = new byte[2];
 		in.read(bytes, 0, bytes.length);
 		long weekN = Bits.byteToLong(bytes);
-		System.out.println("Week No.: " + weekN);
 		
 		/*  GPS Time Shift, 8 bytes  */
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
 		double gpsTimeShift = Bits.byteToIEEE754Double(bytes);
-		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
 		
 		/*  GLONASS Time Shift, 8 bytes  */
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
 		double glonassTimeShift = Bits.byteToIEEE754Double(bytes);
-		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
 		
 		/* Time Correction, 1 bytes */
 		//bytes = new byte[1];
 		//in.read(bytes, 0, bytes.length);	
 		int timeCorrection = in.read();
-		System.out.println("Time_Correction: "+ timeCorrection);	
 		
+//		System.out.println("+----------------  Start of F5  ------------------+");
+
+//		System.out.println("TOW_UTC: "+ utc);			        
+//		System.out.println("Week No.: " + weekN);
+//		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
+//		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
+//		System.out.println("Time_Correction: "+ timeCorrection);	
 		
 		for(int i=0; i< nsv; i++){
-			System.out.println("##### Satellite:  "+ i );
-			
-				//bytes = new byte[30];
-				//in.read(bytes, 0, 1);
-			
+						
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
 				int signalType = Bits.byteToInt(bytes);
-				//int signalType = in.read();
-				System.out.println("Signal_Type: "+ signalType);
 		
-				/* Satellite Number, 1 byte */
-				//bytes = new byte[1];
-				//in.read(bytes, 0, bytes.length);
-				
+				/* Satellite Number, 1 byte */				
 				bytes = new byte[1];
-				//in.read(bytes, 0, 1);
 				in.read(bytes, 0, bytes.length);
 				int satID = Bits.byteToInt(bytes);
-				//int satID = in.read();
-
-				System.out.println("Satellite Number: "+ satID);
 				
 				/* A carrier Number for GLONASS, 1 bytes */
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
-				//in.read(bytes, 0, 1);
 				int carrierNum = Bits.byteToInt(bytes);
-				
-				//int carrierNum = in.read();
-				System.out.println("Carrier Number: "+ carrierNum);
 				
 				/* SNR (dB-Hz), 1 byte */
 				bytes = new byte[1];
-				//in.read(bytes, 0, 1);
 				in.read(bytes, 0, bytes.length);
 				int snr = Bits.byteToInt(bytes);
-
-				//int snr = in.read();
-				System.out.println("SNR: "+ snr);
 				
-				/*  Carrier Phase (cycles), 8 bytes  */
-				
+				/*  Carrier Phase (cycles), 8 bytes  */		
 				bytes = new byte[8];
                 in.read(bytes, 0, bytes.length);
                 
-                String binC1 = "";
+                String binL1 = "";
                 for (int j = 7; j >= 0; j--) {    // for little endian
                         String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
                         temp0 = String.format("%8s",temp0).replace(' ', '0');
-                        binC1 =  binC1 + temp0  ;
+                        binL1 =  binL1 + temp0  ;
                 }
-                signStr = binC1.substring(0,1);
+                
+                signStr = binL1.substring(0,1);
 		        signInt = Integer.parseInt(signStr, 2);
-		        espStr = binC1.substring(1,12);
+		        espStr = binL1.substring(1,12);
 		        espInt = Integer.parseInt(espStr, 2);
-		        mantStr = binC1.substring(12,64);
+		        mantStr = binL1.substring(12,64);
 		        mantInt = Long.parseLong(mantStr, 2);
-		       // mantInt = Double.parseDouble(mantStr); 
-	//	        mantInt = (double) (mantInt / Math.pow(2, 52));
 		        mantInt2 = mantInt / Math.pow(2, 52);
-	//	        double m0 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt));
 		        double carrierPhase = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
 							
+		        /*  cannot use below code due to surpass the max value of Long  */
 //				bytes = new byte[8];
 //				//in.read(bytes, 0, 8);
 //				in.read(bytes, 0, bytes.length);
 //				double carrierPhase = Bits.byteToIEEE754Double(bytes);
-				
-				System.out.println("Carrier Phase: "+ carrierPhase);	
-				
-				/*  Pseudo Range (ms), 8 bytes  */
+						
+				/* C/A Pseudo Range (ms), 8 bytes  */
 				bytes = new byte[8];
-				//in.read(bytes, 0, 8);
 				in.read(bytes, 0, bytes.length);
 				double pseudoRange = Bits.byteToIEEE754Double(bytes);
-				System.out.println("Pseudo Range: "+ pseudoRange);
 				
 				/*  Doppler Frequency(Hz), 8 bytes  */
 				bytes = new byte[8];
-				//in.read(bytes, 0, 8);
 				in.read(bytes, 0, bytes.length);
-				double dopperFrequency = Bits.byteToIEEE754Double(bytes);
-										
-//				bytes = new byte[8];
-//                in.read(bytes, 0, bytes.length);
-//                
-//                String binD1 = "";
-//                for (int j = 7; j >= 0; j--) {    // for little endian
-//                        String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-//                        temp0 = String.format("%8s",temp0).replace(' ', '0');
-//                        binD1 =  binD1 + temp0  ;
-//                }
-//                signStr = binD1.substring(0,1);
-//		        signInt = Integer.parseInt(signStr, 2);
-//		        espStr = binD1.substring(1,12);
-//		        espInt = Integer.parseInt(espStr, 2);
-//		        mantStr = binD1.substring(12,64);
-//		        mantInt = Long.parseLong(mantStr, 2);
-//		        mantInt2 = mantInt / Math.pow(2, 52);
-//		        double dopperFrequency = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64			
-				
-				System.out.println("Doppler Frequency: "+ dopperFrequency);
+				double dopperFrequency = Bits.byteToIEEE754Double(bytes);				
 				
 				/* Raw Data Flags, 1 byte */
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
-				//in.read(bytes, 0, 1);
 				int rawDataFlags = Bits.byteToInt(bytes);
-
-				//int rawDataFlags = in.read();
-				System.out.println("Raw Data Flags: "+ rawDataFlags);
 				
 				/* Reserved, 1 byte*/
-				//bytes = new byte[1];
-				//in.read(bytes, 0, bytes.length);
-				in.read(bytes, 0, 1);
-				//in.read(bytes, 0, 1);
-				//int reserved = in.read();
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
 				//System.out.println("reserved: "+ reserved);
-				System.out.println("			");
+				
+//				System.out.println("##### Satellite:  "+ i );
+//				System.out.println("Signal_Type: "+ signalType);
+//				System.out.println("Satellite Number: "+ satID);
+//				System.out.println("Carrier Number: "+ carrierNum);
+//				System.out.println("SNR: "+ snr);
+//				System.out.println("Carrier Phase: "+ carrierPhase);	
+//				System.out.println("Pseudo Range: "+ pseudoRange);
+//				System.out.println("Doppler Frequency: "+ dopperFrequency);
+//				System.out.println("Raw Data Flags: "+ rawDataFlags);
+//				System.out.println("			");
 
-				
-				
 		}
-		
+//		System.out.println("+-----------------  End of F5  -------------------+");
+
+
 		return null;
 		
 		
