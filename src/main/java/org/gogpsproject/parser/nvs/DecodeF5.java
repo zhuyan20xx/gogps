@@ -20,6 +20,7 @@
 
 package org.gogpsproject.parser.nvs;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,7 +39,11 @@ import org.gogpsproject.util.UnsignedOperation;
 public class DecodeF5 {
 	
 	private InputStream in;
+	//private OutputStream out;
+	
 
+	
+	
 //	private int[] fdata;
 //	private int[] fbits;
 //	private boolean end = true;
@@ -50,6 +55,8 @@ public class DecodeF5 {
 		int leng = this.in.available();
 		System.out.println("Length: "+ leng);
 		
+	
+		// To calculate the number of satellites
 		if(in.markSupported()){
 		    
 		    in.mark(0); // To rewind in.read point 
@@ -59,17 +66,19 @@ public class DecodeF5 {
 				int data = in.read();
 				if(data == 0x10){
 					data = in.read();
-					if(data == 0xf7 || data == 0xf5 || data == 0x4a || data == 0x62 || data == 0xf6 || data == 0xd5 || data == 0xe5 || data == 0x6f || data == 0x63 || data == 0x64 || data == 0x69 || data == 0x6a || data == 0x6b  ){
-						int leng2 = this.in.available();
-						System.out.println("Length2: "+ leng2);
-						
-						leng = (leng - leng2) * 8 ;
-						nsv = (leng - 216) / 240;  // To calculate the number of satellites
-						// 27*8 bits = 216, 30*8 bits = 240
-						System.out.println("Num of Satellite: "+ nsv);
-						
-					break;
+					if(data == 0x03){
+						data = in.read();
+						if(data == 0x10){
+								int leng2 = this.in.available();
+	//							System.out.println("Length2: "+ leng2);					
+								leng = (leng - leng2) * 8 ;
+								nsv = (leng - 216) / 240;  // To calculate the number of satellites
+								// 27*8 bits = 216, 30*8 bits = 240
+								System.out.println("Num of Satellite: "+ nsv);
+								break;
+						}					
 					}
+					
 				}	
 		    }	
 		
@@ -85,9 +94,15 @@ public class DecodeF5 {
 		
 		byte bytes[];
 		
+		int signInt;
+		String signStr; 
+		int espInt;
+		String espStr;
+		long mantInt;
+		String mantStr; 
+		double mantInt2;
 		
-		//System.out.println("Num of Satellite: "+ nsv);
-		
+		//System.out.println("Num of Satellite: "+ nsv);	
 		
 		/*  TOW_UTC, 8 bytes  */
 		bytes = new byte[8];
@@ -113,53 +128,136 @@ public class DecodeF5 {
 		double glonassTimeShift = Bits.byteToIEEE754Double(bytes);
 		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
 		
-		/* Time Correction, 2 bytes */
+		/* Time Correction, 1 bytes */
+		//bytes = new byte[1];
+		//in.read(bytes, 0, bytes.length);	
 		int timeCorrection = in.read();
 		System.out.println("Time_Correction: "+ timeCorrection);	
 		
-		for(int i=0; i< nsv; i++){
 		
-				/* Signal Type, 2 bytes, 01: GLONASS, 02: GPS, 04: SBAS */
-				int signalType = in.read();
+		for(int i=0; i< nsv; i++){
+			System.out.println("##### Satellite:  "+ i );
+			
+				//bytes = new byte[30];
+				//in.read(bytes, 0, 1);
+			
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
+				int signalType = Bits.byteToInt(bytes);
+				//int signalType = in.read();
 				System.out.println("Signal_Type: "+ signalType);
 		
-				/* Satellite Number, 2 bytes */
-				int satID = in.read();
+				/* Satellite Number, 1 byte */
+				//bytes = new byte[1];
+				//in.read(bytes, 0, bytes.length);
+				
+				bytes = new byte[1];
+				//in.read(bytes, 0, 1);
+				in.read(bytes, 0, bytes.length);
+				int satID = Bits.byteToInt(bytes);
+				//int satID = in.read();
+
 				System.out.println("Satellite Number: "+ satID);
 				
-				/* A carrier Number for GLONASS, 2 bytes */
-				int carrierNum = in.read();
+				/* A carrier Number for GLONASS, 1 bytes */
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
+				//in.read(bytes, 0, 1);
+				int carrierNum = Bits.byteToInt(bytes);
+				
+				//int carrierNum = in.read();
 				System.out.println("Carrier Number: "+ carrierNum);
 				
-				/* SNR (dB-Hz) */
-				int snr = in.read();
+				/* SNR (dB-Hz), 1 byte */
+				bytes = new byte[1];
+				//in.read(bytes, 0, 1);
+				in.read(bytes, 0, bytes.length);
+				int snr = Bits.byteToInt(bytes);
+
+				//int snr = in.read();
 				System.out.println("SNR: "+ snr);
 				
 				/*  Carrier Phase (cycles), 8 bytes  */
+				
 				bytes = new byte[8];
-				in.read(bytes, 0, bytes.length);
-				double carrierPhase = Bits.byteToIEEE754Double(bytes);
+                in.read(bytes, 0, bytes.length);
+                
+                String binC1 = "";
+                for (int j = 7; j >= 0; j--) {    // for little endian
+                        String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
+                        temp0 = String.format("%8s",temp0).replace(' ', '0');
+                        binC1 =  binC1 + temp0  ;
+                }
+                signStr = binC1.substring(0,1);
+		        signInt = Integer.parseInt(signStr, 2);
+		        espStr = binC1.substring(1,12);
+		        espInt = Integer.parseInt(espStr, 2);
+		        mantStr = binC1.substring(12,64);
+		        mantInt = Long.parseLong(mantStr, 2);
+		       // mantInt = Double.parseDouble(mantStr); 
+	//	        mantInt = (double) (mantInt / Math.pow(2, 52));
+		        mantInt2 = mantInt / Math.pow(2, 52);
+	//	        double m0 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt));
+		        double carrierPhase = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
+							
+//				bytes = new byte[8];
+//				//in.read(bytes, 0, 8);
+//				in.read(bytes, 0, bytes.length);
+//				double carrierPhase = Bits.byteToIEEE754Double(bytes);
+				
 				System.out.println("Carrier Phase: "+ carrierPhase);	
 				
 				/*  Pseudo Range (ms), 8 bytes  */
 				bytes = new byte[8];
+				//in.read(bytes, 0, 8);
 				in.read(bytes, 0, bytes.length);
 				double pseudoRange = Bits.byteToIEEE754Double(bytes);
 				System.out.println("Pseudo Range: "+ pseudoRange);
 				
 				/*  Doppler Frequency(Hz), 8 bytes  */
 				bytes = new byte[8];
+				//in.read(bytes, 0, 8);
 				in.read(bytes, 0, bytes.length);
 				double dopperFrequency = Bits.byteToIEEE754Double(bytes);
+										
+//				bytes = new byte[8];
+//                in.read(bytes, 0, bytes.length);
+//                
+//                String binD1 = "";
+//                for (int j = 7; j >= 0; j--) {    // for little endian
+//                        String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
+//                        temp0 = String.format("%8s",temp0).replace(' ', '0');
+//                        binD1 =  binD1 + temp0  ;
+//                }
+//                signStr = binD1.substring(0,1);
+//		        signInt = Integer.parseInt(signStr, 2);
+//		        espStr = binD1.substring(1,12);
+//		        espInt = Integer.parseInt(espStr, 2);
+//		        mantStr = binD1.substring(12,64);
+//		        mantInt = Long.parseLong(mantStr, 2);
+//		        mantInt2 = mantInt / Math.pow(2, 52);
+//		        double dopperFrequency = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64			
+				
 				System.out.println("Doppler Frequency: "+ dopperFrequency);
 				
-				/* Raw Data Flags */
-				int rawDataFlags = in.read();
+				/* Raw Data Flags, 1 byte */
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
+				//in.read(bytes, 0, 1);
+				int rawDataFlags = Bits.byteToInt(bytes);
+
+				//int rawDataFlags = in.read();
 				System.out.println("Raw Data Flags: "+ rawDataFlags);
 				
-				/* Reserved */
-				int reserved = in.read();
-				System.out.println("reserved: "+ reserved);
+				/* Reserved, 1 byte*/
+				//bytes = new byte[1];
+				//in.read(bytes, 0, bytes.length);
+				in.read(bytes, 0, 1);
+				//in.read(bytes, 0, 1);
+				//int reserved = in.read();
+				//System.out.println("reserved: "+ reserved);
+				System.out.println("			");
+
 				
 				
 		}
