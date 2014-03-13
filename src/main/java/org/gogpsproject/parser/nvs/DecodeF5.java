@@ -101,6 +101,7 @@ public class DecodeF5 {
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
 		double utc = Bits.byteToIEEE754Double(bytes);
+		long tow = (long)utc;
 	
 		/*  Week Number, 2 bytes  */
 		bytes = new byte[2];
@@ -122,6 +123,9 @@ public class DecodeF5 {
 		//in.read(bytes, 0, bytes.length);	
 		int timeCorrection = in.read();
 		
+		long gmtTS = getGMTTS(tow, weekN);
+		Observations o = new Observations(new Time(gmtTS),0);
+		
 //		System.out.println("+----------------  Start of F5  ------------------+");
 
 //		System.out.println("TOW_UTC: "+ utc);			        
@@ -132,6 +136,8 @@ public class DecodeF5 {
 		
 		for(int i=0; i< nsv; i++){
 						
+				ObservationSet os = new ObservationSet();
+			
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
 				int signalType = Bits.byteToInt(bytes);
@@ -140,6 +146,7 @@ public class DecodeF5 {
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
 				int satID = Bits.byteToInt(bytes);
+				os.setSatID(satID);
 				
 				/* A carrier Number for GLONASS, 1 bytes */
 				bytes = new byte[1];
@@ -150,6 +157,7 @@ public class DecodeF5 {
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
 				int snr = Bits.byteToInt(bytes);
+				os.setSignalStrength(ObservationSet.L1, snr);
 				
 				/*  Carrier Phase (cycles), 8 bytes  */		
 				bytes = new byte[8];
@@ -170,7 +178,9 @@ public class DecodeF5 {
 		        mantInt = Long.parseLong(mantStr, 2);
 		        mantInt2 = mantInt / Math.pow(2, 52);
 		        double carrierPhase = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
-							
+		        os.setPhase(ObservationSet.L1, carrierPhase); 			
+		        
+		        
 		        /*  cannot use below code due to surpass the max value of Long  */
 //				bytes = new byte[8];
 //				//in.read(bytes, 0, 8);
@@ -181,11 +191,14 @@ public class DecodeF5 {
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double pseudoRange = Bits.byteToIEEE754Double(bytes);
+				os.setCodeC(ObservationSet.L1, pseudoRange);
 				
 				/*  Doppler Frequency(Hz), 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double dopperFrequency = Bits.byteToIEEE754Double(bytes);				
+				double dopperFrequency = Bits.byteToIEEE754Double(bytes);
+				float d1 = (float)dopperFrequency; 
+				os.setDoppler(ObservationSet.L1, d1);
 				
 				/* Raw Data Flags, 1 byte */
 				bytes = new byte[1];
@@ -195,6 +208,9 @@ public class DecodeF5 {
 				/* Reserved, 1 byte*/
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
+				
+				o.setGps(i, os);
+				
 				//System.out.println("reserved: "+ reserved);
 				
 //				System.out.println("##### Satellite:  "+ i );
