@@ -65,9 +65,9 @@ public class NVSFileReader  {
 	private NVSReader reader;
 //	private File file;
 	private Observations obs = null;
-	private IonoGps iono = null;
+	private static IonoGps iono = null;
 	// TODO support past times, now keep only last broadcast data
-	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
+	private static HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
 
 	
 	/* (non-Javadoc)
@@ -124,7 +124,7 @@ public class NVSFileReader  {
 						//System.out.println("<DLE>");
 						Object o = reader.readMessagge();
 				
-						/*
+						
 						if(o instanceof Observations){
 							//return (Observations)o;
 						}else
@@ -136,7 +136,7 @@ public class NVSFileReader  {
 							EphGps e = (EphGps)o;
 							ephs.put(new Integer(e.getSatID()), e);
 						}
-						*/
+						
 						
 					}else{
 						//no warning, may be NMEA

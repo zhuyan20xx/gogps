@@ -65,7 +65,7 @@ public class NVSReader implements StreamEventProducer {
 			if (data == 0xf5){
 				System.out.println("F5h");
 				DecodeF5 decodeF5 = new DecodeF5(in);				
-				Observations o = decodeF5.decode();
+				Observations o = decodeF5.decode(null);
 				
 			}else
 			if (data == 0x4a){
