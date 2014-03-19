@@ -59,7 +59,6 @@ public class NVSReader implements StreamEventProducer {
 				System.out.println("F7h");
 				DecodeF7 decodeF7 = new DecodeF7(in);
 				EphGps o = decodeF7.decode();
-
 				
 			}else
 			if (data == 0xf5){
