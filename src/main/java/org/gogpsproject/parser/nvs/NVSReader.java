@@ -58,88 +58,44 @@ public class NVSReader implements StreamEventProducer {
 			if(data == 0xf7){
 				System.out.println("F7h");
 				DecodeF7 decodeF7 = new DecodeF7(in);
-				EphGps o = decodeF7.decode();
-				
+				EphGps eph = decodeF7.decode();
+				if(streamEventListeners!=null && eph!=null){
+					for(StreamEventListener sel:streamEventListeners){
+						sel.addEphemeris(eph);
+					}
+				}
+				return eph;
+						
 			}else
 			if (data == 0xf5){
 				System.out.println("F5h");
 				DecodeF5 decodeF5 = new DecodeF5(in);				
 				Observations o = decodeF5.decode(null);
+				if(streamEventListeners!=null && o!=null){
+					for(StreamEventListener sel:streamEventListeners){
+						Observations oc = (Observations)o.clone();
+						sel.addObservations(oc);
+					}
+				}
+				return o;
 				
 			}else
 			if (data == 0x4a){
 				System.out.println("4Ah");
 				Decode4A decode4A = new Decode4A(in);
-				IonoGps o = decode4A.decode();
+				IonoGps iono = decode4A.decode();
+				if(streamEventListeners!=null && iono!=null){
+					for(StreamEventListener sel:streamEventListeners){
+						sel.addIonospheric(iono);
+					}
+				}
+				return iono;
 
 				
 			}else
 			if (data == 0x62){
 				System.out.println("62h");
-
-//				boolean parsed = false;
-//				if (data == 0x02) {
-//					data = in.read(); // ID
-//					if (data == 0x10) { // RXM
-//						// RMX-RAW
-//			//			DecodeRXMRAW decodegps = new DecodeRXMRAW(in);
-//
-//	//					Observations o = decodegps.decode(null);
-////						if(streamEventListeners!=null && o!=null){
-////							for(StreamEventListener sel:streamEventListeners){
-////								Observations oc = (Observations)o.clone();
-////								sel.addObservations(oc);
-////							}
-////						}
-//			//			return o;
-//					}
-//				}else
-//				if (data == 0x0B) { // AID
-//					data = in.read(); // ID
-//					if (data == 0x02) { // HUI
-//						// AID-HUI (sat. Health / UTC / Ionosphere)
-////						DecodeAIDHUI decodegps = new DecodeAIDHUI(in);
-//
-////						IonoGps iono = decodegps.decode();
-////							if(streamEventListeners!=null && iono!=null){
-////								for(StreamEventListener sel:streamEventListeners){
-////									// TODO clone iono
-////									sel.addIonospheric(iono);
-////								}
-////							}
-////					return iono;
-//					}else
-//					if (data == 0x31) { // EPH
-//						// AID-EPH (ephemerides)
-////							DecodeAIDEPH decodegps = new DecodeAIDEPH(in);
-//
-////							EphGps eph = decodegps.decode();
-////							if(streamEventListeners!=null && eph!=null){
-////								for(StreamEventListener sel:streamEventListeners){
-////									// TODO clone eph
-////									sel.addEphemeris(eph);
-////								}
-////							}
-////							return eph;
-//
-//					}
-//				}else{
-//					in.skip(1); // ID
-//				}
-//				if(!parsed){
-//
-//					// read non parsed message length
-//					int[] length = new int[2];
-//					length[1] = in.read();
-//					length[0] = in.read();
-//
-//					int len = length[0]*256+length[1];
-//					//System.out.println("skip "+len);
-//					in.skip(len+2);
-//
-//				}
-				
-			
+		
 				
 			}else{
 				//System.out.println("Wrong Sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");

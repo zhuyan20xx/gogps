@@ -48,380 +48,203 @@ public class DecodeF7 {
 		// parse little Endian data
 
 
-		int[] data;
-		boolean[] bits;
-		int indice;
-		boolean[] temp1;
-		
 		EphGps eph = new EphGps();
 		int satType = in.read();  // satType 1 = GPS, 2 = GLONASS		
 		int satId = in.read();
 		
 		
-		if (satType == 1){   // GPS: 138 bytes 
+		if (satType == 1){ 
 		
-				data = new int[138];
-				
-				for (int i = 0; i < 138 ; i++) {
-					data[i] = in.read();
-				}
 			
 				eph.setSatID((int)satId);
-
-								
-				/*  Crs, 4 bytes  */
-				bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 3; j >= 0; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float crs = UnsignedOperation.toFloat(Bits.tobytes(bits));
-		        eph.setCrs(crs);		        
-				
-				/*  deltaN, 4 bytes  */
-				bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 7; j >= 4; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float deltaN = UnsignedOperation.toFloat(Bits.tobytes(bits));
-		        eph.setDeltaN(deltaN);		        
-				
-				/*  M0, 8 bytes  */
-				bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 15; j >= 8; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double m0 = UnsignedOperation.toDouble(Bits.tobytes(bits));
-				eph.setM0(m0);
+		
+				byte bytes[];
+				int signInt;
+				String signStr; 
+				int espInt;
+				String espStr;
+				long mantInt;
+				String mantStr; 
+				double mantInt2;
 			
-				/*  Cuc, 4 bytes  */
-				bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 19; j >= 16; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float cuc = UnsignedOperation.toFloat(Bits.tobytes(bits));
+			
+				/*  Crs, 4 bytes  */		
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+				float crs = Bits.byteToIEEE754Float(bytes);
+		        eph.setCrs(crs);		        
+		        
+		        /*  deltaN, 4 bytes  */
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+				float deltaN = Bits.byteToIEEE754Float(bytes);
+		        eph.setDeltaN(deltaN);		        
+		        
+		        /*  M0, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double m0 = Bits.byteToIEEE754Double(bytes);
+				eph.setM0(m0);
+								
+		        /*  Cuc, 4 bytes  */
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+				float cuc = Bits.byteToIEEE754Float(bytes);
 		        eph.setCuc(cuc);
-
-				  
+		        
 		        /*  E, 8 bytes  */
-		        bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 27; j >= 20; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double e = UnsignedOperation.toDouble(Bits.tobytes(bits));
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);	
+				double e = Bits.byteToIEEE754Double(bytes);
 				eph.setE(e);   
-				
-				/*  Cus, 4 bytes  */
-				bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 31; j >= 28; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float cus = UnsignedOperation.toFloat(Bits.tobytes(bits));
+							
+		        /*  Cus, 4 bytes  */
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+				float cus = Bits.byteToIEEE754Float(bytes);
 		        eph.setCus(cus);
-	  	        		        
+		        		        
 		        /*  SqrtA, 8 bytes  */
-		        bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 39; j >= 32; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double rootA = UnsignedOperation.toDouble(Bits.tobytes(bits));	      		 
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double rootA = Bits.byteToIEEE754Double(bytes);
 				eph.setRootA(rootA);
 					        
 		        /*  Toe, 8 bytes  */
-				bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 47; j >= 40; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double toe = UnsignedOperation.toDouble(Bits.tobytes(bits));	      		 				
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double toe = Bits.byteToIEEE754Double(bytes);
 				eph.setToe(toe);
-							  	        
+				  	        
 		        /*  Cic, 4 bytes  */
-				bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 51; j >= 48; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float cic = UnsignedOperation.toFloat(Bits.tobytes(bits));	      		 							
-		        eph.setCic(cic);	
-		           	        
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+				float cic = Bits.byteToIEEE754Float(bytes);
+		        eph.setCic(cic);	        
+		        
 		        /*  Omega0, 8 bytes  */
-		        bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 59; j >= 52; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double omega0 = UnsignedOperation.toDouble(Bits.tobytes(bits));	 		        
-				eph.setOmega0(omega0);	
-								
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double omega0 = Bits.byteToIEEE754Double(bytes);
+				eph.setOmega0(omega0);	        
+				
 				/*  Cis, 4 bytes  */
-				bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 63; j >= 60; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float cis = UnsignedOperation.toFloat(Bits.tobytes(bits));								
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+				float cis = Bits.byteToIEEE754Float(bytes);
 		        eph.setCis(cis);	        
-	        
+		        
 		        /*  I0, 8 bytes  */
-		        bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 71; j >= 64; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double i0 = UnsignedOperation.toDouble(Bits.tobytes(bits));	
-		        eph.setI0(i0);
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double i0 = Bits.byteToIEEE754Double(bytes);
+				eph.setI0(i0);
 				
 				/*  Crc, 4 bytes  */
-		        bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 75; j >= 72; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float crc = UnsignedOperation.toFloat(Bits.tobytes(bits));								 
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+				float crc = Bits.byteToIEEE754Float(bytes);
 		        eph.setCrc(crc);	   
 		        
 		        /*  W, 8 bytes  */
-		        bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 83; j >= 76; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double omega = UnsignedOperation.toDouble(Bits.tobytes(bits));	      
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double omega = Bits.byteToIEEE754Double(bytes);
 				eph.setOmega(omega);
 				
 				/*  OmegaR(OmegaDot), 8 bytes  */
-				bits = new boolean[8 * 8]; // FP64
-					indice = 0;
-					for (int j = 91; j >= 84; j--) {
-						temp1 = Bits.intToBits(data[j], 8);
-						for (int i = 0; i < 8; i++) {
-							bits[indice] = temp1[i];
-							indice++;
-						}
-					}
-				double omegaDot = UnsignedOperation.toDouble(Bits.tobytes(bits));	      			
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double omegaDot = Bits.byteToIEEE754Double(bytes);
 				eph.setOmegaDot(omegaDot);
-							
+				
 				/*  IDOT, 8 bytes  */
-				bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 99; j >= 92; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double iDot = UnsignedOperation.toDouble(Bits.tobytes(bits));	 				
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double iDot = Bits.byteToIEEE754Double(bytes);
 				eph.setiDot(iDot);	
 				
 				/*  Tgd, 4 bytes  */
-				bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 103; j >= 100; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float tgd = UnsignedOperation.toFloat(Bits.tobytes(bits));				
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+				float tgd = Bits.byteToIEEE754Float(bytes);
 		        eph.setTgd(tgd);        
 		        
 		        /*  Toc, 8 bytes  */
-		        bits = new boolean[8 * 8]; // FP64
-				indice = 0;
-				for (int j = 111; j >= 104; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				double toc = UnsignedOperation.toDouble(Bits.tobytes(bits));
-		        eph.setTgd(toc);        
-    			  
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double toc = Bits.byteToIEEE754Double(bytes);
+				eph.setToc(toc);
+		        			
 				/*  Af2, 4 bytes  */
-		        bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 115; j >= 112; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}			
-				//System.out.println("af2: " + Bits.tobytes(bits)) ;
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);
+
+		        /*  cannot use below code due to surpass the max value of Long  */
+//				long af2 = Bits.byteToIEEE754Float(bytes);
+								
+				long longAf2 = Bits.byteToLong(bytes);
+				String binAf2 = Long.toBinaryString(longAf2);
+				binAf2 = String.format("%32s",binAf2).replace(' ', '0');
 				
-				float af2 = (float) UnsignedOperation.toFloat(Bits.tobytes(bits));
-				eph.setAf2(af2);				
+				signStr = binAf2.substring(0,1);
+		        signInt = Integer.parseInt(signStr, 2);
+		        espStr = binAf2.substring(1,9);
+		        espInt = Integer.parseInt(espStr, 2);
+		        mantStr = binAf2.substring(9);
+		        mantInt = Integer.parseInt(mantStr, 2);
+		        mantInt2 = mantInt / Math.pow(2, 23);
+		        double af2 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 127)) * (1 + mantInt2));  //FP32   
+		        eph.setAf2(af2);
+				
 		        
 		        /*  Af1, 4 bytes  */
-		        bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 119; j >= 116; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float af1 = UnsignedOperation.toFloat(Bits.tobytes(bits));
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);			
+				float af1 = Bits.byteToIEEE754Float(bytes);
 		        eph.setAf1(af1);        
 		        
 		        /*  Af0, 4 bytes  */
-		        bits = new boolean[8 * 4]; // FP32
-				indice = 0;
-				for (int j = 123; j >= 120; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				float af0 = UnsignedOperation.toFloat(Bits.tobytes(bits));	        
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);				
+				float af0 = Bits.byteToIEEE754Float(bytes);
 		        eph.setAf0(af0);
-		        		        	        
-		        /*  URA(svaccur), 2 bytes  */	
-		        bits = new boolean[8 * 2]; 
-				indice = 0;
-				for (int j = 125; j >= 124; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				int svAccur = (int)Bits.bitsToUInt(bits);		        
-				eph.setSvAccur(svAccur);			
+		        	        
+		        /*  URA(svaccur), 2 bytes  */
+				bytes = new byte[2];
+				in.read(bytes, 0, bytes.length);
+				long svAccur = Bits.byteToLong(bytes);				
+				eph.setSvAccur((int)svAccur);			
 				
 				/*  IODE, 2 bytes  */
-				bits = new boolean[8 * 2]; 
-				indice = 0;
-				for (int j = 127; j >= 126; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				int iode = (int)Bits.bitsToUInt(bits);		
+				bytes = new byte[2];
+				in.read(bytes, 0, bytes.length);
+				long iode = Bits.byteToLong(bytes);
 				eph.setSvAccur((int)iode);			
 				
 				/*  IODC, 2 bytes  */
-				bits = new boolean[8 * 2]; 
-				indice = 0;
-				for (int j = 129; j >= 128; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				int iodc = (int)Bits.bitsToUInt(bits);			
-				eph.setIodc(iodc);			
+				bytes = new byte[2];
+				in.read(bytes, 0, bytes.length);
+				long iodc = Bits.byteToLong(bytes);			
+				eph.setIodc((int)iodc);			
 				
 				/*  CodeL2, 2 bytes  */
-				bits = new boolean[8 * 2]; 
-				indice = 0;
-				for (int j = 131; j >= 130; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				int l2Code = (int)Bits.bitsToUInt(bits);					
-				eph.setL2Code(l2Code);
+				bytes = new byte[2];
+				in.read(bytes, 0, bytes.length);
+				long l2Code = Bits.byteToLong(bytes);				
+				eph.setL2Code((int)l2Code);
 				
 				/*  L2_Pdata_flag, 2 bytes  */
-				bits = new boolean[8 * 2]; 
-				indice = 0;
-				for (int j = 133; j >= 132; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				int l2Flag = (int)Bits.bitsToUInt(bits);									
-				eph.setL2Flag(l2Flag);		
+				bytes = new byte[2];
+				in.read(bytes, 0, bytes.length);
+				long l2Flag = Bits.byteToLong(bytes);		
+				eph.setL2Flag((int)l2Flag);		
 				
 				/*  WeekN, 2 bytes  */
-				bits = new boolean[8 * 2]; 
-				indice = 0;
-				for (int j = 135; j >= 134; j--) {
-					temp1 = Bits.intToBits(data[j], 8);
-					for (int i = 0; i < 8; i++) {
-						bits[indice] = temp1[i];
-						indice++;
-					}
-				}
-				int week = (int)Bits.bitsToUInt(bits);													
-				eph.setWeek(week);
+				bytes = new byte[2];
+				in.read(bytes, 0, bytes.length);
+				long week = Bits.byteToLong(bytes);		
+				eph.setWeek((int)week);
 			
 				System.out.println("+----------------  Start of F7  ------------------+");
 				System.out.println("satType: " + satType);  
@@ -456,7 +279,7 @@ public class DecodeF7 {
 				System.out.println("+-----------------  End of F7  -------------------+");
 						        
         
-		}else{   // GLONASS: 93 bytes
+		}else{ 
 
 				System.out.println("GLONASS PRN: " + satId);
 
