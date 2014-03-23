@@ -46,22 +46,27 @@ public class DecodeF5 {
 	
 	public DecodeF5(InputStream in) throws IOException {
 		this.in = in;
-		int leng1 = this.in.available();
-			
+		int leng1 = in.available();
+//		System.out.println("leng1: " + leng1 );
+
 		// To calculate the number of satellites
 		if(in.markSupported()){
 		    
 		    in.mark(0); // To rewind in.read point 
 
 		    while(in.available()>0){
-				
+			
 				int data = in.read();
-				if(data == 0x10){
-					data = in.read();
-					if(data == 0x03){
+				if(data == 0x10){  // <DLE>
+					data = in.read(); 
+					if(data == 0x03){  // <ETX>
 						data = in.read();
-						if(data == 0x10){
+						if(data == 0x10){  // <DLE>
+//							System.out.println("mark is ok");
+
 								int leng2 = this.in.available();
+//								System.out.println("leng2: " + leng2 );
+
 	//							System.out.println("Length2: "+ leng2);					
 								leng = (leng1 - leng2) * 8 ;
 								nsv = (leng - 224) / 240;  // To calculate the number of satellites
@@ -75,10 +80,10 @@ public class DecodeF5 {
 				}	
 		    }	
 		
+		}else{
+				System.out.println("mark is not supported, use BufferedInputStream");
 		}
-		else
-		    System.out.println("mark is not supported, use BufferedInputStream");
-		
+		   
 	    in.reset(); // To return to in.mark point  
 		
 	}
@@ -122,8 +127,8 @@ public class DecodeF5 {
 		long gmtTS = getGMTTS(tow, weekN);
 		Observations o = new Observations(new Time(gmtTS),0);
 		
-		System.out.println("+----------------  Start of F5  ------------------+");
-
+//		System.out.println("+----------------  Start of F5  ------------------+");
+//
 //		System.out.println("TOW_UTC: "+ utc);			        
 //		System.out.println("Week No.: " + weekN);
 //		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
@@ -239,22 +244,22 @@ public class DecodeF5 {
 		
 				o.setGps(k, os);
 			
-				System.out.println("##### Satellite:  "+ k );
-				System.out.println("Signal_Type: "+ signalType);
-				System.out.println("Satellite Number: "+ satID);
-				System.out.println("Carrier Number: "+ carrierNum);
-				System.out.println("SNR: "+ snr);
-				System.out.println("Carrier Phase: "+ carrierPhase);	
-				System.out.println("Pseudo Range: "+ pseudoRange);
-				System.out.println("Doppler Frequency: "+ d1);
-				System.out.println("Raw Data Flags: "+ rawDataFlags);
-				System.out.println("			");
+//				System.out.println("##### Satellite:  "+ k );
+//				System.out.println("Signal_Type: "+ signalType);
+//				System.out.println("Satellite Number: "+ satID);
+//				System.out.println("Carrier Number: "+ carrierNum);
+//				System.out.println("SNR: "+ snr);
+//				System.out.println("Carrier Phase: "+ carrierPhase);	
+//				System.out.println("Pseudo Range: "+ pseudoRange);
+//				System.out.println("Doppler Frequency: "+ d1);
+//				System.out.println("Raw Data Flags: "+ rawDataFlags);
+//				System.out.println("			");
 
 		}
-		System.out.println("+-----------------  End of F5  -------------------+");
+//		System.out.println("+-----------------  End of F5  -------------------+");
 
 
-		return null;
+		return o;
 		
 		
 	}

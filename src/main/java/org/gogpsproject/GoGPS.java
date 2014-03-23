@@ -157,7 +157,9 @@ public class GoGPS implements Runnable{
 	private Vector<PositionConsumer> positionConsumers = new Vector<PositionConsumer>();
 
 
-	private boolean debug = false;
+//	private boolean debug = false;
+	private boolean debug = true;
+
 	/**
 	 * Instantiates a new go gps.
 	 *
@@ -205,6 +207,7 @@ public class GoGPS implements Runnable{
 		try {
 			Observations obsR = roverIn.getNextObservations();
 			while (obsR!=null) { // buffStreamObs.ready()
+				if(debug) System.out.println("OK ");
 
 				//try{
 					// If there are at least four satellites
@@ -368,6 +371,9 @@ public class GoGPS implements Runnable{
 			Observations obsM = masterIn.getNextObservations();
 
 			while (obsR != null && obsM != null) {
+//				System.out.println("obsR: " + obsR);
+
+				
 				if(debug)System.out.println("R:"+obsR.getRefTime().getMsec()+" M:"+obsM.getRefTime().getMsec());
 
 				timeRead = System.currentTimeMillis();
@@ -377,28 +383,41 @@ public class GoGPS implements Runnable{
 //				Observations obsR = roverIn.nextObservations();
 //				Observations obsM = masterIn.nextObservations();
 				long obsRtime = obsR.getRefTime().getRoundedGpsTime();
-				//System.out.println("look for M "+obsRtime);
+				System.out.println("look for M "+obsRtime);
+//				System.out.println("obsM_Time: " + obsM.getRefTime().getRoundedGpsTime());
+
 				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getRoundedGpsTime()) {
+					
 //					masterIn.skipDataObs();
 //					masterIn.parseEpochObs();
 					obsM = masterIn.getNextObservations();
+					System.out.println("while obsM: " + obsM);
 				}
-				//System.out.println("found M "+obsRtime);
+//				System.out.println("found M "+obsRtime);
 
 				// Discard rover epochs if correspondent master epochs are
 				// not available
 				long obsMtime = obsM.getRefTime().getGpsTime();
-				//System.out.println("look for R "+obsMtime);
+				System.out.println("##look for R "+obsMtime);
+			
 				while (obsM!=null && obsR!=null && obsR.getRefTime().getGpsTime() < obsMtime) {
+					System.out.println("obsR_Time: " + obsR.getRefTime().getGpsTime() );
+					
 					obsR = roverIn.getNextObservations();
 				}
-				//System.out.println("found R "+obsMtime);
+//				System.out.println("found R "+obsMtime);
+
+				System.out.println("obsM: " + obsM);
+				System.out.println("obsR: " + obsR);
+
 
 				if(obsM!=null && obsR!=null){
 					timeRead = System.currentTimeMillis() - timeRead;
 					depRead = depRead + timeRead;
 					timeProc = System.currentTimeMillis();
+//					System.out.println("Check!!");
 
+					
 					// If Kalman filter was not initialized and if there are at
 					// least four satellites
 					boolean valid = true;
