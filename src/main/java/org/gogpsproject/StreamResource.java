@@ -27,6 +27,7 @@ package org.gogpsproject;
 public interface StreamResource {
 
 	public void init() throws Exception;
+	public void initNVS() throws Exception;
 	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException;
 
 }

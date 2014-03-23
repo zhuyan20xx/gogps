@@ -31,10 +31,10 @@ import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
 /**
  * <p>
- * Read and parse UBX messages
+ * Read and parse NVS messages
  * </p>
  *
- * @author Lorenzo Patocchi cryms.com
+ * @author Daisuke Yoshida (Osaka City University), Lorenzo Patocchi (cryms.com)
  */
 public class NVSReader implements StreamEventProducer {
 	private InputStream in;
@@ -49,61 +49,69 @@ public class NVSReader implements StreamEventProducer {
 		addStreamEventListener(eventListener);
 	}
 
-	public Object readMessagge() throws IOException, NVSException{
+	//public Object readMessagge() throws IOException, NVSException{
+	public Object readMessagge(InputStream in) throws IOException, NVSException{
 
-//		int data = in.read();
-//		if(data == 0xB5){
 			int data = in.read();
-			//int data2 = in2.read();
+//			boolean parsed = false;
+//			System.out.println(data);
+
 			if(data == 0xf7){
-				System.out.println("F7h");
+
 				DecodeF7 decodeF7 = new DecodeF7(in);
+//				parsed = true;
+				
 				EphGps eph = decodeF7.decode();
-				if(streamEventListeners!=null && eph!=null){
-					for(StreamEventListener sel:streamEventListeners){
-						sel.addEphemeris(eph);
-					}
-				}
+//				if(streamEventListeners!=null && eph!=null){
+//					for(StreamEventListener sel:streamEventListeners){
+//						sel.addEphemeris(eph);
+//					}
+//				}
+//				System.out.println("F7h");
 				return eph;
 						
 			}else
 			if (data == 0xf5){
-				System.out.println("F5h");
-				DecodeF5 decodeF5 = new DecodeF5(in);				
+				DecodeF5 decodeF5 = new DecodeF5(in);		
+
+//				parsed = true;
+				
 				Observations o = decodeF5.decode(null);
-				if(streamEventListeners!=null && o!=null){
-					for(StreamEventListener sel:streamEventListeners){
-						Observations oc = (Observations)o.clone();
-						sel.addObservations(oc);
-					}
-				}
+//				if(streamEventListeners!=null && o!=null){
+//					for(StreamEventListener sel:streamEventListeners){
+//						Observations oc = (Observations)o.clone();
+//						sel.addObservations(oc);
+//					}
+//				}
+//				System.out.println("F5h");
+
 				return o;
 				
 			}else
 			if (data == 0x4a){
-				System.out.println("4Ah");
 				Decode4A decode4A = new Decode4A(in);
+//				parsed = true;
+				
 				IonoGps iono = decode4A.decode();
-				if(streamEventListeners!=null && iono!=null){
-					for(StreamEventListener sel:streamEventListeners){
-						sel.addIonospheric(iono);
-					}
-				}
+//				if(streamEventListeners!=null && iono!=null){
+//					for(StreamEventListener sel:streamEventListeners){
+//						sel.addIonospheric(iono);
+//					}
+//				}
+//				System.out.println("4Ah");
 				return iono;
 
 				
 			}else
 			if (data == 0x62){
-				System.out.println("62h");
-		
+				
+//				System.out.println("62h");
 				
 			}else{
+//				System.out.println("else");
 				//System.out.println("Wrong Sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 			}
-//		}else{
-//			//no warning, may be NMEA
-//			//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
-//		}
+
 			return null;
 	}
 	/**
