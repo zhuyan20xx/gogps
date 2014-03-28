@@ -682,7 +682,12 @@ public class ReceiverPosition extends Coordinates{
 			// (twice because the rover position must be updated)
 			selectSatellitesDoubleDiff(roverObs, masterObs, masterPos);
 
-			codeDoubleDifferences(roverObs, masterObs, masterPos);
+			if (satAvail.size() >= 4) {
+				codeDoubleDifferences(roverObs, masterObs, masterPos);
+			} else {
+				this.setXYZ(0, 0, 0);
+				return;
+			}
 		}
 
 		// Estimate phase ambiguities

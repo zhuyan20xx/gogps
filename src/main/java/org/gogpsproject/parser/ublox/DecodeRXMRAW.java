@@ -135,13 +135,13 @@ public class DecodeRXMRAW {
 		//System.out.println(gmtTS+" GPS time "+o.getRefTime().getGpsTime());
 		//ubx.log( o.getRefTime().getGpsTime()+" "+tow+"\n\r");
 
+		int gpsCounter = 0;
 
 		for (int k = 0; k < (len - 8) / 24; k++) {
 //			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%" + k
 //					+ "%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
 
 			ObservationSet os = new ObservationSet();
-
 
 			int offset = k * 24;
 			bits = new boolean[8 * 8]; // R8
@@ -226,7 +226,10 @@ public class DecodeRXMRAW {
 			int total = offset + 7 + 8 + 4 + 1 + 1 + 1 + 1;
 			//System.out.println("Offset " + total);
 
-			o.setGps(k, os);
+			if (os.getSatID() <= 32) {
+				o.setGps(gpsCounter, os);
+				gpsCounter++;
+			}
 		}
 		// / Checksum
 		CH_A = CH_A & 0xFF;
@@ -245,7 +248,7 @@ public class DecodeRXMRAW {
 
 	private long getGMTTS(long tow, long week) {
 		Calendar c = Calendar.getInstance();
-		c.setTimeZone(c.getTimeZone());
+		c.setTimeZone(TimeZone.getTimeZone("GMT Time"));
 		c.set(Calendar.YEAR, 1980);
 		c.set(Calendar.MONTH, Calendar.JANUARY);
 		c.set(Calendar.DAY_OF_MONTH, 6);
