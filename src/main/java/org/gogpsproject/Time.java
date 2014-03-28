@@ -186,8 +186,7 @@ public class Time {
 	}
 	
 	public long getRoundedGpsTime(){
-		long tow = unixToGpsTime(msec);
-		tow = (tow+499)/1000*1000;
+		long tow = unixToGpsTime((msec+499)/1000*1000);
 		return tow;
 	}
 //
