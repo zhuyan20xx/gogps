@@ -72,7 +72,7 @@ public class GoGPS implements Runnable{
 	public final static int WEIGHT_COMBINED_ELEVATION_SNR = 3;
 
 	/** The weights. */
-	private int weights = WEIGHT_SIGNAL_TO_NOISE_RATIO;
+	private int weights = WEIGHT_SAT_ELEVATION;
 
 
 	/** The Constant DYN_MODEL_STATIC. */
@@ -176,6 +176,18 @@ public class GoGPS implements Runnable{
 		this.navigation = navigation;
 		this.roverIn = roverIn;
 		this.masterIn = masterIn;
+
+		validPosition = false;
+	}
+	
+	public GoGPS(NavigationProducer navigation, ObservationsProducer roverIn){
+
+		stDevCodeP = new double[2];
+		stDevCodeP[0] = 0.6;
+		stDevCodeP[1] = 0.4;
+
+		this.navigation = navigation;
+		this.roverIn = roverIn;
 
 		validPosition = false;
 	}
@@ -434,7 +446,8 @@ public class GoGPS implements Runnable{
 							// Initialize Kalman filter
 							roverPos.kalmanFilterInit(obsR, obsM, masterIn.getDefinedPosition());
 
-							kalmanInitialized = true;
+							if (roverPos.isValidXYZ())
+								kalmanInitialized = true;
 
 							if(debug)System.out.println("OK");
 						}else{
