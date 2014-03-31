@@ -42,6 +42,7 @@ import java.io.OutputStreamWriter;
 
 
 
+
 import org.ejml.simple.SimpleMatrix;
 import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
@@ -66,16 +67,14 @@ import org.gogpsproject.parser.ublox.UBXReader;
 //public class NVSFileReader  {
 public class NVSFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
 
-	private InputStream in;
+//	private InputStream in;
+	private BufferedInputStream in;
 	private NVSReader reader;
 	private File file;
 	private Observations obs = null;
 	private IonoGps iono = null;
 	// TODO support past times, now keep only last broadcast data
 	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
-	String file2 = "./data/output.txt";
-	
-	BufferedInputStream in2;
 
 		
 	public NVSFileReader(File file) {
@@ -115,159 +114,62 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	 */
 	@Override
 	public void init() throws Exception {
-		this.in = new FileInputStream(file);
-
+		FileInputStream inf = new FileInputStream(file);
+		this.in = new BufferedInputStream(inf);
 		this.reader = new NVSReader(in, null);
 	}
 	
-	public void initNVS() throws Exception {
-		this.in = new FileInputStream(file);
-		
-		FileOutputStream outf = null;
-			try {
-				outf = new FileOutputStream(file2);
-			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-		
-		BufferedOutputStream out = new BufferedOutputStream(outf);	
 
-		while(in.available()>0){   // To remove double <DLE> 
-			int contents = in.read();
-		    out.write(contents);
-			if(contents == 0x10){
-				contents = in.read();
-				if(contents == 0x10){
-					continue;	
-				}else{
-					out.write(contents);								
-
-				}										
-			}	
-		}		
-		out.close();		
-		
-		FileInputStream ins = new FileInputStream(file2);
-		in2 = new BufferedInputStream(ins);
-		
-		this.reader = new NVSReader(in2, null);	
-		
-	}
-	
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#init()
 	 */
 	@Override   // need to comment if you want to use main method 
 	public Observations getNextObservations() {
-//	public static void main(String[] args) throws FileNotFoundException {
-//	 	String file = "./data/rc.rin"; 
-//	 	String file = "./data/output.txt"; 
-//	 	String file = "./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover_00.bin";
-			
-//	    String file2 = "./data/output.txt";  // after deleting double <DLE> data
-	    //String file = "./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover_00.bin";
-
-	    /* for deleting double <DLE> data  */
-//		FileInputStream ins0 = null;
-//		try {
-//			ins0 = new FileInputStream(file);
-//		} catch (FileNotFoundException e2) {
-//			// TODO Auto-generated catch block
-//			e2.printStackTrace();
-//		}
-		
-//		BufferedInputStream in0 = new BufferedInputStream(ins0);
-    
-		
-	    
-	    /* for deleting double <DLE> data  */
-//	    FileOutputStream outf = null;
-//		try {
-//			outf = new FileOutputStream(file2);
-//		} catch (FileNotFoundException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-	//	DataOutputStream out = new DataOutputStream(outf);	
-//		BufferedOutputStream out = new BufferedOutputStream(outf);	
-		
 		try{		
-
-//			while(in0.available()>0){   // To remove double <DLE> 
-//						int contents = in0.read();
-//					    out.write(contents);
-//						if(contents == 0x10){
-//							contents = in0.read();
-//							if(contents == 0x10){
-//								continue;	
-//							}else{
-//								out.write(contents);								
-//
-//							}										
-//						}	
-//			}		
-			
-//			while(in.available()>0){   // To remove double <DLE> 
-//				int contents = in.read();
-//			    out.write(contents);
-//				if(contents == 0x10){
-//					contents = in.read();
-//					if(contents == 0x10){
-//						continue;	
-//					}else{
-//						out.write(contents);								
-//
-//					}										
-//				}	
-//			}		
-//			out.close();
-			
-		    /* after deleting double <DLE> data */
-//			FileInputStream ins = new FileInputStream(file2);
-//			@SuppressWarnings("resource")
-//			BufferedInputStream in2 = new BufferedInputStream(ins);
-				
-//????			    NVSReader reader = new NVSReader(in, null);		
-//			System.out.println(in2.available());
-
-			while(in2.available()>0){
+			while(in.available()>0){
 				try{
-					int data = in2.read();
-//					System.out.println("<DLE>");
-
-					if(data == 0x10){
-//						System.out.println("<DLE>");
-//						Object o = reader.readMessagge();
-						Object o = reader.readMessagge(in2);
-
-						if(o instanceof Observations){
-//							System.out.println("Observations OK");
-							return (Observations)o;
-						}else
-						if(o instanceof IonoGps){
-//							System.out.println("IonoGps OK");
-							iono = (IonoGps)o;
+						int data = in.read();
+						if(data == 0x10){
+							in.mark(0);
+							data = in.read();				
+							if(data == 0x10){
+//								System.out.println("<DLE>");
+								continue;			
+								
+							}else{
+								in.reset();
+								Object o = reader.readMessagge(in);
+								
+								if(o instanceof Observations){
+									return (Observations)o;
+								}else
+									if(o instanceof IonoGps){
+										iono = (IonoGps)o;
+									}
+								if(o instanceof EphGps){
+		
+									EphGps e = (EphGps)o;
+									ephs.put(new Integer(e.getSatID()), e);
+								}
+								
+					
+							}			
+							
+							
+						}else{
+								//System.out.println("else");
+								//no warning, may be NMEA
+								//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 						}
-						if(o instanceof EphGps){
-//							System.out.println("EphGps OK");
-							EphGps e = (EphGps)o;
-							ephs.put(new Integer(e.getSatID()), e);
-						}
-						
-						
-					}else{
-						//System.out.println("else");
-						//no warning, may be NMEA
-						//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+				
+				
+					}catch(NVSException nvse){
+							System.err.println(nvse);
+		//					ubxe.printStackTrace();
 					}
-				}catch(NVSException nvse){
-					System.err.println(nvse);
-//					ubxe.printStackTrace();
-				}
-			}
+				
+				}	
 			
-		//	in.close();
 			
 		}catch(IOException e){
 			e.printStackTrace();

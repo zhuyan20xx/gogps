@@ -20,6 +20,7 @@
 
 package org.gogpsproject.parser.nvs;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,9 +40,11 @@ import org.gogpsproject.util.UnsignedOperation;
 
 public class Decode4A {
 
+//	private BufferedInputStream in;
 	InputStream in;
 
 	public Decode4A(InputStream _in) {
+//	public Decode4A(BufferedInputStream _in) {
 		in = _in;
 	}
 
@@ -52,7 +55,7 @@ public class Decode4A {
 		
 		byte bytes[];
 			      
-//		System.out.println("+----------------  Start of 4A  ------------------+");
+		System.out.println("+----------------  Start of 4A  ------------------+");
 
         /*  Alpha, 4 bytes each  */		
         bytes = new byte[4];
@@ -81,7 +84,7 @@ public class Decode4A {
         
         
 //        System.out.println("Reliable Sign: "+ reliable_sign);  // 255 - the data is reliable
-//		System.out.println("+-----------------  End of 4A  -------------------+");
+		System.out.println("+-----------------  End of 4A  -------------------+");
 						        
          
 
