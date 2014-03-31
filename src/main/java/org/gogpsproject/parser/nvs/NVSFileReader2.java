@@ -79,7 +79,9 @@ public class NVSFileReader2  {
 	    
 //	    String file = "./data/rc.rin"; 
 //	    String file2 = "./data/output.txt";  // after deleting double <DLE> data
-	    String file = "./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover_00.bin";
+//	    String file = "./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover_00.bin";
+//	    String file = "./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover_00.bin";
+	    String file = "./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin";
 
 	    /* for deleting double <DLE> data  */
 		FileInputStream ins0 = new FileInputStream(file);
@@ -107,7 +109,7 @@ public class NVSFileReader2  {
 						in.mark(0);
 						data = in.read();				
 						if(data == 0x10){
-							System.out.println("<DLE>");
+//							System.out.println("<DLE>");
 							continue;			
 							
 						}else{

@@ -72,8 +72,8 @@ public class DecodeF5 {
 								
 								nsv = (leng - 224) / 240;  // To calculate the number of satellites
 								/* 28*8 bits = 224, 30*8 bits = 240 */
-								System.out.println("leng: " + leng );
-								System.out.println("Num of Satellite: "+ nsv);
+//								System.out.println("leng: " + leng );
+//								System.out.println("Num of Satellite: "+ nsv);
 								break;
 						}					
 					}
@@ -131,12 +131,12 @@ public class DecodeF5 {
 		long gmtTS = getGMTTS(tow, weekN);
 		Observations o = new Observations(new Time(gmtTS),0);
 		
-		System.out.println("+----------------  Start of F5  ------------------+");
-		System.out.println("TOW_UTC: "+ utc);			        
-		System.out.println("Week No.: " + weekN);
-		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
-		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
-		System.out.println("Time_Correction: "+ timeCorrection);	
+//		System.out.println("+----------------  Start of F5  ------------------+");
+//		System.out.println("TOW_UTC: "+ utc);			        
+//		System.out.println("Week No.: " + weekN);
+//		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
+//		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
+//		System.out.println("Time_Correction: "+ timeCorrection);	
 		
 		if (leng == 0)   // To avoid java.lang.NegativeArraySizeException.
 			System.exit(0);
@@ -255,7 +255,7 @@ public class DecodeF5 {
 									
 										gpsCounter ++ ;
 										
-										System.out.println("##### Satellite:  "+ k );
+//										System.out.println("##### Satellite:  "+ k );
 //										System.out.println("Signal_Type: "+ signalType);
 //										System.out.println("Satellite Number: "+ satID);
 //										System.out.println("Carrier Number: "+ carrierNum);
@@ -269,7 +269,7 @@ public class DecodeF5 {
 							
 
 					}
-					System.out.println("+-----------------  End of F5  -------------------+");
+//					System.out.println("+-----------------  End of F5  -------------------+");
 			
 
 			}

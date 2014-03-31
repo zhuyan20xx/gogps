@@ -19,9 +19,9 @@
  */
 package org.gogpsproject.parser.nvs;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Vector;
 
 import org.gogpsproject.EphGps;
@@ -38,6 +38,7 @@ import org.gogpsproject.StreamEventProducer;
  */
 public class NVSReader implements StreamEventProducer {
 	private InputStream in;
+//	private BufferedInputStream in;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 //	private StreamEventListener streamEventListener;
 
@@ -46,6 +47,7 @@ public class NVSReader implements StreamEventProducer {
 	}
 	public NVSReader(InputStream is, StreamEventListener eventListener){
 		this.in = is;
+//		this.in = (BufferedInputStream) is;
 		addStreamEventListener(eventListener);
 	}
 
@@ -53,52 +55,52 @@ public class NVSReader implements StreamEventProducer {
 	public Object readMessagge(InputStream in) throws IOException, NVSException{
 
 			int data = in.read();
-//			boolean parsed = false;
+			boolean parsed = false;
 //			System.out.println(data);
 
 			if(data == 0xf7){
 
 				DecodeF7 decodeF7 = new DecodeF7(in);
-//				parsed = true;
+				parsed = true;
 				
 				EphGps eph = decodeF7.decode();
-//				if(streamEventListeners!=null && eph!=null){
-//					for(StreamEventListener sel:streamEventListeners){
-//						sel.addEphemeris(eph);
-//					}
-//				}
-//				System.out.println("F7h");
+				if(streamEventListeners!=null && eph!=null){
+					for(StreamEventListener sel:streamEventListeners){
+						sel.addEphemeris(eph);
+					}
+				}
+				System.out.println("F7h");
 				return eph;
 						
 			}else
 			if (data == 0xf5){
 				DecodeF5 decodeF5 = new DecodeF5(in);		
 
-//				parsed = true;
+				parsed = true;
 				
 				Observations o = decodeF5.decode(null);
-//				if(streamEventListeners!=null && o!=null){
-//					for(StreamEventListener sel:streamEventListeners){
-//						Observations oc = (Observations)o.clone();
-//						sel.addObservations(oc);
-//					}
-//				}
-//				System.out.println("F5h");
+				if(streamEventListeners!=null && o!=null){
+					for(StreamEventListener sel:streamEventListeners){
+						Observations oc = (Observations)o.clone();
+						sel.addObservations(oc);
+					}
+				}
+				System.out.println("F5h");
 
 				return o;
 				
 			}else
 			if (data == 0x4a){
 				Decode4A decode4A = new Decode4A(in);
-//				parsed = true;
+				parsed = true;
 				
 				IonoGps iono = decode4A.decode();
-//				if(streamEventListeners!=null && iono!=null){
-//					for(StreamEventListener sel:streamEventListeners){
-//						sel.addIonospheric(iono);
-//					}
-//				}
-//				System.out.println("4Ah");
+				if(streamEventListeners!=null && iono!=null){
+					for(StreamEventListener sel:streamEventListeners){
+						sel.addIonospheric(iono);
+					}
+				}
+				System.out.println("4Ah");
 				return iono;
 
 				

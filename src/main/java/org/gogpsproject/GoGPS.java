@@ -24,6 +24,8 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.text.*;
 
+import org.gogpsproject.parser.nvs.NVSFileReader;
+import org.gogpsproject.parser.nvs.NVSFileReader2;
 import org.gogpsproject.parser.rinex.RinexNavigation;
 import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
@@ -213,13 +215,18 @@ public class GoGPS implements Runnable{
 	 */
 	public RoverPosition runCodeStandalone(double stopAtDopThreshold) throws Exception {
 
+		
+//		GoGPS goGPS = new GoGPS(navigation, roverIn);
+//		roverPos = new ReceiverPosition(goGPS);
+
 		// Create a new object for the rover position
 		roverPos = new ReceiverPosition(this);
+
 
 		try {
 			Observations obsR = roverIn.getNextObservations();
 			while (obsR!=null) { // buffStreamObs.ready()
-				if(debug) System.out.println("OK ");
+//				if(debug) System.out.println("OK ");
 
 				//try{
 					// If there are at least four satellites
