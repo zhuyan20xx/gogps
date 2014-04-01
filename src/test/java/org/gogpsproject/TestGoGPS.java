@@ -63,7 +63,7 @@ public class TestGoGPS {
 			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover_00.bin")); /* NVS */
 //			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13o")); /* NVS */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR3_rover_00.bin")); /* NVS */
-			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS3_master.obs"));
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS3_master.obs"));
 			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG3.13N"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13n"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13n"));
@@ -154,7 +154,7 @@ public class TestGoGPS {
 			// 1st init
 			navigationIn.init();
 			roverIn.init();
- 			masterIn.init();
+// 			masterIn.init();
 
 			// Name output files name using Timestamp
 			Date date = new Date();
@@ -165,8 +165,8 @@ public class TestGoGPS {
 			TxtProducer txt = new TxtProducer(outPathTxt);
 			KmlProducer kml = new KmlProducer(outPathKml, goodDopThreshold, timeSampleDelaySec);
 
-			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
-//			GoGPS goGPS = new GoGPS(navigationIn, roverIn);
+//			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
+			GoGPS goGPS = new GoGPS(navigationIn, roverIn);
 			goGPS.addPositionConsumerListener(txt);
 			goGPS.addPositionConsumerListener(kml);
 			goGPS.setDynamicModel(dynamicModel);
@@ -179,11 +179,11 @@ public class TestGoGPS {
 			}catch(InterruptedException ie){
 				ie.printStackTrace();
 			}
-			try{
-				masterIn.release(true,10000);
-			}catch(InterruptedException ie){
-				ie.printStackTrace();
-			}
+//			try{
+//				masterIn.release(true,10000);
+//			}catch(InterruptedException ie){
+//				ie.printStackTrace();
+//			}
 			try{
 				navigationIn.release(true,10000);
 			}catch(InterruptedException ie){

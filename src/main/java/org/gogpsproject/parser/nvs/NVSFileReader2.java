@@ -121,7 +121,8 @@ public class NVSFileReader2  {
 //							
 						}else{
 							in.reset();
-							Object o = reader.readMessagge(in);
+//							Object o = reader.readMessagge(in);
+							Object o = reader.readMessagge();
 				
 						}
 							i++;
