@@ -58,12 +58,12 @@ public class NVSReader implements StreamEventProducer {
 //	public Object readMessagge(BufferedInputStream in) throws IOException, NVSException{
 
 			int data = in.read();
-//			boolean parsed = false;
+			boolean parsed = false;
 			
 			if(data == 0xf7){
 
 				DecodeF7 decodeF7 = new DecodeF7(in);
-//				parsed = true;
+				parsed = true;
 				
 				EphGps eph = decodeF7.decode();
 				if(streamEventListeners!=null && eph!=null){
@@ -79,7 +79,6 @@ public class NVSReader implements StreamEventProducer {
 				
 				 in.mark(0); // To rewind in.read point 
 				 int leng = 0;	
-				 int nsv ;
 				 int leng1 = in.available();
 				 
 				    while(in.available()>0){			
@@ -92,7 +91,7 @@ public class NVSReader implements StreamEventProducer {
 										int leng2 = this.in.available();
 //										System.out.println("leng2: " + leng2 );
 										leng = (leng1 - leng2) * 8 ;
-										nsv = (leng - 224) / 240;  // To calculate the number of satellites
+										int nsv = (leng - 224) / 240;  // To calculate the number of satellites
 										/* 28*8 bits = 224, 30*8 bits = 240 */
 //										System.out.println("leng: " + leng );
 //										System.out.println("Num of Satellite: "+ nsv);
@@ -102,10 +101,10 @@ public class NVSReader implements StreamEventProducer {
 						}	
 				  }	
 				in.reset(); // To return to in.mark point  
-				DecodeF5 decodeF5 = new DecodeF5(in, leng);										
-//				parsed = true;
+				DecodeF5 decodeF5 = new DecodeF5(in);										
+				parsed = true;
 				
-				Observations o = decodeF5.decode();
+				Observations o = decodeF5.decode(null, leng);
 				if(streamEventListeners!=null && o!=null){
 					for(StreamEventListener sel:streamEventListeners){
 						Observations oc = (Observations)o.clone();
@@ -118,7 +117,7 @@ public class NVSReader implements StreamEventProducer {
 			}else
 			if (data == 0x4a){
 				Decode4A decode4A = new Decode4A(in);
-//				parsed = true;
+				parsed = true;
 				
 				IonoGps iono = decode4A.decode();
 				if(streamEventListeners!=null && iono!=null){
