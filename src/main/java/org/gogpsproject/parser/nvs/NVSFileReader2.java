@@ -104,7 +104,7 @@ public class NVSFileReader2  {
 //				
 			    NVSReader reader = new NVSReader(in, null);		
 		 
-//			int i = 0 ;
+			int i = 0 ;
 			while(in.available()>0){
 				try{
 					int data = in.read();
@@ -124,8 +124,8 @@ public class NVSFileReader2  {
 							Object o = reader.readMessagge(in);
 				
 						}
-//							i++;
-//							System.out.println(i);
+							i++;
+							System.out.println(i);
 
 							
 						}else{
