@@ -42,8 +42,10 @@ public class NVSReader implements StreamEventProducer {
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 //	private StreamEventListener streamEventListener;
 
-	public NVSReader(InputStream is){
+	public NVSReader(InputStream is, int leng){
 		this(is,null);
+		
+		
 	}
 	public NVSReader(InputStream is, StreamEventListener eventListener){
 		this.in = is;
@@ -53,15 +55,15 @@ public class NVSReader implements StreamEventProducer {
 
 	//public Object readMessagge() throws IOException, NVSException{
 	public Object readMessagge(InputStream in) throws IOException, NVSException{
+//	public Object readMessagge(BufferedInputStream in) throws IOException, NVSException{
 
 			int data = in.read();
-			boolean parsed = false;
-//			System.out.println(data);
-
+//			boolean parsed = false;
+			
 			if(data == 0xf7){
 
 				DecodeF7 decodeF7 = new DecodeF7(in);
-				parsed = true;
+//				parsed = true;
 				
 				EphGps eph = decodeF7.decode();
 				if(streamEventListeners!=null && eph!=null){
@@ -69,30 +71,54 @@ public class NVSReader implements StreamEventProducer {
 						sel.addEphemeris(eph);
 					}
 				}
-				System.out.println("F7h");
+//				System.out.println("F7h");
 				return eph;
 						
 			}else
 			if (data == 0xf5){
-				DecodeF5 decodeF5 = new DecodeF5(in);		
-
-				parsed = true;
 				
-				Observations o = decodeF5.decode(null);
+				 in.mark(0); // To rewind in.read point 
+				 int leng = 0;	
+				 int nsv ;
+				 int leng1 = in.available();
+				 
+				    while(in.available()>0){			
+						 data = in.read();
+						if(data == 0x10){  // <DLE>
+							data = in.read(); 
+							if(data == 0x03){  // <ETX>
+								data = in.read();
+								if(data == 0x10){  // <DLE>
+										int leng2 = this.in.available();
+//										System.out.println("leng2: " + leng2 );
+										leng = (leng1 - leng2) * 8 ;
+										nsv = (leng - 224) / 240;  // To calculate the number of satellites
+										/* 28*8 bits = 224, 30*8 bits = 240 */
+//										System.out.println("leng: " + leng );
+//										System.out.println("Num of Satellite: "+ nsv);
+										break;
+								}					
+							}							
+						}	
+				  }	
+				in.reset(); // To return to in.mark point  
+				DecodeF5 decodeF5 = new DecodeF5(in, leng);										
+//				parsed = true;
+				
+				Observations o = decodeF5.decode();
 				if(streamEventListeners!=null && o!=null){
 					for(StreamEventListener sel:streamEventListeners){
 						Observations oc = (Observations)o.clone();
 						sel.addObservations(oc);
 					}
 				}
-				System.out.println("F5h");
-
+//				System.out.println("F5h");
 				return o;
 				
 			}else
 			if (data == 0x4a){
 				Decode4A decode4A = new Decode4A(in);
-				parsed = true;
+//				parsed = true;
 				
 				IonoGps iono = decode4A.decode();
 				if(streamEventListeners!=null && iono!=null){
@@ -100,7 +126,7 @@ public class NVSReader implements StreamEventProducer {
 						sel.addIonospheric(iono);
 					}
 				}
-				System.out.println("4Ah");
+//				System.out.println("4Ah");
 				return iono;
 
 				

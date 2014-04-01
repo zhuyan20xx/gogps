@@ -21,6 +21,7 @@
 package org.gogpsproject.parser.nvs;
 
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,57 +40,23 @@ import org.gogpsproject.util.UnsignedOperation;
 public class DecodeF5 {
 	
 	private InputStream in;
+//	private BufferedInputStream in;
 
 	int nsv;
 	int leng;	
 	int[] data;
 	
-	public DecodeF5(InputStream in) throws IOException {
+	public DecodeF5(InputStream in, int leng) throws IOException {
+
 		this.in = in;
-		int leng1 = in.available();
-//		System.out.println("leng1: " + leng1 );
-
-		// To calculate the number of satellites
-		if(in.markSupported()){
-		    
-		    in.mark(0); // To rewind in.read point 
-
-		    while(in.available()>0){
-			
-				int data = in.read();
-				if(data == 0x10){  // <DLE>
-					data = in.read(); 
-					if(data == 0x03){  // <ETX>
-						data = in.read();
-						if(data == 0x10){  // <DLE>
-//							System.out.println("mark is ok");
-
-								int leng2 = this.in.available();
-//								System.out.println("leng2: " + leng2 );
-
-	//							System.out.println("Length2: "+ leng2);					
-								leng = (leng1 - leng2) * 8 ;
-								
-								nsv = (leng - 224) / 240;  // To calculate the number of satellites
-								/* 28*8 bits = 224, 30*8 bits = 240 */
-//								System.out.println("leng: " + leng );
-//								System.out.println("Num of Satellite: "+ nsv);
-								break;
-						}					
-					}
-					
-				}	
-		    }	
+		this.leng = leng;
 		
-		}else{
-				System.out.println("mark is not supported, use BufferedInputStream");
-		}
-		   
-	    in.reset(); // To return to in.mark point  
 		
 	}
 
-	public Observations decode(OutputStream logos) throws IOException, NVSException {
+
+
+	public Observations decode(OutputStream logos,int len) throws IOException, NVSException {
 		
 		byte bytes[];
 		
@@ -97,8 +64,12 @@ public class DecodeF5 {
 		int indice;
 		boolean[] temp1;
 		
-//		System.out.println("Num of Satellite: "+ nsv);	
 		
+		if (leng == 0)   // To avoid java.lang.NegativeArraySizeException.
+			System.exit(0);
+		
+//		System.out.println("Num of Satellite: "+ nsv);	
+				
 		/*  TOW_UTC, 8 bytes  */
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
@@ -137,9 +108,7 @@ public class DecodeF5 {
 //		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
 //		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
 //		System.out.println("Time_Correction: "+ timeCorrection);	
-		
-		if (leng == 0)   // To avoid java.lang.NegativeArraySizeException.
-			System.exit(0);
+			
 		
 		data = new int[leng -224];
 		
@@ -300,5 +269,12 @@ public class DecodeF5 {
 		//ubx.log( (c.getTime().getTime())+" "+c.getTime()+" "+week+" "+tow+"\n\r");
 
 		return c.getTimeInMillis() + week*7*24*3600*1000 + tow;
+	}
+
+
+
+	public Observations decode() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
