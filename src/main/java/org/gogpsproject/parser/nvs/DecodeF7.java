@@ -52,13 +52,14 @@ public class DecodeF7 {
 		int satType = in.read();  // satType 1 = GPS, 2 = GLONASS		
 		int satId = in.read();
 		
+		byte bytes[];
+
+//		System.out.println("satType: " + satType); 
 		
-		if (satType == 1){ 
-		
+		if (satType == 1){   // GPS: 138(-2) bytes	
 			
 				eph.setSatID((int)satId);
 		
-				byte bytes[];
 				int signInt;
 				String signStr; 
 				int espInt;
@@ -279,9 +280,12 @@ public class DecodeF7 {
 //				System.out.println("+-----------------  End of F7  -------------------+");
 						        
         
-		}else{ 
+		}else{  // GLONASS: 93 (-2) bytes
 
-//				System.out.println("GLONASS PRN: " + satId);
+//			System.out.println("GLONASS PRN: " + satId);
+			bytes = new byte[91];
+			in.read(bytes, 0, bytes.length);	
+			
 
 		}
         

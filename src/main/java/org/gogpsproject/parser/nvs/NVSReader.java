@@ -42,10 +42,8 @@ public class NVSReader implements StreamEventProducer {
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 //	private StreamEventListener streamEventListener;
 
-	public NVSReader(InputStream is, int leng){
-		this(is,null);
-		
-		
+	public NVSReader(InputStream is){
+		this(is,null);		
 	}
 	public NVSReader(InputStream is, StreamEventListener eventListener){
 		this.in = is;
@@ -53,14 +51,15 @@ public class NVSReader implements StreamEventProducer {
 		addStreamEventListener(eventListener);
 	}
 
-	//public Object readMessagge() throws IOException, NVSException{
-	public Object readMessagge(InputStream in) throws IOException, NVSException{
+	public Object readMessagge() throws IOException, NVSException{
+//	public Object readMessagge(InputStream in) throws IOException, NVSException{
 //	public Object readMessagge(BufferedInputStream in) throws IOException, NVSException{
 
 			int data = in.read();
+			@SuppressWarnings("unused")
 			boolean parsed = false;
 			
-			if(data == 0xf7){
+			if(data == 0xf7){ // F7
 
 				DecodeF7 decodeF7 = new DecodeF7(in);
 				parsed = true;
@@ -75,12 +74,12 @@ public class NVSReader implements StreamEventProducer {
 				return eph;
 						
 			}else
-			if (data == 0xf5){
+			if (data == 0xf5){  // F5
 				
 				 in.mark(0); // To rewind in.read point 
 				 int leng = 0;	
 				 int leng1 = in.available();
-				 
+				// To calculate the number of satellites
 				    while(in.available()>0){			
 						 data = in.read();
 						if(data == 0x10){  // <DLE>
@@ -91,7 +90,7 @@ public class NVSReader implements StreamEventProducer {
 										int leng2 = this.in.available();
 //										System.out.println("leng2: " + leng2 );
 										leng = (leng1 - leng2) * 8 ;
-										int nsv = (leng - 224) / 240;  // To calculate the number of satellites
+										int nsv = (leng - 224) / 240;  
 										/* 28*8 bits = 224, 30*8 bits = 240 */
 //										System.out.println("leng: " + leng );
 //										System.out.println("Num of Satellite: "+ nsv);
@@ -115,7 +114,7 @@ public class NVSReader implements StreamEventProducer {
 				return o;
 				
 			}else
-			if (data == 0x4a){
+			if (data == 0x4a){ // 4A
 				Decode4A decode4A = new Decode4A(in);
 				parsed = true;
 				

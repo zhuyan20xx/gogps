@@ -196,8 +196,10 @@ public class DecodeF5 {
 									bytes = new byte[1];
 									in.read(bytes, 0, bytes.length);
 									
-									o.setGps(gpsCounter, os);
-									gpsCounter ++ ;
+//									if (os.getSatID() <= 32) {
+										o.setGps(gpsCounter, os);
+										gpsCounter ++ ;
+//									}
 									
 									//System.out.println("reserved: "+ reserved);
 									
