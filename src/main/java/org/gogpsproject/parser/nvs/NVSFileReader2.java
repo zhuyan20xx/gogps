@@ -80,15 +80,17 @@ public class NVSFileReader2  {
 //	    String file = "./data/rc.rin"; 
 //	    String file2 = "./data/output.txt";  // after deleting double <DLE> data
 //	    String file = "./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover_00.bin";
-//	    String file = "./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover_00.bin";
-	    String file = "./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin";
+	    String file = "./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover_00.bin";
+//	    String file = "./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin";
 
 	    /* for deleting double <DLE> data  */
 		FileInputStream ins0 = new FileInputStream(file);
 	    BufferedInputStream in = new BufferedInputStream(ins0);
+	    
+	    
 //	    DataInputStream in0 = new DataInputStream(inb0);
 	    
-//	    FileInputStream ins = new FileInputStream(file);
+//	    FileInputStream in = new FileInputStream(file);
 //	    BufferedInputStream in = new BufferedInputStream(ins);
 //	    DataInputStream in = new DataInputStream(inb);
 //	    NVSReader reader = new NVSReader(in, null);
@@ -102,21 +104,38 @@ public class NVSFileReader2  {
 //				
 			    NVSReader reader = new NVSReader(in, null);		
 		 
+//			int i = 0 ;
 			while(in.available()>0){
 				try{
 					int data = in.read();
-					if(data == 0x10){
+					if(data == 0x03){
+//					System.out.println("<ETX>");
+
+						data = in.read();
+						if(data == 0x10){
 						in.mark(0);
 						data = in.read();				
 						if(data == 0x10){
 //							System.out.println("<DLE>");
 							continue;			
-							
+//							
 						}else{
 							in.reset();
 							Object o = reader.readMessagge(in);
 				
 						}
+//							i++;
+//							System.out.println(i);
+
+							
+						}else{
+							
+							continue;
+							
+						}
+							
+				
+						
 //						if(o instanceof Observations){
 //							//return (Observations)o;
 //						}else
