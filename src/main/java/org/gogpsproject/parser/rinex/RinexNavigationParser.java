@@ -165,6 +165,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 
 		//Navigation.iono = new double[8];
 		String sub;
+		int ver = 0;
 
 		try {
 
@@ -187,91 +188,113 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 							// Error if navigation file identifier was not found
 							System.err.println("Navigation file identifier is missing in file " + fileNav.toString() + " header");
 							return false;
+					
+						} else if (line.substring(5, 9).equals("3.01")){
+						
+							System.out.println("Ver. 3.01");
+							ver = 3;
+						
+						} else {
+						
+							System.out.println("Ver. 2.x");
+							ver = 2;
 						}
-
-					} else if (typeField.equals("ION ALPHA")) {
-
-						float a[] = new float[4];
-						sub = line.substring(3, 14).replace('D', 'e');
-						//Navigation.iono[0] = Double.parseDouble(sub.trim());
-						a[0] = Float.parseFloat(sub.trim());
-
-						sub = line.substring(15, 26).replace('D', 'e');
-						//Navigation.iono[1] = Double.parseDouble(sub.trim());
-						a[1] = Float.parseFloat(sub.trim());
-
-						sub = line.substring(27, 38).replace('D', 'e');
-						//Navigation.iono[2] = Double.parseDouble(sub.trim());
-						a[2] = Float.parseFloat(sub.trim());
-
-						sub = line.substring(39, 50).replace('D', 'e');
-						//Navigation.iono[3] = Double.parseDouble(sub.trim());
-						a[3] = Float.parseFloat(sub.trim());
-
-						if(iono==null) iono = new IonoGps();
-						iono.setAlpha(a);
-
-					} else if (typeField.equals("ION BETA")) {
-
-						float b[] = new float[4];
-
-						sub = line.substring(3, 14).replace('D', 'e');
-						//Navigation.iono[4] = Double.parseDouble(sub.trim());
-						//setIono(4, Double.parseDouble(sub.trim()));
-						b[0] = Float.parseFloat(sub.trim());
-
-
-						sub = line.substring(15, 26).replace('D', 'e');
-						//Navigation.iono[5] = Double.parseDouble(sub.trim());
-						//setIono(5, Double.parseDouble(sub.trim()));
-						b[1] = Float.parseFloat(sub.trim());
-
-						sub = line.substring(27, 38).replace('D', 'e');
-						//Navigation.iono[6] = Double.parseDouble(sub.trim());
-						//setIono(6, Double.parseDouble(sub.trim()));
-						b[2] = Float.parseFloat(sub.trim());
-
-						sub = line.substring(39, 50).replace('D', 'e');
-						//Navigation.iono[7] = Double.parseDouble(sub.trim());
-						//setIono(7, Double.parseDouble(sub.trim()));
-						b[3] = Float.parseFloat(sub.trim());
-
-						if(iono==null) iono = new IonoGps();
-						iono.setBeta(b);
-
-					} else if (typeField.equals("DELTA-UTC: A0,A1,T,W")) {
-
-						if(iono==null) iono = new IonoGps();
-
-						sub = line.substring(3, 22).replace('D', 'e');
-						//setA0(Double.parseDouble(sub.trim()));
-						iono.setUtcA0(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(22, 41).replace('D', 'e');
-						//setA1(Double.parseDouble(sub.trim()));
-						iono.setUtcA1(Double.parseDouble(sub.trim()));
-
-						sub = line.substring(41, 50).replace('D', 'e');
-						//setT(Integer.parseInt(sub.trim()));
-						// TODO need check
-						iono.setUtcWNT(Integer.parseInt(sub.trim()));
-
-						sub = line.substring(50, 59).replace('D', 'e');
-						//setW(Integer.parseInt(sub.trim()));
-						// TODO need check
-						iono.setUtcTOW(Integer.parseInt(sub.trim()));
-
-					} else if (typeField.equals("LEAP SECONDS")) {
-						if(iono==null) iono = new IonoGps();
-						sub = line.substring(0, 6).trim().replace('D', 'e');
-						//setLeaps(Integer.parseInt(sub.trim()));
-						// TODO need check
-						iono.setUtcLS(Integer.parseInt(sub.trim()));
-
-					} else if (typeField.equals("END OF HEADER")) {
-
-						return true;
+					
 					}
+						
+					switch (ver){ 	
+					case 2:
+
+							if (typeField.equals("ION ALPHA")) {
+		
+								float a[] = new float[4];
+								sub = line.substring(3, 14).replace('D', 'e');
+								//Navigation.iono[0] = Double.parseDouble(sub.trim());
+								a[0] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(15, 26).replace('D', 'e');
+								//Navigation.iono[1] = Double.parseDouble(sub.trim());
+								a[1] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(27, 38).replace('D', 'e');
+								//Navigation.iono[2] = Double.parseDouble(sub.trim());
+								a[2] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(39, 50).replace('D', 'e');
+								//Navigation.iono[3] = Double.parseDouble(sub.trim());
+								a[3] = Float.parseFloat(sub.trim());
+		
+								if(iono==null) iono = new IonoGps();
+								iono.setAlpha(a);
+		
+							} else if (typeField.equals("ION BETA")) {
+		
+								float b[] = new float[4];
+		
+								sub = line.substring(3, 14).replace('D', 'e');
+								//Navigation.iono[4] = Double.parseDouble(sub.trim());
+								//setIono(4, Double.parseDouble(sub.trim()));
+								b[0] = Float.parseFloat(sub.trim());
+		
+		
+								sub = line.substring(15, 26).replace('D', 'e');
+								//Navigation.iono[5] = Double.parseDouble(sub.trim());
+								//setIono(5, Double.parseDouble(sub.trim()));
+								b[1] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(27, 38).replace('D', 'e');
+								//Navigation.iono[6] = Double.parseDouble(sub.trim());
+								//setIono(6, Double.parseDouble(sub.trim()));
+								b[2] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(39, 50).replace('D', 'e');
+								//Navigation.iono[7] = Double.parseDouble(sub.trim());
+								//setIono(7, Double.parseDouble(sub.trim()));
+								b[3] = Float.parseFloat(sub.trim());
+		
+								if(iono==null) iono = new IonoGps();
+								iono.setBeta(b);
+		
+							} else if (typeField.equals("DELTA-UTC: A0,A1,T,W")) {
+		
+								if(iono==null) iono = new IonoGps();
+		
+								sub = line.substring(3, 22).replace('D', 'e');
+								//setA0(Double.parseDouble(sub.trim()));
+								iono.setUtcA0(Double.parseDouble(sub.trim()));
+		
+								sub = line.substring(22, 41).replace('D', 'e');
+								//setA1(Double.parseDouble(sub.trim()));
+								iono.setUtcA1(Double.parseDouble(sub.trim()));
+		
+								sub = line.substring(41, 50).replace('D', 'e');
+								//setT(Integer.parseInt(sub.trim()));
+								// TODO need check
+								iono.setUtcWNT(Integer.parseInt(sub.trim()));
+		
+								sub = line.substring(50, 59).replace('D', 'e');
+								//setW(Integer.parseInt(sub.trim()));
+								// TODO need check
+								iono.setUtcTOW(Integer.parseInt(sub.trim()));
+		
+							} else if (typeField.equals("LEAP SECONDS")) {
+								if(iono==null) iono = new IonoGps();
+								sub = line.substring(0, 6).trim().replace('D', 'e');
+								//setLeaps(Integer.parseInt(sub.trim()));
+								// TODO need check
+								iono.setUtcLS(Integer.parseInt(sub.trim()));
+		
+							} else if (typeField.equals("END OF HEADER")) {	
+								return true;
+							}
+					break;
+					
+					case 3: 
+						System.out.println("RINEX Ver.3 parsing here");
+						
+						break;
+					}  // End of Switch 
+					
 				} catch (StringIndexOutOfBoundsException e) {
 					// Skip over blank lines
 				}
@@ -523,6 +546,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		
 		//check satellite health
 //		temporary comment out by Yoshida, since NVS does not include health value
+				
 		if (refEph != null && refEph.getSvHealth() != 0) {
 			refEph = null;
 		}
