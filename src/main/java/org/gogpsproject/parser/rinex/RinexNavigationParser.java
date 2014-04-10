@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl, Daisuke Yoshida (Osaka City Univ.). All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -98,8 +98,21 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	@Override
 	public void init() {
 		open();
-		if(parseHeaderNav()){
-			parseDataNav();
+		int ver = parseHeaderNav();
+		if(ver != 0){
+			
+			if (ver == 2){
+				
+//				System.out.println("Ver. 2.x");
+				parseDataNav();
+				
+			} else if (ver == 3){
+				
+//				System.out.println("Ver. 3.01");
+				parseDataNavV3();
+				
+			}
+			
 		}
 		close();
 	}
@@ -161,7 +174,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	/**
 	 *
 	 */
-	public boolean parseHeaderNav() {
+	public int parseHeaderNav() {
 
 		//Navigation.iono = new double[8];
 		String sub;
@@ -187,16 +200,21 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 
 							// Error if navigation file identifier was not found
 							System.err.println("Navigation file identifier is missing in file " + fileNav.toString() + " header");
-							return false;
+							return ver = 0;
 					
 						} else if (line.substring(5, 9).equals("3.01")){
 						
-							System.out.println("Ver. 3.01");
+//							System.out.println("Ver. 3.01");
+							ver = 3;
+							
+						} else if (line.substring(5, 9).equals("2.12")){
+							
+//							System.out.println("Ver. 2.12");
 							ver = 3;
 						
 						} else {
 						
-							System.out.println("Ver. 2.x");
+//							System.out.println("Ver. 2.x");
 							ver = 2;
 						}
 					
@@ -285,12 +303,94 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 								iono.setUtcLS(Integer.parseInt(sub.trim()));
 		
 							} else if (typeField.equals("END OF HEADER")) {	
-								return true;
+								return ver;
 							}
 					break;
 					
 					case 3: 
-						System.out.println("RINEX Ver.3 parsing here");
+//						System.out.println("RINEX Ver.3 parsing here");
+						
+						String typeField2 = line.substring(0, 4);
+						typeField2 = typeField2.trim();
+						
+//						String typeField3 = line.substring(60, line.length());
+//						typeField3 = typeField3.trim();
+						
+//						System.out.println(typeField2);
+
+						
+						if (typeField2.equals("GPSA")) {
+							
+//							System.out.println("GPSA");
+
+							float a[] = new float[4];
+							sub = line.substring(7, 17).replace('D', 'e');
+							//Navigation.iono[0] = Double.parseDouble(sub.trim());
+							a[0] = Float.parseFloat(sub.trim());
+	
+							sub = line.substring(18, 29).replace('D', 'e');
+							//Navigation.iono[1] = Double.parseDouble(sub.trim());
+							a[1] = Float.parseFloat(sub.trim());
+	
+							sub = line.substring(30, 41).replace('D', 'e');
+							//Navigation.iono[2] = Double.parseDouble(sub.trim());
+							a[2] = Float.parseFloat(sub.trim());
+	
+							sub = line.substring(42, 53).replace('D', 'e');
+							//Navigation.iono[3] = Double.parseDouble(sub.trim());
+							a[3] = Float.parseFloat(sub.trim());
+	
+							if(iono==null) iono = new IonoGps();
+							iono.setAlpha(a);
+							
+//							System.out.println(a[0]);
+//							System.out.println(a[1]);
+//							System.out.println(a[2]);
+//							System.out.println(a[3]);
+
+	
+						} else if (typeField2.equals("GPSB")) {
+							
+//							System.out.println("GPSB");
+							
+							float b[] = new float[4];
+							
+							sub = line.substring(7, 17).replace('D', 'e');
+							//Navigation.iono[4] = Double.parseDouble(sub.trim());
+							//setIono(4, Double.parseDouble(sub.trim()));
+							b[0] = Float.parseFloat(sub.trim());
+	
+	
+							sub = line.substring(18, 29).replace('D', 'e');
+							//Navigation.iono[5] = Double.parseDouble(sub.trim());
+							//setIono(5, Double.parseDouble(sub.trim()));
+							b[1] = Float.parseFloat(sub.trim());
+	
+							sub = line.substring(30, 41).replace('D', 'e');
+							//Navigation.iono[6] = Double.parseDouble(sub.trim());
+							//setIono(6, Double.parseDouble(sub.trim()));
+							b[2] = Float.parseFloat(sub.trim());
+	
+							sub = line.substring(42, 53).replace('D', 'e');
+							//Navigation.iono[7] = Double.parseDouble(sub.trim());
+							//setIono(7, Double.parseDouble(sub.trim()));
+							b[3] = Float.parseFloat(sub.trim());
+	
+							if(iono==null) iono = new IonoGps();
+							iono.setBeta(b);
+							
+//							System.out.println(b[0]);
+//							System.out.println(b[1]);
+//							System.out.println(b[2]);
+//							System.out.println(b[3]);				
+							
+						
+						} else if (typeField.equals("END OF HEADER")) {	
+//							System.out.println("END OF HEADER");
+							
+							return ver;
+						}
+						
 						
 						break;
 					}  // End of Switch 
@@ -307,7 +407,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return false;
+		return 0;
 	}
 
 	/**
@@ -359,6 +459,8 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 								String dT = line.substring(2, 22);
 								dT = dT.replace("  ", " 0").trim();
 								dT = "20" + dT;
+//								System.out.println(dT);
+
 
 								try {
 									//Time timeEph = new Time(dT);
@@ -511,6 +613,206 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		}
 	}
 
+	
+	public void parseDataNavV3() {
+
+		try {
+
+			// Resizable array
+			//Navigation.eph = new ArrayList<EphGps>();
+
+			int j = 0;
+
+			EphGps eph = null;
+
+			while (buffStreamNav.ready()) {
+
+				String sub;
+
+				// read 8 lines
+				for (int i = 0; i < 8; i++) {
+
+					String line = buffStreamNav.readLine();
+					if(cacheStreamWriter!=null){
+						cacheStreamWriter.write(line);
+						cacheStreamWriter.write(newline);
+					}
+
+					try {
+
+						int len = line.length();
+
+						if (len != 0) {
+
+							if (i == 0) { // LINE 1
+
+								//Navigation.eph.get(j).refTime = new Time();
+
+								eph = new EphGps();
+								//Navigation.eph.add(eph);
+								addEph(eph);
+
+								// Get satellite ID
+								sub = line.substring(1, 3).trim();
+								eph.setSatID(Integer.parseInt(sub));
+
+								// Get and format date and time string
+								String dT = line.substring(4, 23);
+//								dT = dT.replace("  ", " 0").trim();
+								dT = dT + ".0";
+//								System.out.println(dT);
+
+
+								try {
+									//Time timeEph = new Time(dT);
+									// Convert String to UNIX standard time in
+									// milliseconds
+									//timeEph.msec = Time.dateStringToTime(dT);
+									Time toc = new Time(dT);
+									eph.setRefTime(toc);
+									eph.setToc(toc.getGpsWeekSec());
+
+									// sets Iono reference time
+									if(iono!=null && iono.getRefTime()==null) iono.setRefTime(new Time(dT));
+
+								} catch (ParseException e) {
+									System.err.println("Time parsing failed");
+								}
+
+								sub = line.substring(23, 42).replace('D', 'e');
+								eph.setAf0(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(42, 61).replace('D', 'e');
+								eph.setAf1(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(61, len).replace('D', 'e');
+								eph.setAf2(Double.parseDouble(sub.trim()));
+
+							} else if (i == 1) { // LINE 2
+
+								sub = line.substring(4, 23).replace('D', 'e');
+								double iode = Double.parseDouble(sub.trim());
+								// TODO check double -> int conversion ?
+								eph.setIode((int) iode);
+
+								sub = line.substring(23, 42).replace('D', 'e');
+								eph.setCrs(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(42, 61).replace('D', 'e');
+								eph.setDeltaN(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(61, len).replace('D', 'e');
+								eph.setM0(Double.parseDouble(sub.trim()));
+
+							} else if (i == 2) { // LINE 3
+
+								sub = line.substring(0, 23).replace('D', 'e');
+								eph.setCuc(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(23, 42).replace('D', 'e');
+								eph.setE(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(42, 61).replace('D', 'e');
+								eph.setCus(Double.parseDouble(sub .trim()));
+
+								sub = line.substring(61, len).replace('D', 'e');
+								eph.setRootA(Double.parseDouble(sub.trim()));
+
+							} else if (i == 3) { // LINE 4
+
+								sub = line.substring(0, 23).replace('D', 'e');
+								eph.setToe(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(23, 42).replace('D', 'e');
+								eph.setCic(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(42, 61).replace('D', 'e');
+								eph.setOmega0(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(61, len).replace('D', 'e');
+								eph.setCis(Double.parseDouble(sub.trim()));
+
+							} else if (i == 4) { // LINE 5
+
+								sub = line.substring(0, 23).replace('D', 'e');
+								eph.setI0(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(23, 42).replace('D', 'e');
+								eph.setCrc(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(42, 61).replace('D', 'e');
+								eph.setOmega(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(61, len).replace('D', 'e');
+								eph.setOmegaDot(Double.parseDouble(sub.trim()));
+
+							} else if (i == 5) { // LINE 6
+
+								sub = line.substring(0, 23).replace('D', 'e');
+								eph.setiDot(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(23, 42).replace('D', 'e');
+								double L2Code = Double.parseDouble(sub.trim());
+								eph.setL2Code((int) L2Code);
+
+								sub = line.substring(42, 61).replace('D', 'e');
+								double week = Double.parseDouble(sub.trim());
+								eph.setWeek((int) week);
+
+								sub = line.substring(61, len).replace('D', 'e');
+								double L2Flag = Double.parseDouble(sub.trim());
+								eph.setL2Flag((int) L2Flag);
+
+							} else if (i == 6) { // LINE 7
+
+								sub = line.substring(0, 23).replace('D', 'e');
+								double svAccur = Double.parseDouble(sub.trim());
+								eph.setSvAccur((int) svAccur);
+
+								sub = line.substring(23, 42).replace('D', 'e');
+								double svHealth = Double.parseDouble(sub.trim());
+								eph.setSvHealth((int) svHealth);
+
+								sub = line.substring(42, 61).replace('D', 'e');
+								eph.setTgd(Double.parseDouble(sub.trim()));
+
+								sub = line.substring(61, len).replace('D', 'e');
+								double iodc = Double.parseDouble(sub.trim());
+								eph.setIodc((int) iodc);
+
+							} else if (i == 7) { // LINE 8
+
+								sub = line.substring(0, 23).replace('D', 'e');
+								eph.setTom(Double.parseDouble(sub.trim()));
+
+								if (len > 22) {
+									sub = line.substring(23, 42).replace('D', 'e');
+									eph.setFitInt(Double.parseDouble(sub.trim()));
+
+								} else {
+									eph.setFitInt(0);
+								}
+							}
+						} else {
+							i--;
+						}
+					} catch (NullPointerException e) {
+						// Skip over blank lines
+					}
+				}
+
+				// Increment array index
+				j++;
+				// Store the number of ephemerides
+				//Navigation.n = j;
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * @param unixTime
