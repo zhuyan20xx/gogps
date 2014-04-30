@@ -58,7 +58,7 @@ public class TestRTCM3 {
 			rtcm.init();
 
 			// log rinex format
-			RinexV2Producer rinexOut = new RinexV2Producer("./data/test-rinex.11o",true);
+			RinexV2Producer rinexOut = new RinexV2Producer("./data/test-rinex.11o",true,false);
 			rtcm.addStreamEventListener(rinexOut);
 
 

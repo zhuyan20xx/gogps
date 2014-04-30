@@ -42,41 +42,32 @@ public class UBXToRinex {
 	public static void main(String[] args) {
 
 		if(args.length<1){
-			System.out.println("UBXToRinex <ubx file> [y|n] (y=master n=rover=default)");
+			System.out.println("UBXToRinex <ubx file>");
 			return;
 		}
 
-		Calendar c = Calendar.getInstance();
-		int yy = c.get(Calendar.YEAR)-2000;
 		int p=0;
 		String inFile = args[p++];
-		String outFile = inFile.indexOf(".dat")>0?inFile.substring(0, inFile.indexOf(".dat"))+"."+yy+"o":inFile+"."+yy+"o";
+		String outFile = inFile.indexOf(".ubx")>0?inFile.substring(0, inFile.indexOf(".ubx"))+".obs":inFile+".obs";
 
 		System.out.println("in :"+inFile);
 		System.out.println("out:"+outFile);
 
-		ObservationsProducer masterIn = new UBXFileReader(new File(inFile));
+		ObservationsProducer roverIn = new UBXFileReader(new File(inFile));
 		try {
-			masterIn.init();
+			roverIn.init();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-//		ObservationsBuffer masterIn = new ObservationsBuffer();
-//		try {
-//			masterIn.readFromLog(inFile,false);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		System.out.println("Started writing RINEX file...");
+		RinexV2Producer rp = new RinexV2Producer(outFile, false, true);
+		rp.setDefinedPosition(roverIn.getDefinedPosition());
 
-		System.out.println("RINEX");
-		RinexV2Producer rp = new RinexV2Producer(outFile, args!=null&&args.length>=p+1&&args[p++].startsWith("y"));
-		rp.setDefinedPosition(masterIn.getDefinedPosition());
-
-		Observations o = masterIn.getNextObservations();
+		Observations o = roverIn.getNextObservations();
 		while(o!=null){
 			rp.addObservations(o);
-			o = masterIn.getNextObservations();
+			o = roverIn.getNextObservations();
 		}
 		rp.streamClosed();
 		System.out.println("END");

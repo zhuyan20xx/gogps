@@ -93,7 +93,7 @@ public class TestRinexProducer {
 		System.out.println("RINEX");
 		System.out.println("RINEX");
 		System.out.println("RINEX");
-		RinexV2Producer rp = new RinexV2Producer("data\\20111003-004754-master.o11", true);
+		RinexV2Producer rp = new RinexV2Producer("data\\20111003-004754-master.o11", true, false);
 		rp.setDefinedPosition(masterIn.getDefinedPosition());
 
 		Observations o = masterIn.getNextObservations();

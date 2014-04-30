@@ -58,6 +58,7 @@ public class RinexV2Producer implements StreamEventListener {
 	private Vector<Observations> observations = new Vector<Observations>();
 
 	private boolean needApproxPos=false;
+	private boolean singleFreq=false;
 
 	private FileOutputStream fos = null;
 	private PrintStream ps = null;
@@ -73,9 +74,10 @@ public class RinexV2Producer implements StreamEventListener {
 
 	private final static TimeZone TZ = TimeZone.getTimeZone("GMT");
 
-	public RinexV2Producer(String outFilename, boolean needApproxPos){
+	public RinexV2Producer(String outFilename, boolean needApproxPos, boolean singleFreq){
 		this.outFilename = outFilename;
 		this.needApproxPos = needApproxPos;
+		this.singleFreq = singleFreq;
 
 		try {
 			fos = new FileOutputStream(outFilename, false);
@@ -84,17 +86,18 @@ public class RinexV2Producer implements StreamEventListener {
 			e.printStackTrace();
 		}
 
-		// set default type config
-		// C1    P1    P2    L1    L2    D1    D2   S1   S2
+		// set observation type config
 		typeConfig.add(new Type(Type.C,1));
 		typeConfig.add(new Type(Type.P,1));
-		typeConfig.add(new Type(Type.P,2));
 		typeConfig.add(new Type(Type.L,1));
-		typeConfig.add(new Type(Type.L,2));
 		typeConfig.add(new Type(Type.D,1));
-		typeConfig.add(new Type(Type.D,2));
 		typeConfig.add(new Type(Type.S,1));
-		typeConfig.add(new Type(Type.S,2));
+		if (!this.singleFreq) {
+			typeConfig.add(new Type(Type.P,2));
+			typeConfig.add(new Type(Type.L,2));
+			typeConfig.add(new Type(Type.D,2));
+			typeConfig.add(new Type(Type.S,2));
+		}
 
 	}
 
@@ -331,7 +334,7 @@ public class RinexV2Producer implements StreamEventListener {
 					case Type.L:
 						line += Double.isNaN(os.getPhase(t.getFrequency()-1))?sf("",14):sp(dfX3.format(os.getPhase(t.getFrequency()-1)),14,1); // L
 						line += os.getLossLockInd(t.getFrequency()-1)<0?" ":dfX.format(os.getLossLockInd(t.getFrequency()-1)); // L1 Loss of Lock Indicator
-						line += os.getSignalStrengthInd(t.getFrequency()-1)<0?" ":dfX.format(os.getSignalStrengthInd(t.getFrequency()-1)); // L1 Signal Strength Indicator
+						line += Float.isNaN(os.getSignalStrength(t.getFrequency()-1))?" ":dfX.format(Math.floor(os.getSignalStrength(t.getFrequency()-1)/6)); // L1 Signal Strength Indicator
 						break;
 					case Type.D:
 						line += Float.isNaN(os.getDoppler(t.getFrequency()-1))?sf("",16):sp(dfX3.format(os.getDoppler(t.getFrequency()-1)),14,1)+"  ";
@@ -347,7 +350,9 @@ public class RinexV2Producer implements StreamEventListener {
 						cnt = 0;
 					}
 				}
-				writeLine(line, true);
+				if (typeConfig.size() > 5) {
+					writeLine(line, true);
+				}
 			}
 		}
 
