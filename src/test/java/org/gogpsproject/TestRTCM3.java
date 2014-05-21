@@ -44,27 +44,32 @@ public class TestRTCM3 {
 	public static void main(String[] args) {
 
 
+		String NTRIPurl = args[0];
+		int NTRIPport = Integer.parseInt(args[1]);
+		String NTRIPuser = args[2];
+		String NTRIPpass = args[3];
+		String NTRIPmountpoint = args[4];
 
 		try {
-			RTCM3Client rtcm = RTCM3Client.getInstance(args[0], Integer.parseInt(args[1]), args[2],args[3], args[4]);
-			//RTCM3Client rtcm = RTCM3Client.getInstance("ntrip.jenoba.jp", 80, args[0],args[1], "JVR30");
-			rtcm.setDebug(true);
-			// Ntrip-GAA: $GPGGA,183836,3435.524,N,13530.231,E,4,10,1,164,M,1,M,3,0*69
+			RTCM3Client rtcm = RTCM3Client.getInstance(NTRIPurl.trim(), NTRIPport, NTRIPuser.trim(), NTRIPpass.trim(), NTRIPmountpoint.trim());
 			// CH Manno
-			Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
+			//Coordinates coordinates = Coordinates.globalXYZInstance(4382366.510741806,687718.046802147,4568060.791344867);
 			// JP Osaka
 			//Coordinates coordinates = Coordinates.globalXYZInstance(-3749314.940644724,3684015.867703885,3600798.5084946174);
+			// IT Milano
+			Coordinates coordinates = Coordinates.globalXYZInstance(4421892.585,718469.9347,4525016.336);
 			rtcm.setVirtualReferenceStationPosition(coordinates);
+			rtcm.setReconnectionPolicy(RTCM3Client.CONNECTION_POLICY_RECONNECT);
+			rtcm.setExitPolicy(RTCM3Client.EXIT_ON_LAST_LISTENER_LEAVE);
+			rtcm.setDebug(true);
 			rtcm.init();
 
 			// log rinex format
-			RinexV2Producer rinexOut = new RinexV2Producer("./data/test-rinex.11o",true,false);
+			RinexV2Producer rinexOut = new RinexV2Producer("./test/test-rinex.obs",true,false);
 			rtcm.addStreamEventListener(rinexOut);
 
-
-			ObservationsBuffer ob = new ObservationsBuffer(rtcm,"./data/test-rtcm.dat");
+			ObservationsBuffer ob = new ObservationsBuffer(rtcm,"./test/test-rtcm.dat");
 			ob.init();
-
 
 			Thread.sleep(60*1000);
 
