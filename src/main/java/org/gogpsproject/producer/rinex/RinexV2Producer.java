@@ -214,7 +214,18 @@ public class RinexV2Producer implements StreamEventListener {
 			appendLine(sp(dfX4.format(0.0),14,1)+sp(dfX4.format(0.0),14,1)+sp(dfX4.format(0.0),14,1)+sf("",18)+se("APPROX POSITION XYZ",20));
 		}
 		appendLine(sp(dfX4.format(0.0),14,1)+sp(dfX4.format(0.0),14,1)+sp(dfX4.format(0.0),14,1)+sf("",18)+se("ANTENNA: DELTA H/E/N",20));
-		appendLine(sp(dfX.format(1),6,1)+sp(dfX.format(1),6,1)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",12)+se("WAVELENGTH FACT L1/2",20));
+		boolean found = false;
+		for (Type t:typeConfig) {
+		    if (t.toString().equals("L2")) {
+		        found = true;
+		        break;
+		    }
+		}
+		int wf1 = 2; int wf2 = 0; //single frequency (hypothesizing ublox-type low-cost receiver, i.e. with half cycle ambiguities)
+		if(found) {
+			wf1 = 1; wf2 = 1; //dual frequency (hypothesizing full cycle ambiguities)
+		}
+		appendLine(sp(dfX.format(wf1),6,1)+sp(dfX.format(wf2),6,1)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",6)+sf("",12)+se("WAVELENGTH FACT L1/2",20));
 
 		String line = "";
 		int cols=60;
