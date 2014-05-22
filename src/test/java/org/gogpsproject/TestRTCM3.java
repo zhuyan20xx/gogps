@@ -25,6 +25,7 @@ import gnu.io.PortInUseException;
 
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Vector;
 
 import org.gogpsproject.ObservationsBuffer;
@@ -39,10 +40,10 @@ public class TestRTCM3 {
 	 * @param args
 	 */
 
-
-
 	public static void main(String[] args) {
-
+		
+		//force dot as decimal separator
+		Locale.setDefault(new Locale("en", "US"));
 
 		String NTRIPurl = args[0];
 		int NTRIPport = Integer.parseInt(args[1]);

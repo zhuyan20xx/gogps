@@ -46,6 +46,10 @@ public class TestAssistNow {
 	public static void main(String[] args) {
 
 		try{
+			
+			//force dot as decimal separator
+			Locale.setDefault(new Locale("en", "US"));
+			
 			// Get current time
 			long start = System.currentTimeMillis();
 

@@ -20,6 +20,7 @@
 package org.gogpsproject;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
@@ -34,6 +35,10 @@ public class TestRinexProducer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		//force dot as decimal separator
+		Locale.setDefault(new Locale("en", "US"));
+		
 		String masterFile = "./test/master.dat";
 //		String rover = "./test/20111003-004754-rover.dat";
 

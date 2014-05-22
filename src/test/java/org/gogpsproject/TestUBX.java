@@ -29,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Vector;
 
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
@@ -83,7 +84,9 @@ public class TestUBX implements StreamEventListener{
 	}
 
 	public static void main(String[] args) {
-
+		
+		//force dot as decimal separator
+		Locale.setDefault(new Locale("en", "US"));
 
 		Vector<String> ports = UBXSerialConnection.getPortList(false);
 		if (ports.size() > 0) {

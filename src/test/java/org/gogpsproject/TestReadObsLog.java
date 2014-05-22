@@ -25,6 +25,7 @@ import gnu.io.PortInUseException;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 
 import org.gogpsproject.ObservationsBuffer;
@@ -39,6 +40,9 @@ public class TestReadObsLog {
 	 */
 
 	public static void main(String[] args) {
+		
+		//force dot as decimal separator
+		Locale.setDefault(new Locale("en", "US"));
 
 		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
 		double goodDopThreshold = 2.5;
