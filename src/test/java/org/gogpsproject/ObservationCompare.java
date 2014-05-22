@@ -22,6 +22,7 @@ package org.gogpsproject;
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.Locale;
 
 import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.ublox.UBXFileReader;
@@ -37,6 +38,10 @@ public class ObservationCompare {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		//force dot as decimal separator
+		Locale.setDefault(new Locale("en", "US"));
+		
 		Calendar c = Calendar.getInstance();
 		int yy = c.get(Calendar.YEAR)-2000;
 		int p=0;

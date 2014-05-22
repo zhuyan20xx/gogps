@@ -48,6 +48,9 @@ public class LiveTracking {
 	public static void main(String[] args) {
 		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
 		try{
+			//force dot as decimal separator
+			Locale.setDefault(new Locale("en", "US"));
+			
 			// Get current time
 			long start = System.currentTimeMillis();
 
