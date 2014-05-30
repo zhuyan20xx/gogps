@@ -38,6 +38,7 @@ import org.gogpsproject.StreamEventProducer;
 public class UBXReader implements StreamEventProducer {
 	private InputStream in;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
+	private Boolean debugModeEnabled;
 	//	private StreamEventListener streamEventListener;
 
 	public UBXReader(InputStream is){
@@ -65,6 +66,9 @@ public class UBXReader implements StreamEventProducer {
 					parsed = true;
 
 					Observations o = decodegps.decode(null);
+					if (o!=null && this.debugModeEnabled) {
+						System.out.println("Decoded observations");
+					}
 					if(streamEventListeners!=null && o!=null){
 						for(StreamEventListener sel:streamEventListeners){
 							Observations oc = (Observations)o.clone();
@@ -83,6 +87,9 @@ public class UBXReader implements StreamEventProducer {
 							parsed = true;
 
 							IonoGps iono = decodegps.decode();
+							if (iono!=null && this.debugModeEnabled) {
+								System.out.println("Decoded iono parameters");
+							}
 							if(streamEventListeners!=null && iono!=null){
 								for(StreamEventListener sel:streamEventListeners){
 									sel.addIonospheric(iono);
@@ -96,16 +103,20 @@ public class UBXReader implements StreamEventProducer {
 								parsed = true;
 
 								EphGps eph = decodegps.decode();
+								if (eph!=null && this.debugModeEnabled) {
+									System.out.println("Decoded ephemeris for satellite " + eph.getSatID());
+								}
 								if(streamEventListeners!=null && eph!=null){
 									for(StreamEventListener sel:streamEventListeners){
 										sel.addEphemeris(eph);
 									}
 								}
 								return eph;
-
 							}
 					}catch(UBXException ubxe){
-						//System.out.println(ubxe);
+						if (this.debugModeEnabled) {
+							System.out.println(ubxe);
+						}
 					}
 				}else{
 					in.read(); // ID
@@ -118,17 +129,21 @@ public class UBXReader implements StreamEventProducer {
 				length[0] = in.read();
 
 				int len = length[0]*256+length[1];
-				//System.out.println("skip "+len);
+				if (this.debugModeEnabled) {
+					System.out.println("Warning: UBX message not decoded; skipping "+len+" bytes");
+				}
 				for (int b = 0; b < len+2; b++) {
 					in.read();
 				}
 			}
 		}else{
-			System.out.println("Wrong Sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+			if (this.debugModeEnabled) {
+				System.out.println("Warning: wrong sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+			}
 		}
 	//	}else{
 	//		//no warning, may be NMEA
-	//		//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+	//		//System.out.println("Warning: wrong sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 	//	}
 		return null;
 	}
@@ -158,6 +173,9 @@ public class UBXReader implements StreamEventProducer {
 		if(streamEventListener==null) return;
 		if(streamEventListeners.contains(streamEventListener))
 			this.streamEventListeners.remove(streamEventListener);
+	}
+	public void enableDebugMode(Boolean enableDebug) {
+		this.debugModeEnabled = enableDebug;
 	}
 
 }
