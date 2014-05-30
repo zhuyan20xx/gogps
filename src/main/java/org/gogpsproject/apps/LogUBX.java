@@ -73,6 +73,12 @@ public class LogUBX {
 		parser.addArgument("-t", "--timetag")
 				.action(Arguments.storeTrue())
 				.help("log the system time when RXM-RAW messages are received");
+		parser.addArgument("-xo", "--rinexobs")
+		        .action(Arguments.storeTrue())
+		        .help("write a RINEX observation file while logging");
+		parser.addArgument("-d", "--debug")
+                .action(Arguments.storeTrue())
+                .help("show warning messages for debugging purposes");
 		parser.addArgument("port").nargs("*")
 				.help("COM port(s) connected to u-blox receivers (e.g. COM3 COM10)");
 		Namespace ns = null;
@@ -102,18 +108,28 @@ public class LogUBX {
 				}
 			}
 			
+			int r = 1;
 			for (String portId : ns.<String> getList("port")) {
 				
 				UBXSerialConnection ubxSerialConn = new UBXSerialConnection(portId, 9600);
 				
 				ubxSerialConn.setMeasurementRate((Integer) ns.get("rate"));
-				ubxSerialConn.enableEphemeris((Integer) ns.get("ephemeris"));
-				ubxSerialConn.enableIonoParam((Integer) ns.get("ionosphere"));
+				if (r == 1) {
+					ubxSerialConn.enableEphemeris((Integer) ns.get("ephemeris"));
+					ubxSerialConn.enableIonoParam((Integer) ns.get("ionosphere"));
+				} else {
+					ubxSerialConn.enableEphemeris(0);
+					ubxSerialConn.enableIonoParam(0);
+				}
 				ubxSerialConn.enableTimetag(ns.getBoolean("timetag"));
 				ubxSerialConn.enableNmeaSentences(ns.<String> getList("nmea"));
+				ubxSerialConn.enableRinexObs(ns.getBoolean("rinexobs"));
+				ubxSerialConn.enableDebug(ns.getBoolean("debug"));
 				ubxSerialConn.init();
 				
 				new ObservationsBuffer(ubxSerialConn, null);
+				
+				r++;
 			}
 
 		}catch(Exception e){

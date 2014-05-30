@@ -50,6 +50,8 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	private int setEphemerisRate = 10;
 	private int setIonosphereRate = 60;
 	private boolean enableTimetag = true;
+	private Boolean enableDebug = true;
+	private Boolean enableRnxObs = true;
 	private List<String> enableNmeaList;
 
 	public UBXSerialConnection(String portName, int speed) {
@@ -112,6 +114,8 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 				ubxReader.enableAidEphMsg(this.setEphemerisRate);
 				ubxReader.enableAidHuiMsg(this.setIonosphereRate);
 				ubxReader.enableSysTimeLog(this.enableTimetag);
+				ubxReader.enableRinexObsOutput(this.enableRnxObs);
+				ubxReader.enableDebugMode(this.enableDebug);
 				ubxReader.enableNmeaMsg(this.enableNmeaList);
 				ubxReader.start();
 
@@ -229,6 +233,22 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 			ubxReader.enableSysTimeLog(enableTim);
 		} else {
 			this.enableTimetag = enableTim;
+		}
+	}
+
+	public void enableRinexObs(Boolean enableRnxObs) {
+		if(ubxReader!=null){
+			ubxReader.enableRinexObsOutput(enableRnxObs);
+		} else {
+			this.enableRnxObs = enableRnxObs;
+		}
+	}
+	
+	public void enableDebug(Boolean enableDebug) {
+		if(ubxReader!=null){
+			ubxReader.enableDebugMode(enableDebug);
+		} else {
+			this.enableDebug = enableDebug;
 		}
 	}
 }
