@@ -38,7 +38,7 @@ import org.gogpsproject.StreamEventProducer;
 public class UBXReader implements StreamEventProducer {
 	private InputStream in;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
-	private Boolean debugModeEnabled;
+	private Boolean debugModeEnabled = false;
 	//	private StreamEventListener streamEventListener;
 
 	public UBXReader(InputStream is){

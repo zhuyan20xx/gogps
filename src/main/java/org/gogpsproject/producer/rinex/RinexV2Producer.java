@@ -88,7 +88,9 @@ public class RinexV2Producer implements StreamEventListener {
 
 		// set observation type config
 		typeConfig.add(new Type(Type.C,1));
-		typeConfig.add(new Type(Type.P,1));
+		if (!this.singleFreq) {
+			typeConfig.add(new Type(Type.P,1));
+		}
 		typeConfig.add(new Type(Type.L,1));
 		typeConfig.add(new Type(Type.D,1));
 		typeConfig.add(new Type(Type.S,1));
@@ -355,7 +357,7 @@ public class RinexV2Producer implements StreamEventListener {
 						break;
 					}
 					cnt++;
-					if(cnt==5){
+					if(cnt==typeConfig.size() || cnt==5){
 						writeLine(line, true);
 						line = "";
 						cnt = 0;
