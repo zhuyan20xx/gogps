@@ -76,12 +76,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		
 		FileOutputStream fos_ubx= null;
 		COMPort = padCOMSpaces(COMPort);
-		
-		String COMPortStr = COMPort;
-		String [] tokens = COMPort.split("/");
-		if (tokens.length > 0) {
-			COMPortStr = tokens[tokens.length-1].trim();	//for Linux /dev/tty* ports
-		}
+		String COMPortStr = prepareCOMStringForFilename(COMPort);
 
 		File file = new File(outputDir);
 		if(!file.exists() || !file.isDirectory()){
@@ -164,11 +159,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			System.out.println(date1+" - "+COMPort+" - RINEX output enabled");
 			SimpleDateFormat sdfExt = new SimpleDateFormat("yy");
 			String year = sdfExt.format(date);
-			String COMPortStr = COMPort;
-			String [] tokens = COMPort.split("/");
-			if (tokens.length > 0) {
-				COMPortStr = tokens[tokens.length-1].trim();	//for Linux /dev/tty* ports
-			}
+			String COMPortStr = prepareCOMStringForFilename(COMPort);
 			rinexOut = new RinexV2Producer(outputDir+"/"+COMPortStr+ "_" + dateFile + "." + year + "o",false,true);
 		}
 		
@@ -201,12 +192,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
-		
-		String COMPortStr = COMPort;
-		String [] tokens = COMPort.split("/");
-		if (tokens.length > 0) {
-			COMPortStr = tokens[tokens.length-1].trim();	//for UNIX /dev/tty* ports
-		}
+		String COMPortStr = prepareCOMStringForFilename(COMPort);
 		
 		if (sysTimeLogEnabled) {
 			System.out.println(date1+" - "+COMPort+" - System time logging enabled");
@@ -443,5 +429,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 			COMPortIn = COMPortIn + " ";
 		}
 		return COMPortIn;
+	}
+	
+	private String prepareCOMStringForFilename(String COMPort) {
+		String [] tokens = COMPort.split("/");
+		if (tokens.length > 0) {
+			COMPort = tokens[tokens.length-1].trim();	//for UNIX /dev/tty* ports
+		}
+		return COMPort;
 	}
 }
