@@ -239,7 +239,7 @@ public class RinexV2Producer implements StreamEventListener {
 		line += se("# / TYPES OF OBSERV",20);
 
 		appendLine(line);
-		appendLine(sp(dfX.format(1),6,1)+sf("",60-1*6)+se("INTERVAL",20));
+		//appendLine(sp(dfX.format(1),6,1)+sf("",60-1*6)+se("INTERVAL",20));
 
 		if(firstObservation!=null){
 			Calendar c = Calendar.getInstance(TZ);
