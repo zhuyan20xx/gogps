@@ -21,10 +21,13 @@ package org.gogpsproject.conversion;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
+import org.gogpsproject.Time;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 
@@ -40,18 +43,21 @@ public class UBXToRinex {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		//force dot as decimal separator
+		Locale.setDefault(new Locale("en", "US"));
 
-		if(args.length<1){
-			System.out.println("UBXToRinex <ubx file>");
+		if(args.length<2){
+			System.out.println("UBXToRinex <ubx file> <marker name>");
 			return;
 		}
 
 		int p=0;
 		String inFile = args[p++];
-		String outFile = inFile.indexOf(".ubx")>0?inFile.substring(0, inFile.indexOf(".ubx"))+".obs":inFile+".obs";
+		String marker = args[p++];
+		//String outFile = inFile.indexOf(".ubx")>0?inFile.substring(0, inFile.indexOf(".ubx"))+".obs":inFile+".obs";
 
 		System.out.println("in :"+inFile);
-		System.out.println("out:"+outFile);
 
 		ObservationsProducer roverIn = new UBXFileReader(new File(inFile));
 		try {
@@ -59,19 +65,48 @@ public class UBXToRinex {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		System.out.println("Started writing RINEX file...");
+		
+		Observations o = roverIn.getNextObservations();
+		while(o==null){
+			o = roverIn.getNextObservations();
+		}
+		
+		//First daily RINEX file
+		Time epoch = o.getRefTime();
+		int DOY = epoch.getDayOfYear();
+		int year = epoch.getYear2c();
+		String outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
+        
+		System.out.println("Started writing RINEX file "+outFile);
 		RinexV2Producer rp = new RinexV2Producer(outFile, false, true);
 		rp.setDefinedPosition(roverIn.getDefinedPosition());
 
-		Observations o = roverIn.getNextObservations();
+		int DOYold = DOY;
+		
 		while(o!=null){
 			rp.addObservations(o);
 			o = roverIn.getNextObservations();
+			
+			if (o!=null) {
+				//check if the day changes; if yes, a new daily RINEX file must be started
+				epoch = o.getRefTime();
+				DOY = epoch.getDayOfYear();
+
+				if (DOY != DOYold) {
+					rp.streamClosed();
+
+					year = epoch.getYear2c();
+					outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
+
+					System.out.println("Started writing RINEX file "+outFile);
+					rp = new RinexV2Producer(outFile, false, true);
+					rp.setDefinedPosition(roverIn.getDefinedPosition());
+
+					DOYold = DOY;
+				}
+			}
 		}
 		rp.streamClosed();
 		System.out.println("END");
-
 	}
-
 }
