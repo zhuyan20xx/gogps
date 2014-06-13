@@ -45,7 +45,7 @@ public class Time {
 
 	{
 		gc = GregorianCalendar.getInstance();
-		gc.setTimeZone(gc.getTimeZone());
+		gc.setTimeZone(TimeZone.getTimeZone("GMT Time"));
 	}
 
 	public Time(long msec){
