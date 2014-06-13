@@ -63,6 +63,10 @@ public class DecodeRXMRAW {
 		CH_A += length[0];CH_B += CH_A;
 
 		int len = length[0]*256+length[1];
+		
+		if (len == 0) {
+			throw new UBXException("Zero-length RXM-RAW message");
+		}
 
 		//System.out.println("Length : " + len);
 		data = new int[8];
