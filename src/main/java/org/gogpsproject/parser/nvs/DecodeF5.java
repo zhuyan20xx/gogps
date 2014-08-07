@@ -174,11 +174,37 @@ public class DecodeF5 {
 					//				in.read(bytes, 0, bytes.length);
 					//				double carrierPhase = Bits.byteToIEEE754Double(bytes);
 											
+							        
+
+							        /* C/A Pseudo Range (ms), 8 bytes  */
+							        bytes = new byte[8];
+							                in.read(bytes, 0, bytes.length);
+							
+							                String binpR = "";
+							                for (int j = 7; j >= 0; j--) {    // for little endian
+							                        String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned
+							                        temp0 = String.format("%8s",temp0).replace(' ', '0');
+							                        binpR =  binpR + temp0  ;
+							                }
+							
+							                signStr = binpR.substring(0,1);
+							        signInt = Integer.parseInt(signStr, 2);
+							        espStr = binpR.substring(1,12);
+							        espInt = Integer.parseInt(espStr, 2);
+							        mantStr = binpR.substring(12,64);
+							        mantInt = Long.parseLong(mantStr, 2);
+							        mantInt2 = mantInt / Math.pow(2, 52);
+							        double pseudoRange = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
+							        pseudoRange = pseudoRange * 299792458 * 0.001;   // velocity of light in the void [m/s]
+							        os.setCodeC(ObservationSet.L1, pseudoRange);
+							       							        
+							        
 									/* C/A Pseudo Range (ms), 8 bytes  */
-									bytes = new byte[8];
-									in.read(bytes, 0, bytes.length);
-									double pseudoRange = Bits.byteToIEEE754Double(bytes);
-									os.setCodeC(ObservationSet.L1, pseudoRange);
+//									bytes = new byte[8];
+//									in.read(bytes, 0, bytes.length);
+//									double pseudoRange = Bits.byteToIEEE754Double(bytes);
+//							        pseudoRange = pseudoRange * 299792458 * 1e-3;   // velocity of light in the void [m/s]
+//									os.setCodeC(ObservationSet.L1, pseudoRange);
 									
 									/*  Doppler Frequency(Hz), 8 bytes  */
 									bytes = new byte[8];
