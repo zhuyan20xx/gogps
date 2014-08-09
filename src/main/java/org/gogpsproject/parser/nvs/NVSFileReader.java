@@ -126,18 +126,26 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	@Override   // need to comment if you want to use main method 
 	public Observations getNextObservations() {
 		try{	
-			while(in.available()>0){
+			while(in.available() > 1000){  // Need to adjust this value 
+				
+//				int leng1 = in.available();
+//				System.out.println("leng1: " + leng1);
+				
 				try{
 						int data = in.read();
+						
+						if(data == 0x03){
+						data = in.read();
+
 						if(data == 0x10){
-							in.mark(0);
-							data = in.read();				
-							if(data == 0x10){
-//								System.out.println("<DLE>");
-								continue;			
-								
-							}else{
-								in.reset();
+//							in.mark(0);
+//							data = in.read();				
+//							if(data == 0x10){
+////								System.out.println("<DLE>");
+//								continue;			
+//								
+//							}else{
+//								in.reset();
 								Object o = reader.readMessagge();
 								
 								if(o instanceof Observations){
@@ -153,7 +161,8 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 								}
 								
 					
-							}			
+//							}			
+						}
 							
 							
 						}else{
