@@ -65,7 +65,6 @@ public class Decode4A {
 			alpha[i] = Bits.byteToIEEE754Float(bytes);
 //			System.out.println("Alpha" +i + ": " + alpha[i]);
 		}
-		iono.setAlpha(alpha);
 		
 		
 		/*  Beta, 4 bytes each  */		
@@ -76,14 +75,19 @@ public class Decode4A {
 			beta[i] = Bits.byteToIEEE754Float(bytes);
 //			System.out.println("Beta" +i + ": " + beta[i]);
 		}
-		iono.setBeta(beta);	
                 
         
         int reliable_sign = in.read();
         
+        if(reliable_sign == 255){  // 255 - the data is reliable
+          System.out.println("Reliable Sign: "+ reliable_sign); 
+
+        	iono.setAlpha(alpha);
+        	iono.setBeta(beta);	
+        }
         
         
-//        System.out.println("Reliable Sign: "+ reliable_sign);  // 255 - the data is reliable
+//        System.out.println("Reliable Sign: "+ reliable_sign); 
 //		System.out.println("+-----------------  End of 4A  -------------------+");
 						        
          
