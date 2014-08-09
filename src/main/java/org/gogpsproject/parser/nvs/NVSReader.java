@@ -37,15 +37,25 @@ import org.gogpsproject.StreamEventProducer;
  * @author Daisuke Yoshida (Osaka City University), Lorenzo Patocchi (cryms.com)
  */
 public class NVSReader implements StreamEventProducer {
-	private InputStream in;
-//	private BufferedInputStream in;
+//	private InputStream in;
+	private BufferedInputStream in;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 //	private StreamEventListener streamEventListener;
 
-	public NVSReader(InputStream is){
+//	public NVSReader(InputStream is){
+//		this(is,null);		
+//	}
+	public NVSReader(BufferedInputStream is){
 		this(is,null);		
 	}
-	public NVSReader(InputStream is, StreamEventListener eventListener){
+	
+//	public NVSReader(InputStream is, StreamEventListener eventListener){
+//		this.in = is;
+////		this.in = (BufferedInputStream) is;
+//		addStreamEventListener(eventListener);
+//	}
+	
+	public NVSReader(BufferedInputStream is, StreamEventListener eventListener){
 		this.in = is;
 //		this.in = (BufferedInputStream) is;
 		addStreamEventListener(eventListener);
@@ -88,8 +98,9 @@ public class NVSReader implements StreamEventProducer {
 								data = in.read();
 								if(data == 0x10){  // <DLE>
 										int leng2 = this.in.available();
+//										System.out.println("leng1: " + leng1 );
 //										System.out.println("leng2: " + leng2 );
-										leng = (leng1 - leng2) * 8 ;
+										leng = (leng1 - leng2 + 1 ) * 8 ;
 										int nsv = (leng - 224) / 240;  
 										/* 28*8 bits = 224, 30*8 bits = 240 */
 //										System.out.println("leng: " + leng );
