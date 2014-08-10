@@ -63,7 +63,7 @@ import org.gogpsproject.StreamResource;
  * @author Daisuke Yoshida OCU
  */
 
-public class NVSFileReader3 extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
+public class NVSFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
 	
 
 //	private InputStream in;
@@ -79,7 +79,7 @@ public class NVSFileReader3 extends EphemerisSystem implements ObservationsProdu
     String file2 = "./data/data.txt";  // for storing processed data after removing double <DLE>
 
 	
-	public NVSFileReader3(File file) {
+	public NVSFileReader(File file) {
 		this.file = file;
 	
 	}
