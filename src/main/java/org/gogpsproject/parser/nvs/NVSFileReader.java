@@ -54,30 +54,32 @@ import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.StreamResource;
-import org.gogpsproject.parser.ublox.UBXReader;
 
 /**
  * <p>
- * Read an NVS File and implement Observation and Navigation producer (if 4A and F7 has been recorded)
+ * Read an UBX File and implement Observation and Navigation producer (if AID-HUI and AID-EPH has been recorded)
  * </p>
  *
- * @author Daisuke Yoshida (Osaka City University), Lorenzo Patocchi (cryms.com)
+ * @author Daisuke Yoshida OCU
  */
 
-//public class NVSFileReader  {
-public class NVSFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
+public class NVSFileReader3 extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
+	
 
 //	private InputStream in;
 	private BufferedInputStream in;
-	private NVSReader reader;
 	private File file;
 	private Observations obs = null;
+	private NVSReader reader;
 	private IonoGps iono = null;
 	// TODO support past times, now keep only last broadcast data
 	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
+	private BufferedInputStream in0;
 
-		
-	public NVSFileReader(File file) {
+    String file2 = "./data/data.txt";  // for storing processed data after removing double <DLE>
+
+	
+	public NVSFileReader3(File file) {
 		this.file = file;
 	
 	}
@@ -114,79 +116,97 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	 */
 	@Override
 	public void init() throws Exception {
+		
+		/* read original data file */
 		FileInputStream inf = new FileInputStream(file);
-		this.in = new BufferedInputStream(inf);
+		@SuppressWarnings("resource")
+		BufferedInputStream in0 = new BufferedInputStream(inf);
+		
+		/* write processed data */
+	    FileOutputStream outf = null;
+		outf = new FileOutputStream(file2);
+		BufferedOutputStream out = new BufferedOutputStream(outf);	
+		
+		/*  remove double <DLE> into single  */
+		while(in0.available()>0){   
+			int contents = in0.read();
+		    out.write(contents);
+		    
+			if(contents == 0x10){
+				contents = in0.read();
+				if(contents == 0x10){
+					continue;	
+				}else{
+					out.write(contents);								
+				}										
+			}	
+			
+		}								
+		out.close();	
+		
+		
+		/* read processed data file */
+		FileInputStream ins = new FileInputStream(file2);
+	    this.in = new BufferedInputStream(ins);	    		
 		this.reader = new NVSReader(in, null);
+	    		
 	}
 	
-
+	
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#init()
 	 */
 	@Override   // need to comment if you want to use main method 
 	public Observations getNextObservations() {
-		try{	
-			while(in.available() > 1000){  // Need to adjust this value 
-				
+//	public static void main(String[] args) throws FileNotFoundException {
+		//public void init() throws Exception {  
+		
+		try{		
+			while(in.available()> 1000){  // Need to adjust this value 
 //				int leng1 = in.available();
 //				System.out.println("leng1: " + leng1);
 				
+				
 				try{
-						int data = in.read();
-						
-						if(data == 0x03){
-						data = in.read();
-
-						if(data == 0x10){
-//							in.mark(0);
-//							data = in.read();				
-//							if(data == 0x10){
-////								System.out.println("<DLE>");
-//								continue;			
-//								
-//							}else{
-//								in.reset();
-								Object o = reader.readMessagge();
-								
-								if(o instanceof Observations){
-									return (Observations)o;
-								}else
-									if(o instanceof IonoGps){
-										iono = (IonoGps)o;
-									}
-								if(o instanceof EphGps){
-		
-									EphGps e = (EphGps)o;
-									ephs.put(new Integer(e.getSatID()), e);
-								}
-								
+					int data = in.read();
 					
-//							}			
+					if(data == 0x10){
+//						System.out.println("<DLE>");
+						Object o = reader.readMessagge();
+						
+						if(o instanceof Observations){
+							return (Observations)o;
+						}else
+							if(o instanceof IonoGps){
+								iono = (IonoGps)o;
+							}
+						if(o instanceof EphGps){
+
+							EphGps e = (EphGps)o;
+							ephs.put(new Integer(e.getSatID()), e);
 						}
-							
-							
-						}else{
-								//System.out.println("else");
-								//no warning, may be NMEA
-								//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
-						}
-				
-				
-					}catch(NVSException nvse){
-							System.err.println(nvse);
-		//					ubxe.printStackTrace();
+						
+						
+//					}else{
+						//no warning, may be NMEA
+						//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 					}
-				
-				}	
+				}catch(NVSException nvse){
+					System.err.println(nvse);
+//					ubxe.printStackTrace();
+				}
+			}
 			
+			in.close();
 			
 		}catch(IOException e){
 			e.printStackTrace();
 		}
-		return null;   // need to comment if you want to use main method 
+		return null;
 	}
-			
-
+		
+		
+		
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#release()
 	 */
@@ -212,7 +232,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 		}
 		return null ;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.NavigationProducer#getIono(long)
 	 */
@@ -221,8 +241,9 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 		return iono;
 	}
 
+	
+}	
 
- }
 
 	
 	
