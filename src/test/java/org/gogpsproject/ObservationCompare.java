@@ -72,7 +72,7 @@ public class ObservationCompare {
 		while(o1!=null && o2!=null){
 			//r=1 m=2
 
-			long obs1time = o1.getRefTime().getGpsTime();
+			double obs1time = o1.getRefTime().getGpsTime();
 			//System.out.println("look for M "+o1time);
 			while (o1!=null && o2!=null && obs1time > o2.getRefTime().getGpsTime()) {
 //				masterIn.skipDataObs();
@@ -84,7 +84,7 @@ public class ObservationCompare {
 
 			// Discard rover epochs if correspondent master epochs are
 			// not available
-			long o2time = o2.getRefTime().getGpsTime();
+			double o2time = o2.getRefTime().getGpsTime();
 			//System.out.println("look for R "+o2time);
 			while (o2!=null && o1!=null && o1.getRefTime().getGpsTime() < o2time) {
 				System.out.println("Skip o1 "+o1.getRefTime().getGpsTime());

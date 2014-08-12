@@ -392,7 +392,7 @@ public class SP3Parser implements NavigationProducer{
 	 */
 	private double getClockCorrection(long unixTime, double timeCorrection, double obsPseudorange) {
 
-		long gpsTime = (new Time(unixTime)).getGpsTime();
+		double gpsTime = (new Time(unixTime)).getGpsTime();
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 

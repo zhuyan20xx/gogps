@@ -95,7 +95,7 @@ public class TxtProducer implements PositionConsumer, Runnable {
 			pw.printf("%16d", week);
 			
 			//GPS time-of-week (tow)
-			long tow = coord.getRefTime().getGpsTime();
+			double tow = coord.getRefTime().getGpsTime();
 			
 			pw.printf("%16d", tow);
 			

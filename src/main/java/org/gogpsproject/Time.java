@@ -109,7 +109,7 @@ public class Time {
 	 *            (UNIX standard time in milliseconds)
 	 * @return GPS time in seconds
 	 */
-	private static long unixToGpsTime(long time) {
+	private static double unixToGpsTime(double time) {
 		// Shift from UNIX time (January 1, 1970 - msec)
 		// to GPS time (January 6, 1980 - sec)
 		time = time / Constants.MILLISEC_IN_SEC - Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY;
@@ -181,12 +181,12 @@ public class Time {
 		return tmpl;
 	}
 
-	public long getGpsTime(){
+	public double getGpsTime(){
 		return unixToGpsTime(msec);
 	}
 	
-	public long getRoundedGpsTime(){
-		long tow = unixToGpsTime((msec+499)/1000*1000);
+	public double getRoundedGpsTime(){
+		double tow = unixToGpsTime((msec+499)/1000*1000);
 		return tow;
 	}
 //
