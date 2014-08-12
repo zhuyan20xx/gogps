@@ -300,14 +300,14 @@ public class GoGPS implements Runnable{
 
 				// Discard master epochs if correspondent rover epochs are
 				// not available
-				long obsRtime = obsR.getRefTime().getRoundedGpsTime();
+				double obsRtime = obsR.getRefTime().getRoundedGpsTime();
 				while (obsM!=null && obsR!=null && obsRtime > obsM.getRefTime().getRoundedGpsTime()) {
 					obsM = masterIn.getNextObservations();
 				}
 
 				// Discard rover epochs if correspondent master epochs are
 				// not available
-				long obsMtime = obsM.getRefTime().getRoundedGpsTime();
+				double obsMtime = obsM.getRefTime().getRoundedGpsTime();
 				while (obsM!=null && obsR!=null && obsR.getRefTime().getRoundedGpsTime() < obsMtime) {
 					obsR = roverIn.getNextObservations();
 				}
@@ -401,7 +401,7 @@ public class GoGPS implements Runnable{
 				// not available
 //				Observations obsR = roverIn.nextObservations();
 //				Observations obsM = masterIn.nextObservations();
-				long obsRtime = obsR.getRefTime().getRoundedGpsTime();
+				double obsRtime = obsR.getRefTime().getRoundedGpsTime();
 				System.out.println("look for M "+obsRtime);
 //				System.out.println("obsM_Time: " + obsM.getRefTime().getRoundedGpsTime());
 
@@ -416,7 +416,7 @@ public class GoGPS implements Runnable{
 
 				// Discard rover epochs if correspondent master epochs are
 				// not available
-				long obsMtime = obsM.getRefTime().getGpsTime();
+				double obsMtime = obsM.getRefTime().getGpsTime();
 				System.out.println("##look for R "+obsMtime);
 			
 				while (obsM!=null && obsR!=null && obsR.getRefTime().getGpsTime() < obsMtime) {

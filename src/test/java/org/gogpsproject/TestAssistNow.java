@@ -76,7 +76,7 @@ public class TestAssistNow {
 
 						//Compare
 						if(eph2!=null){
-							long ms = eph1.getRefTime().getGpsTime()-eph2.getRefTime().getGpsTime();
+							double ms = eph1.getRefTime().getGpsTime()-eph2.getRefTime().getGpsTime();
 							System.out.println(" time dif:"+(ms/1000)+"s "+(ms%1000)+"ms");
 							;
 							equalDouble("Af0",eph1.getAf0(),eph2.getAf0());

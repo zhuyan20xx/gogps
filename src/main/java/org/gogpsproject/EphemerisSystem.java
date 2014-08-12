@@ -124,7 +124,7 @@ public abstract class EphemerisSystem {
 		// double rho2 = Math.pow(diff.get(0), 2) + Math.pow(diff.get(1), 2)
 		// 		+ Math.pow(diff.get(2), 2);
 		// double traveltime = Math.sqrt(rho2) / Constants.SPEED_OF_LIGHT;
-		long receptionTime = (new Time(unixTime)).getGpsTime();
+		double receptionTime = (new Time(unixTime)).getGpsTime();
 		double traveltime = receptionTime + receiverClockError - transmissionTime;
 
 		// Compute rotation angle
@@ -157,7 +157,7 @@ public abstract class EphemerisSystem {
 	 */
 	protected double computeClockCorrectedTransmissionTime(long unixTime, double satelliteClockError, double obsPseudorange) {
 
-		long gpsTime = (new Time(unixTime)).getGpsTime();
+		double gpsTime = (new Time(unixTime)).getGpsTime();
 
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
@@ -170,7 +170,7 @@ public abstract class EphemerisSystem {
 	 * @return Satellite clock error
 	 */
 	protected double computeSatelliteClockError(long unixTime, EphGps eph, double obsPseudorange){
-		long gpsTime = (new Time(unixTime)).getGpsTime();
+		double gpsTime = (new Time(unixTime)).getGpsTime();
 		// Remove signal travel time from observation time
 		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
 
