@@ -74,8 +74,7 @@ public class DecodeF5 {
 		/*  TOW_UTC, 8 bytes  */
 		bytes = new byte[8];
 		in.read(bytes, 0, bytes.length);
-		double utc = Bits.byteToIEEE754Double(bytes);
-		long tow = (long)utc;
+		double tow = Bits.byteToIEEE754Double(bytes);
 	
 		/*  Week Number, 2 bytes  */
 		bytes = new byte[2];
@@ -100,8 +99,9 @@ public class DecodeF5 {
 //		tow = (tow + gpsTimeShift) / 1000 ;
 		weekN = weekN + 1024 ;
 		
-		long gmtTS = getGMTTS(tow, weekN);
-		Observations o = new Observations(new Time(gmtTS),0);
+		//long gmtTS = getGMTTS(tow, weekN);
+		Time refTime = new Time((int)weekN, (tow+gpsTimeShift)/1000);
+		Observations o = new Observations(refTime,0);
 		
 //		System.out.println("+----------------  Start of F5  ------------------+");
 //		System.out.println("TOW_UTC: "+ utc);			        
@@ -209,8 +209,11 @@ public class DecodeF5 {
 									/*  Doppler Frequency(Hz), 8 bytes  */
 									bytes = new byte[8];
 									in.read(bytes, 0, bytes.length);
-									double dopperFrequency = Bits.byteToIEEE754Double(bytes);
-									float d1 = (float)dopperFrequency; 
+									double dopplerFrequency = Bits.byteToIEEE754Double(bytes);
+									float d1 = (float)dopplerFrequency; 
+									if (Math.abs(d1) > 1e5) {
+										d1 = 0;
+									}
 									os.setDoppler(ObservationSet.L1, d1);
 									
 									/* Raw Data Flags, 1 byte */
@@ -266,7 +269,7 @@ public class DecodeF5 {
 		
 	}
 
-	private long getGMTTS(long tow, long week) {
+	private long getGMTTS(double tow, long week) {
 		Calendar c = Calendar.getInstance();
 		c.setTimeZone(TimeZone.getTimeZone("GMT Time"));
 //		c.setTimeZone(c.getTimeZone());
@@ -285,6 +288,6 @@ public class DecodeF5 {
 		//System.out.println(sdf.format(c.getTime()));
 		//ubx.log( (c.getTime().getTime())+" "+c.getTime()+" "+week+" "+tow+"\n\r");
 
-		return c.getTimeInMillis() + week*7*24*3600*1000 + tow;
+		return (long)(c.getTimeInMillis() + week*7*24*3600*1000 + tow);
 	}
 }

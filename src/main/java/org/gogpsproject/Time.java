@@ -63,8 +63,10 @@ public class Time {
 		this.gc.setTimeInMillis(this.msec);
 		this.fraction = Double.NaN;
 	}
-	public Time(int gpsWeek, int weekSec){
-		this.msec = (Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY + gpsWeek*7L*24L*3600L + weekSec) * 1000L;
+	public Time(int gpsWeek, double weekSec){
+		double fullTime = (Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY + gpsWeek*Constants.DAYS_IN_WEEK*Constants.SEC_IN_DAY + weekSec) * 1000L;
+		this.msec = (long) (fullTime);
+		this.fraction = fullTime - this.msec;
 		this.gc.setTimeInMillis(this.msec);
 	}
 	/**
@@ -96,12 +98,12 @@ public class Time {
 	 *            (GPS time in seconds)
 	 * @return UNIX standard time in milliseconds
 	 */
-	private static long gpsToUnixTime(long time, int week) {
+	private static long gpsToUnixTime(double time, int week) {
 		// Shift from GPS time (January 6, 1980 - sec)
 		// to UNIX time (January 1, 1970 - msec)
 		time = (time + (week * Constants.DAYS_IN_WEEK + Constants.UNIX_GPS_DAYS_DIFF) * Constants.SEC_IN_DAY) * Constants.MILLISEC_IN_SEC;
 
-		return time;
+		return (long)time;
 	}
 
 	/**

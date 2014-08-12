@@ -309,7 +309,7 @@ public class RinexV2Producer implements StreamEventListener {
 		line += sp(dfX.format(c.get(Calendar.DATE)),3,1);
 		line += sp(dfX.format(c.get(Calendar.HOUR_OF_DAY)),3,1);
 		line += sp(dfX.format(c.get(Calendar.MINUTE)),3,1);
-		line += sp(dfX7.format(c.get(Calendar.SECOND)+c.get(Calendar.MILLISECOND)/1000.0),11,1);
+		line += sp(dfX7.format(c.get(Calendar.SECOND)+c.get(Calendar.MILLISECOND)/1000.0+o.getRefTime().getFraction()/1000),11,1);
 		line += sp(dfX.format(o.getEventFlag()),3,1);
 		int gpsSize = 0;
 		for(int i=0;i<o.getGpsSize();i++){
