@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland, Daisuke Yoshida. All Rights Reserved. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -111,9 +111,10 @@ public class RinexObservationParser implements ObservationsProducer{
 	/**
 	 *
 	 */
-	public void parseHeaderObs() {
+	public int parseHeaderObs() {
 		try {
 			boolean foundTypeObs = false;
+			int ver = 0;
 
 			while (buffStreamObs.ready()) {
 				String line = buffStreamObs.readLine();
@@ -122,43 +123,104 @@ public class RinexObservationParser implements ObservationsProducer{
 
 				if (typeField.equals("RINEX VERSION / TYPE")) {
 
-					if (!line.substring(20, 21).equals("O")) {
-
-						// Error if observation file identifier was not found
-						System.err
-								.println("Observation file identifier is missing in file "
+						if (!line.substring(20, 21).equals("O")) {
+	
+							// Error if observation file identifier was not found
+							System.err
+									.println("Observation file identifier is missing in file "
+											+ fileObs.toString() + " header");
+							return ver = 0;
+							
+						} else if (line.substring(5, 9).equals("3.01")){
+							
+							System.out.println("Version 3.01");
+							ver = 3;
+							
+						} else if (line.substring(5, 9).equals("2.12")){
+							
+							System.out.println("Version 2.12");
+							ver = 3;
+							
+						} else {
+							
+							System.out.println("Version 2.1x");
+							ver = 2;
+							
+						}
+						
+				}
+				
+				switch (ver){ 	
+				/* In case of RINEX ver. 2 */
+				case 2: 
+						if (typeField.equals("# / TYPES OF OBSERV")) {
+							parseTypes(line);
+							foundTypeObs = true;
+						}
+		
+						else if (typeField.equals("TIME OF FIRST OBS")) {
+							parseTimeFirstObs(line);
+						}
+		
+						else if (typeField.equals("APPROX POSITION XYZ")) {
+							parseApproxPos(line);
+						}
+		
+						else if (typeField.equals("ANTENNA: DELTA H/E/N")) {
+							parseAntDelta(line);
+						}
+		
+						else if (typeField.equals("END OF HEADER")) {
+							if (!foundTypeObs) {
+								// Display an error if TIME OF FIRST OBS was not found
+								System.err.println("Critical information"
+										+ "(TYPES OF OBSERV) is missing in file "
 										+ fileObs.toString() + " header");
-					}
-				}
+							}
+							return ver;
+						}		
+				break;
+				
+				/* In case of RINEX ver. 3 */
+				case 3:  
+						System.out.println("Version 3 process here!");
+						
+						if (typeField.equals("SYS / # / OBS TYPES")) {
+							
+							System.out.println("SYS / # / OBS TYPES");
+							parseTypes(line);
+							foundTypeObs = true;
+						}
+		
+						else if (typeField.equals("TIME OF FIRST OBS")) {
+							parseTimeFirstObs(line);
+						}
+		
+						else if (typeField.equals("APPROX POSITION XYZ")) {
+							parseApproxPos(line);
+						}
+		
+						else if (typeField.equals("ANTENNA: DELTA H/E/N")) {
+							parseAntDelta(line);
+						}
+		
+						else if (typeField.equals("END OF HEADER")) {
+							if (!foundTypeObs) {
+								// Display an error if TIME OF FIRST OBS was not found
+								System.err.println("Critical information"
+										+ "(TYPES OF OBSERV) is missing in file "
+										+ fileObs.toString() + " header");
+							}
+							return ver;
+						}							
+				break;
+						
+				
+				} // End of switch
+				
+			} // End of while 
 
-				else if (typeField.equals("# / TYPES OF OBSERV")) {
-					parseTypes(line);
-					foundTypeObs = true;
-				}
-
-				else if (typeField.equals("TIME OF FIRST OBS")) {
-					parseTimeFirstObs(line);
-				}
-
-				else if (typeField.equals("APPROX POSITION XYZ")) {
-					parseApproxPos(line);
-				}
-
-				else if (typeField.equals("ANTENNA: DELTA H/E/N")) {
-					parseAntDelta(line);
-				}
-
-				else if (typeField.equals("END OF HEADER")) {
-					if (!foundTypeObs) {
-						// Display an error if TIME OF FIRST OBS was not found
-						System.err.println("Critical information"
-								+ "(TYPES OF OBSERV) is missing in file "
-								+ fileObs.toString() + " header");
-					}
-					return;
-				}
-			}
-
+			
 			// Display an error if END OF HEADER was not reached
 			System.err.println("END OF HEADER was not found in file "
 					+ fileObs.toString());
@@ -169,6 +231,9 @@ public class RinexObservationParser implements ObservationsProducer{
 			// Skip over blank lines
 			e.printStackTrace();
 		}
+		
+		return 0;
+		
 	}
 
 	/**
