@@ -34,7 +34,7 @@ import org.gogpsproject.producer.rinex.RinexV2Producer;
 /**
  * @author Lorenzo Patocchi, cryms.com
  *
- * Converts UBX binary file to RINEX
+ * Converts NVS binary file to RINEX
  *
  */
 public class NVSToRinex {

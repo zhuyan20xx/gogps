@@ -60,8 +60,9 @@ public class TestGoGPS {
 			
 			/*  Oct 21st, 2013, OCU (NVS test) */
 //			dynamicModel = GoGPS.DYN_MODEL_STATIC;
-			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin")); /* NVS */
-//			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13o")); /* NVS */
+//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin")); /* NVS */
+			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13o")); /* NVS */
+//			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13o_v3")); /* NVS */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR3_rover_00.bin")); /* NVS */
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS3_master.obs"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG3.13N"));
@@ -72,6 +73,7 @@ public class TestGoGPS {
 //			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/Javad_SciBLDG3.13o")); /* Javad */
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS3_master.obs"));
 			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG3.13N"));		
+
 			
 			/*  Oct 21st, 2013, OCU (u-blox test) */
 //			dynamicModel = GoGPS.DYN_MODEL_STATIC;
@@ -121,7 +123,7 @@ public class TestGoGPS {
 //			ObservationsProducer roverIn = new UBXFileReader(new File("./data/COM10_100617_025543.ubx"));
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/vrs2.10o"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/vrs2.10n"));
-//			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 //			/* Locarno, Switzerland */
 			//ObservationsProducer roverIn = new UBXFileReader(new File("P:/eclipse.eriadne/goGPS-tests/data/ubx-partito.out"));
