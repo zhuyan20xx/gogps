@@ -80,7 +80,7 @@ public class Decode4A {
         int reliable_sign = in.read();
         
         if(reliable_sign == 255){  // 255 - the data is reliable
-          System.out.println("Reliable Sign: "+ reliable_sign); 
+//          System.out.println("Reliable Sign: "+ reliable_sign); 
 
         	iono.setAlpha(alpha);
         	iono.setBeta(beta);	

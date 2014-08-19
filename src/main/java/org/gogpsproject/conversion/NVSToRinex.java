@@ -30,6 +30,7 @@ import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.Time;
 import org.gogpsproject.parser.nvs.NVSFileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
+import org.gogpsproject.producer.rinex.RinexV3Producer;
 
 /**
  * @author Lorenzo Patocchi, cryms.com
@@ -78,6 +79,7 @@ public class NVSToRinex {
 		String outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
         
 		System.out.println("Started writing RINEX file "+outFile);
+//		RinexV3Producer rp = new RinexV3Producer(outFile, false, true);
 		RinexV2Producer rp = new RinexV2Producer(outFile, false, true);
 		rp.setDefinedPosition(roverIn.getDefinedPosition());
 
@@ -99,6 +101,7 @@ public class NVSToRinex {
 					outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
 
 					System.out.println("Started writing RINEX file "+outFile);
+//					rp = new RinexV3Producer(outFile, false, true);
 					rp = new RinexV2Producer(outFile, false, true);
 					rp.setDefinedPosition(roverIn.getDefinedPosition());
 
