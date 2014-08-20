@@ -74,7 +74,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	private IonoGps iono = null;
 	// TODO support past times, now keep only last broadcast data
 	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
-	private BufferedInputStream in0;
+//	private BufferedInputStream in0;
 
     String file2 = "./data/data.txt";  // for storing processed data after removing double <DLE>
 
@@ -158,20 +158,14 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	 */
 	@Override   // need to comment if you want to use main method 
 	public Observations getNextObservations() {
-//	public static void main(String[] args) throws FileNotFoundException {
-		//public void init() throws Exception {  
 		
 		try{		
 			while(in.available()> 1000){  // Need to adjust this value 
-//				int leng1 = in.available();
-//				System.out.println("leng1: " + leng1);
-				
 				
 				try{
 					int data = in.read();
 					
 					if(data == 0x10){
-//						System.out.println("<DLE>");
 						Object o = reader.readMessagge();
 						
 						if(o instanceof Observations){
