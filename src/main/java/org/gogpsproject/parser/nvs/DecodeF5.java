@@ -119,148 +119,136 @@ public class DecodeF5 {
 						
 				ObservationSet os = new ObservationSet();
 			
+				/* 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
-				int signalType = Bits.byteToInt(bytes);
-		
-				if (signalType == 2){  // 1:GLONASS, 2: GPS, 4: SBAS, 8:Galileo
+				int signalType = Bits.byteToInt(bytes);					
+				
+				/* Satellite Number, 1 byte */				
+				/* satID: 33 is QZSS  */
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
+				int satID = Bits.byteToInt(bytes);
 				
 				
-						/* Satellite Number, 1 byte */				
-						bytes = new byte[1];
-						in.read(bytes, 0, bytes.length);
-						int satID = Bits.byteToInt(bytes);
-						os.setSatID(satID);
+				/* A carrier Number for GLONASS, 1 bytes */
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
+				int carrierNum = Bits.byteToInt(bytes);
+				
+				/* SNR (dB-Hz), 1 byte */
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
+				int snr = Bits.byteToInt(bytes);
+				
+				/*  Carrier Phase (cycles), 8 bytes  */		
+				bytes = new byte[8];
+                in.read(bytes, 0, bytes.length);
+                
+                String binL1 = "";
+                for (int j = 7; j >= 0; j--) {    // for little endian
+                        String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
+                        temp0 = String.format("%8s",temp0).replace(' ', '0');
+                        binL1 =  binL1 + temp0  ;
+                }
+                
+                signStr = binL1.substring(0,1);
+		        signInt = Integer.parseInt(signStr, 2);
+		        espStr = binL1.substring(1,12);
+		        espInt = Integer.parseInt(espStr, 2);
+		        mantStr = binL1.substring(12,64);
+		        mantInt = Long.parseLong(mantStr, 2);
+		        mantInt2 = mantInt / Math.pow(2, 52);
+		        double carrierPhase = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
+		        
+		        
+		        /*  cannot use below code due to surpass the max value of Long  */
+//				bytes = new byte[8];
+//				//in.read(bytes, 0, 8);
+//				in.read(bytes, 0, bytes.length);
+//				double carrierPhase = Bits.byteToIEEE754Double(bytes);
 						
-//						if (satID != 1 && satID != 33 ){  // satID:33 is QZSS
-						if (satID != 33  ){  // satID:33 is QZSS
-						
-									/* A carrier Number for GLONASS, 1 bytes */
-									bytes = new byte[1];
-									in.read(bytes, 0, bytes.length);
-									int carrierNum = Bits.byteToInt(bytes);
-									
-									/* SNR (dB-Hz), 1 byte */
-									bytes = new byte[1];
-									in.read(bytes, 0, bytes.length);
-									int snr = Bits.byteToInt(bytes);
-									os.setSignalStrength(ObservationSet.L1, snr);
-									
-									/*  Carrier Phase (cycles), 8 bytes  */		
-									bytes = new byte[8];
-					                in.read(bytes, 0, bytes.length);
-					                
-					                String binL1 = "";
-					                for (int j = 7; j >= 0; j--) {    // for little endian
-					                        String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned 
-					                        temp0 = String.format("%8s",temp0).replace(' ', '0');
-					                        binL1 =  binL1 + temp0  ;
-					                }
-					                
-					                signStr = binL1.substring(0,1);
-							        signInt = Integer.parseInt(signStr, 2);
-							        espStr = binL1.substring(1,12);
-							        espInt = Integer.parseInt(espStr, 2);
-							        mantStr = binL1.substring(12,64);
-							        mantInt = Long.parseLong(mantStr, 2);
-							        mantInt2 = mantInt / Math.pow(2, 52);
-							        double carrierPhase = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
-							        os.setPhase(ObservationSet.L1, carrierPhase); 			
-							        
-							        
-							        /*  cannot use below code due to surpass the max value of Long  */
-					//				bytes = new byte[8];
-					//				//in.read(bytes, 0, 8);
-					//				in.read(bytes, 0, bytes.length);
-					//				double carrierPhase = Bits.byteToIEEE754Double(bytes);
-											
-							        
+		        
 
-							        /* C/A Pseudo Range (ms), 8 bytes  */
-//							        bytes = new byte[8];
-//							                in.read(bytes, 0, bytes.length);
-//							
-//							                String binpR = "";
-//							                for (int j = 7; j >= 0; j--) {    // for little endian
-//							                        String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned
-//							                        temp0 = String.format("%8s",temp0).replace(' ', '0');
-//							                        binpR =  binpR + temp0  ;
-//							                }
-//							
-//							                signStr = binpR.substring(0,1);
-//							        signInt = Integer.parseInt(signStr, 2);
-//							        espStr = binpR.substring(1,12);
-//							        espInt = Integer.parseInt(espStr, 2);
-//							        mantStr = binpR.substring(12,64);
-//							        mantInt = Long.parseLong(mantStr, 2);
-//							        mantInt2 = mantInt / Math.pow(2, 52);
-//							        double pseudoRange = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
-//							        pseudoRange = pseudoRange * 299792458 * 0.001;   // velocity of light in the void [m/s]
-//							        os.setCodeC(ObservationSet.L1, pseudoRange);
-//							       							        
-							        
-									/* C/A Pseudo Range (ms), 8 bytes  */
-									bytes = new byte[8];
-									in.read(bytes, 0, bytes.length);
-									double pseudoRange = Bits.byteToIEEE754Double(bytes);
-							        pseudoRange = pseudoRange * 299792458 * 1e-3;   // velocity of light in the void [m/s]
-									os.setCodeC(ObservationSet.L1, pseudoRange);
-									
-									/*  Doppler Frequency(Hz), 8 bytes  */
-									bytes = new byte[8];
-									in.read(bytes, 0, bytes.length);
-									double dopplerFrequency = Bits.byteToIEEE754Double(bytes);
-									float d1 = (float)dopplerFrequency; 
-									if (Math.abs(d1) > 1e5) {
-										d1 = 0;
-									}
-									os.setDoppler(ObservationSet.L1, d1);
-									
-									/* Raw Data Flags, 1 byte */
-									bytes = new byte[1];
-									in.read(bytes, 0, bytes.length);
-									int rawDataFlags = Bits.byteToInt(bytes);
-									
-									/* Reserved, 1 byte*/
-									bytes = new byte[1];
-									in.read(bytes, 0, bytes.length);
-									
-//									if (os.getSatID() <= 32) {
-										o.setGps(gpsCounter, os);
-										gpsCounter ++ ;
-//									}
-									
-									//System.out.println("reserved: "+ reserved);
-									
-//									System.out.println("##### Satellite:  "+ i );
-//									System.out.println("Signal_Type: "+ signalType);
-//									System.out.println("Satellite Number: "+ satID);
-//									System.out.println("Carrier Number: "+ carrierNum);
-//									System.out.println("SNR: "+ snr);
-//									System.out.println("Carrier Phase: "+ carrierPhase);	
-//									System.out.println("Pseudo Range: "+ pseudoRange);
-//									System.out.println("Doppler Frequency: "+ dopperFrequency);
-//									System.out.println("Raw Data Flags: "+ rawDataFlags);
-//									System.out.println("			");
-									
-						}else{  // ID:33 QZSS						
-//							System.out.println("QZSS:  ");
-							bytes = new byte[28];
-							in.read(bytes, 0, bytes.length);					
-						}	
-									
-						
-				}else if (signalType == 1){				
-//					System.out.println("GLONASS:  ");
-					bytes = new byte[29];
-					in.read(bytes, 0, bytes.length);																		
-			
-				}else{					
-//					System.out.println("others:  ");
-					bytes = new byte[29];
-					in.read(bytes, 0, bytes.length);
-					
+		        /* C/A Pseudo Range (ms), 8 bytes  */
+//		        bytes = new byte[8];
+//		                in.read(bytes, 0, bytes.length);
+//		
+//		                String binpR = "";
+//		                for (int j = 7; j >= 0; j--) {    // for little endian
+//		                        String temp0 = Integer.toBinaryString(bytes[j] & 0xFF);  // & 0xFF is for converting to unsigned
+//		                        temp0 = String.format("%8s",temp0).replace(' ', '0');
+//		                        binpR =  binpR + temp0  ;
+//		                }
+//		
+//		                signStr = binpR.substring(0,1);
+//		        signInt = Integer.parseInt(signStr, 2);
+//		        espStr = binpR.substring(1,12);
+//		        espInt = Integer.parseInt(espStr, 2);
+//		        mantStr = binpR.substring(12,64);
+//		        mantInt = Long.parseLong(mantStr, 2);
+//		        mantInt2 = mantInt / Math.pow(2, 52);
+//		        double pseudoRange = Math.pow(-1, signInt) * Math.pow(2, (espInt - 1023)) * (1 + mantInt2);   // FP64
+//		        pseudoRange = pseudoRange * 299792458 * 0.001;   // velocity of light in the void [m/s]
+//		        os.setCodeC(ObservationSet.L1, pseudoRange);
+							       							        
+		        
+				/* C/A Pseudo Range (ms), 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double pseudoRange = Bits.byteToIEEE754Double(bytes);
+		        pseudoRange = pseudoRange * 299792458 * 1e-3;   // velocity of light in the void [m/s]
+				
+				/*  Doppler Frequency(Hz), 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double dopplerFrequency = Bits.byteToIEEE754Double(bytes);
+				float d1 = (float)dopplerFrequency; 
+				if (Math.abs(d1) > 1e5) {
+					d1 = 0;
 				}
+				
+				/* Raw Data Flags, 1 byte */
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
+				int rawDataFlags = Bits.byteToInt(bytes);
+				
+				/* Reserved, 1 byte*/
+				bytes = new byte[1];
+				in.read(bytes, 0, bytes.length);
+									
+//				if (os.getSatID() <= 32) {
+//					
+//				}
+									
+//				System.out.println("reserved: "+ reserved);
+									
+//				System.out.println("##### Satellite:  "+ i );
+//				System.out.println("Signal_Type: "+ signalType);
+//				System.out.println("Satellite Number: "+ satID);
+//				System.out.println("Carrier Number: "+ carrierNum);
+//				System.out.println("SNR: "+ snr);
+//				System.out.println("Carrier Phase: "+ carrierPhase);	
+//				System.out.println("Pseudo Range: "+ pseudoRange);
+//				System.out.println("Doppler Frequency: "+ dopperFrequency);
+//				System.out.println("Raw Data Flags: "+ rawDataFlags);
+//				System.out.println("			");
+									
+									
+				if (signalType == 2 && satID != 33){  
+				/* signalType 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
+				/* satID 33 is QZSS */
+					
+					os.setSatID(satID);
+					os.setCodeC(ObservationSet.L1, pseudoRange);
+			        os.setPhase(ObservationSet.L1, carrierPhase); 			
+					os.setSignalStrength(ObservationSet.L1, snr);
+					os.setDoppler(ObservationSet.L1, d1);
+					o.setGps(gpsCounter, os);
+					gpsCounter ++ ;
+					
+				}			
+	
 
 		}
 //		System.out.println("+-----------------  End of F5  -------------------+");
