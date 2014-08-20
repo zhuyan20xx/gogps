@@ -247,48 +247,131 @@ public class DecodeF7 {
 				long week = Bits.byteToLong(bytes);		
 				eph.setWeek((int)week);
 			
-//				System.out.println("+----------------  Start of F7  ------------------+");
-//				System.out.println("satType: " + satType);  
-//				System.out.println("GPS PRN: " + satId);  
-//		        System.out.println("Crs: "+ crs);		
-//		        System.out.println("deltaN: "+ deltaN);	   
-//				System.out.println("M0: "+ m0);			        
-//		        System.out.println("Cuc: "+ cuc);	        
-//				System.out.println("E: "+ e);				
-//		        System.out.println("Cus: "+ cus);        
-//				System.out.println("SqrtA: "+ rootA);		
-//				System.out.println("Toe: "+ toe);			
-//		        System.out.println("Cis: "+ cis);
-//		        System.out.println("Cic: "+ cic);        
-//				System.out.println("Omega0: "+ omega0);			
-//				System.out.println("I0: "+ i0);			
-//		        System.out.println("Crc: "+ crc);  
-//				System.out.println("W: "+ omega);	
-//				System.out.println("OmegaR: "+ omegaDot);				
-//				System.out.println("IDOT: "+ iDot);	
-//		        System.out.println("Tgd: "+ tgd);
-//				System.out.println("toc: "+ toc);		
-//		        System.out.println("Af2: "+ af2);
-//		        System.out.println("Af1: "+ af1);	        
-//		        System.out.println("Af0: "+ af0);  
-//				System.out.println("URA: " + svAccur);
-//				System.out.println("IODE: " + iode);
-//				System.out.println("IODC: " + iodc);
-//				System.out.println("CodeL2: " + l2Code);
-//				System.out.println("L2_Pdata_flag: " + l2Flag);
-//				System.out.println("WeekN: " + week);
-//				System.out.println("+-----------------  End of F7  -------------------+");
+				System.out.println("+----------------  Start of F7 (GPS) ------------------+");
+				System.out.println("satType: " + satType);  
+				System.out.println("GPS PRN: " + satId);  
+		        System.out.println("Crs: "+ crs);		
+		        System.out.println("deltaN: "+ deltaN);	   
+				System.out.println("M0: "+ m0);			        
+		        System.out.println("Cuc: "+ cuc);	        
+				System.out.println("E: "+ e);				
+		        System.out.println("Cus: "+ cus);        
+				System.out.println("SqrtA: "+ rootA);		
+				System.out.println("Toe: "+ toe);			
+		        System.out.println("Cis: "+ cis);
+		        System.out.println("Cic: "+ cic);        
+				System.out.println("Omega0: "+ omega0);			
+				System.out.println("I0: "+ i0);			
+		        System.out.println("Crc: "+ crc);  
+				System.out.println("W: "+ omega);	
+				System.out.println("OmegaR: "+ omegaDot);				
+				System.out.println("IDOT: "+ iDot);	
+		        System.out.println("Tgd: "+ tgd);
+				System.out.println("toc: "+ toc);		
+		        System.out.println("Af2: "+ af2);
+		        System.out.println("Af1: "+ af1);	        
+		        System.out.println("Af0: "+ af0);  
+				System.out.println("URA: " + svAccur);
+				System.out.println("IODE: " + iode);
+				System.out.println("IODC: " + iodc);
+				System.out.println("CodeL2: " + l2Code);
+				System.out.println("L2_Pdata_flag: " + l2Flag);
+				System.out.println("WeekN: " + week);
+				System.out.println("+-----------------  End of F7  ----------------------+");
 						        
         
 		}else{  // GLONASS: 93 (-2) bytes
 
-//			System.out.println("GLONASS PRN: " + satId);
-			bytes = new byte[91];
-			in.read(bytes, 0, bytes.length);	
+				/*  Carrier Number, 1 bytes  */
+				int carrierNum = in.read();
+				
+				/*  Xm, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Xm = Bits.byteToIEEE754Double(bytes);
+	
+				/*  Ym, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Ym = Bits.byteToIEEE754Double(bytes);
+				
+				/*  Zm, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Zm = Bits.byteToIEEE754Double(bytes);
+				
+				/*  Vx, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Vx = Bits.byteToIEEE754Double(bytes);
+				
+				/*  Vy, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Vy = Bits.byteToIEEE754Double(bytes);
+				
+				/*  Vz, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Vz = Bits.byteToIEEE754Double(bytes);
+				
+				/*  Ax, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Ax = Bits.byteToIEEE754Double(bytes);
+				
+				/*  Ay, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Ay = Bits.byteToIEEE754Double(bytes);
+				
+				/*  Az, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double Az = Bits.byteToIEEE754Double(bytes);
+				
+				/*  tb, 8 bytes  */
+				bytes = new byte[8];
+				in.read(bytes, 0, bytes.length);
+				double tb = Bits.byteToIEEE754Double(bytes);
+				
+				/*  gammaN, 4 bytes  */
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);				
+				float gammaN = Bits.byteToIEEE754Float(bytes);
+				
+				 /*  tn, 4 bytes  */
+				bytes = new byte[4];
+				in.read(bytes, 0, bytes.length);				
+				float tn = Bits.byteToIEEE754Float(bytes);
+				
+				/*  En, 2 bytes  */
+				bytes = new byte[2];
+				in.read(bytes, 0, bytes.length);
+				long En = Bits.byteToLong(bytes);		
+									
+				System.out.println("+--------------  Start of F7 (GLONASS)  -------------+");
+				System.out.println("satType: " + satType);  
+				System.out.println("GLONASS PRN: " + satId);
+				System.out.println("carrierNum: " + carrierNum);  
+		        System.out.println("Xm: "+ Xm);		
+		        System.out.println("Ym: "+ Ym);	   
+				System.out.println("Zm: "+ Zm);			        
+		        System.out.println("Vx: "+ Vx);	        
+				System.out.println("Vy: "+ Vy);				
+		        System.out.println("Vz: "+ Vz);        
+				System.out.println("Ax: "+ Ax);		
+				System.out.println("Ay: "+ Ay);			
+		        System.out.println("Az: "+ Az);
+		        System.out.println("tb: "+ tb);       
+				System.out.println("tb: "+ tb);			
+				System.out.println("gammaN: "+ gammaN);			
+		        System.out.println("tn: "+ tn);  
+				System.out.println("En: "+ En);	
+				System.out.println("+-----------------  End of F7  -----------------------+");
 			
-
-		}
-        
+			
+		}        
 
 			return eph;
 	}
