@@ -34,6 +34,7 @@ import java.util.Vector;
 import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
+import org.gogpsproject.Time;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 import org.gogpsproject.util.InputStreamCounter;
 
@@ -63,9 +64,10 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	private String outputDir = "./out";
 	private int msgAidEphRate = 0; //seconds
 	private int msgAidHuiRate = 0; //seconds
-	private RinexV2Producer rinexOut;
+	private RinexV2Producer rinexOut = null;
 	private boolean rinexObsOutputEnabled = false;
 	private boolean debugModeEnabled = false;
+	private int DOYold = 0;
 
 	public UBXSerialReader(InputStream in,OutputStream out, String COMPort) {
 		this(in,out,COMPort,null);
@@ -154,15 +156,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		MsgConfiguration msgcfg = new MsgConfiguration(MessageType.CLASS_RXM, MessageType.RXM_RAW, true);
 		out.write(msgcfg.getByte());
 		out.flush();
-		
-		if (this.rinexObsOutputEnabled) {
-			System.out.println(date1+" - "+COMPort+" - RINEX output enabled");
-			SimpleDateFormat sdfExt = new SimpleDateFormat("yy");
-			String year = sdfExt.format(date);
-			String COMPortStr = prepareCOMStringForFilename(COMPort);
-			rinexOut = new RinexV2Producer(outputDir+"/"+COMPortStr+ "_" + dateFile + "." + year + "o",false,true);
-		}
-		
+
 		if (this.debugModeEnabled) {
 			System.out.println(date1+" - "+COMPort+" - !!! DEBUG MODE !!!");
 		}
@@ -265,6 +259,34 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 										    	psSystime.println(dateGps +"       "+dateSys);
 										    }
 										    if (this.rinexObsOutputEnabled) {
+										    	//check if the day changes; if yes, a new daily RINEX file must be started
+										    	int DOY = co.getRefTime().getDayOfYear();
+
+										    	if (DOY != this.DOYold) {
+										    		if (rinexOut != null) {
+										    			rinexOut.streamClosed();
+										    			rinexOut = null;
+										    		}
+
+										    		String COMPortStrId = COMPortStr.length() >= 2 ? COMPortStr.substring(COMPortStr.length() - 2) : "0" + COMPortStr;
+										    		String marker = "UB" + COMPortStrId;
+										    		char session = 'a' - 1;
+										    		String outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
+										    		File f = new File(outFile);
+										    		if(f.exists()){
+										    			String prev = "";
+										    			if (session <= 'y') {
+										    				session++;
+										    			} else {
+										    				prev.concat("z");
+										    			}
+										    			outFile = outputDir + "/" + marker + String.format("%03d", DOY) + prev + session + "." + co.getRefTime().getYear2c() + "o";
+										    		}
+										    		System.out.println(date1+" - "+COMPort+" - Started writing RINEX file "+outFile);
+										    		rinexOut = new RinexV2Producer(outFile, false, true);
+
+										    		this.DOYold = DOY;
+										    	}
 										    	rinexOut.addObservations(co);
 										    }
 										}
