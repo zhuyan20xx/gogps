@@ -416,10 +416,10 @@ public class GoGPS implements Runnable{
 
 				// Discard rover epochs if correspondent master epochs are
 				// not available
-				double obsMtime = obsM.getRefTime().getGpsTime();
+				double obsMtime = obsM.getRefTime().getRoundedGpsTime();
 				System.out.println("##look for R "+obsMtime);
 			
-				while (obsM!=null && obsR!=null && obsR.getRefTime().getGpsTime() < obsMtime) {
+				while (obsM!=null && obsR!=null && obsR.getRefTime().getRoundedGpsTime() < obsMtime) {
 					System.out.println("obsR_Time: " + obsR.getRefTime().getGpsTime() );
 					
 					obsR = roverIn.getNextObservations();
