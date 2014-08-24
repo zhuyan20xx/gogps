@@ -29,8 +29,9 @@ import java.io.IOException;
  * GPS broadcast ephemerides
  * </p>
  *
- * @author Eugenio Realini, Cryms.com
+ * @author Eugenio Realini, Cryms.com, Daisuke Yoshida 
  */
+
 public class EphGps implements Streamable {
 	private final static int STREAM_V = 1;
 
@@ -75,6 +76,26 @@ public class EphGps implements Streamable {
 										 * perturbations
 										 */
 	private double fitInt; /* Fit interval */
+	
+	/* for GLONASS data */
+	private float tauN;
+	private float gammaN;
+	private double tk;
+
+	private double X;
+	private double Xv;
+	private double Xa;
+	private double Bn;
+	
+	private double Y;
+	private double Yv;
+	private double Ya;
+	private double freq_num;
+
+	private double Z;
+	private double Zv;
+	private double Za;
+	private double En;
 
 
 	public EphGps(){
@@ -468,6 +489,122 @@ public class EphGps implements Streamable {
 	public void setFitInt(double fitInt) {
 		this.fitInt = fitInt;
 	}
+	
+	
+	/* for GLONASS data */
+	public float getTauN() {
+		return tauN;
+	}
+	public void setTauN(float tauN) {
+		this.tauN = tauN;
+	}
+	
+	public float getGammaN() {
+		return gammaN;
+	}
+	public void setGammaN(float gammaN) {
+		this.gammaN = gammaN;
+	}
+	
+	public double gettk() {
+		return tk;
+	}
+	public void settk(double tk) {
+		this.tk = tk;
+	}
+	
+	public double getX() {
+		return X;
+	}
+	public void setX(double X) {
+		this.X = X;
+	}
+	
+	public double getXv() {
+		return Xv;
+	}
+	public void setXv(double Xv) {
+		this.Xv = Xv;
+	}
+	
+	public double getXa() {
+		return Xa;
+	}
+	public void setXa(double Xa) {
+		this.Xa = Xa;
+	}
+	
+	public double getBn() {
+		return Bn;
+	}
+	public void setBn(double Bn) {
+		this.Bn = Bn;
+	}
+	
+	public double getY() {
+		return Y;
+	}
+	public void setY(double Y) {
+		this.Y = Y;
+	}
+	
+	public double getYv() {
+		return Yv;
+	}
+	public void setYv(double Yv) {
+		this.Yv = Yv;
+	}
+	
+	public double getYa() {
+		return Ya;
+	}
+	public void setYa(double Ya) {
+		this.Ya = Ya;
+	}
+	
+	public double getfreq_num() {
+		return freq_num;
+	}
+	public void setfreq_num(double freq_num) {
+		this.freq_num = freq_num;
+	}
+	
+	public double getZ() {
+		return Z;
+	}
+	public void setZ(double Z) {
+		this.Z = Z;
+	}
+	
+	public double getZv() {
+		return Zv;
+	}
+	public void setZv(double Zv) {
+		this.Zv = Zv;
+	}
+	
+	public double getZa() {
+		return Za;
+	}
+	public void setZa(double Za) {
+		this.Za = Za;
+	}
+	
+//	public long getEn() {
+//		return En;
+//	}
+//	public void setEn(long En) {
+//		this.En = En;
+//	}
+	
+	public double getEn() {
+		return En;
+	}
+	public void setEn(double En) {
+		this.En = En;
+	}
+	
+	
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.Streamable#write(java.io.DataOutputStream)
 	 */
