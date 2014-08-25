@@ -67,5 +67,54 @@ public class Constants {
 	public static final float SNR_A = 30;
 	public static final float SNR_0 = 10;
 	public static final float SNR_1 = 50;
+	
+	/*
+	 CONSTELLATION REF 
+     CRS parameters, according to each GNSS system CRS definition
+     (ICD document in brackets):
+    
+     *_GPS --> WGS-84  (IS-GPS200E)
+     *_GLO --> PZ-90   (GLONASS-ICD 5.1)
+     *_GAL --> GTRF    (Galileo-ICD 1.1)
+     *_BDS --> CSG2000 (BeiDou-ICD 1.0)
+     *_QZS --> WGS-84  (IS-QZSS 1.5D)
+    */
+    
+	public static final long ELL_A_GPS = 6378137;                          // GPS (WGS-84)     Ellipsoid semi-major axis [m]
+	public static final long ELL_A_GLO = 6378136;                          // GLONASS (PZ-90)  Ellipsoid semi-major axis [m]
+	public static final long ELL_A_GAL = 6378137;                          // Galileo (GTRF)   Ellipsoid semi-major axis [m]
+	public static final long ELL_A_BDS = 6378136;                          // BeiDou (CSG2000) Ellipsoid semi-major axis [m]
+	public static final long ELL_A_QZS = 6378137;                          // QZSS (WGS-84)    Ellipsoid semi-major axis [m]
+    
+	public static final double ELL_F_GPS = 1/298.257222101;                  // GPS (WGS-84)     Ellipsoid flattening
+	public static final double ELL_F_GLO = 1/298.257222101;                  // GLONASS (PZ-90)  Ellipsoid flattening
+	public static final double ELL_F_GAL = 1/298.257222101;                  // Galileo (GTRF)   Ellipsoid flattening
+	public static final double ELL_F_BDS = 1/298.257222101;                  // BeiDou (CSG2000) Ellipsoid flattening
+	public static final double ELL_F_QZS = 1/298.257222101;                  // QZSS (WGS-84)    Ellipsoid flattening
+    
+	public static final double ELL_E_GPS = Math.sqrt(1-(1- Math.pow(ELL_F_GPS, 2)));   // GPS (WGS-84)     Eccentricity
+	public static final double ELL_E_GLO = Math.sqrt(1-(1- Math.pow(ELL_F_GLO, 2)));   // GLONASS (PZ-90)  Eccentricity
+	public static final double ELL_E_GAL = Math.sqrt(1-(1- Math.pow(ELL_F_GAL, 2)));   // Galileo (GTRF)   Eccentricity
+	public static final double ELL_E_BDS = Math.sqrt(1-(1- Math.pow(ELL_F_BDS, 2)));   // BeiDou (CSG2000) Eccentricity
+	public static final double ELL_E_QZS = Math.sqrt(1-(1- Math.pow(ELL_F_QZS, 2)));   // QZSS (WGS-84)    Eccentricity
+    
+	public static final double GM_GPS = 3.986005e14;                     // GPS     Gravitational constant * (mass of Earth) [m^3/s^2]
+	public static final double GM_GLO = 3.9860044e14;                    // GLONASS Gravitational constant * (mass of Earth) [m^3/s^2]
+	public static final double GM_GAL = 3.986004418e14;                  // Galileo Gravitational constant * (mass of Earth) [m^3/s^2]
+	public static final double GM_BDS = 3.986004418e14;                  // BeiDou  Gravitational constant * (mass of Earth) [m^3/s^2]
+	public static final double GM_QZS = 3.986005e14;                     // QZSS    Gravitational constant * (mass of Earth) [m^3/s^2]
+    
+	public static final double OMEGAE_DOT_GPS = 7.2921151467e-5;             // GPS     Angular velocity of the Earth rotation [rad/s]
+	public static final double OMEGAE_DOT_GLO = 7.292115e-5;                 // GLONASS Angular velocity of the Earth rotation [rad/s]
+	public static final double OMEGAE_DOT_GAL = 7.2921151467e-5;             // Galileo Angular velocity of the Earth rotation [rad/s]
+	public static final double OMEGAE_DOT_BDS = 7.292115e-5;                 // BeiDou  Angular velocity of the Earth rotation [rad/s]
+	public static final double OMEGAE_DOT_QZS = 7.2921151467e-5;             // QZSS    Angular velocity of the Earth rotation [rad/s]
+    
+	public static final double J2_GLO = 1.0826257e-3;                        // GLONASS second zonal harmonic of the geopotential
+    
+	public static final double PI_ORBIT = 3.1415926535898;                   // pi value used for orbit computation
+	public static final double CIRCLE_RAD = 2 * PI_ORBIT;               // 2 pi
+	
+	
 
 }

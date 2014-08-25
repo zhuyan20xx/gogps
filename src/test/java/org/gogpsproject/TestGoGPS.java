@@ -23,12 +23,12 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import org.gogpsproject.parser.nvs.NVSFileReader;
 import org.gogpsproject.parser.rinex.RinexNavigation;
 import org.gogpsproject.parser.rinex.RinexNavigationParser;
 import org.gogpsproject.parser.rinex.RinexObservationParser;
 import org.gogpsproject.parser.sp3.SP3Navigation;
 import org.gogpsproject.parser.ublox.UBXFileReader;
+import org.gogpsproject.parser.nvs.NVSFileReader;
 import org.gogpsproject.producer.KmlProducer;
 import org.gogpsproject.producer.TxtProducer;
 
@@ -60,32 +60,29 @@ public class TestGoGPS {
 			
 			/*  Oct 21st, 2013, OCU (NVS test) */
 //			dynamicModel = GoGPS.DYN_MODEL_STATIC;
-//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin")); /* NVS */
-			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13o")); /* NVS */
-//			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13o_v3")); /* NVS */
-//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR3_rover_00.bin")); /* NVS */
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS3_master.obs"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG3.13N"));
+//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin")); /* NVS Kinematic */
+//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR3_rover_00.bin")); /* NVS Static*/
+//			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13o")); /* NVS */
+//			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13o_v3")); /* NVS RINEX3*/
+			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS2_master.obs"));
+			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG2.13N"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13n"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13n"));
+//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/*  Oct 21st, 2013, OCU (Javad test) */
 //			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/Javad_SciBLDG3.13o")); /* Javad */
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS3_master.obs"));
-			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG3.13N"));		
-
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS2_master.obs"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG2.13N"));		
 			
 			/*  Oct 21st, 2013, OCU (u-blox test) */
 //			dynamicModel = GoGPS.DYN_MODEL_STATIC;
-//			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_UBX1_rover_00.bin")); /* ublox */
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/yamatogawa_rover.obs"));
-//			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/yamatogawa_rover_00.bin")); /* ublox */
+			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_UBX1_rover_00.bin")); /* ublox */
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS2_master.obs"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG2.13N"));
 //			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13n"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13n"));
-			
 			
 			/* Osaka, Japan (u-blox test) */
 //			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/yamatogawa_rover.obs")); /* TOPCON front */
@@ -99,7 +96,7 @@ public class TestGoGPS {
 //			//ObservationsProducer roverIn = new UBXFileReader(new File("./data/log1220b_ublox.ubx")); /* u-blox */
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/Vb05.10o"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Vb05.10n"));
-//			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
+			//NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Como, Italy (static) */
 //			dynamicModel = GoGPS.DYN_MODEL_STATIC;
@@ -156,7 +153,7 @@ public class TestGoGPS {
 			// 1st init
 			navigationIn.init();
 			roverIn.init();
-// 			masterIn.init();
+ 			masterIn.init();
 
 			// Name output files name using Timestamp
 			Date date = new Date();
@@ -167,14 +164,14 @@ public class TestGoGPS {
 			TxtProducer txt = new TxtProducer(outPathTxt);
 			KmlProducer kml = new KmlProducer(outPathKml, goodDopThreshold, timeSampleDelaySec);
 
-//			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
-			GoGPS goGPS = new GoGPS(navigationIn, roverIn);
+			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
+//			GoGPS goGPS = new GoGPS(navigationIn, roverIn);
 			goGPS.addPositionConsumerListener(txt);
 			goGPS.addPositionConsumerListener(kml);
 			goGPS.setDynamicModel(dynamicModel);
-			goGPS.runCodeStandalone();
+//			goGPS.runCodeStandalone();
 //			goGPS.runCodeDoubleDifferences();
-//			goGPS.runKalmanFilter();
+			goGPS.runKalmanFilter();
 
 			try{
 				roverIn.release(true,10000);
