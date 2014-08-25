@@ -29,6 +29,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.gogpsproject.Constants;
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.Time;
@@ -197,7 +198,7 @@ public class DecodeF5 {
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double pseudoRange = Bits.byteToIEEE754Double(bytes);
-		        pseudoRange = pseudoRange * 299792458 * 1e-3;   // velocity of light in the void [m/s]
+		        pseudoRange = pseudoRange * Constants.SPEED_OF_LIGHT * 1e-3;   // velocity of light in the void [m/s]
 				
 				/*  Doppler Frequency(Hz), 8 bytes  */
 				bytes = new byte[8];
