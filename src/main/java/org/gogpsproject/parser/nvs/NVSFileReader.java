@@ -127,6 +127,8 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 		outf = new FileOutputStream(file2);
 		BufferedOutputStream out = new BufferedOutputStream(outf);	
 		
+		System.out.println("Removing double <DLE> (10h) bytes from NVS binary data...");
+		
 		/*  remove double <DLE> into single  */
 		while(in0.available()>0){   
 			int contents = in0.read();
