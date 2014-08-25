@@ -97,6 +97,20 @@ public class Observations implements Streamable {
 			if(gps.get(i)!=null) nsat++;
 		return gps==null?-1:nsat;
 	}
+	public int getGloSize(){
+		if(glo == null) return 0;
+		int nsat = 0;
+		for(int i=0;i<glo.size();i++)
+			if(glo.get(i)!=null) nsat++;
+		return glo==null?-1:nsat;
+	}
+	public int getSbsSize(){
+		if(sbs == null) return 0;
+		int nsat = 0;
+		for(int i=0;i<sbs.size();i++)
+			if(sbs.get(i)!=null) nsat++;
+		return sbs==null?-1:nsat;
+	}
 	public ObservationSet getGpsByIdx(int idx){
 		return gps.get(idx);
 	}

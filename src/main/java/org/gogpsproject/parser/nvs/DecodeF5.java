@@ -253,6 +253,9 @@ public class DecodeF5 {
 		}
 //		System.out.println("+-----------------  End of F5  -------------------+");
 
+		if (o.getGpsSize() == 0 && o.getGloSize() == 0 && o.getSbsSize() == 0) {
+			o = null;
+		}
 		return o;		
 		
 	}
