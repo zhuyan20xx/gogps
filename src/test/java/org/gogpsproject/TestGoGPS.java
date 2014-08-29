@@ -53,6 +53,10 @@ public class TestGoGPS {
 			// Get current time
 			long start = System.currentTimeMillis();
 			
+			/* Big data in Como, Italy */
+//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/NVS_20140819_A_rover_000c.bin")); /* NVS */
+			
+			
 			/*  Jan 27th, 2014, OCU (NVS test) */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/140127_SciBLDG_BINR1_rover_000.bin")); /* NVS */
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/jvrs127.14o"));
@@ -64,8 +68,8 @@ public class TestGoGPS {
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR3_rover_00.bin")); /* NVS Static*/
 //			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13o")); /* NVS */
 //			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13o_v3")); /* NVS RINEX3*/
-			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS2_master.obs"));
-			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG2.13N"));
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS3_master.obs"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG3.13N"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13n"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13n"));
 //			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
@@ -77,7 +81,7 @@ public class TestGoGPS {
 			
 			/*  Oct 21st, 2013, OCU (u-blox test) */
 //			dynamicModel = GoGPS.DYN_MODEL_STATIC;
-			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_UBX1_rover_00.bin")); /* ublox */
+//			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_UBX1_rover_00.bin")); /* ublox */
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS2_master.obs"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG2.13N"));
 //			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
@@ -85,9 +89,9 @@ public class TestGoGPS {
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13n"));
 			
 			/* Osaka, Japan (u-blox test) */
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/yamatogawa_rover.obs")); /* TOPCON front */
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/yamatogawa_master.obs"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/yamatogawa_rover.nav"));
+			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/yamatogawa_rover.obs")); /* TOPCON front */
+			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/yamatogawa_master.obs"));
+			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/yamatogawa_rover.nav"));
 //			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Osaka, Japan (TOPCON test) */
@@ -189,6 +193,11 @@ public class TestGoGPS {
 				ie.printStackTrace();
 			}
 
+			/* To wait for other Thread to be finished */
+			while (Thread.activeCount() > 1){
+//					System.out.println("waiting for KML generation...");
+			}			
+			
 			// Get and display elapsed time
 			int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
 			int elapsedTimeMillisec = (int) ((System.currentTimeMillis() - start) - elapsedTimeSec * 1000);
