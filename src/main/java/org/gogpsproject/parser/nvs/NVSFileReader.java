@@ -207,6 +207,8 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 			}
 			
 			in.close();
+			File file = new File(tmpfile);		
+			file.delete();
 			
 		}catch(IOException e){
 			e.printStackTrace();
@@ -258,6 +260,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 		t = new Thread(this);
 		t.start();	
 
+		Thread.sleep(1000);
 		/* read processed data file */
 		FileInputStream ins = null;
 		try {

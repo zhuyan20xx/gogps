@@ -67,13 +67,6 @@ public class NVSToRinex {
 			e.printStackTrace();
 		}
 		
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		Observations o = roverIn.getNextObservations();
 		while(o==null){
 			o = roverIn.getNextObservations();
@@ -117,6 +110,7 @@ public class NVSToRinex {
 			}
 		}
 		rp.streamClosed();
+		
 		System.out.println("END");
 	}
 }
