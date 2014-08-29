@@ -133,10 +133,10 @@ public class DecodeRXMRAW {
 		}
 		//System.out.println();
 
-		//long gmtTS = getGMTTS(tow, week);
-		//Observations o = new Observations(new Time(gmtTS),0);
-		Time refTime = new Time((int)week, tow/1000);
-		Observations o = new Observations(refTime,0);
+		long gmtTS = getGMTTS(tow, week);
+		Observations o = new Observations(new Time(gmtTS),0);
+//		Time refTime = new Time((int)week, tow/1000);
+//		Observations o = new Observations(refTime,0);
 
 		//System.out.println(gmtTS+" GPS time "+o.getRefTime().getGpsTime());
 		//ubx.log( o.getRefTime().getGpsTime()+" "+tow+"\n\r");
