@@ -76,7 +76,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
 //	private BufferedInputStream in0;
 
-    String file2 = "./data/data.txt";  // for storing processed data after removing double <DLE>
+    String tmpfile = "./data/data.txt";  // for storing processed data after removing double <DLE>
 
 	
 	public NVSFileReader(File file) {
@@ -124,7 +124,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 		
 		/* write processed data */
 	    FileOutputStream outf = null;
-		outf = new FileOutputStream(file2);
+		outf = new FileOutputStream(tmpfile);
 		BufferedOutputStream out = new BufferedOutputStream(outf);	
 		
 		System.out.println("Removing double <DLE> (10h) bytes from NVS binary data...");
@@ -145,10 +145,12 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 			
 		}								
 		out.close();	
-		
+		outf.close();
+		in0.close();
+		inf.close();
 		
 		/* read processed data file */
-		FileInputStream ins = new FileInputStream(file2);
+		FileInputStream ins = new FileInputStream(tmpfile);
 	    this.in = new BufferedInputStream(ins);	    		
 		this.reader = new NVSReader(in, null);
 	    		
@@ -194,6 +196,9 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 			}
 			
 			in.close();
+
+			File file = new File(tmpfile);
+			file.delete();
 			
 		}catch(IOException e){
 			e.printStackTrace();

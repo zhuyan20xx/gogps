@@ -86,10 +86,11 @@ public class NVSReader implements StreamEventProducer {
 			}else
 			if (data == 0xf5){  // F5
 				
-				 in.mark(0); // To rewind in.read point 
-				 int leng = 0;	
-				 int leng1 = in.available();
-				// To calculate the number of satellites
+				 int leng1 = in.available();  // for Total data
+				 int leng2 = 0;	 			  // for <DLE><ETX><DLE> position
+				 in.mark(leng1); 			// To rewind in.read point 
+				 
+				 	/* To calculate the number of satellites */
 				    while(in.available()>0){			
 						 data = in.read();
 						if(data == 0x10){  // <DLE>
@@ -97,11 +98,9 @@ public class NVSReader implements StreamEventProducer {
 							if(data == 0x03){  // <ETX>
 								data = in.read();
 								if(data == 0x10){  // <DLE>
-										int leng2 = this.in.available();
-//										System.out.println("leng1: " + leng1 );
-//										System.out.println("leng2: " + leng2 );
-										leng = (leng1 - leng2 + 1 ) * 8 ;
-										int nsv = (leng - 224) / 240;  
+										leng2 = this.in.available();
+										leng2 = (leng1 - leng2 + 1 ) * 8 ;
+//										int nsv = (leng2 - 224) / 240;  
 										/* 28*8 bits = 224, 30*8 bits = 240 */
 //										System.out.println("leng: " + leng );
 //										System.out.println("Num of Satellite: "+ nsv);
@@ -110,19 +109,25 @@ public class NVSReader implements StreamEventProducer {
 							}							
 						}	
 				  }	
-				in.reset(); // To return to in.mark point  
-				DecodeF5 decodeF5 = new DecodeF5(in);										
-				parsed = true;
-				
-				Observations o = decodeF5.decode(null, leng);
-				if(streamEventListeners!=null && o!=null){
-					for(StreamEventListener sel:streamEventListeners){
-						Observations oc = (Observations)o.clone();
-						sel.addObservations(oc);
-					}
+				    
+				if(leng2 != 0){
+						in.reset(); // To return to in.mark point  
+						DecodeF5 decodeF5 = new DecodeF5(in);										
+						parsed = true;
+						
+						Observations o = decodeF5.decode(null, leng2);
+						if(streamEventListeners!=null && o!=null){
+							for(StreamEventListener sel:streamEventListeners){
+								Observations oc = (Observations)o.clone();
+								sel.addObservations(oc);
+							}
+						}
+	//					System.out.println("F5h");
+						return o;
+				}else{
+						return null;
 				}
-//				System.out.println("F5h");
-				return o;
+				
 				
 			}else
 			if (data == 0x4a){ // 4A
