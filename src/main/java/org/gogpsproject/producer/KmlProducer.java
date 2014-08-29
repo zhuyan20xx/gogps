@@ -25,6 +25,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
 import org.gogpsproject.PositionConsumer;
 import org.gogpsproject.RoverPosition;
 /**
@@ -377,6 +378,7 @@ public class KmlProducer implements PositionConsumer, Runnable {
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public void run() {
 		int last = 0;
@@ -388,6 +390,8 @@ public class KmlProducer implements PositionConsumer, Runnable {
 //					goodDop = false;
 					FileWriter out = startOfTrack();
 					if(out!=null){
+						
+						// TODO Below process is taking time? 
 						for(RoverPosition pos: (ArrayList<RoverPosition>) positions.clone()){
 							writeCoordinate(pos, out);
 						}

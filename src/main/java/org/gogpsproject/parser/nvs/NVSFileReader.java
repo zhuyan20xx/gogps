@@ -34,15 +34,6 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.io.OutputStreamWriter;
 
-
-
-
-
-
-
-
-
-
 import org.ejml.simple.SimpleMatrix;
 import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
@@ -57,13 +48,13 @@ import org.gogpsproject.StreamResource;
 
 /**
  * <p>
- * Read an UBX File and implement Observation and Navigation producer (if AID-HUI and AID-EPH has been recorded)
+ * Read an NVS File and implement Observation and Navigation producer 
  * </p>
  *
  * @author Daisuke Yoshida OCU
  */
 
-public class NVSFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
+public class NVSFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer, Runnable {
 	
 
 //	private InputStream in;
@@ -78,10 +69,11 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 
     String tmpfile = "./data/data.txt";  // for storing processed data after removing double <DLE>
 
+    private Thread t = null;
 	
 	public NVSFileReader(File file) {
 		this.file = file;
-	
+		
 	}
 	
 	/* (non-Javadoc)
@@ -115,44 +107,63 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	 * @see org.gogpsproject.ObservationsProducer#init()
 	 */
 	@Override
-	public void init() throws Exception {
+	public void run() {
 		
 		/* read original data file */
-		FileInputStream inf = new FileInputStream(file);
-		@SuppressWarnings("resource")
+		FileInputStream inf = null;
+		try {
+			inf = new FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		BufferedInputStream in0 = new BufferedInputStream(inf);
 		
 		/* write processed data */
 	    FileOutputStream outf = null;
-		outf = new FileOutputStream(tmpfile);
+		try {
+			outf = new FileOutputStream(tmpfile);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		BufferedOutputStream out = new BufferedOutputStream(outf);	
 		
 		System.out.println("Removing double <DLE> (10h) bytes from NVS binary data...");
 		
 		/*  remove double <DLE> into single  */
-		while(in0.available()>0){   
-			int contents = in0.read();
-		    out.write(contents);
-		    
-			if(contents == 0x10){
-				contents = in0.read();
+		try {
+			while(in0.available()>0){   
+				int contents = in0.read();
+			    out.write(contents);
+			    
 				if(contents == 0x10){
-					continue;	
-				}else{
-					out.write(contents);								
-				}										
-			}	
-			
+					contents = in0.read();
+					if(contents == 0x10){
+						continue;	
+					}else{
+						out.write(contents);								
+					}										
+				}	
+				
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}								
-		out.close();	
-		outf.close();
-		in0.close();
-		inf.close();
 		
-		/* read processed data file */
-		FileInputStream ins = new FileInputStream(tmpfile);
-	    this.in = new BufferedInputStream(ins);	    		
-		this.reader = new NVSReader(in, null);
+		try {
+			out.close();
+			outf.close();
+			in0.close();
+			inf.close();	
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+		
+		
+		
 	    		
 	}
 	
@@ -196,9 +207,6 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 			}
 			
 			in.close();
-
-			File file = new File(tmpfile);
-			file.delete();
 			
 		}catch(IOException e){
 			e.printStackTrace();
@@ -215,6 +223,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	public void release(boolean waitForThread, long timeoutMs) throws InterruptedException {
 		try {
 			in.close();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -240,6 +249,27 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	@Override
 	public IonoGps getIono(long unixTime) {
 		return iono;
+	}
+
+	@Override
+	public void init() throws Exception {
+		// TODO Auto-generated method stub
+		
+		t = new Thread(this);
+		t.start();	
+
+		/* read processed data file */
+		FileInputStream ins = null;
+		try {
+			ins = new FileInputStream(tmpfile);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	    this.in = new BufferedInputStream(ins);	    		
+		this.reader = new NVSReader(in, null);
+		
 	}
 
 	
