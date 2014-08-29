@@ -56,7 +56,6 @@ public class TestGoGPS {
 			/* Big data in Como, Italy */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/NVS_20140819_A_rover_000c.bin")); /* NVS */
 			
-			
 			/*  Jan 27th, 2014, OCU (NVS test) */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/140127_SciBLDG_BINR1_rover_000.bin")); /* NVS */
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/jvrs127.14o"));
@@ -194,9 +193,11 @@ public class TestGoGPS {
 			}
 
 			/* To wait for other Thread to be finished */
+			System.out.println("waiting for finishing all the processes");
 			while (Thread.activeCount() > 1){
-//					System.out.println("waiting for KML generation...");
 			}			
+			System.out.println("Finished!");
+
 			
 			// Get and display elapsed time
 			int elapsedTimeSec = (int) Math.floor((System.currentTimeMillis() - start) / 1000);
