@@ -58,10 +58,6 @@ public class DecodeF5 {
 		boolean[] temp1;
 		this.leng = leng;
 		
-		
-		if (leng == 0)   // To avoid java.lang.NegativeArraySizeException.
-			System.exit(0);
-		
 		int signInt;
 		String signStr; 
 		int espInt;
