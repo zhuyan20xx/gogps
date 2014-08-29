@@ -232,7 +232,7 @@ public class DecodeF5 {
 //				System.out.println("			");
 									
 									
-				if (signalType == 2 && satID != 33){  
+				if (signalType == 2 && satID != 33 && pseudoRange != 0){  
 				/* signalType 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
 				/* satID 33 is QZSS */
 					
