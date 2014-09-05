@@ -348,8 +348,11 @@ public class DecodeF7 {
 				/*  En, 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
-				long En = Bits.byteToLong(bytes);		
-									
+				long En = Bits.byteToLong(bytes);	
+				
+				/* tb is a time interval within the current day (UTC + 3 hours)*/
+				double tk = tb - 10800;					
+				
 //				System.out.println("+--------------  Start of F7 (GLONASS)  -------------+");
 //				System.out.println("satType: " + satType);  
 //				System.out.println("GLONASS PRN: " + satId);

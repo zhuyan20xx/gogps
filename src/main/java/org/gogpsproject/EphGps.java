@@ -36,6 +36,7 @@ public class EphGps implements Streamable {
 	private final static int STREAM_V = 1;
 
 	private Time refTime; /* Reference time of the dataset */
+	private char satType; /* Satellite Type */
 	private int satID; /* Satellite ID number */
 	private int week; /* GPS week number */
 
@@ -116,6 +117,18 @@ public class EphGps implements Streamable {
 	 */
 	public void setRefTime(Time refTime) {
 		this.refTime = refTime;
+	}
+	/**
+	 * @return the satType
+	 */
+	public char getSatType() {
+		return satType;
+	}
+	/**
+	 * @param satType the satType to set
+	 */
+	public void setSatType(char satType) {
+		this.satType = satType;
 	}
 	/**
 	 * @return the satID
@@ -590,19 +603,19 @@ public class EphGps implements Streamable {
 		this.Za = Za;
 	}
 	
-//	public long getEn() {
-//		return En;
-//	}
-//	public void setEn(long En) {
-//		this.En = En;
-//	}
-	
 	public double getEn() {
 		return En;
 	}
 	public void setEn(double En) {
 		this.En = En;
 	}
+	
+//	public long getEn() {
+//		return En;
+//	}
+//	public void setEn(long En) {
+//		this.En = En;
+//	}
 	
 	
 	/* (non-Javadoc)

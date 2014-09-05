@@ -238,8 +238,10 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
 		EphGps eph = ephs.get(new Integer(satID));
 
+		char satType = eph.getSatType();
+		
 		if (eph != null) {
-			SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(unixTime, satType, satID, eph, range, receiverClockError);
 			return sp;
 		}
 		return null ;

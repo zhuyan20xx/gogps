@@ -414,20 +414,24 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	 * Read all navigation data
 	 */
 	public void parseDataNav() {
-
 		try {
 
 			// Resizable array
 			//Navigation.eph = new ArrayList<EphGps>();
 
-			int j = 0;
+//			int j = 0;
 
 			EphGps eph = null;
 
 			while (buffStreamNav.ready()) {
 
 				String sub;
-
+				char satType = 'G'; 				
+				
+				eph = new EphGps();
+				addEph(eph);
+				eph.setSatType(satType);
+				
 				// read 8 lines
 				for (int i = 0; i < 8; i++) {
 
@@ -441,15 +445,15 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 
 						int len = line.length();
 
-						if (len != 0) {
+						if (len != 0) {							
 
 							if (i == 0) { // LINE 1
 
 								//Navigation.eph.get(j).refTime = new Time();
 
-								eph = new EphGps();
+								
 								//Navigation.eph.add(eph);
-								addEph(eph);
+//								addEph(eph);
 
 								// Get satellite ID
 								sub = line.substring(0, 2).trim();
@@ -601,7 +605,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 				}
 
 				// Increment array index
-				j++;
+//				j++;
 				// Store the number of ephemerides
 				//Navigation.n = j;
 			}
@@ -628,13 +632,13 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 			while (buffStreamNav.ready()) {
 
 				String sub;
-				char sys;
+				char satType;
 				
-				sys = (char)buffStreamNav.read();
+				satType = (char)buffStreamNav.read();
 //				System.out.println(s);
 				
-				if (sys != 'R'){  // other than GLONASS data
-						System.out.println(sys);
+				if (satType != 'R'){  // other than GLONASS data
+						System.out.println(satType);
 								
 						// read 8 lines
 						for (int i = 0; i < 8; i++) {
@@ -657,6 +661,8 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 										//Navigation.eph.add(eph);
 										addEph(eph);
 		
+										eph.setSatType(satType);
+										
 										// Get satellite ID
 										sub = line.substring(0, 2).trim();
 //										System.out.println(sub);
@@ -813,7 +819,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 				
 						
 				} else {   // In case of GLONASS data
-						System.out.println(sys);
+						System.out.println(satType);
 
 						for (int i = 0; i < 4; i++) {
 							String line = buffStreamNav.readLine();
@@ -830,33 +836,32 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		
 										//Navigation.eph.get(j).refTime = new Time();
 		
-//										eph = new EphGps();
-										//Navigation.eph.add(eph);
-//										addEph(eph);
+										eph = new EphGps();
+										addEph(eph);
 		
+										eph.setSatType(satType);
+										
 										// Get satellite ID
 										sub = line.substring(0, 2).trim();
-										System.out.println(sub);
-//										eph.setSatID(Integer.parseInt(sub));
+//										System.out.println(sub);
+										eph.setSatID(Integer.parseInt(sub));
 		
 										// Get and format date and time string
 										String dT = line.substring(3, 22);
 		//								dT = dT.replace("  ", " 0").trim();
 										dT = dT + ".0";
-										System.out.println(dT);
-		
-										
-		
+//										System.out.println(dT);
+			
 										try {
-//											Time timeEph = new Time(dT);
+											//Time timeEph = new Time(dT);
 											// Convert String to UNIX standard time in
 											// milliseconds
-//											timeEph.msec = Time.dateStringToTime(dT);
-//												Time toc = new Time(dT);
-//												System.out.println("Time: " + toc);
-
-//												eph.setRefTime(toc);
-//												eph.setToc(toc.getGpsWeekSec());
+											//timeEph.msec = Time.dateStringToTime(dT);
+												Time toc = new Time(dT);
+												eph.setRefTime(toc);
+												eph.setToc(toc.getGpsWeekSec());
+			
+												
 			
 												// sets Iono reference time
 												if(iono!=null && iono.getRefTime()==null) iono.setRefTime(new Time(dT));
@@ -867,86 +872,86 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		
 										/* TauN */ 
 										sub = line.substring(22, 41).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setTauN(Float.parseFloat(sub.trim()));
+//										System.out.println(sub);
+										eph.setTauN(Float.parseFloat(sub.trim()));
 		
 										/* GammaN */
 										sub = line.substring(41, 60).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setGammaN(Float.parseFloat(sub.trim()));
+//										System.out.println(sub);
+										eph.setGammaN(Float.parseFloat(sub.trim()));
 		
 										/* tk */
 										sub = line.substring(60, len).replace('D', 'e');
-										System.out.println(sub);
-//										eph.settk(Double.parseDouble(sub.trim()));									
+//										System.out.println(sub);
+										eph.settk(Double.parseDouble(sub.trim()));									
 										
 									} else if (i == 1) { // LINE 2
 										
 										/* X */
 										sub = line.substring(4, 23).replace('D', 'e');
 										double iode = Double.parseDouble(sub.trim());
-										System.out.println(iode);
-//										eph.setX(Double.parseDouble(sub.trim()));									
+//										System.out.println(iode);
+										eph.setX(Double.parseDouble(sub.trim()));									
 		
 										/* Xv */
 										sub = line.substring(23, 42).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setXv(Double.parseDouble(sub.trim()));									
+//										System.out.println(sub);
+										eph.setXv(Double.parseDouble(sub.trim()));									
 		
 										/* Xa */
 										sub = line.substring(42, 61).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setXa(Double.parseDouble(sub.trim()));									
+//										System.out.println(sub);
+										eph.setXa(Double.parseDouble(sub.trim()));									
 		
 										/* Bn */
 										sub = line.substring(61, len).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setBn(Double.parseDouble(sub.trim()));									
+//										System.out.println(sub);
+										eph.setBn(Double.parseDouble(sub.trim()));									
 		
 									} else if (i == 2) { // LINE 3
 		
 										/* Y */
 										sub = line.substring(4, 23).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setY(Double.parseDouble(sub.trim()));
+//										System.out.println(sub);
+										eph.setY(Double.parseDouble(sub.trim()));
 		
 										/* Yv */
 										sub = line.substring(23, 42).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setYv(Double.parseDouble(sub.trim()));
+//										System.out.println(sub);
+										eph.setYv(Double.parseDouble(sub.trim()));
 		
 										/* Ya */
 										sub = line.substring(42, 61).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setYa(Double.parseDouble(sub.trim()));
+//										System.out.println(sub);
+										eph.setYa(Double.parseDouble(sub.trim()));
 		
 										/* freq_num */
 										sub = line.substring(61, len).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setfreq_num(Double.parseDouble(sub.trim()));
+//										System.out.println(sub);
+										eph.setfreq_num(Double.parseDouble(sub.trim()));
 		
 									} else if (i == 3) { // LINE 4
 		
 										/* Z */
 										sub = line.substring(4, 23).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setZ(Double.parseDouble(sub.trim()));
+//										System.out.println(sub);
+										eph.setZ(Double.parseDouble(sub.trim()));
 		
 										/* Zv */
 										sub = line.substring(23, 42).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setZv(Double.parseDouble(sub.trim()));
+//										System.out.println(sub);
+										eph.setZv(Double.parseDouble(sub.trim()));
 		
 										/* Za */
 										sub = line.substring(42, 61).replace('D', 'e');
-										System.out.println(sub);
-//										eph.setZa(Double.parseDouble(sub.trim()));
+//										System.out.println(sub);
+										eph.setZa(Double.parseDouble(sub.trim()));
 		
 										/* En */
 										sub = line.substring(61, len).replace('D', 'e');
-										System.out.println(sub);
+//										System.out.println(sub);
 //										eph.setEn(Long.parseLong(sub.trim()));
-//										eph.setEn(Double.parseDouble(sub.trim()));
+										eph.setEn(Double.parseDouble(sub.trim()));
 
 																		
 									} // End of if
@@ -1113,9 +1118,12 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	@Override
 	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
 		EphGps eph = findEph(unixTime, satID);
-
+		
 		if (eph != null) {
-			SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
+			
+			char satType = eph.getSatType();
+			
+			SatellitePosition sp = computePositionGps(unixTime, satType, satID, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, unixTime, satID, range);
 		}

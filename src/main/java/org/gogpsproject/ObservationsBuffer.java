@@ -354,7 +354,9 @@ public class ObservationsBuffer
         if(closer !=null){
         	EphGps eph = closer.ephs.get(ID);
 
-        	SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
+        	char satType = eph.getSatType();
+        	
+        	SatellitePosition sp = computePositionGps(unixTime, satType, satID, eph, range, receiverClockError);
         	//System.out.println("\tR: < sat pos "+ID);
 			return sp;
         }
