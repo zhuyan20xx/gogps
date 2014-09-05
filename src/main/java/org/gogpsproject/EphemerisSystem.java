@@ -105,22 +105,32 @@ public abstract class EphemerisSystem {
 			
 			
 					System.out.println("### GLONASS computation");
+					satID = eph.getSatID();
 					
-					double X = eph.getX();
-					double Y = eph.getY();
-					double Z = eph.getZ();
-					double Xv = eph.getXv();
-					double Yv = eph.getYv();
-					double Zv = eph.getZv();
-					double Xa = eph.getXa();
-					double Ya = eph.getYa();
-					double Za = eph.getZa();
+					double X = eph.getX();  // satellite X coordinate at ephemeris reference time
+					double Y = eph.getY();  // satellite Y coordinate at ephemeris reference time
+					double Z = eph.getZ();  // satellite Z coordinate at ephemeris reference time
+					double Xv = eph.getXv();  // satellite velocity along X at ephemeris reference time
+					double Yv = eph.getYv();  // satellite velocity along Y at ephemeris reference time
+					double Zv = eph.getZv();  // satellite velocity along Z at ephemeris reference time
+					double Xa = eph.getXa();  // acceleration due to lunar-solar gravitational perturbation along X at ephemeris reference time
+					double Ya = eph.getYa();  // acceleration due to lunar-solar gravitational perturbation along Y at ephemeris reference time
+					double Za = eph.getZa();  // acceleration due to lunar-solar gravitational perturbation along Z at ephemeris reference time
+					/* NOTE:  Xa,Ya,Za are considered constant within the integration interval (i.e. toe ?}15 minutes) */
+
 					
-					double tb = eph.getTauN();
+					double tb = eph.getTauN();    
 					float gammaN = eph.getGammaN();
-					double tk = eph.gettk();
+					double tk = eph.gettk();   // time from the ephemeris reference epoch
 					double En = eph.getEn();
 					
+					Time refTime = eph.getRefTime();
+					double toc = eph.getToc();
+					System.out.println("refTime: " + refTime);
+					System.out.println("toc: " + toc);
+					System.out.println("unixTime: " + unixTime);
+					
+					System.out.println("satID: " + satID);
 					System.out.println("X: " + X);
 					System.out.println("Y: " + Y);
 					System.out.println("Z: " + Z);
@@ -136,7 +146,36 @@ public abstract class EphemerisSystem {
 					System.out.println("tk: " + tk);
 					System.out.println("En: " + En);
 
-			
+					System.out.println("					");
+					
+					/* integration step */
+				    int int_step = 60 ; // [s]	
+					
+				    /* number of iterations on "full" steps */
+					int n = (int) Math.floor(Math.abs(tk / int_step));
+					System.out.println("Number of interations: " + n);
+					
+					/* array containing integration steps (same sign as tk) */
+					
+					// Compute satellite clock error
+//					double satelliteClockError = computeSatelliteClockError(unixTime, eph, obsPseudorange);
+//					
+//					// Compute clock corrected transmission time
+//					double tGPS = computeClockCorrectedTransmissionTime(unixTime, satelliteClockError, obsPseudorange);
+//			
+//					// Compute eccentric anomaly
+//					double Ek = computeEccentricAnomaly(tGPS, eph);
+//			
+//					// Time from the ephemerides reference epoch
+//					double tk0 = checkGpsTime(tGPS - eph.getToe());
+//					System.out.println("tk0: " + tk0);
+					
+					
+					
+					/* transformation from PZ-90.02 to WGS-84 (ITRF2000) */
+					double x1 = X - 0.36;
+					double y1 = Y + 0.86;
+					double z1 = Z + 0.18;
 					
 		
 					// Fill in the satellite position matrix

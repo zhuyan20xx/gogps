@@ -850,7 +850,8 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 										String dT = line.substring(3, 22);
 		//								dT = dT.replace("  ", " 0").trim();
 										dT = dT + ".0";
-//										System.out.println(dT);
+										
+//										System.out.println("dT: " + dT);
 			
 										try {
 											//Time timeEph = new Time(dT);
@@ -860,6 +861,10 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 												Time toc = new Time(dT);
 												eph.setRefTime(toc);
 												eph.setToc(toc.getGpsWeekSec());
+												
+												int tow = toc.getGpsWeek();
+//												System.out.println("tow: " + tow);																		
+//												eph.setTow(toc.getGpsWeek());
 			
 												
 			
@@ -925,10 +930,10 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 //										System.out.println(sub);
 										eph.setYa(Double.parseDouble(sub.trim()));
 		
-										/* freq_num */
+										/* freq_num, tb?  */
 										sub = line.substring(61, len).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setfreq_num(Double.parseDouble(sub.trim()));
+										eph.settb(Double.parseDouble(sub.trim()));
 		
 									} else if (i == 3) { // LINE 4
 		
@@ -986,6 +991,11 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		}
 				
 		
+	}
+
+	private double gpsToUnixTime(Time toc, int tow) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	/**
