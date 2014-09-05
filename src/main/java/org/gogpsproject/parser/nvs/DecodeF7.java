@@ -289,69 +289,83 @@ public class DecodeF7 {
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Xm = Bits.byteToIEEE754Double(bytes);
+				eph.setX(Xm);
 	
 				/*  Ym, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Ym = Bits.byteToIEEE754Double(bytes);
+				eph.setY(Ym);
 				
 				/*  Zm, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Zm = Bits.byteToIEEE754Double(bytes);
+				eph.setZ(Zm);
 				
 				/*  Vx, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Vx = Bits.byteToIEEE754Double(bytes);
+				eph.setXv(Vx);
 				
 				/*  Vy, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Vy = Bits.byteToIEEE754Double(bytes);
+				eph.setYv(Vy);
 				
 				/*  Vz, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Vz = Bits.byteToIEEE754Double(bytes);
+				eph.setZv(Vz);
 				
 				/*  Ax, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Ax = Bits.byteToIEEE754Double(bytes);
+				eph.setXa(Ax);
 				
 				/*  Ay, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Ay = Bits.byteToIEEE754Double(bytes);
+				eph.setYa(Ay);
 				
 				/*  Az, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Az = Bits.byteToIEEE754Double(bytes);
+				eph.setZa(Az);
 				
 				/*  tb, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double tb = Bits.byteToIEEE754Double(bytes);
+				eph.settb(tb);
 				
 				/*  gammaN, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);				
 				float gammaN = Bits.byteToIEEE754Float(bytes);
+				eph.setGammaN(gammaN);
 				
 				 /*  tn, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);				
 				float tn = Bits.byteToIEEE754Float(bytes);
+				eph.setTauN(tn);
 				
 				/*  En, 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
 				long En = Bits.byteToLong(bytes);	
+				eph.setEn(En);
 				
 				/* tb is a time interval within the current day (UTC + 3 hours)*/
-				double tk = tb - 10800;					
+				double tk = tb - 10800;		
+				eph.settk(tk);
 				
 //				System.out.println("+--------------  Start of F7 (GLONASS)  -------------+");
 //				System.out.println("satType: " + satType);  

@@ -92,6 +92,7 @@ public class EphGps implements Streamable {
 	private double Yv;
 	private double Ya;
 	private double freq_num;
+	private double tb;
 
 	private double Z;
 	private double Zv;
@@ -580,6 +581,13 @@ public class EphGps implements Streamable {
 	}
 	public void setfreq_num(double freq_num) {
 		this.freq_num = freq_num;
+	}
+	
+	public double gettb() {
+		return tb;
+	}
+	public void settb(double tb) {
+		this.tb = tb;
 	}
 	
 	public double getZ() {
