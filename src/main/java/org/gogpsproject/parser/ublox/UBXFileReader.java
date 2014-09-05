@@ -154,7 +154,10 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 		EphGps eph = ephs.get(new Integer(satID));
 
 		if (eph != null) {
-			SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
+			
+			char satType = eph.getSatType();
+			
+			SatellitePosition sp = computePositionGps(unixTime,satType, satID, eph, range, receiverClockError);
 			return sp;
 		}
 		return null ;

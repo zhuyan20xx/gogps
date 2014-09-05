@@ -38,64 +38,126 @@ public abstract class EphemerisSystem {
 	 * @param range
 	 * @param approxPos
 	 */
-	protected SatellitePosition computePositionGps(long unixTime,int satID, EphGps eph, double obsPseudorange, double receiverClockError) {
+	protected SatellitePosition computePositionGps(long unixTime, char satType, int satID, EphGps eph, double obsPseudorange, double receiverClockError) {
 
-		// Compute satellite clock error
-		double satelliteClockError = computeSatelliteClockError(unixTime, eph, obsPseudorange);
+		
+		if(satType != 'R'){  // other than GLONASS
+			
+//					System.out.println("### other than GLONASS data");
+			
+					// Compute satellite clock error
+					double satelliteClockError = computeSatelliteClockError(unixTime, eph, obsPseudorange);
+			
+					// Compute clock corrected transmission time
+					double tGPS = computeClockCorrectedTransmissionTime(unixTime, satelliteClockError, obsPseudorange);
+			
+					// Compute eccentric anomaly
+					double Ek = computeEccentricAnomaly(tGPS, eph);
+			
+					// Semi-major axis
+					double A = eph.getRootA() * eph.getRootA();
+			
+					// Time from the ephemerides reference epoch
+					double tk = checkGpsTime(tGPS - eph.getToe());
+			
+					// Position computation
+					double fk = Math.atan2(Math.sqrt(1 - Math.pow(eph.getE(), 2))
+							* Math.sin(Ek), Math.cos(Ek) - eph.getE());
+					double phi = fk + eph.getOmega();
+					phi = Math.IEEEremainder(phi, 2 * Math.PI);
+					double u = phi + eph.getCuc() * Math.cos(2 * phi) + eph.getCus()
+							* Math.sin(2 * phi);
+					double r = A * (1 - eph.getE() * Math.cos(Ek)) + eph.getCrc()
+							* Math.cos(2 * phi) + eph.getCrs() * Math.sin(2 * phi);
+					double ik = eph.getI0() + eph.getiDot() * tk + eph.getCic() * Math.cos(2 * phi)
+							+ eph.getCis() * Math.sin(2 * phi);
+					double Omega = eph.getOmega0()
+							+ (eph.getOmegaDot() - Constants.EARTH_ANGULAR_VELOCITY) * tk
+							- Constants.EARTH_ANGULAR_VELOCITY * eph.getToe();
+					Omega = Math.IEEEremainder(Omega + 2 * Math.PI, 2 * Math.PI);
+					double x1 = Math.cos(u) * r;
+					double y1 = Math.sin(u) * r;
+			
+					// Coordinates
+			//			double[][] data = new double[3][1];
+			//			data[0][0] = x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega);
+			//			data[1][0] = x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega);
+			//			data[2][0] = y1 * Math.sin(ik);
+			
+					// Fill in the satellite position matrix
+					//this.coord.ecef = new SimpleMatrix(data);
+					//this.coord = Coordinates.globalXYZInstance(new SimpleMatrix(data));
+					SatellitePosition sp = new SatellitePosition(unixTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
+							x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
+							y1 * Math.sin(ik));
+					sp.setSatelliteClockError(satelliteClockError);
+			
+					// Apply the correction due to the Earth rotation during signal travel time
+					SimpleMatrix R = computeEarthRotationCorrection(unixTime, receiverClockError, tGPS);
+					sp.setSMMultXYZ(R);
+			
+					return sp;
+			//		this.setXYZ(x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
+			//				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
+			//				y1 * Math.sin(ik));
 
-		// Compute clock corrected transmission time
-		double tGPS = computeClockCorrectedTransmissionTime(unixTime, satelliteClockError, obsPseudorange);
+		} else {   // GLONASS 
+			
+			
+					System.out.println("### GLONASS computation");
+					
+					double X = eph.getX();
+					double Y = eph.getY();
+					double Z = eph.getZ();
+					double Xv = eph.getXv();
+					double Yv = eph.getYv();
+					double Zv = eph.getZv();
+					double Xa = eph.getXa();
+					double Ya = eph.getYa();
+					double Za = eph.getZa();
+					
+					double tb = eph.getTauN();
+					float gammaN = eph.getGammaN();
+					double tk = eph.gettk();
+					double En = eph.getEn();
+					
+					System.out.println("X: " + X);
+					System.out.println("Y: " + Y);
+					System.out.println("Z: " + Z);
+					System.out.println("Xv: " + Xv);
+					System.out.println("Yv: " + Yv);
+					System.out.println("Zv: " + Zv);
+					System.out.println("Xa: " + Xa);
+					System.out.println("Ya: " + Ya);
+					System.out.println("Za: " + Za);
 
-		// Compute eccentric anomaly
-		double Ek = computeEccentricAnomaly(tGPS, eph);
+					System.out.println("tb: " + tb);
+					System.out.println("gammaN: " + gammaN);
+					System.out.println("tk: " + tk);
+					System.out.println("En: " + En);
 
-		// Semi-major axis
-		double A = eph.getRootA() * eph.getRootA();
-
-		// Time from the ephemerides reference epoch
-		double tk = checkGpsTime(tGPS - eph.getToe());
-
-		// Position computation
-		double fk = Math.atan2(Math.sqrt(1 - Math.pow(eph.getE(), 2))
-				* Math.sin(Ek), Math.cos(Ek) - eph.getE());
-		double phi = fk + eph.getOmega();
-		phi = Math.IEEEremainder(phi, 2 * Math.PI);
-		double u = phi + eph.getCuc() * Math.cos(2 * phi) + eph.getCus()
-				* Math.sin(2 * phi);
-		double r = A * (1 - eph.getE() * Math.cos(Ek)) + eph.getCrc()
-				* Math.cos(2 * phi) + eph.getCrs() * Math.sin(2 * phi);
-		double ik = eph.getI0() + eph.getiDot() * tk + eph.getCic() * Math.cos(2 * phi)
-				+ eph.getCis() * Math.sin(2 * phi);
-		double Omega = eph.getOmega0()
-				+ (eph.getOmegaDot() - Constants.EARTH_ANGULAR_VELOCITY) * tk
-				- Constants.EARTH_ANGULAR_VELOCITY * eph.getToe();
-		Omega = Math.IEEEremainder(Omega + 2 * Math.PI, 2 * Math.PI);
-		double x1 = Math.cos(u) * r;
-		double y1 = Math.sin(u) * r;
-
-		// Coordinates
-//			double[][] data = new double[3][1];
-//			data[0][0] = x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega);
-//			data[1][0] = x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega);
-//			data[2][0] = y1 * Math.sin(ik);
-
-		// Fill in the satellite position matrix
-		//this.coord.ecef = new SimpleMatrix(data);
-		//this.coord = Coordinates.globalXYZInstance(new SimpleMatrix(data));
-		SatellitePosition sp = new SatellitePosition(unixTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
-				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
-				y1 * Math.sin(ik));
-		sp.setSatelliteClockError(satelliteClockError);
-
-		// Apply the correction due to the Earth rotation during signal travel time
-		SimpleMatrix R = computeEarthRotationCorrection(unixTime, receiverClockError, tGPS);
-		sp.setSMMultXYZ(R);
-
-		return sp;
-//		this.setXYZ(x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
-//				x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
-//				y1 * Math.sin(ik));
-
+			
+					
+		
+					// Fill in the satellite position matrix
+//				
+//					SatellitePosition sp = new SatellitePosition(unixTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
+//							x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
+//							y1 * Math.sin(ik));
+//					sp.setSatelliteClockError(satelliteClockError);
+//		
+//					// Apply the correction due to the Earth rotation during signal travel time
+//					SimpleMatrix R = computeEarthRotationCorrection(unixTime, receiverClockError, tGPS);
+//					sp.setSMMultXYZ(R);
+		
+//					return sp ;
+					return null ;
+		
+			
+		}
+		
+		
+		
 	}
 
 	/**

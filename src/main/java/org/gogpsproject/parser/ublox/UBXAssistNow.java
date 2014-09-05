@@ -288,7 +288,10 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 		EphGps eph = findEph(unixTime, satID);
 
 		if (eph != null) {
-			SatellitePosition sp = computePositionGps(unixTime,satID, eph, range, receiverClockError);
+			
+			char satType = eph.getSatType();
+			
+			SatellitePosition sp = computePositionGps(unixTime,satType, satID, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, unixTime, satID, range);
 		}
