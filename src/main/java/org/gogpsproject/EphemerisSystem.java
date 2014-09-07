@@ -19,7 +19,9 @@
  */
 package org.gogpsproject;
 
-import org.ejml.simple.SimpleMatrix;
+import java.text.ParseException;
+
+import org.ejml.simple.SimpleMatrix; 
 
 /**
  * <p>
@@ -38,6 +40,11 @@ public abstract class EphemerisSystem {
 	 * @param range
 	 * @param approxPos
 	 */
+	
+//	double[] pos ;
+	
+	
+	
 	protected SatellitePosition computePositionGps(long unixTime, char satType, int satID, EphGps eph, double obsPseudorange, double receiverClockError) {
 
 		
@@ -106,7 +113,6 @@ public abstract class EphemerisSystem {
 			
 					System.out.println("### GLONASS computation");
 					satID = eph.getSatID();
-					
 					double X = eph.getX();  // satellite X coordinate at ephemeris reference time
 					double Y = eph.getY();  // satellite Y coordinate at ephemeris reference time
 					double Z = eph.getZ();  // satellite Z coordinate at ephemeris reference time
@@ -117,19 +123,30 @@ public abstract class EphemerisSystem {
 					double Ya = eph.getYa();  // acceleration due to lunar-solar gravitational perturbation along Y at ephemeris reference time
 					double Za = eph.getZa();  // acceleration due to lunar-solar gravitational perturbation along Z at ephemeris reference time
 					/* NOTE:  Xa,Ya,Za are considered constant within the integration interval (i.e. toe ?}15 minutes) */
-
-					
-					double tb = eph.getTauN();    
+				
+					double tn = eph.getTauN();    
 					float gammaN = eph.getGammaN();
 					double tk = eph.gettk();   // time from the ephemeris reference epoch
 					double En = eph.getEn();
 					
-					Time refTime = eph.getRefTime();
-					double toc = eph.getToc();
+					String refTime = eph.getRefTime().toString();
+					refTime = refTime.substring(0,19);
 					System.out.println("refTime: " + refTime);
-					System.out.println("toc: " + toc);
-					System.out.println("unixTime: " + unixTime);
 					
+					try {
+						long ut = new java.text.SimpleDateFormat("yyyy MM dd HH mm ss").parse(refTime).getTime() / 1000;
+						System.out.println("ut: " + ut);
+						
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					
+					double toc = eph.getToc();
+//					System.out.println("refTime: " + refTime);
+					System.out.println("toc: " + toc);
+					System.out.println("unixTime: " + unixTime);				
 					System.out.println("satID: " + satID);
 					System.out.println("X: " + X);
 					System.out.println("Y: " + Y);
@@ -140,12 +157,10 @@ public abstract class EphemerisSystem {
 					System.out.println("Xa: " + Xa);
 					System.out.println("Ya: " + Ya);
 					System.out.println("Za: " + Za);
-
-					System.out.println("tb: " + tb);
+					System.out.println("tn: " + tn);
 					System.out.println("gammaN: " + gammaN);
 					System.out.println("tk: " + tk);
 					System.out.println("En: " + En);
-
 					System.out.println("					");
 					
 					/* integration step */
@@ -156,28 +171,61 @@ public abstract class EphemerisSystem {
 					System.out.println("Number of interations: " + n);
 					
 					/* array containing integration steps (same sign as tk) */
+
+					// numerical integration steps (i.e. re-calculation of satellite positions from toe to tk)
+					double[] pos = {X, Y, Z};
+					double[] vel = {Xv, Yv, Zv};
+					double[] acc = {Xa, Ya, Za};				
+					double[] pos1;
+					double[] vel1;
+									
 					
-					// Compute satellite clock error
-//					double satelliteClockError = computeSatelliteClockError(unixTime, eph, obsPseudorange);
-//					
-//					// Compute clock corrected transmission time
-//					double tGPS = computeClockCorrectedTransmissionTime(unixTime, satelliteClockError, obsPseudorange);
-//			
-//					// Compute eccentric anomaly
-//					double Ek = computeEccentricAnomaly(tGPS, eph);
-//			
-//					// Time from the ephemerides reference epoch
-//					double tk0 = checkGpsTime(tGPS - eph.getToe());
-//					System.out.println("tk0: " + tk0);
-					
-					
-					
+//					for (int i = 0 ; i < 13 ; i++ ){
+//						
+//							/* Runge-Kutta numerical integration algorithm */
+//					        // step 1 
+//							pos1 = pos;
+//							vel1 = vel;
+//							
+//							// differential position
+//							double[] pos1_dot = vel;
+//							double[] vel1_dot = satellite_motion_diff_eq(pos1, vel1, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+//							
+//							// step 2
+//							double[] pos2 = pos + pos1_dot*ii(s)/2;
+//					        double[] vel2 = vel + vel1_dot*ii(s)/2;
+//							double[] pos2_dot = vel2;						
+//							double[] vel2_dot = satellite_motion_diff_eq(pos2, vel2, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+//							
+//							// step 3											
+//							double[] pos3 = pos + pos1_dot*ii(s)/2;
+//					        double[] vel3 = vel + vel1_dot*ii(s)/2;
+//					        double[] pos3_dot = vel3;
+//							double[] vel3_dot = satellite_motion_diff_eq(pos3, vel3, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+//							
+//							// step 4
+//							double[] pos4 = pos + pos1_dot*ii(s)/2;
+//					        double[] vel4 = vel + vel1_dot*ii(s)/2;
+//							double[] pos4_dot = vel4;
+//							double[] vel4_dot = satellite_motion_diff_eq(pos4, vel4, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+//						
+//							// final position and velocity
+//						    pos = pos + (pos1_dot + 2*pos2_dot + 2*pos3_dot + pos4_dot)*ii(s)/6;
+//						    vel = vel + (vel1_dot + 2*vel2_dot + 2*vel3_dot + vel4_dot)*ii(s)/6;
+//						
+//					}
+										
+									
 					/* transformation from PZ-90.02 to WGS-84 (ITRF2000) */
 					double x1 = X - 0.36;
 					double y1 = Y + 0.86;
 					double z1 = Z + 0.18;
 					
-		
+					/* satellite velocity */
+				    double Xv1 = vel[0];
+				    double Yv1 = vel[1];
+				    double Zv1 = vel[2];
+					
 					// Fill in the satellite position matrix
 //				
 //					SatellitePosition sp = new SatellitePosition(unixTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
@@ -197,6 +245,41 @@ public abstract class EphemerisSystem {
 		
 		
 		
+	}
+
+	private double[] satellite_motion_diff_eq(double[] pos, double[] vel,
+			double[] acc, long ellAGlo, double gmGlo, double j2Glo,
+			double omegaeDotGlo) {
+		// TODO Auto-generated method stub
+		
+		
+		/* renaming variables for better readability position */
+		double X = pos[0];
+		double Y = pos[1];
+		double Z = pos[2];
+		
+		/* velocity */
+		double Xv = vel[0];
+		double Yv = vel[1];
+		
+		/* acceleration (i.e. perturbation) */
+		double Xa = acc[1];
+		double Ya = acc[2];
+		double Za = acc[3];
+		
+		/* parameters */
+		double r = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2) + Math.pow(Z,2));
+		double g = -gmGlo/Math.pow(r,3);
+		double h = j2Glo*1.5*Math.pow((ellAGlo/r),2);
+		double k = 5*Math.pow(Z,2)/Math.pow(r,2);
+		
+		/* differential velocity */
+		double[] vel_dot = new double[2] ;
+		vel_dot[0] = g*X*(1 - h*(k - 1)) + Xa + Math.pow(omegaeDotGlo,2)*X + 2*omegaeDotGlo*Yv;
+		vel_dot[1] = g*Y*(1 - h*(k - 1)) + Ya + Math.pow(omegaeDotGlo,2)*Y - 2*omegaeDotGlo*Xv;
+		vel_dot[2] = g*Z*(1 - h*(k - 3)) + Za;
+		
+		return vel_dot;
 	}
 
 	/**
