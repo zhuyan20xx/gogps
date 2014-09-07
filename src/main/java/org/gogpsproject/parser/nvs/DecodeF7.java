@@ -343,6 +343,7 @@ public class DecodeF7 {
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double tb = Bits.byteToIEEE754Double(bytes);
+				tb = tb * 1e-3 ;
 				eph.settb(tb);
 				
 				/*  gammaN, 4 bytes  */
@@ -381,7 +382,9 @@ public class DecodeF7 {
 //				System.out.println("Ay: "+ Ay);			
 //		        System.out.println("Az: "+ Az);
 //		        System.out.println("tb: "+ tb);       
-//				System.out.println("tb: "+ tb);			
+//				System.out.println("tb: "+ tb);		
+//				System.out.println("tk: "+ tk);			
+
 //				System.out.println("gammaN: "+ gammaN);			
 //		        System.out.println("tn: "+ tn);  
 //				System.out.println("En: "+ En);	
