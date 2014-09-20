@@ -84,6 +84,8 @@ public class ReceiverPosition extends Coordinates{
 
 	private boolean debug = false;
 
+	char satType;
+	
 	private GoGPS goGPS;
 
 	public ReceiverPosition(GoGPS goGPS){
@@ -135,10 +137,15 @@ public class ReceiverPosition extends Coordinates{
 
 		int p=0;
 		int id = 0;
+		
+		
 		for (int i = 0; i < nObs; i++) {
 
 			id = obs.getGpsSatID(i);
-
+			satType = obs.getGnssSatType(i);
+//			System.out.println("####" + satType + id  + "####");
+			
+			
 			// Create new satellite position object
 			//pos[i] = new SatellitePosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obs.getGpsByID(id).getPseudorange(goGPS.getFreq()));
 
@@ -146,7 +153,7 @@ public class ReceiverPosition extends Coordinates{
 			//pos[i].computePositionGps(goGPS.getNavigation());
 
 			double obsPseudorange = obs.getGpsByID(id).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), id, obsPseudorange, this.getReceiverClockError());
+			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), id, satType, obsPseudorange, this.getReceiverClockError());
 
 			try {
 				//System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
@@ -934,7 +941,7 @@ public class ReceiverPosition extends Coordinates{
 			id = roverObs.getGpsSatID(i);
 
 			// Compute GPS satellite positions
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, satType, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
 			if(pos[i]!=null){
 
@@ -1033,7 +1040,7 @@ public class ReceiverPosition extends Coordinates{
 			id = roverObs.getGpsSatID(i);
 
 			// Compute GPS satellite positions
-			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, id, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
+			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, id, satType, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
 			if(pos[i]!=null){
 

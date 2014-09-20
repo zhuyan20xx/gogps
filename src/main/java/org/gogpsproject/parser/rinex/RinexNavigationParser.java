@@ -819,7 +819,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 				
 						
 				} else {   // In case of GLONASS data
-						System.out.println(satType);
+						System.out.println("satType: " + satType);
 
 						for (int i = 0; i < 4; i++) {
 							String line = buffStreamNav.readLine();
@@ -843,7 +843,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 										
 										// Get satellite ID
 										sub = line.substring(0, 2).trim();
-//										System.out.println(sub);
+										System.out.println("ID: "+sub);
 										eph.setSatID(Integer.parseInt(sub));
 		
 										// Get and format date and time string
@@ -858,16 +858,23 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 											// Convert String to UNIX standard time in
 											// milliseconds
 											//timeEph.msec = Time.dateStringToTime(dT);
-												Time toc = new Time(dT);
-												eph.setRefTime(toc);
-												eph.setToc(toc.getGpsWeekSec());
+											
 												
-												int tow = toc.getGpsWeek();
-//												System.out.println("tow: " + tow);																		
-//												eph.setTow(toc.getGpsWeek());
-			
+												Time dtoc = new Time(dT);
+												eph.setRefTime(dtoc);
+												int toc = dtoc.getGpsWeekSec();
+												System.out.println("toc: " + toc);																		
+												eph.setToc(toc);
 												
+												int tow = dtoc.getGpsWeek();
+												System.out.println("tow: " + tow);																		
+												eph.setTow(tow);
 			
+												double toe = tow*7*86400 + toc;
+//												System.out.printf("%.3f\n", gTime);
+												System.out.println("timeEph: " + toe);
+												eph.setToe(toe);
+														
 												// sets Iono reference time
 												if(iono!=null && iono.getRefTime()==null) iono.setRefTime(new Time(dT));
 			
@@ -885,10 +892,18 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 //										System.out.println(sub);
 										eph.setGammaN(Float.parseFloat(sub.trim()));
 		
-										/* tk */
+										/* tb */
 										sub = line.substring(60, len).replace('D', 'e');
-//										System.out.println(sub);
-										eph.settk(Double.parseDouble(sub.trim()));									
+										System.out.println("tb: " + sub);
+										
+										/* tb is a time interval within the current day (UTC + 3 hours)*/
+										double tb = Double.parseDouble(sub.trim());
+										double tk = tb - 10800;		
+										System.out.println("tk: " + tk);
+										eph.settk(tk);
+										
+										
+//										eph.settb(Double.parseDouble(sub.trim()));									
 										
 									} else if (i == 1) { // LINE 2
 										
@@ -1126,14 +1141,15 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
 		EphGps eph = findEph(unixTime, satID);
 		
 		if (eph != null) {
 			
-			char satType = eph.getSatType();
+//			char satType = eph.getSatType();
 			
-			SatellitePosition sp = computePositionGps(unixTime, satType, satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(unixTime, satID, satType, eph, range, receiverClockError);
+//			SatellitePosition sp = computePositionGps(unixTime, satType, satID, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, unixTime, satID, range);
 		}
