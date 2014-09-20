@@ -150,14 +150,14 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
 		EphGps eph = ephs.get(new Integer(satID));
 
 		if (eph != null) {
 			
-			char satType = eph.getSatType();
+//			char satType = eph.getSatType();
 			
-			SatellitePosition sp = computePositionGps(unixTime,satType, satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(unixTime, satID, satType, eph, range, receiverClockError);
 			return sp;
 		}
 		return null ;

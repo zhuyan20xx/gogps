@@ -93,7 +93,9 @@ public class RinexNavigation implements NavigationProducer {
 
 		RinexNavigation rn = new RinexNavigation(IGN_NAVIGATION_HOURLY_ZIM2);
 		rn.init();
-		SatellitePosition sp = rn.getGpsSatPosition(c.getTimeInMillis(), 2, 0, 0);
+//		SatellitePosition sp = rn.getGpsSatPosition(c.getTimeInMillis(), 2, 0, 0);
+		SatellitePosition sp = rn.getGpsSatPosition(c.getTimeInMillis(), 2, 'G', 0, 0);
+
 		if(sp!=null){
 			System.out.println("found "+(new Date(sp.getUtcTime()))+" "+(sp.isPredicted()?" predicted":""));
 		}else{
@@ -120,13 +122,12 @@ public class RinexNavigation implements NavigationProducer {
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
-	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
 
 		RinexNavigationParser rnp = getRNPByTimestamp(unixTime);
 		if(rnp!=null){
 			if(rnp.isTimestampInEpocsRange(unixTime)){
-				return rnp.getGpsSatPosition(unixTime, satID, range, receiverClockError);
+				return rnp.getGpsSatPosition(unixTime, satID, satType, range, receiverClockError);
 			}else{
 				return null;
 			}

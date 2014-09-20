@@ -323,7 +323,7 @@ public class ObservationsBuffer
      * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
      */
     @Override
-    public SatellitePosition getGpsSatPosition(long unixTime, int satID, double range, double receiverClockError) {
+    public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
     	if(timeOrderedEphs.size()==0 ||
                 unixTime < timeOrderedEphs.elementAt(0).refTime.getMsec()
                 ){
@@ -353,10 +353,8 @@ public class ObservationsBuffer
         }
         if(closer !=null){
         	EphGps eph = closer.ephs.get(ID);
-
-        	char satType = eph.getSatType();
         	
-        	SatellitePosition sp = computePositionGps(unixTime, satType, satID, eph, range, receiverClockError);
+        	SatellitePosition sp = computePositionGps(unixTime, satID, satType, eph, range, receiverClockError);
         	//System.out.println("\tR: < sat pos "+ID);
 			return sp;
         }

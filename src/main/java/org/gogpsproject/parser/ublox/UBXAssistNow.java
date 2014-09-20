@@ -283,15 +283,15 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID,
+	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType,
 			double range, double receiverClockError) {
 		EphGps eph = findEph(unixTime, satID);
 
 		if (eph != null) {
 			
-			char satType = eph.getSatType();
+//			char satType = eph.getSatType();
 			
-			SatellitePosition sp = computePositionGps(unixTime,satType, satID, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(unixTime, satID, satType, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, unixTime, satID, range);
 		}

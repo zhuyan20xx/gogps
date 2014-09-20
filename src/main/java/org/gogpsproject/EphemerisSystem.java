@@ -19,8 +19,11 @@
  */
 package org.gogpsproject;
 
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.TimeZone;
 
+import org.gogpsproject.Time;
 import org.ejml.simple.SimpleMatrix; 
 
 /**
@@ -45,9 +48,9 @@ public abstract class EphemerisSystem {
 	
 	
 	
-	protected SatellitePosition computePositionGps(long unixTime, char satType, int satID, EphGps eph, double obsPseudorange, double receiverClockError) {
+	protected SatellitePosition computePositionGps(long unixTime, int satID, char satType, EphGps eph, double obsPseudorange, double receiverClockError) {
 
-		
+//		char satType = eph.getSatType() ;
 		if(satType != 'R'){  // other than GLONASS
 			
 //					System.out.println("### other than GLONASS data");
@@ -109,8 +112,7 @@ public abstract class EphemerisSystem {
 			//				y1 * Math.sin(ik));
 
 		} else {   // GLONASS 
-			
-			
+						
 					System.out.println("### GLONASS computation");
 					satID = eph.getSatID();
 					double X = eph.getX();  // satellite X coordinate at ephemeris reference time
@@ -126,26 +128,42 @@ public abstract class EphemerisSystem {
 				
 					double tn = eph.getTauN();    
 					float gammaN = eph.getGammaN();
-					double tk = eph.gettk();   // time from the ephemeris reference epoch
+					double tk = eph.gettk();   
 					double En = eph.getEn();
+					double toc = eph.getToc();
+					double toe = eph.getToe();
 					
+					/*
 					String refTime = eph.getRefTime().toString();
+//					refTime = refTime.substring(0,10);
 					refTime = refTime.substring(0,19);
+//					refTime = refTime + " 00 00 00";
 					System.out.println("refTime: " + refTime);
 					
 					try {
-						long ut = new java.text.SimpleDateFormat("yyyy MM dd HH mm ss").parse(refTime).getTime() / 1000;
-						System.out.println("ut: " + ut);
-						
+							// Set GMT time zone
+							TimeZone zone = TimeZone.getTimeZone("GMT Time");
+//							TimeZone zone = TimeZone.getTimeZone("UTC+4");
+							DateFormat df = new java.text.SimpleDateFormat("yyyy MM dd HH mm ss");
+							df.setTimeZone(zone);
+	
+							long ut = df.parse(refTime).getTime() ;
+							System.out.println("ut: " + ut);
+							Time tm = new Time(ut); 
+							double gpsTime = tm.getGpsTime();
+	//						double gpsTime = tm.getRoundedGpsTime();
+							System.out.println("gpsT: " + gpsTime);
+							
 					} catch (ParseException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					*/
+						
 					
-					
-					double toc = eph.getToc();
 //					System.out.println("refTime: " + refTime);
 					System.out.println("toc: " + toc);
+					System.out.println("toe: " + toe);
 					System.out.println("unixTime: " + unixTime);				
 					System.out.println("satID: " + satID);
 					System.out.println("X: " + X);
@@ -159,6 +177,7 @@ public abstract class EphemerisSystem {
 					System.out.println("Za: " + Za);
 					System.out.println("tn: " + tn);
 					System.out.println("gammaN: " + gammaN);
+//					System.out.println("tb: " + tb);
 					System.out.println("tk: " + tk);
 					System.out.println("En: " + En);
 					System.out.println("					");
@@ -166,12 +185,27 @@ public abstract class EphemerisSystem {
 					/* integration step */
 				    int int_step = 60 ; // [s]	
 					
+					/* Compute satellite clock error */
+				    double satelliteClockError = computeSatelliteClockError(unixTime, eph, obsPseudorange);
+				    System.out.println("satelliteClockError: " + satelliteClockError);
+				    
+					/* Compute clock corrected transmission time */
+					double tGPS = computeClockCorrectedTransmissionTime(unixTime, satelliteClockError, obsPseudorange);
+					tGPS = eph.getTow()*7*86400 + tGPS;
+				    System.out.println("tGPS: " + tGPS);
+					
+				    /* Time from the ephemerides reference epoch */
+					double tk2 = checkGpsTime(tGPS - toe);
+					System.out.println("tk2: " + tk2);
+				    
 				    /* number of iterations on "full" steps */
-					int n = (int) Math.floor(Math.abs(tk / int_step));
+					int n = (int) Math.floor(Math.abs(tk2 / int_step));
 					System.out.println("Number of interations: " + n);
 					
 					/* array containing integration steps (same sign as tk) */
-
+					 double [][] tkArray = new double [n][1];
+//					 double ii = tkArray * int_step * (tk2/Math.abs(tk2));
+					
 					// numerical integration steps (i.e. re-calculation of satellite positions from toe to tk)
 					double[] pos = {X, Y, Z};
 					double[] vel = {Xv, Yv, Zv};
@@ -180,7 +214,7 @@ public abstract class EphemerisSystem {
 					double[] vel1;
 									
 					
-//					for (int i = 0 ; i < 13 ; i++ ){
+//					for (int i = 0 ; i < n ; i++ ){
 //						
 //							/* Runge-Kutta numerical integration algorithm */
 //					        // step 1 
@@ -354,24 +388,53 @@ public abstract class EphemerisSystem {
 	 * @return Satellite clock error
 	 */
 	protected double computeSatelliteClockError(long unixTime, EphGps eph, double obsPseudorange){
-		double gpsTime = (new Time(unixTime)).getGpsTime();
-		// Remove signal travel time from observation time
-		double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
+		
+		if (eph.getSatType() == 'R'){   // In case of GLONASS
+			
+				double gpsTime = (new Time(unixTime)).getGpsTime();
+				System.out.println("## gpsTime: " + gpsTime);
+				System.out.println("## obsPseudorange: " + obsPseudorange);
 
-		// Compute eccentric anomaly
-		double Ek = computeEccentricAnomaly(tRaw, eph);
-
-		// Relativistic correction term computation
-		double dtr = Constants.RELATIVISTIC_ERROR_CONSTANT * eph.getE() * eph.getRootA() * Math.sin(Ek);
-
-		// Clock error computation
-		double dt = checkGpsTime(tRaw - eph.getToc());
-		double timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
-		double tGPS = tRaw - timeCorrection;
-		dt = checkGpsTime(tGPS - eph.getToc());
-		timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
-
-		return timeCorrection;
+				// Remove signal travel time from observation time
+				double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);		
+				System.out.println("## tRaw: " + tRaw);
+				
+				tRaw = eph.getTow()*7*86400 + tRaw;
+//				double toe = tow*7*86400 + toc;
+				System.out.println("## tRaw2: " + tRaw);
+				
+				double toe = eph.getToe() ;
+				System.out.println("## toe: " + toe);
+				
+				// Clock error computation
+				double dt = checkGpsTime(tRaw - eph.getToe());
+				System.out.println("## dt: " + dt);
+				
+				double timeCorrection =  eph.getTauN() + eph.getGammaN() * dt ;			
+//				double timeCorrection =  - eph.getTauN() + eph.getGammaN() * dt ;					
+				
+				return timeCorrection;
+			
+		}else{		// other than GLONASS
+				double gpsTime = (new Time(unixTime)).getGpsTime();
+				// Remove signal travel time from observation time
+				double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);
+		
+				// Compute eccentric anomaly
+				double Ek = computeEccentricAnomaly(tRaw, eph);
+		
+				// Relativistic correction term computation
+				double dtr = Constants.RELATIVISTIC_ERROR_CONSTANT * eph.getE() * eph.getRootA() * Math.sin(Ek);
+		
+				// Clock error computation
+				double dt = checkGpsTime(tRaw - eph.getToc());
+				double timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
+				double tGPS = tRaw - timeCorrection;
+				dt = checkGpsTime(tGPS - eph.getToc());
+				timeCorrection = (eph.getAf2() * dt + eph.getAf1()) * dt + eph.getAf0() + dtr - eph.getTgd();
+		
+				return timeCorrection;		
+		}
 	}
 
 	/**
