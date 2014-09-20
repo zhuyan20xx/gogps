@@ -41,6 +41,8 @@ public class ObservationSet implements Streamable {
 
 
 	private int satID;	/* Satellite number */
+	private char satType;	/* Satellite Type */
+
 	/* Array of [L1,L2] */
 	private double[] codeC = {Double.NaN,Double.NaN};			/* C Coarse/Acquisition (C/A) code [m] */
 	private double[] codeP = {Double.NaN,Double.NaN};			/* P Code Pseudorange [m] */
@@ -90,6 +92,21 @@ public class ObservationSet implements Streamable {
 		this.satID = satID;
 	}
 
+	/**
+	 * @return the satType
+	 */
+	public char getSatType() {
+		return satType;
+	}
+
+	/**
+	 * @param satType the satType to set
+	 */
+	public void setSatType(char satType) {
+		this.satType = satType;
+	}
+	
+	
 	/**
 	 * @return the pseudorange
 	 */

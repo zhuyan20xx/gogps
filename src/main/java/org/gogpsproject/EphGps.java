@@ -79,6 +79,8 @@ public class EphGps implements Streamable {
 	private double fitInt; /* Fit interval */
 	
 	/* for GLONASS data */
+	private float tow;
+	
 	private float tauN;
 	private float gammaN;
 	private double tk;
@@ -506,6 +508,13 @@ public class EphGps implements Streamable {
 	
 	
 	/* for GLONASS data */
+	
+	public float getTow() {
+		return tow;
+	}
+	public void setTow(float tow) {
+		this.tow = tow;
+	}
 	public float getTauN() {
 		return tauN;
 	}

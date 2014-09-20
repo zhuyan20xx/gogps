@@ -123,6 +123,9 @@ public class Observations implements Streamable {
 	public Integer getGpsSatID(int idx){
 		return getGpsByIdx(idx).getSatID();
 	}
+	public char getGnssSatType(int idx){
+		return getGpsByIdx(idx).getSatType();
+	}
 	public boolean containsGpsSatID(Integer id){
 		return getGpsByID(id) != null;
 	}
