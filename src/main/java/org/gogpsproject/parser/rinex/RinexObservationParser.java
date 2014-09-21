@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 
-import org.ejml.simple.SimpleMatrix;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
 import org.gogpsproject.NavigationProducer;
@@ -172,10 +171,10 @@ public class RinexObservationParser implements ObservationsProducer{
 				case 3:  						
 						if (typeField.equals("SYS / # / OBS TYPES")) {		
 							
-							String sys = line.substring(0,1);
+							String satType = line.substring(0,1);
 //							System.out.println("sys: " + sys);
 							
-							if(sys.equals("G")){
+							if(satType.equals("G")){
 								parseTypesV3(line);
 								foundTypeObs = true;
 							}
@@ -265,17 +264,17 @@ public class RinexObservationParser implements ObservationsProducer{
 						int j = 2;
 						for (int i = 0; i < nSat; i++) {
 		
-							String sys = satAvail.substring(j, j + 1);
+							String satType = satAvail.substring(j, j + 1);
 							String satID = satAvail.substring(j + 1, j + 3);
-							if (sys.equals("G") || sys.equals(" ")) {
+							if (satType.equals("G") || satType.equals(" ")) {
 								sysOrder[i] = 'G';
 								satOrder[i] = Integer.parseInt(satID.trim());
 								nGps++;
-							} else if (sys.equals("R")) {
+							} else if (satType.equals("R")) {
 								sysOrder[i] = 'R';
 								satOrder[i] = Integer.parseInt(satID.trim());
 								nGlo++;
-							} else if (sys.equals("S")) {
+							} else if (satType.equals("S")) {
 								sysOrder[i] = 'S';
 								satOrder[i] = Integer.parseInt(satID.trim());
 								nSbs++;
@@ -288,17 +287,17 @@ public class RinexObservationParser implements ObservationsProducer{
 						int j = 2;
 						for (int i = 0; i < 12; i++) {
 		
-							String sys = satAvail.substring(j, j + 1);
+							String satType = satAvail.substring(j, j + 1);
 							String satID = satAvail.substring(j + 1, j + 3);
-							if (sys.equals("G") || sys.equals(" ")) {
+							if (satType.equals("G") || satType.equals(" ")) {
 								sysOrder[i] = 'G';
 								satOrder[i] = Integer.parseInt(satID.trim());
 								nGps++;
-							} else if (sys.equals("R")) {
+							} else if (satType.equals("R")) {
 								sysOrder[i] = 'R';
 								satOrder[i] = Integer.parseInt(satID.trim());
 								nGlo++;
-							} else if (sys.equals("S")) {
+							} else if (satType.equals("S")) {
 								sysOrder[i] = 'S';
 								satOrder[i] = Integer.parseInt(satID.trim());
 								nSbs++;
@@ -315,17 +314,17 @@ public class RinexObservationParser implements ObservationsProducer{
 						int k = 0;
 						for (int i = 0; i < num; i++) {
 		
-							String sys = satAvail.substring(k, k + 1);
+							String satType = satAvail.substring(k, k + 1);
 							String satID = satAvail.substring(k + 1, k + 3);
-							if (sys.equals("G") || sys.equals(" ")) {
+							if (satType.equals("G") || satType.equals(" ")) {
 								sysOrder[i + 12] = 'G';
 								satOrder[i + 12] = Integer.parseInt(satID.trim());
 								nGps++;
-							} else if (sys.equals("R")) {
+							} else if (satType.equals("R")) {
 								sysOrder[i + 12] = 'R';
 								satOrder[i + 12] = Integer.parseInt(satID.trim());
 								nGlo++;
-							} else if (sys.equals("S")) {
+							} else if (satType.equals("S")) {
 								sysOrder[i + 12] = 'S';
 								satOrder[i + 12] = Integer.parseInt(satID.trim());
 								nSbs++;
@@ -539,13 +538,13 @@ public class RinexObservationParser implements ObservationsProducer{
 				// Read line of observations
 				String line = buffStreamObs.readLine();
 
-				String sys = line.substring(0, 1);
+				String satType = line.substring(0, 1);
 				String satNum = line.substring(1, 3);
 				
 				int satID = Integer.parseInt(satNum.trim());
 					
 				
-				if (sys.equals("G")) {
+				if (satType.equals("G") || satType.equals("J")) {
 					
 					// Create observation object
 					ObservationSet os = new ObservationSet();
@@ -575,36 +574,31 @@ public class RinexObservationParser implements ObservationsProducer{
 							assignTypes(line, k, j, i);
 							j = j + 16;
 						}
-
-//					} else { // ... otherwise, they are on two lines
-//
-//						// Parse observation data according to typeOrder
-//						// (first line <-> 5 observation columns)
-//						int j = 0;
-//						for (int k = 0; k < 5; k++) {
-//
-//							assignTypes(line, k, j, i);
-//							j = j + 16;
-//						}
-//
-//						// Get second line
-//						line = buffStreamObs.readLine();
-//
-//						// Parse observation data according to typeOrder
-//						// (second line)
-//						j = 0;
-//						for (int k = 5; k < nTypes; k++) {
-//
-//							assignTypes(line, k, j, i);
-//							j = j + 16;
-//						}
-//					}
 						
 //				} else if (nTypes > 5){
 //					// Skip additional observation line for GLO and SBS
 //					line = buffStreamObs.readLine();
-				}
-			}
+				} else if (satType.equals("R")){
+				
+					// Create observation object
+					ObservationSet os = new ObservationSet();
+					os.setSatType('R');
+					os.setSatID(satID);
+					obs.setGps(i, os);
+					
+					
+					line = line.substring(3);
+					// Parse observation data according to typeOrder
+					int j = 0;
+					for (int k = 0; k < nTypes; k++) {
+						assignTypes(line, k, j, i);
+						j = j + 16;
+					}
+								
+							
+				} // End of if
+				
+			}  // End of for
 
 		} catch (StringIndexOutOfBoundsException e) {
 			e.printStackTrace();
