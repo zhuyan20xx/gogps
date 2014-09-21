@@ -100,11 +100,11 @@ public class DecodeF5 {
 		Time refTime = new Time((int)weekN, (tow+gpsTimeShift)/1000);
 		Observations o = new Observations(refTime,0);
 		
-//		System.out.println("+----------------  Start of F5  ------------------+");
+		System.out.println("+----------------  Start of F5  ------------------+");
 //		System.out.println("TOW_UTC: "+ utc);			        
 //		System.out.println("Week No.: " + weekN);
 //		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
-//		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
+		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
 //		System.out.println("Time_Correction: "+ timeCorrection);	
 		
 		
@@ -119,7 +119,7 @@ public class DecodeF5 {
 				/* 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
-				int signalType = Bits.byteToInt(bytes);					
+				int satType = Bits.byteToInt(bytes);					
 				
 				/* Satellite Number, 1 byte */				
 				/* satID: 33 is QZSS  */
@@ -221,7 +221,7 @@ public class DecodeF5 {
 //				System.out.println("reserved: "+ reserved);
 									
 //				System.out.println("##### Satellite:  "+ i );
-//				System.out.println("Signal_Type: "+ signalType);
+//				System.out.println("SatType: "+ satType);
 //				System.out.println("Satellite Number: "+ satID);
 //				System.out.println("Carrier Number: "+ carrierNum);
 //				System.out.println("SNR: "+ snr);
@@ -232,11 +232,11 @@ public class DecodeF5 {
 //				System.out.println("			");
 									
 									
-				if (signalType == 2 && satID != 33 && pseudoRange != 0){  
+				if (satType == 2 && satID != 33 && pseudoRange != 0){  
 				/* signalType 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
-				/* satID 33 is QZSS */
-					
+				/* satID 33 is QZSS */				
 					os.setSatID(satID);
+					os.setSatType('G');
 					os.setCodeC(ObservationSet.L1, pseudoRange);
 			        os.setPhase(ObservationSet.L1, carrierPhase); 			
 					os.setSignalStrength(ObservationSet.L1, snr);
@@ -244,7 +244,28 @@ public class DecodeF5 {
 					o.setGps(gpsCounter, os);
 					gpsCounter ++ ;
 					
-				}			
+				}else if(satType == 2 && satID == 33 && pseudoRange != 0) {
+				/* QZSS */
+					os.setSatID(satID);
+					os.setSatType('Q');
+					os.setCodeC(ObservationSet.L1, pseudoRange);
+			        os.setPhase(ObservationSet.L1, carrierPhase); 			
+					os.setSignalStrength(ObservationSet.L1, snr);
+					os.setDoppler(ObservationSet.L1, d1);
+					o.setGps(gpsCounter, os);
+					gpsCounter ++ ;				
+					
+				}else if(satType == 1 && pseudoRange != 0){
+				/* GLONASS */	
+					os.setSatID(satID);
+					os.setSatType('R');
+					os.setCodeC(ObservationSet.L1, pseudoRange);
+			        os.setPhase(ObservationSet.L1, carrierPhase); 			
+					os.setSignalStrength(ObservationSet.L1, snr);
+					os.setDoppler(ObservationSet.L1, d1);
+					o.setGps(gpsCounter, os);
+					gpsCounter ++ ;				
+				}
 	
 
 		}
