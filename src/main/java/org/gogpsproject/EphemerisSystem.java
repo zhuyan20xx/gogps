@@ -21,6 +21,7 @@ package org.gogpsproject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.TimeZone;
 
 import org.gogpsproject.Time;
@@ -50,7 +51,7 @@ public abstract class EphemerisSystem {
 	
 	protected SatellitePosition computePositionGps(long unixTime, int satID, char satType, EphGps eph, double obsPseudorange, double receiverClockError) {
 
-//		char satType = eph.getSatType() ;
+//		char satType2 = eph.getSatType() ;
 		if(satType != 'R'){  // other than GLONASS
 			
 //					System.out.println("### other than GLONASS data");
@@ -162,92 +163,138 @@ public abstract class EphemerisSystem {
 						
 					
 //					System.out.println("refTime: " + refTime);
-					System.out.println("toc: " + toc);
-					System.out.println("toe: " + toe);
-					System.out.println("unixTime: " + unixTime);				
+//					System.out.println("toc: " + toc);
+//					System.out.println("toe: " + toe);
+//					System.out.println("unixTime: " + unixTime);				
 					System.out.println("satID: " + satID);
-					System.out.println("X: " + X);
-					System.out.println("Y: " + Y);
-					System.out.println("Z: " + Z);
-					System.out.println("Xv: " + Xv);
-					System.out.println("Yv: " + Yv);
-					System.out.println("Zv: " + Zv);
-					System.out.println("Xa: " + Xa);
-					System.out.println("Ya: " + Ya);
-					System.out.println("Za: " + Za);
-					System.out.println("tn: " + tn);
-					System.out.println("gammaN: " + gammaN);
-//					System.out.println("tb: " + tb);
-					System.out.println("tk: " + tk);
-					System.out.println("En: " + En);
-					System.out.println("					");
+//					System.out.println("X: " + X);
+//					System.out.println("Y: " + Y);
+//					System.out.println("Z: " + Z);
+//					System.out.println("Xv: " + Xv);
+//					System.out.println("Yv: " + Yv);
+//					System.out.println("Zv: " + Zv);
+//					System.out.println("Xa: " + Xa);
+//					System.out.println("Ya: " + Ya);
+//					System.out.println("Za: " + Za);
+//					System.out.println("tn: " + tn);
+//					System.out.println("gammaN: " + gammaN);
+////					System.out.println("tb: " + tb);
+//					System.out.println("tk: " + tk);
+//					System.out.println("En: " + En);
+//					System.out.println("					");
 					
 					/* integration step */
 				    int int_step = 60 ; // [s]	
 					
 					/* Compute satellite clock error */
 				    double satelliteClockError = computeSatelliteClockError(unixTime, eph, obsPseudorange);
-				    System.out.println("satelliteClockError: " + satelliteClockError);
+//				    System.out.println("satelliteClockError: " + satelliteClockError);
 				    
 					/* Compute clock corrected transmission time */
 					double tGPS = computeClockCorrectedTransmissionTime(unixTime, satelliteClockError, obsPseudorange);
 					tGPS = eph.getTow()*7*86400 + tGPS;
-				    System.out.println("tGPS: " + tGPS);
+//				    System.out.println("tGPS: " + tGPS);
 					
 				    /* Time from the ephemerides reference epoch */
 					double tk2 = checkGpsTime(tGPS - toe);
-					System.out.println("tk2: " + tk2);
+//					System.out.println("tk2: " + tk2);
 				    
 				    /* number of iterations on "full" steps */
 					int n = (int) Math.floor(Math.abs(tk2 / int_step));
 					System.out.println("Number of interations: " + n);
 					
 					/* array containing integration steps (same sign as tk) */
-					 double [][] tkArray = new double [n][1];
-//					 double ii = tkArray * int_step * (tk2/Math.abs(tk2));
+					double[] array = new double[n];
+					Arrays.fill(array, 1);
+					SimpleMatrix tkArray = new SimpleMatrix(n, 1, true, array);
 					
+//					SimpleMatrix tkArray2  = tkArray.scale(2);
+					tkArray = tkArray.scale(int_step);
+					tkArray = tkArray.scale(tk2/Math.abs(tk2));
+//					tkArray.print();
+					//double ii = tkArray * int_step * (tk2/Math.abs(tk2));
+					
+					/* check residual iteration step (i.e. remaining fraction of int_step) */
+				    double int_step_res = tk2 % int_step;
+//				    System.out.println("int_step_res: " + int_step_res);
+				    
+				    double[] intStepRes = new double[]{int_step_res};
+					SimpleMatrix int_stepArray = new SimpleMatrix(1, 1, false, intStepRes);
+//					int_stepArray.print();
+					
+					/* adjust the total number of iterations and the array of iteration steps */
+				    if (int_step_res != 0){
+				        tkArray = tkArray.combine(n, 0, int_stepArray);
+//				        tkArray.print();
+				        n = n + 1;
+				       // tkArray = [ii; int_step_res];
+				    }
+//				    System.out.println("n: " + n);				
+				    
 					// numerical integration steps (i.e. re-calculation of satellite positions from toe to tk)
 					double[] pos = {X, Y, Z};
 					double[] vel = {Xv, Yv, Zv};
 					double[] acc = {Xa, Ya, Za};				
 					double[] pos1;
 					double[] vel1;
-									
+								
+					SimpleMatrix posArray = new SimpleMatrix(1, 3, true, pos);
+					SimpleMatrix velArray = new SimpleMatrix(1, 3, true, vel);
+					SimpleMatrix accArray = new SimpleMatrix(1, 3, true, acc);
+					SimpleMatrix pos1Array;
+					SimpleMatrix vel1Array;				
+					SimpleMatrix acc1Array;
+					posArray.print();
 					
-//					for (int i = 0 ; i < n ; i++ ){
-//						
-//							/* Runge-Kutta numerical integration algorithm */
-//					        // step 1 
-//							pos1 = pos;
-//							vel1 = vel;
-//							
-//							// differential position
-//							double[] pos1_dot = vel;
-//							double[] vel1_dot = satellite_motion_diff_eq(pos1, vel1, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
-//							
-//							// step 2
-//							double[] pos2 = pos + pos1_dot*ii(s)/2;
-//					        double[] vel2 = vel + vel1_dot*ii(s)/2;
+					
+					SimpleMatrix pos1dotArray;
+					SimpleMatrix pos2dotArray;
+					SimpleMatrix vel1dotArray;
+				
+					
+					for (int i = 0 ; i < n ; i++ ){
+						
+							/* Runge-Kutta numerical integration algorithm */
+					        // step 1 
+							pos1Array = posArray; 
+							//pos1 = pos;
+							vel1Array = velArray;
+							//vel1 = vel;
+							
+							// differential position
+							pos1dotArray = velArray;
+							//double[] pos1_dot = vel;
+							vel1dotArray = satellite_motion_diff_eq(pos1Array, vel1Array, accArray, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+							//double[] vel1_dot = satellite_motion_diff_eq(pos1, vel1, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+							vel1dotArray.print();
+							
+							// step 2 
+							pos2dotArray =  pos1dotArray.scale(tkArray.get(i)).divide(2);
+							pos2dotArray = posArray.plus(pos2dotArray);
+							//double[] pos2 = pos + pos1_dot*ii(i)/2;
+//							pos2dotArray.print();
+							
+//					        double[] vel2 = vel + vel1_dot * tkArray.get(i)/2;
 //							double[] pos2_dot = vel2;						
 //							double[] vel2_dot = satellite_motion_diff_eq(pos2, vel2, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
 //							
 //							// step 3											
-//							double[] pos3 = pos + pos1_dot*ii(s)/2;
-//					        double[] vel3 = vel + vel1_dot*ii(s)/2;
+//							double[] pos3 = pos + pos1_dot * tkArray.get(i)/2;
+//					        double[] vel3 = vel + vel1_dot * tkArray.get(i)/2;
 //					        double[] pos3_dot = vel3;
 //							double[] vel3_dot = satellite_motion_diff_eq(pos3, vel3, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
 //							
 //							// step 4
-//							double[] pos4 = pos + pos1_dot*ii(s)/2;
-//					        double[] vel4 = vel + vel1_dot*ii(s)/2;
+//							double[] pos4 = pos + pos1_dot * tkArray.get(i)/2;
+//					        double[] vel4 = vel + vel1_dot * tkArray.get(i)/2;
 //							double[] pos4_dot = vel4;
 //							double[] vel4_dot = satellite_motion_diff_eq(pos4, vel4, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
 //						
 //							// final position and velocity
 //						    pos = pos + (pos1_dot + 2*pos2_dot + 2*pos3_dot + pos4_dot)*ii(s)/6;
 //						    vel = vel + (vel1_dot + 2*vel2_dot + 2*vel3_dot + vel4_dot)*ii(s)/6;
-//						
-//					}
+						
+					}
 										
 									
 					/* transformation from PZ-90.02 to WGS-84 (ITRF2000) */
@@ -279,6 +326,64 @@ public abstract class EphemerisSystem {
 		
 		
 		
+	}
+
+	private SimpleMatrix satellite_motion_diff_eq(SimpleMatrix pos1Array,
+			SimpleMatrix vel1Array, SimpleMatrix accArray, long ellAGlo,
+			double gmGlo, double j2Glo, double omegaeDotGlo) {
+		// TODO Auto-generated method stub
+		
+		/* renaming variables for better readability position */
+		double X = pos1Array.get(0);
+		double Y = pos1Array.get(1);
+		double Z = pos1Array.get(2);
+		
+//		System.out.println("X: " + X);
+//		System.out.println("Y: " + Y);
+//		System.out.println("Z: " + Z);
+		
+		/* velocity */
+		double Xv = vel1Array.get(0);
+		double Yv = vel1Array.get(1);
+		
+//		System.out.println("Xv: " + Xv);
+//		System.out.println("Yv: " + Yv);
+		
+		/* acceleration (i.e. perturbation) */
+		double Xa = accArray.get(0);
+		double Ya = accArray.get(1);
+		double Za = accArray.get(2);
+		
+//		System.out.println("Xa: " + Xa);
+//		System.out.println("Ya: " + Ya);
+//		System.out.println("Za: " + Za);
+		
+		/* parameters */
+		double r = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2) + Math.pow(Z,2));
+		double g = -gmGlo/Math.pow(r,3);
+		double h = j2Glo*1.5*Math.pow((ellAGlo/r),2);
+		double k = 5*Math.pow(Z,2)/Math.pow(r,2);
+		
+//		System.out.println("r: " + r);
+//		System.out.println("g: " + g);
+//		System.out.println("h: " + h);
+//		System.out.println("k: " + k);
+		
+		/* differential velocity */
+		double[] vel_dot = new double[3] ;
+		vel_dot[0] = g*X*(1 - h*(k - 1)) + Xa + Math.pow(omegaeDotGlo,2)*X + 2*omegaeDotGlo*Yv;
+//		System.out.println("vel1: " + vel_dot[0]);
+		
+		vel_dot[1] = g*Y*(1 - h*(k - 1)) + Ya + Math.pow(omegaeDotGlo,2)*Y - 2*omegaeDotGlo*Xv;
+//		System.out.println("vel2: " + vel_dot[1]);
+		
+		vel_dot[2] = g*Z*(1 - h*(k - 3)) + Za;
+//		System.out.println("vel3: " + vel_dot[2]);
+		
+		SimpleMatrix velDotArray = new SimpleMatrix(1, 3, true, vel_dot);
+//		velDotArray.print();
+		
+		return velDotArray;
 	}
 
 	private double[] satellite_motion_diff_eq(double[] pos, double[] vel,
@@ -392,23 +497,23 @@ public abstract class EphemerisSystem {
 		if (eph.getSatType() == 'R'){   // In case of GLONASS
 			
 				double gpsTime = (new Time(unixTime)).getGpsTime();
-				System.out.println("## gpsTime: " + gpsTime);
-				System.out.println("## obsPseudorange: " + obsPseudorange);
+//				System.out.println("gpsTime: " + gpsTime);
+//				System.out.println("obsPseudorange: " + obsPseudorange);
 
 				// Remove signal travel time from observation time
 				double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);		
-				System.out.println("## tRaw: " + tRaw);
+//				System.out.println("tRaw: " + tRaw);
 				
 				tRaw = eph.getTow()*7*86400 + tRaw;
 //				double toe = tow*7*86400 + toc;
-				System.out.println("## tRaw2: " + tRaw);
+//				System.out.println("tRaw2: " + tRaw);
 				
 				double toe = eph.getToe() ;
-				System.out.println("## toe: " + toe);
+//				System.out.println("toe: " + toe);
 				
 				// Clock error computation
 				double dt = checkGpsTime(tRaw - eph.getToe());
-				System.out.println("## dt: " + dt);
+//				System.out.println("dt: " + dt);
 				
 				double timeCorrection =  eph.getTauN() + eph.getGammaN() * dt ;			
 //				double timeCorrection =  - eph.getTauN() + eph.getGammaN() * dt ;					
