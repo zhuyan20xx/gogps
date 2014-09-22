@@ -638,7 +638,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 //				System.out.println(s);
 				
 				if (satType != 'R'){  // other than GLONASS data
-						System.out.println(satType);
+//						System.out.println(satType);
 								
 						// read 8 lines
 						for (int i = 0; i < 8; i++) {
@@ -819,7 +819,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 				
 						
 				} else {   // In case of GLONASS data
-						System.out.println("satType: " + satType);
+//						System.out.println("satType: " + satType);
 
 						for (int i = 0; i < 4; i++) {
 							String line = buffStreamNav.readLine();
@@ -843,7 +843,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 										
 										// Get satellite ID
 										sub = line.substring(0, 2).trim();
-										System.out.println("ID: "+sub);
+//										System.out.println("ID: "+sub);
 										eph.setSatID(Integer.parseInt(sub));
 		
 										// Get and format date and time string
@@ -863,16 +863,16 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 												Time dtoc = new Time(dT);
 												eph.setRefTime(dtoc);
 												int toc = dtoc.getGpsWeekSec();
-												System.out.println("toc: " + toc);																		
+//												System.out.println("toc: " + toc);																		
 												eph.setToc(toc);
 												
 												int tow = dtoc.getGpsWeek();
-												System.out.println("tow: " + tow);																		
+//												System.out.println("tow: " + tow);																		
 												eph.setTow(tow);
 			
 												double toe = tow*7*86400 + toc;
 //												System.out.printf("%.3f\n", gTime);
-												System.out.println("timeEph: " + toe);
+//												System.out.println("timeEph: " + toe);
 												eph.setToe(toe);
 														
 												// sets Iono reference time
@@ -894,12 +894,12 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		
 										/* tb */
 										sub = line.substring(60, len).replace('D', 'e');
-										System.out.println("tb: " + sub);
+//										System.out.println("tb: " + sub);
 										
 										/* tb is a time interval within the current day (UTC + 3 hours)*/
 										double tb = Double.parseDouble(sub.trim());
 										double tk = tb - 10800;		
-										System.out.println("tk: " + tk);
+//										System.out.println("tk: " + tk);
 										eph.settk(tk);
 										
 										
@@ -907,21 +907,20 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 										
 									} else if (i == 1) { // LINE 2
 										
-										/* X */
+										/* X: satellite X coordinate at ephemeris reference time [m] */
 										sub = line.substring(4, 23).replace('D', 'e');
-										double iode = Double.parseDouble(sub.trim());
-//										System.out.println(iode);
-										eph.setX(Double.parseDouble(sub.trim()));									
+//										System.out.println(sub);
+										eph.setX(Double.parseDouble(sub.trim())*1e3);									
 		
-										/* Xv */
+										/* Xv: satellite velocity along X at ephemeris reference time [m/s] */
 										sub = line.substring(23, 42).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setXv(Double.parseDouble(sub.trim()));									
+										eph.setXv(Double.parseDouble(sub.trim())*1e3);									
 		
-										/* Xa */
+										/* Xa: acceleration due to lunar-solar gravitational perturbation along X at ephemeris reference time [m/s^2] */
 										sub = line.substring(42, 61).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setXa(Double.parseDouble(sub.trim()));									
+										eph.setXa(Double.parseDouble(sub.trim())*1e3);									
 		
 										/* Bn */
 										sub = line.substring(61, len).replace('D', 'e');
@@ -930,20 +929,20 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		
 									} else if (i == 2) { // LINE 3
 		
-										/* Y */
+										/* Y: satellite Y coordinate at ephemeris reference time [m] */
 										sub = line.substring(4, 23).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setY(Double.parseDouble(sub.trim()));
+										eph.setY(Double.parseDouble(sub.trim())*1e3);
 		
-										/* Yv */
+										/* Yv: satellite velocity along Y at ephemeris reference time [m/s] */
 										sub = line.substring(23, 42).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setYv(Double.parseDouble(sub.trim()));
+										eph.setYv(Double.parseDouble(sub.trim())*1e3);
 		
-										/* Ya */
+										/* Ya: acceleration due to lunar-solar gravitational perturbation along Y at ephemeris reference time [m/s^2] */
 										sub = line.substring(42, 61).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setYa(Double.parseDouble(sub.trim()));
+										eph.setYa(Double.parseDouble(sub.trim())*1e3);
 		
 										/* freq_num, tb?  */
 										sub = line.substring(61, len).replace('D', 'e');
@@ -952,20 +951,20 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 		
 									} else if (i == 3) { // LINE 4
 		
-										/* Z */
+										/* Z: satellite Z coordinate at ephemeris reference time [m] */
 										sub = line.substring(4, 23).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setZ(Double.parseDouble(sub.trim()));
+										eph.setZ(Double.parseDouble(sub.trim())*1e3);
 		
-										/* Zv */
+										/* Zv: satellite velocity along Z at ephemeris reference time [m/s] */
 										sub = line.substring(23, 42).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setZv(Double.parseDouble(sub.trim()));
+										eph.setZv(Double.parseDouble(sub.trim())*1e3);
 		
-										/* Za */
+										/* Za: acceleration due to lunar-solar gravitational perturbation along Z at ephemeris reference time [m/s^2]  */
 										sub = line.substring(42, 61).replace('D', 'e');
 //										System.out.println(sub);
-										eph.setZa(Double.parseDouble(sub.trim()));
+										eph.setZa(Double.parseDouble(sub.trim())*1e3);
 		
 										/* En */
 										sub = line.substring(61, len).replace('D', 'e');

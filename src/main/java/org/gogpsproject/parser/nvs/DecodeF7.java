@@ -285,59 +285,68 @@ public class DecodeF7 {
 				/*  Carrier Number, 1 bytes  */
 				int carrierNum = in.read();
 				
-				/*  Xm, 8 bytes  */
+				/*  X, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Xm = Bits.byteToIEEE754Double(bytes);
-				eph.setX(Xm);
+				double X = Bits.byteToIEEE754Double(bytes);
+				X = X * 1e3;
+				eph.setX(X);
 	
-				/*  Ym, 8 bytes  */
+				/*  Y, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Ym = Bits.byteToIEEE754Double(bytes);
-				eph.setY(Ym);
+				double Y = Bits.byteToIEEE754Double(bytes);
+				Y = Y * 1e3;
+				eph.setY(Y);
 				
-				/*  Zm, 8 bytes  */
+				/*  Z, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Zm = Bits.byteToIEEE754Double(bytes);
-				eph.setZ(Zm);
+				double Z = Bits.byteToIEEE754Double(bytes);
+				Z = Z * 1e3;
+				eph.setZ(Z);
 				
-				/*  Vx, 8 bytes  */
+				/*  Xv, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Vx = Bits.byteToIEEE754Double(bytes);
-				eph.setXv(Vx);
+				double Xv = Bits.byteToIEEE754Double(bytes);
+				Xv = Xv * 1e3;
+				eph.setXv(Xv);
 				
-				/*  Vy, 8 bytes  */
+				/*  Yv, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Vy = Bits.byteToIEEE754Double(bytes);
-				eph.setYv(Vy);
+				double Yv = Bits.byteToIEEE754Double(bytes);
+				Yv = Yv * 1e3;
+				eph.setYv(Yv);
 				
-				/*  Vz, 8 bytes  */
+				/*  Zv, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Vz = Bits.byteToIEEE754Double(bytes);
-				eph.setZv(Vz);
+				double Zv = Bits.byteToIEEE754Double(bytes);
+				Zv = Zv * 1e3;
+				eph.setZv(Zv);
 				
-				/*  Ax, 8 bytes  */
+				/*  Xa, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Ax = Bits.byteToIEEE754Double(bytes);
-				eph.setXa(Ax);
+				double Xa = Bits.byteToIEEE754Double(bytes);
+				Xa = Xa * 1e3;
+				eph.setXa(Xa);
 				
-				/*  Ay, 8 bytes  */
+				/*  Ya, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Ay = Bits.byteToIEEE754Double(bytes);
-				eph.setYa(Ay);
+				double Ya = Bits.byteToIEEE754Double(bytes);
+				Ya = Ya * 1e3;
+				eph.setYa(Ya);
 				
-				/*  Az, 8 bytes  */
+				/*  Za, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
-				double Az = Bits.byteToIEEE754Double(bytes);
-				eph.setZa(Az);
+				double Za = Bits.byteToIEEE754Double(bytes);
+				Za = Za * 1e3;
+				eph.setZa(Za);
 				
 				/*  tb, 8 bytes  */
 				bytes = new byte[8];

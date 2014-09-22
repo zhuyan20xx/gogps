@@ -100,11 +100,11 @@ public class DecodeF5 {
 		Time refTime = new Time((int)weekN, (tow+gpsTimeShift)/1000);
 		Observations o = new Observations(refTime,0);
 		
-		System.out.println("+----------------  Start of F5  ------------------+");
+//		System.out.println("+----------------  Start of F5  ------------------+");
 //		System.out.println("TOW_UTC: "+ utc);			        
 //		System.out.println("Week No.: " + weekN);
 //		System.out.println("GPS-UTC TimeShift: "+ gpsTimeShift);		
-		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
+//		System.out.println("GLONASS-UTC TimeShift: "+ glonassTimeShift);	
 //		System.out.println("Time_Correction: "+ timeCorrection);	
 		
 		
