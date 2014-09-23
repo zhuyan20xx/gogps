@@ -114,7 +114,7 @@ public abstract class EphemerisSystem {
 
 		} else {   // GLONASS 
 						
-					System.out.println("### GLONASS computation");
+//					System.out.println("### GLONASS computation");
 					satID = eph.getSatID();
 					double X = eph.getX();  // satellite X coordinate at ephemeris reference time
 					double Y = eph.getY();  // satellite Y coordinate at ephemeris reference time
@@ -166,7 +166,7 @@ public abstract class EphemerisSystem {
 //					System.out.println("toc: " + toc);
 //					System.out.println("toe: " + toe);
 //					System.out.println("unixTime: " + unixTime);				
-					System.out.println("satID: " + satID);
+//					System.out.println("satID: " + satID);
 //					System.out.println("X: " + X);
 //					System.out.println("Y: " + Y);
 //					System.out.println("Z: " + Z);
@@ -201,7 +201,7 @@ public abstract class EphemerisSystem {
 				    
 				    /* number of iterations on "full" steps */
 					int n = (int) Math.floor(Math.abs(tk2 / int_step));
-					System.out.println("Number of interations: " + n);
+//					System.out.println("Number of interations: " + n);
 					
 					/* array containing integration steps (same sign as tk) */
 					double[] array = new double[n];
@@ -243,14 +243,22 @@ public abstract class EphemerisSystem {
 					SimpleMatrix accArray = new SimpleMatrix(1, 3, true, acc);
 					SimpleMatrix pos1Array;
 					SimpleMatrix vel1Array;				
-					SimpleMatrix acc1Array;
-					posArray.print();
-					
-					
+					SimpleMatrix pos2Array;
+					SimpleMatrix vel2Array;				
+					SimpleMatrix pos3Array;
+					SimpleMatrix vel3Array;		
+					SimpleMatrix pos4Array;
+					SimpleMatrix vel4Array;						
 					SimpleMatrix pos1dotArray;
-					SimpleMatrix pos2dotArray;
 					SimpleMatrix vel1dotArray;
-				
+					SimpleMatrix pos2dotArray;
+					SimpleMatrix vel2dotArray;
+					SimpleMatrix pos3dotArray;
+					SimpleMatrix vel3dotArray;
+					SimpleMatrix pos4dotArray;
+					SimpleMatrix vel4dotArray;
+					SimpleMatrix subPosArray;
+					SimpleMatrix subVelArray;
 					
 					for (int i = 0 ; i < n ; i++ ){
 						
@@ -266,55 +274,89 @@ public abstract class EphemerisSystem {
 							//double[] pos1_dot = vel;
 							vel1dotArray = satellite_motion_diff_eq(pos1Array, vel1Array, accArray, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
 							//double[] vel1_dot = satellite_motion_diff_eq(pos1, vel1, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
-							vel1dotArray.print();
+//							vel1dotArray.print();
 							
 							// step 2 
-							pos2dotArray =  pos1dotArray.scale(tkArray.get(i)).divide(2);
-							pos2dotArray = posArray.plus(pos2dotArray);
+							pos2Array = pos1dotArray.scale(tkArray.get(i)).divide(2);
+							pos2Array = posArray.plus(pos2Array);
 							//double[] pos2 = pos + pos1_dot*ii(i)/2;
-//							pos2dotArray.print();
+//							System.out.println("## pos2Array: " ); pos2Array.print();
 							
-//					        double[] vel2 = vel + vel1_dot * tkArray.get(i)/2;
-//							double[] pos2_dot = vel2;						
-//							double[] vel2_dot = satellite_motion_diff_eq(pos2, vel2, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
-//							
-//							// step 3											
-//							double[] pos3 = pos + pos1_dot * tkArray.get(i)/2;
-//					        double[] vel3 = vel + vel1_dot * tkArray.get(i)/2;
-//					        double[] pos3_dot = vel3;
-//							double[] vel3_dot = satellite_motion_diff_eq(pos3, vel3, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
-//							
-//							// step 4
-//							double[] pos4 = pos + pos1_dot * tkArray.get(i)/2;
-//					        double[] vel4 = vel + vel1_dot * tkArray.get(i)/2;
-//							double[] pos4_dot = vel4;
-//							double[] vel4_dot = satellite_motion_diff_eq(pos4, vel4, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
-//						
-//							// final position and velocity
-//						    pos = pos + (pos1_dot + 2*pos2_dot + 2*pos3_dot + pos4_dot)*ii(s)/6;
-//						    vel = vel + (vel1_dot + 2*vel2_dot + 2*vel3_dot + vel4_dot)*ii(s)/6;
+							vel2Array = vel1dotArray.scale(tkArray.get(i)).divide(2);
+							vel2Array = velArray.plus(vel2Array);
+							//double[] vel2 = vel + vel1_dot * tkArray.get(i)/2;
+//							System.out.println("## vel2Array: " ); vel2Array.print();
+							
+							pos2dotArray = vel2Array;
+							//double[] pos2_dot = vel2;		
+							vel2dotArray = satellite_motion_diff_eq(pos2Array, vel2Array, accArray, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+							//double[] vel2_dot = satellite_motion_diff_eq(pos2, vel2, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+//							System.out.println("## vel2dotArray: " ); vel2dotArray.print();																			
+							
+							// step 3															
+							pos3Array = pos2dotArray.scale(tkArray.get(i)).divide(2);
+							pos3Array = posArray.plus(pos3Array);
+//							double[] pos3 = pos + pos2_dot * tkArray.get(i)/2;
+//							System.out.println("## pos3Array: " ); pos3Array.print();
+							
+							vel3Array = vel2dotArray.scale(tkArray.get(i)).divide(2);
+							vel3Array = velArray.plus(vel3Array);
+//					        double[] vel3 = vel + vel2_dot * tkArray.get(i)/2;
+//							System.out.println("## vel3Array: " ); vel3Array.print();
+							
+							pos3dotArray = vel3Array;
+					        //double[] pos3_dot = vel3;
+							vel3dotArray = satellite_motion_diff_eq(pos3Array, vel3Array, accArray, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+							//double[] vel3_dot = satellite_motion_diff_eq(pos3, vel3, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+//							System.out.println("## vel3dotArray: " ); vel3dotArray.print();	
+							
+							// step 4
+							pos4Array = pos3dotArray.scale(tkArray.get(i));
+							pos4Array = posArray.plus(pos4Array);
+							//double[] pos4 = pos + pos3_dot * tkArray.get(i);
+//							System.out.println("## pos4Array: " ); pos4Array.print();
+							
+							vel4Array = vel3dotArray.scale(tkArray.get(i));
+							vel4Array = velArray.plus(vel4Array);
+					        //double[] vel4 = vel + vel3_dot * tkArray.get(i);				
+//							System.out.println("## vel4Array: " ); vel4Array.print();
+							
+							pos4dotArray = vel4Array;
+							//double[] pos4_dot = vel4;						
+							vel4dotArray = satellite_motion_diff_eq(pos4Array, vel4Array, accArray, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+							//double[] vel4_dot = satellite_motion_diff_eq(pos4, vel4, acc, Constants.ELL_A_GLO, Constants.GM_GLO, Constants.J2_GLO, Constants.OMEGAE_DOT_GLO);
+//							System.out.println("## vel4dotArray: " ); vel4dotArray.print();																			
+							
+							// final position and velocity
+							subPosArray = pos1dotArray.plus(pos2dotArray.scale(2)).plus(pos3dotArray.scale(2)).plus(pos4dotArray);
+							subPosArray = subPosArray.scale(tkArray.get(i)).divide(6);
+							posArray = posArray.plus(subPosArray) ;
+						    //pos = pos + (pos1_dot + 2*pos2_dot + 2*pos3_dot + pos4_dot)*ii(s)/6;
+//							System.out.println("## posArray: " ); posArray.print();	
+							
+							subVelArray = vel1dotArray.plus(vel2dotArray.scale(2)).plus(vel3dotArray.scale(2)).plus(vel4dotArray);
+							subVelArray = subVelArray.scale(tkArray.get(i)).divide(6);
+							velArray = velArray.plus(subVelArray) ;
+						    //vel = vel + (vel1_dot + 2*vel2_dot + 2*vel3_dot + vel4_dot)*ii(s)/6;
+//							System.out.println("## velArray: " ); velArray.print();	
 						
 					}
-										
-									
+																		
 					/* transformation from PZ-90.02 to WGS-84 (ITRF2000) */
-					double x1 = X - 0.36;
-					double y1 = Y + 0.86;
-					double z1 = Z + 0.18;
+					double x1 = posArray.get(0) - 0.36;
+					double y1 = posArray.get(1) + 0.86;
+					double z1 = posArray.get(2) + 0.18;
 					
 					/* satellite velocity */
-				    double Xv1 = vel[0];
-				    double Yv1 = vel[1];
-				    double Zv1 = vel[2];
+				    double Xv1 = velArray.get(0);
+				    double Yv1 = velArray.get(1);
+				    double Zv1 = velArray.get(2);
 					
-					// Fill in the satellite position matrix
-//				
-//					SatellitePosition sp = new SatellitePosition(unixTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
-//							x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
-//							y1 * Math.sin(ik));
+					/* Fill in the satellite position matrix */			
+//					SatellitePosition sp = new SatellitePosition(unixTime,satID, x1, y1, z1);
 //					sp.setSatelliteClockError(satelliteClockError);
 //		
-//					// Apply the correction due to the Earth rotation during signal travel time
+//					/* Apply the correction due to the Earth rotation during signal travel time */
 //					SimpleMatrix R = computeEarthRotationCorrection(unixTime, receiverClockError, tGPS);
 //					sp.setSMMultXYZ(R);
 		
