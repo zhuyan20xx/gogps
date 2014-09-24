@@ -72,7 +72,7 @@ public class TestAssistNow {
 						EphGps eph1 = new EphGps(dis,false);
 						System.out.println("found sat"+eph1.getSatID()+" time:"+eph1.getRefTime().getGpsTime());
 
-						EphGps eph2 =navigationIn.findEph(eph1.getRefTime().getMsec(), eph1.getSatID());
+						EphGps eph2 =navigationIn.findEph(eph1.getRefTime().getMsec(), eph1.getSatID(), eph1.getSatType());
 
 						//Compare
 						if(eph2!=null){

@@ -238,10 +238,12 @@ public class GoGPS implements Runnable{
 
 						// If an approximate position was computed
 						if(debug) System.out.println("Valid Bancroft position? "+roverPos.isValidXYZ()+" x:"+roverPos.getX()+" y:"+roverPos.getY()+" z:"+roverPos.getZ());
+						
 						if (roverPos.isValidXYZ()) {
 							// Select available satellites
 							roverPos.selectSatellitesStandalone(obsR);
-
+							
+//							System.out.println("&&&&&&&&& satNum: " + roverPos.getSatAvailNumber());
 							if (roverPos.getSatAvailNumber() >= 4)
 								// Compute code stand-alone positioning (epoch-by-epoch solution)
 								roverPos.codeStandalone(obsR, false);

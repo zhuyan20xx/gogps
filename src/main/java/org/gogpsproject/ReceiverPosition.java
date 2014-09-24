@@ -145,35 +145,39 @@ public class ReceiverPosition extends Coordinates{
 			satType = obs.getGnssSatType(i);
 //			System.out.println("####" + satType + id  + "####");
 			
+			if (satType == 'G' ){  // Temporary solution 
 			
-			// Create new satellite position object
-			//pos[i] = new SatellitePosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obs.getGpsByID(id).getPseudorange(goGPS.getFreq()));
-
-			// Compute clock-corrected satellite position
-			//pos[i].computePositionGps(goGPS.getNavigation());
-
-			double obsPseudorange = obs.getGpsByID(id).getPseudorange(goGPS.getFreq());
-			pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), id, satType, obsPseudorange, this.getReceiverClockError());
-
-			try {
-				//System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
-				// Store Bancroft matrix data (X, Y, Z and clock-corrected
-				// range)
-				if(pos[i]!=null){
-					dataB[p][0] = pos[i].getX();
-					dataB[p][1] = pos[i].getY();
-					dataB[p][2] = pos[i].getZ();
-					dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getSatelliteClockError();
-					p++;
-				}else{
-					if(debug) System.out.println("Error: satellite positions not computed for satID:"+obs.getGpsSatID(i));
-				}
-			} catch (NullPointerException u) {
-				u.printStackTrace();
-				if(debug) System.out.println("Error: satellite positions not computed for satID:"+obs.getGpsSatID(i));
-				//return; // don't break eggs so quickly :-)
+					// Create new satellite position object
+					//pos[i] = new SatellitePosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obs.getGpsByID(id).getPseudorange(goGPS.getFreq()));
+		
+					// Compute clock-corrected satellite position
+					//pos[i].computePositionGps(goGPS.getNavigation());
+		
+					double obsPseudorange = obs.getGpsByID(id).getPseudorange(goGPS.getFreq());
+					pos[i] = goGPS.getNavigation().getGpsSatPosition(obs.getRefTime().getMsec(), id, satType, obsPseudorange, this.getReceiverClockError());
+		
+					try {
+//						System.out.println("SatPos "+obs.getGpsSatID(i)+" x:"+pos[i].getX()+" y:"+pos[i].getY()+" z:"+pos[i].getZ());
+						// Store Bancroft matrix data (X, Y, Z and clock-corrected
+						// range)
+						if(pos[i]!=null){
+							dataB[p][0] = pos[i].getX();
+							dataB[p][1] = pos[i].getY();
+							dataB[p][2] = pos[i].getZ();
+							dataB[p][3] = obsPseudorange + Constants.SPEED_OF_LIGHT * pos[i].getSatelliteClockError();
+							p++;
+						}else{
+							if(debug) System.out.println("Error: satellite positions not computed for satID:"+obs.getGpsSatID(i));
+						}
+					} catch (NullPointerException u) {
+						u.printStackTrace();
+						if(debug) System.out.println("Error: satellite positions not computed for satID:"+obs.getGpsSatID(i));
+						//return; // don't break eggs so quickly :-)
+					}
+			
 			}
 		}
+		
 		if(p<4) return;
 		if(dataB.length != p){
 			double[][] dataB1 = new double[p][4];
@@ -273,9 +277,14 @@ public class ReceiverPosition extends Coordinates{
 				this.receiverClockError = possiblePosA.get(3, 0) / Constants.SPEED_OF_LIGHT;
 			}
 		}
-
+//		System.out.println("## x: " + this.getX() );
+//		System.out.println("## y: " + this.getY() );
+//		System.out.println("## z: " + this.getZ() );
+		
+		
 		// Compute Bancroft's positioning in geodetic coordinates
 		this.computeGeodetic();
+		
 	}
 
 	/**
@@ -939,10 +948,14 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < nObs; i++) {
 
 			id = roverObs.getGpsSatID(i);
-
-			// Compute GPS satellite positions
+			satType = roverObs.getGnssSatType(i);
+			
+//			System.out.println("### " + +satType + " " + id ); 
+			// Compute GPS satellite positions getGpsByIdx(idx).getSatType()
+//			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, satType, roverObs.getGpsSatID(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, satType, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
+			
 			if(pos[i]!=null){
 
 				// Compute rover-satellite approximate pseudorange
@@ -961,9 +974,10 @@ public class ReceiverPosition extends Coordinates{
 				// Correct approximate pseudorange for ionosphere
 				roverSatIonoCorr[i] = computeIonosphereCorrection(navigation, this, roverTopo[i].getAzimuth(), roverTopo[i].getElevation(), roverObs.getRefTime());
 
+				
+//				System.out.println("getElevation: " + id + "::" + roverTopo[i].getElevation() ); 
 				// Check if satellite elevation is higher than cutoff
 				if (roverTopo[i].getElevation() > cutoff) {
-
 					satAvail.add(id);
 					//System.out.println("Available sat "+id);
 
@@ -1038,6 +1052,7 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < nObs; i++) {
 
 			id = roverObs.getGpsSatID(i);
+			satType = roverObs.getGnssSatType(i);
 
 			// Compute GPS satellite positions
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec() /*getGpsTime()*/, id, satType, roverObs.getGpsByID(id).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());

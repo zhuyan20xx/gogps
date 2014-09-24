@@ -29,17 +29,19 @@ package org.gogpsproject;
  */
 public class SatellitePosition extends Coordinates{
 	private int satID; /* Satellite ID number */
+	private char satType;
 	private double satelliteClockError; /* Correction due to satellite clock error in seconds*/
 	//private double range;
 	private long unixTime;
 	private boolean predicted;
 	private boolean maneuver;
 
-	public SatellitePosition(long unixTime, int satID, double x, double y, double z) {
+	public SatellitePosition(long unixTime, int satID, char satType, double x, double y, double z) {
 		super();
 
 		this.unixTime = unixTime;
 		this.satID = satID;
+		this.satType = satType;
 
 		this.setXYZ(x, y, z);
 	}
@@ -112,7 +114,7 @@ public class SatellitePosition extends Coordinates{
 	}
 
 	public Object clone(){
-		SatellitePosition sp = new SatellitePosition(this.unixTime,this.satID,this.getX(),this.getY(),this.getZ());
+		SatellitePosition sp = new SatellitePosition(this.unixTime,this.satID, this.satType, this.getX(),this.getY(),this.getZ());
 		sp.maneuver = this.maneuver;
 		sp.predicted = this.predicted;
 		sp.satelliteClockError = this.satelliteClockError;
