@@ -1017,7 +1017,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	 * @param satID
 	 * @return Reference ephemeris set for given time and satellite
 	 */
-	public EphGps findEph(long unixTime, int satID) {
+	public EphGps findEph(long unixTime, int satID, char satType) {
 
 		long dt = 0;
 		long dtMin = 0;
@@ -1027,7 +1027,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 
 		for (int i = 0; i < eph.size(); i++) {
 			// Find ephemeris sets for given satellite
-			if (eph.get(i).getSatID() == satID) {
+			if (eph.get(i).getSatID() == satID && eph.get(i).getSatType() == satType) {
 				// Compare current time and ephemeris reference time
 				dt = Math.abs(eph.get(i).getRefTime().getMsec() - unixTime /*getGpsTime() - gpsTime*/);
 				// If it's the first round, set the minimum time difference and
@@ -1141,7 +1141,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	 */
 	@Override
 	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
-		EphGps eph = findEph(unixTime, satID);
+		EphGps eph = findEph(unixTime, satID, satType);
 		
 		if (eph != null) {
 			

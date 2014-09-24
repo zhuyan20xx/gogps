@@ -135,7 +135,7 @@ public class RinexNavigation implements NavigationProducer {
 
 		return null;
 	}
-	public EphGps findEph(long unixTime, int satID) {
+	public EphGps findEph(long unixTime, int satID, char satType) {
 		long requestedTime = unixTime;
 		EphGps eph = null;
 		int maxBack = 12;
@@ -145,7 +145,7 @@ public class RinexNavigation implements NavigationProducer {
 
 			if(rnp!=null){
 				if(rnp.isTimestampInEpocsRange(unixTime)){
-					eph = rnp.findEph(unixTime, satID);
+					eph = rnp.findEph(unixTime, satID, satType);
 				}
 			}
 			if(eph==null) requestedTime -= (1L*3600L*1000L);

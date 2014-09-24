@@ -98,7 +98,7 @@ public abstract class EphemerisSystem {
 					// Fill in the satellite position matrix
 					//this.coord.ecef = new SimpleMatrix(data);
 					//this.coord = Coordinates.globalXYZInstance(new SimpleMatrix(data));
-					SatellitePosition sp = new SatellitePosition(unixTime,satID, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
+					SatellitePosition sp = new SatellitePosition(unixTime,satID, satType, x1 * Math.cos(Omega) - y1 * Math.cos(ik) * Math.sin(Omega),
 							x1 * Math.sin(Omega) + y1 * Math.cos(ik) * Math.cos(Omega),
 							y1 * Math.sin(ik));
 					sp.setSatelliteClockError(satelliteClockError);
