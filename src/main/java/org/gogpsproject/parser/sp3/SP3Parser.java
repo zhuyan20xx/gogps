@@ -345,7 +345,7 @@ public class SP3Parser implements NavigationProducer{
 						boolean orbitPredFlag = line.length()>79 && line.charAt(79) == 'P';
 
 
-						SatellitePosition sp = new SatellitePosition(ts.getMsec(), Integer.parseInt(satid.substring(1).trim()), x, y, z);
+						SatellitePosition sp = new SatellitePosition(ts.getMsec(), Integer.parseInt(satid.substring(1).trim()),'G', x, y, z);
 						sp.setSatelliteClockError(clock);
 						sp.setPredicted(orbitPredFlag||clockPredFlag);
 						sp.setManeuver(maneuverFlag);
