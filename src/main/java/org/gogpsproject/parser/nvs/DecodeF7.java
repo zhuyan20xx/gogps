@@ -57,7 +57,10 @@ public class DecodeF7 {
 //		System.out.println("satType: " + satType); 
 		
 		if (satType == 1){   // GPS: 138(-2) bytes	
-			
+		
+//			if (satType == 33) System.out.println("######## QZSS: " + satId); 
+
+				eph.setSatType('G');
 				eph.setSatID((int)satId);
 		
 				int signInt;
@@ -281,6 +284,10 @@ public class DecodeF7 {
 						        
         
 		}else{  // GLONASS: 93 (-2) bytes
+
+				eph.setSatType('R');
+				eph.setSatID((int)satId);
+//				System.out.println("satId: " + satId); 
 
 				/*  Carrier Number, 1 bytes  */
 				int carrierNum = in.read();
