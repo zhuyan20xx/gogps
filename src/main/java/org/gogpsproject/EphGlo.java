@@ -40,7 +40,8 @@ public class EphGlo implements Streamable {
 	private int satID; /* Satellite ID number */
 	private int week; /* GPS week number */
 	private double toc; /* clock data reference time */
-	
+	private double tow;
+	private double toe; /* ephemeris reference time */
 	
 	private float tauN;
 	private float gammaN;
@@ -129,6 +130,30 @@ public class EphGlo implements Streamable {
 	 */
 	public void setToc(double toc) {
 		this.toc = toc;
+	}
+	/**
+	 * @return the tow
+	 */
+	public double getTow() {
+		return tow;
+	}
+	/**
+	 * @param tow the tow to set
+	 */
+	public void setTow(double tow) {
+		this.tow = tow;
+	}
+	/**
+	 * @return the toe
+	 */
+	public double getToe() {
+		return toe;
+	}
+	/**
+	 * @param toe the toe to set
+	 */
+	public void setToe(double toe) {
+		this.toe = toe;
 	}
 	
 	
