@@ -143,7 +143,6 @@ public class ReceiverPosition extends Coordinates{
 
 			id = obs.getGpsSatID(i);
 			satType = obs.getGnssSatType(i);
-//			System.out.println("####" + satType + id  + "####");
 			
 			if (satType == 'G' ){  // Temporary solution 
 			
@@ -354,7 +353,11 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < nObs; i++) {
 
 			id = roverObs.getGpsSatID(i);
+			satType = roverObs.getGnssSatType(i);		
+			if (satType == 'G' ){  // Temporary solution 
+				System.out.println("####" + satType + id  + "####");
 
+			
 			if (pos[i]!=null && satAvail.contains(id)) {
 
 				// Fill in one row in the design matrix
@@ -382,6 +385,8 @@ public class ReceiverPosition extends Coordinates{
 
 				// Increment available satellites counter
 				k++;
+			}
+			
 			}
 		}
 
@@ -949,7 +954,9 @@ public class ReceiverPosition extends Coordinates{
 
 			id = roverObs.getGpsSatID(i);
 			satType = roverObs.getGnssSatType(i);
-			
+			if (satType == 'G' ){  // Temporary solution 
+//				System.out.println("####" + satType + id  + "####");
+
 //			System.out.println("### " + +satType + " " + id ); 
 			// Compute GPS satellite positions getGpsByIdx(idx).getSatType()
 //			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, satType, roverObs.getGpsSatID(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
@@ -989,6 +996,8 @@ public class ReceiverPosition extends Coordinates{
 				}else{
 					if(debug) System.out.println("Not useful sat "+roverObs.getGpsSatID(i)+" for too low elevation "+roverTopo[i].getElevation()+" < "+cutoff);
 				}
+			}
+			
 			}
 		}
 	}
