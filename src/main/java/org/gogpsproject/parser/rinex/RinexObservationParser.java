@@ -548,7 +548,8 @@ public class RinexObservationParser implements ObservationsProducer{
 					
 					// Create observation object
 					ObservationSet os = new ObservationSet();
-					os.setSatType('G');
+					if (satType.equals("G")) os.setSatType('G');
+					if (satType.equals("J")) os.setSatType('J');
 					os.setSatID(satID);
 					obs.setGps(i, os);
 //					obs.gps[i] = os;// new ObservationSet();

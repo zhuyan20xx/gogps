@@ -58,8 +58,6 @@ public class DecodeF7 {
 		
 		if (satType == 1){   // GPS: 138(-2) bytes	
 		
-//			if (satType == 33) System.out.println("######## QZSS: " + satId); 
-
 				eph.setSatType('G');
 				eph.setSatID((int)satId);
 		
