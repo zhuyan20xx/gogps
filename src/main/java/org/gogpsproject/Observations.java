@@ -120,6 +120,12 @@ public class Observations implements Streamable {
 			if(gps.get(i)!=null && gps.get(i).getSatID()==satID.intValue()) return gps.get(i);
 		return null;
 	}
+	public ObservationSet getGpsByID(Integer satID, char satType){
+		if(gps == null || satID==null) return null;
+		for(int i=0;i<gps.size();i++)
+			if(gps.get(i)!=null && gps.get(i).getSatID()==satID.intValue() && gps.get(i).getSatType()==satType) return gps.get(i);
+		return null;
+	}
 	public Integer getGpsSatID(int idx){
 		return getGpsByIdx(idx).getSatID();
 	}
@@ -222,7 +228,7 @@ public class Observations implements Streamable {
 		String out= " GPS Time:"+getRefTime().getGpsTime()+" "+sdfHeader.format(new Date(getRefTime().getMsec()))+" evt:"+eventFlag+lineBreak;
 		for(int i=0;i<getGpsSize();i++){
 			ObservationSet os = getGpsByIdx(i);
-			out+="  Sat:"+os.getSatID()+"\tC:"+fd(os.getCodeC(0))
+			out+="satType:"+ os.getSatType() +"  Sat:"+os.getSatID()+"\tC:"+fd(os.getCodeC(0))
 				+" cP:"+fd(os.getCodeP(0))
 				+" Ph:"+fd(os.getPhase(0))
 				+" Dp:"+fd(os.getDoppler(0))
