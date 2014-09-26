@@ -51,7 +51,7 @@ public class Time {
 	public Time(long msec){
 		this.gc.setTimeInMillis(msec);
 		this.msec = msec;
-		this.fraction = Double.NaN;
+		this.fraction = 0;
 	}
 	public Time(long msec, double fraction){
 		this.msec = msec;
@@ -61,7 +61,7 @@ public class Time {
 	public Time(String dateStr) throws ParseException{
 		this.msec = dateStringToTime(dateStr);
 		this.gc.setTimeInMillis(this.msec);
-		this.fraction = Double.NaN;
+		this.fraction = 0;
 	}
 	public Time(int gpsWeek, double weekSec){
 		double fullTime = (Constants.UNIX_GPS_DAYS_DIFF * Constants.SEC_IN_DAY + gpsWeek*Constants.DAYS_IN_WEEK*Constants.SEC_IN_DAY + weekSec) * 1000L;
