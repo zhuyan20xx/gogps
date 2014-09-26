@@ -246,8 +246,9 @@ public class DecodeF5 {
 					
 				}else if(satType == 2 && satID == 33 && pseudoRange != 0) {
 				/* QZSS */
+					satID = 1;
 					os.setSatID(satID);
-					os.setSatType('Q');
+					os.setSatType('J');
 					os.setCodeC(ObservationSet.L1, pseudoRange);
 			        os.setPhase(ObservationSet.L1, carrierPhase); 			
 					os.setSignalStrength(ObservationSet.L1, snr);
