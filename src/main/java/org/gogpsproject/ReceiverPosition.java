@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
+ * Copyright (c) 2010, Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland, Daisuke Yoshida. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -27,14 +27,16 @@ import org.ejml.simple.SimpleMatrix;
  * Receiver position class
  * </p>
  *
- * @author Eugenio Realini, Cryms.com
+ * @author Eugenio Realini, Cryms.com, Daisuke Yoshida
  */
 public class ReceiverPosition extends Coordinates{
 
 	/* Satellites */
 	private int pivot; /* Index of the satellite with highest elevation in satAvail list */
 	private ArrayList<Integer> satAvail; /* List of satellites available for processing */
+	private ArrayList<Character> satTypeAvail;
 	private ArrayList<Integer> satAvailPhase; /* List of satellites available for processing */
+	private ArrayList<Character> satTypeAvailPhase; /* List of satellites available for processing */
 	private SatellitePosition[] pos; /* Absolute position of all visible satellites (ECEF) */
 
 	// Fields related to the receiver position
@@ -359,12 +361,12 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < nObs; i++) {
 
 			id = roverObs.getGpsSatID(i);
-			satType = roverObs.getGnssSatType(i);		
-			if (satType == 'G' ){  // Temporary solution 
+			char satType = roverObs.getGnssSatType(i);		
+//			if (satType == 'G' ){  // Temporary solution 
 //				System.out.println("####" + satType + id  + "####");
 
 			
-			if (pos[i]!=null && satAvail.contains(id)) {
+			if (pos[i]!=null && satAvail.contains(id)  && satTypeAvail.contains(satType)) {
 
 				// Fill in one row in the design matrix
 				A.set(k, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]); /* X */
@@ -393,7 +395,7 @@ public class ReceiverPosition extends Coordinates{
 				k++;
 			}
 			
-			}
+//			}
 		}
 
 		// Apply troposphere and ionosphere correction
@@ -560,8 +562,9 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < nObs; i++) {
 
 			id = roverObs.getGpsSatID(i);
+			char satType = roverObs.getGnssSatType(i);
 
-			if (pos[i] !=null && satAvail.contains(id) && i != pivot) {
+			if (pos[i] !=null && satAvail.contains(id) && satTypeAvail.contains(satType) && i != pivot) {
 
 				// Fill in one row in the design matrix
 				A.set(k, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]
@@ -600,7 +603,7 @@ public class ReceiverPosition extends Coordinates{
 			}
 
 			// Design matrix for DOP computation
-			if (pos[i] != null && satAvail.contains(id)) {
+			if (pos[i] != null && satAvail.contains(id) && satTypeAvail.contains(satType)) {
 				// Fill in one row in the design matrix (complete one, for DOP)
 				Adop.set(d, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]); /* X */
 				Adop.set(d, 1, diffRoverSat[i].get(1) / roverSatAppRange[i]); /* Y */
@@ -945,9 +948,11 @@ public class ReceiverPosition extends Coordinates{
 
 		// Create a list for available satellites after cutoff
 		satAvail = new ArrayList<Integer>(0);
+		satTypeAvail = new ArrayList<Character>(0);
 
 		// Create a list for available satellites with phase
 		satAvailPhase = new ArrayList<Integer>(0);
+		satTypeAvailPhase = new ArrayList<Character>(0);
 
 		// Allocate array of topocentric coordinates
 		roverTopo = new TopocentricCoordinates[nObs];
@@ -961,7 +966,7 @@ public class ReceiverPosition extends Coordinates{
 
 			id = roverObs.getGpsSatID(i);
 			satType = roverObs.getGnssSatType(i);
-			if (satType == 'G' ){  // Temporary solution 
+//			if (satType == 'G' ){  // Temporary solution 
 //				System.out.println("####" + satType + id  + "####");
 
 //			System.out.println("### " + +satType + " " + id ); 
@@ -993,19 +998,22 @@ public class ReceiverPosition extends Coordinates{
 				// Check if satellite elevation is higher than cutoff
 				if (roverTopo[i].getElevation() > cutoff) {
 					satAvail.add(id);
+					satTypeAvail.add(satType);
 					//System.out.println("Available sat "+id);
 
 					// Check if also phase is available
 					if (!Double.isNaN(roverObs.getGpsByID(id, satType).getPhase(goGPS.getFreq()))) {
 						//System.out.println("Available sat phase "+id);
 						satAvailPhase.add(id);
+						satTypeAvailPhase.add(satType);
+						
 					}
 				}else{
 					if(debug) System.out.println("Not useful sat "+roverObs.getGpsSatID(i)+" for too low elevation "+roverTopo[i].getElevation()+" < "+cutoff);
 				}
 			}
 			
-			}
+//			}
 		}
 	}
 
@@ -1044,9 +1052,11 @@ public class ReceiverPosition extends Coordinates{
 
 		// Create a list for available satellites
 		satAvail = new ArrayList<Integer>(0);
+		satTypeAvail = new ArrayList<Character>(0);
 
 		// Create a list for available satellites with phase
 		satAvailPhase = new ArrayList<Integer>(0);
+		satTypeAvailPhase = new ArrayList<Character>(0);
 
 		// Allocate arrays of topocentric coordinates
 		roverTopo = new TopocentricCoordinates[nObs];
@@ -1113,7 +1123,8 @@ public class ReceiverPosition extends Coordinates{
 
 				// Check if satellite is available for double differences, after
 				// cutoff
-				if (masterObs.containsGpsSatID(roverObs.getGpsSatID(i)) // gpsSat.get( // masterObs.gpsSat.contains(roverObs.getGpsSatID(i)
+//				if (masterObs.containsGpsSatID(roverObs.getGpsSatID(i)) // gpsSat.get( // masterObs.gpsSat.contains(roverObs.getGpsSatID(i)
+				if (masterObs.containsGnssSat(roverObs.getGpsSatID(i), roverObs.getGnssSatType(i)) // gpsSat.get( // masterObs.gpsSat.contains(roverObs.getGpsSatID(i)
 						&& roverTopo[i].getElevation() > cutoff) {
 
 					// Find code pivot satellite (with highest elevation)
@@ -1123,6 +1134,7 @@ public class ReceiverPosition extends Coordinates{
 					}
 
 					satAvail.add(id);
+					satTypeAvail.add(satType);
 
 					// Check if also phase is available for both rover and master
 					if (!Double.isNaN(roverObs.getGpsByID(id, satType).getPhase(goGPS.getFreq())) &&
@@ -1135,6 +1147,7 @@ public class ReceiverPosition extends Coordinates{
 						}
 
 						satAvailPhase.add(id);
+						satTypeAvailPhase.add(satType);
 					}
 				}
 			}
@@ -1195,7 +1208,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Pivot satellite ID
 		int pivotId = roverObs.getGpsSatID(pivot);
-		satType = roverObs.getGnssSatType(pivot);
+		char satType = roverObs.getGnssSatType(pivot);
 
 		// Store rover-pivot and master-pivot observed pseudoranges
 		double roverPivotCodeObs = roverObs.getGpsByID(pivotId, satType).getPseudorange(goGPS.getFreq());
@@ -1251,8 +1264,9 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < nObs; i++) {
 
 			id = roverObs.getGpsSatID(i);
+			satType = roverObs.getGnssSatType(i);
 
-			if (pos[i]!=null && satAvail.contains(id)
+			if (pos[i]!=null && satAvail.contains(id) && satTypeAvail.contains(satType)
 					&& i != pivot) {
 
 				// Compute parameters obtained from linearization of observation equations
@@ -1277,7 +1291,7 @@ public class ReceiverPosition extends Coordinates{
 						- (roverPivotCodeObs - masterPivotCodeObs);
 
 				// Observed phase double difference
-				double ddpObs = (lambda * roverObs.getGpsByID(id).getPhase(goGPS.getFreq()) - lambda
+				double ddpObs = (lambda * roverObs.getGpsByID(id, satType).getPhase(goGPS.getFreq()) - lambda
 						* masterObs.getGpsByID(id, satType).getPhase(goGPS.getFreq()))
 						- (roverPivotPhaseObs - masterPivotPhaseObs);
 
@@ -1318,7 +1332,7 @@ public class ReceiverPosition extends Coordinates{
 						* goGPS.getStDevCode(masterObs.getGpsByID(id, satType), goGPS.getFreq())
 						* (roverSatWeight + masterSatWeight));
 
-				if (satAvailPhase.contains(id)) {
+				if (satAvailPhase.contains(id) && satTypeAvailPhase.contains(satType)) {
 
 					// Fill in one row in the design matrix (for phase)
 					H.set(nObsAvail + p, 0, alphaX);
@@ -1486,7 +1500,7 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < satAvailPhase.size(); i++) {
 
 			int satID = satAvailPhase.get(i);
-			satType = roverObs.getGnssSatType(i);						
+			char satType = satTypeAvailPhase.get(i);					
 			
 			// cycle slip detected by loss of lock indicator (temporarily disabled)
 			lossOfLockCycleSlipRover = roverObs.getGpsByID(satID, satType).isPossibleCycleSlip(goGPS.getFreq());
@@ -1584,7 +1598,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Pivot satellite ID
 		int pivotId = roverObs.getGpsSatID(pivotIndex);
-		char satType = roverObs.getGnssSatType(pivot);
+		char satType = roverObs.getGnssSatType(pivotIndex);
 
 		// Rover-pivot and master-pivot observed pseudorange
 		double roverPivotCodeObs = roverObs.getGpsByID(pivotId, satType).getPseudorange(goGPS.getFreq());
@@ -1767,8 +1781,9 @@ public class ReceiverPosition extends Coordinates{
 			for (int i = 0; i < nObs; i++) {
 
 				id = roverObs.getGpsSatID(i);
+				satType = roverObs.getGnssSatType(i);
 
-				if (pos[i] !=null && satAvail.contains(id)
+				if (pos[i] !=null && satAvail.contains(id) && satTypeAvail.contains(satType)
 						&& i != pivotIndex) {
 
 					// Fill in one row in the design matrix
@@ -1811,8 +1826,9 @@ public class ReceiverPosition extends Coordinates{
 			for (int i = 0; i < nObs; i++) {
 
 				id = roverObs.getGpsSatID(i);
+				satType = roverObs.getGnssSatType(i);
 
-				if (pos[i] !=null && satAvailPhase.contains(id)
+				if (pos[i] !=null && satAvailPhase.contains(id) && satTypeAvailPhase.contains(satType)
 						&& i != pivotIndex) {
 
 					// Fill in one row in the design matrix
@@ -2151,12 +2167,13 @@ public class ReceiverPosition extends Coordinates{
 
 		for (int i = 0; i < satAvailPhase.size(); i++) {
 
-//			satType = roverObs.getGnssSatType(i);
+			int satID = satAvailPhase.get(i);
+			char satType = satTypeAvailPhase.get(i);
 			
-			double roverPhase = roverObs.getGpsByID(satAvailPhase.get(i)).getPhase(goGPS.getFreq());
-			double masterPhase = masterObs.getGpsByID(satAvailPhase.get(i)).getPhase(goGPS.getFreq());
-			float roverDoppler = roverObs.getGpsByID(satAvailPhase.get(i)).getDoppler(goGPS.getFreq());
-			float masterDoppler = masterObs.getGpsByID(satAvailPhase.get(i)).getDoppler(goGPS.getFreq());
+			double roverPhase = roverObs.getGpsByID(satID, satType).getPhase(goGPS.getFreq());
+			double masterPhase = masterObs.getGpsByID(satID, satType).getPhase(goGPS.getFreq());
+			float roverDoppler = roverObs.getGpsByID(satID, satType).getDoppler(goGPS.getFreq());
+			float masterDoppler = masterObs.getGpsByID(satID, satType).getDoppler(goGPS.getFreq());
 
 			if (!Double.isNaN(roverPhase) && !Float.isNaN(roverDoppler))
 				this.setRoverDopplerPredictedPhase(satAvailPhase.get(i), roverPhase - roverDoppler);

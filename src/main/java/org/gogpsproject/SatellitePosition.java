@@ -59,6 +59,20 @@ public class SatellitePosition extends Coordinates{
 	public void setSatID(int satID) {
 		this.satID = satID;
 	}
+	
+	/**
+	 * @return the satType
+	 */
+	public char getSatType() {
+		return satType;
+	}
+
+	/**
+	 * @param satType the satType to set
+	 */
+	public void setSatType(char satType) {
+		this.satType = satType;
+	}
 
 	/**
 	 * @return the timeCorrection
