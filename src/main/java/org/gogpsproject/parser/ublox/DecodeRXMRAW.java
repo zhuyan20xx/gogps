@@ -233,6 +233,7 @@ public class DecodeRXMRAW {
 			//System.out.println("Offset " + total);
 
 			if (os.getSatID() <= 32) {
+				os.setSatType('G');
 				o.setGps(gpsCounter, os);
 				gpsCounter++;
 			}
