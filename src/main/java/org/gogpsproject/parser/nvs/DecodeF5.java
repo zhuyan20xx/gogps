@@ -232,7 +232,7 @@ public class DecodeF5 {
 //				System.out.println("			");
 									
 									
-				if (satType == 2 && satID != 33 && pseudoRange != 0){  
+				if (satType == 2 && satID != 33 && pseudoRange > 0){  
 				/* signalType 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
 				/* satID 33 is QZSS */				
 					os.setSatID(satID);
@@ -244,7 +244,7 @@ public class DecodeF5 {
 					o.setGps(gpsCounter, os);
 					gpsCounter ++ ;
 					
-				}else if(satType == 2 && satID == 33 && pseudoRange != 0) {
+				}else if(satType == 2 && satID == 33 && pseudoRange > 0) {
 				/* QZSS */
 					satID = 1;
 					os.setSatID(satID);
@@ -256,7 +256,7 @@ public class DecodeF5 {
 					o.setGps(gpsCounter, os);
 					gpsCounter ++ ;				
 					
-				}else if(satType == 1 && pseudoRange != 0){
+				}else if(satType == 1 && pseudoRange > 0){
 				/* GLONASS */	
 					os.setSatID(satID);
 					os.setSatType('R');
