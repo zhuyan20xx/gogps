@@ -34,9 +34,9 @@ public class ReceiverPosition extends Coordinates{
 	/* Satellites */
 	private int pivot; /* Index of the satellite with highest elevation in satAvail list */
 	private ArrayList<Integer> satAvail; /* List of satellites available for processing */
-	private ArrayList<Character> satTypeAvail;
+	private ArrayList<Character> satTypeAvail; /* List of satellite Types available for processing */
 	private ArrayList<Integer> satAvailPhase; /* List of satellites available for processing */
-	private ArrayList<Character> satTypeAvailPhase; /* List of satellites available for processing */
+	private ArrayList<Character> satTypeAvailPhase; /* List of satellite Type available for processing */
 	private SatellitePosition[] pos; /* Absolute position of all visible satellites (ECEF) */
 
 	// Fields related to the receiver position
@@ -82,7 +82,9 @@ public class ReceiverPosition extends Coordinates{
 
 	// Fields for keeping track of satellite configuration changes
 	private ArrayList<Integer> satOld;
+	private ArrayList<Character> satTypeOld;
 	private int oldPivotId;
+	private char oldPivotType;
 
 	private boolean debug = false;
 
@@ -145,13 +147,10 @@ public class ReceiverPosition extends Coordinates{
 
 			id = obs.getGpsSatID(i);
 			satType = obs.getGnssSatType(i);
-//			System.out.println("####" + satType + id  + "####");
 
-			if (satType == 'G' ){  // Temporary solution 
+//			if (satType == 'G' ){  // Temporary solution 
 			
-				
-//				System.out.println("####" + satType + id  + "####: " + goGPS.getNavigation());
-					// Create new satellite position object
+									// Create new satellite position object
 					//pos[i] = new SatellitePosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obs.getGpsByID(id).getPseudorange(goGPS.getFreq()));
 		
 					// Compute clock-corrected satellite position
@@ -182,7 +181,7 @@ public class ReceiverPosition extends Coordinates{
 //			}else{
 //				
 //				p++;
-			}
+//			}
 		}
 		
 		if(p<4) return;
@@ -364,7 +363,6 @@ public class ReceiverPosition extends Coordinates{
 			char satType = roverObs.getGnssSatType(i);		
 //			if (satType == 'G' ){  // Temporary solution 
 //				System.out.println("####" + satType + id  + "####");
-
 			
 			if (pos[i]!=null && satAvail.contains(id)  && satTypeAvail.contains(satType)) {
 
@@ -776,10 +774,12 @@ public class ReceiverPosition extends Coordinates{
 
 		// Save previous list of available satellites with phase
 		satOld = satAvailPhase;
+		satTypeOld = satTypeAvailPhase;
 
 		// Save the ID and index of the previous pivot satellite
 		try {
 			oldPivotId = pos[pivot].getSatID();
+			oldPivotType = pos[pivot].getSatType();
 		} catch(ArrayIndexOutOfBoundsException e) {
 			oldPivotId = 0;
 		}
@@ -967,11 +967,8 @@ public class ReceiverPosition extends Coordinates{
 			id = roverObs.getGpsSatID(i);
 			satType = roverObs.getGnssSatType(i);
 //			if (satType == 'G' ){  // Temporary solution 
-//				System.out.println("####" + satType + id  + "####");
 
-//			System.out.println("### " + +satType + " " + id ); 
 			// Compute GPS satellite positions getGpsByIdx(idx).getSatType()
-//			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, satType, roverObs.getGpsSatID(i).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, satType, roverObs.getGpsByID(id, satType).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
 
 			
@@ -999,11 +996,9 @@ public class ReceiverPosition extends Coordinates{
 				if (roverTopo[i].getElevation() > cutoff) {
 					satAvail.add(id);
 					satTypeAvail.add(satType);
-					//System.out.println("Available sat "+id);
 
 					// Check if also phase is available
 					if (!Double.isNaN(roverObs.getGpsByID(id, satType).getPhase(goGPS.getFreq()))) {
-						//System.out.println("Available sat phase "+id);
 						satAvailPhase.add(id);
 						satTypeAvailPhase.add(satType);
 						
@@ -1123,7 +1118,6 @@ public class ReceiverPosition extends Coordinates{
 
 				// Check if satellite is available for double differences, after
 				// cutoff
-//				if (masterObs.containsGpsSatID(roverObs.getGpsSatID(i)) // gpsSat.get( // masterObs.gpsSat.contains(roverObs.getGpsSatID(i)
 				if (masterObs.containsGnssSat(roverObs.getGpsSatID(i), roverObs.getGnssSatType(i)) // gpsSat.get( // masterObs.gpsSat.contains(roverObs.getGpsSatID(i)
 						&& roverTopo[i].getElevation() > cutoff) {
 
@@ -1394,7 +1388,7 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < satOld.size(); i++) {
 
 			// Set ambiguity of lost satellites to zero
-			if (!satAvailPhase.contains(satOld.get(i))) {
+			if (!satAvailPhase.contains(satOld.get(i)) && satTypeAvailPhase.contains(satOld.get(i))) {
 
 				if(debug) System.out.println("Lost satellite "+satOld.get(i));
 
@@ -1407,12 +1401,13 @@ public class ReceiverPosition extends Coordinates{
 		boolean newPivot = false;
 		for (int i = 0; i < pos.length; i++) {
 
-			if (pos[i] != null && satAvailPhase.contains(pos[i].getSatID())
-					&& !satOld.contains(pos[i].getSatID())) {
+			if (pos[i] != null && satAvailPhase.contains(pos[i].getSatID()) && satTypeAvailPhase.contains(pos[i].getSatType())
+					&& !satOld.contains(pos[i].getSatID()) && satTypeOld.contains(pos[i].getSatType())) {
 
+				//TODO: need to check below 
 				newSatellites.add(pos[i].getSatID());
 
-				if (pos[i].getSatID() != pos[pivot].getSatID()) {
+				if (pos[i].getSatID() != pos[pivot].getSatID() && pos[i].getSatType() == pos[pivot].getSatType()) {
 					if(debug) System.out.println("New satellite "+pos[i].getSatID());
 				} else {
 					newPivot = true;
@@ -1426,10 +1421,10 @@ public class ReceiverPosition extends Coordinates{
 			// If it is not the only satellite with phase
 			if (satAvailPhase.size() > 1) {
 				// If the former pivot is still among satellites with phase
-				if (satAvailPhase.contains(oldPivotId)) {
+				if (satAvailPhase.contains(oldPivotId) && satTypeAvailPhase.contains(oldPivotType)) {
 					// Find the index of the old pivot
 					for (int j = 0; j < pos.length; j ++) {
-						if (pos[j] != null && pos[j].getSatID() == oldPivotId) {
+						if (pos[j] != null && pos[j].getSatID() == oldPivotId && pos[j].getSatType() == oldPivotType) {
 							temporaryPivot = j;
 						}
 					}
@@ -1437,7 +1432,7 @@ public class ReceiverPosition extends Coordinates{
 					double maxEl = 0;
 					// Find a temporary pivot with phase
 					for (int j = 0; j < pos.length; j ++) {
-						if (pos[j] != null && satAvailPhase.contains(pos[j].getSatID())
+						if (pos[j] != null && satAvailPhase.contains(pos[j].getSatID()) && satTypeAvailPhase.contains(pos[j].getSatType())
 								&& j != pivot
 								&& roverTopo[j].getElevation() > maxEl) {
 							temporaryPivot = j;
@@ -1448,6 +1443,8 @@ public class ReceiverPosition extends Coordinates{
 					newSatellites.clear();
 					newSatellites.addAll(satAvailPhase);
 					oldPivotId = pos[temporaryPivot].getSatID();
+					oldPivotType = pos[temporaryPivot].getSatType();
+					
 				}
 				// Estimate the ambiguity of the new pivot and other (new) satellites, using the temporary pivot
 				estimateAmbiguities(roverObs, masterObs, masterPos, newSatellites, temporaryPivot, false);
@@ -1456,13 +1453,14 @@ public class ReceiverPosition extends Coordinates{
 		}
 
 		// Check if pivot satellite changed since the previous epoch
-		if (oldPivotId != pos[pivot].getSatID() && satAvailPhase.size() > 1) {
+		if (oldPivotId != pos[pivot].getSatID() && oldPivotType == pos[pivot].getSatType()  && satAvailPhase.size() > 1) {
 
 			if(debug) System.out.println("Pivot change from satellite "+oldPivotId+" to satellite "+pos[pivot].getSatID());
 
 			// Matrix construction to manage the change of pivot satellite
 			SimpleMatrix A = new SimpleMatrix(o3 + nN, o3 + nN);
 
+			//TODO: need to check below
 			int pivotIndex = i3 + pos[pivot].getSatID();
 			int pivotOldIndex = i3 + oldPivotId;
 			for (int i = 0; i < o3; i++) {
