@@ -70,10 +70,17 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
     String tmpfile = "./data/data.txt";  // for storing processed data after removing double <DLE>
 
     private Thread t = null;
+	private Boolean[] multiConstellation;
 	
 	public NVSFileReader(File file) {
 		this.file = file;
-		
+		this.multiConstellation[0] = true;  // enable QZSS data reading
+		this.multiConstellation[1] = true;  // enable GLONASS data reading
+	}
+	
+	public NVSFileReader(File file, Boolean[] multiConstellation) {
+		this.file = file;
+		this.multiConstellation = multiConstellation;		
 	}
 	
 	/* (non-Javadoc)
@@ -273,7 +280,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 		}
 		
 	    this.in = new BufferedInputStream(ins);	    		
-		this.reader = new NVSReader(in, null);
+		this.reader = new NVSReader(in, multiConstellation, null);
 		
 	}
 

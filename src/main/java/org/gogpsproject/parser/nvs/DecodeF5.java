@@ -41,12 +41,14 @@ public class DecodeF5 {
 	
 	private InputStream in;
 //	private BufferedInputStream in;
-
+	private Boolean[] multiConstellation;
+	
 	int leng;	
 	int[] data;
 	
-	public DecodeF5(InputStream in) throws IOException {
+	public DecodeF5(InputStream in, Boolean[] multiConstellation) throws IOException {
 		this.in = in;		
+		this.multiConstellation = multiConstellation;
 	}
 
 	public Observations decode(OutputStream logos,int leng) throws IOException, NVSException {
@@ -57,6 +59,9 @@ public class DecodeF5 {
 		int indice;
 		boolean[] temp1;
 		this.leng = leng;
+		
+		boolean qzsEnable = multiConstellation[0];
+		boolean gloEnable = multiConstellation[1];
 		
 		int signInt;
 		String signStr; 
@@ -234,7 +239,6 @@ public class DecodeF5 {
 									
 				if (satType == 2 && satID != 33 && pseudoRange > 0){  
 				/* signalType 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
-				/* satID 33 is QZSS */				
 					os.setSatID(satID);
 					os.setSatType('G');
 					os.setCodeC(ObservationSet.L1, pseudoRange);
@@ -244,8 +248,8 @@ public class DecodeF5 {
 					o.setGps(gpsCounter, os);
 					gpsCounter ++ ;
 					
-				}else if(satType == 2 && satID == 33 && pseudoRange > 0) {
-				/* QZSS */
+				}else if(satType == 2 && satID == 33 && qzsEnable == true && pseudoRange > 0) {
+				/* QZSS: satID 33 */				
 					satID = 1;
 					os.setSatID(satID);
 					os.setSatType('J');
@@ -256,7 +260,7 @@ public class DecodeF5 {
 					o.setGps(gpsCounter, os);
 					gpsCounter ++ ;				
 					
-				}else if(satType == 1 && pseudoRange > 0){
+				}else if(satType == 1 && gloEnable == true && pseudoRange > 0){
 				/* GLONASS */	
 					os.setSatID(satID);
 					os.setSatType('R');

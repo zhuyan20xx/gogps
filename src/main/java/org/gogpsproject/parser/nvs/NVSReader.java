@@ -40,13 +40,15 @@ public class NVSReader implements StreamEventProducer {
 //	private InputStream in;
 	private BufferedInputStream in;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
+	private Boolean[] multiConstellation;
 //	private StreamEventListener streamEventListener;
 
 //	public NVSReader(InputStream is){
 //		this(is,null);		
 //	}
-	public NVSReader(BufferedInputStream is){
-		this(is,null);		
+	//TODO
+	public NVSReader(BufferedInputStream is, Boolean[] multiConstellation){
+		this(is,null, null);		
 	}
 	
 //	public NVSReader(InputStream is, StreamEventListener eventListener){
@@ -55,9 +57,10 @@ public class NVSReader implements StreamEventProducer {
 //		addStreamEventListener(eventListener);
 //	}
 	
-	public NVSReader(BufferedInputStream is, StreamEventListener eventListener){
+	public NVSReader(BufferedInputStream is, Boolean[] multiConstellation, StreamEventListener eventListener){
 		this.in = is;
 //		this.in = (BufferedInputStream) is;
+		this.multiConstellation = multiConstellation;
 		addStreamEventListener(eventListener);
 	}
 
@@ -71,7 +74,7 @@ public class NVSReader implements StreamEventProducer {
 			
 			if(data == 0xf7){ // F7
 
-				DecodeF7 decodeF7 = new DecodeF7(in);
+				DecodeF7 decodeF7 = new DecodeF7(in, multiConstellation);
 				parsed = true;
 				
 				EphGps eph = decodeF7.decode();
@@ -112,7 +115,7 @@ public class NVSReader implements StreamEventProducer {
 				    
 				if(leng2 != 0){
 						in.reset(); // To return to in.mark point  
-						DecodeF5 decodeF5 = new DecodeF5(in);										
+						DecodeF5 decodeF5 = new DecodeF5(in, multiConstellation);										
 						parsed = true;
 						
 						Observations o = decodeF5.decode(null, leng2);

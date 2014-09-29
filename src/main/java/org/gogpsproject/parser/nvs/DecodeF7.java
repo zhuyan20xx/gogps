@@ -39,9 +39,11 @@ import org.gogpsproject.util.UnsignedOperation;
 public class DecodeF7 {
 
 	InputStream in;
+	private Boolean[] multiConstellation;
 
-	public DecodeF7(InputStream _in) {
+	public DecodeF7(InputStream _in, Boolean[] multiConstellation) {
 		in = _in;
+		this.multiConstellation = multiConstellation;
 	}
 
 	public EphGps decode() throws IOException,NVSException {
@@ -53,9 +55,10 @@ public class DecodeF7 {
 		int satId = in.read();
 		
 		byte bytes[];
-
-//		System.out.println("satType: " + satType); 
 		
+		boolean qzsEnable = multiConstellation[0];
+		boolean gloEnable = multiConstellation[1];
+				
 		if (satType == 1){   // GPS: 138(-2) bytes	
 		
 				eph.setSatType('G');
@@ -281,7 +284,7 @@ public class DecodeF7 {
 //				System.out.println("+-----------------  End of F7  ----------------------+");
 						        
         
-		}else{  // GLONASS: 93 (-2) bytes
+		}else if (satType == 1 && gloEnable == true){  // GLONASS: 93 (-2) bytes
 
 				eph.setSatType('R');
 				eph.setSatID((int)satId);
