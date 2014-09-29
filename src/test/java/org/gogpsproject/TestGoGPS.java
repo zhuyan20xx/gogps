@@ -47,8 +47,15 @@ public class TestGoGPS {
 		Locale.setDefault(new Locale("en", "US"));
 		
 		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
+//		int dynamicModel = GoGPS.DYN_MODEL_STATIC;
+
 		double goodDopThreshold = 2.5;
 		int timeSampleDelaySec = 1;
+		
+		boolean qzsEnable = true;  // enable QZSS data reading
+		boolean gloEnable = true;  // enable GLONASS data reading		
+		Boolean[] multiConstellation = {qzsEnable, gloEnable};
+				
 		try{
 			// Get current time
 			long start = System.currentTimeMillis();
@@ -62,14 +69,13 @@ public class TestGoGPS {
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/jvrs127.14N"));	
 			
 			/*  Oct 21st, 2013, OCU (NVS test) */
-//			dynamicModel = GoGPS.DYN_MODEL_STATIC;
-//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin")); /* NVS Kinematic */
+//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR2_rover_00.bin"), multiConstellation); /* NVS Kinematic */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR3_rover_00.bin")); /* NVS Static*/
 //			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13o")); /* NVS */
 //			ObservationsProducer roverIn =  new RinexObservationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13o_v3")); /* NVS RINEX3*/
 //			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/SciBLDG_VRS3_master.obs"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/Javad_SciBLDG3.13N"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13n"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover.13p"));
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13n"));
 //			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
