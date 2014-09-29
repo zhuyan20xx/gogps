@@ -339,6 +339,8 @@ public abstract class EphemerisSystem {
 							velArray = velArray.plus(subVelArray) ;
 						    //vel = vel + (vel1_dot + 2*vel2_dot + 2*vel3_dot + vel4_dot)*ii(s)/6;
 //							System.out.println("## velArray: " ); velArray.print();	
+//							System.out.println(" " );
+							
 						
 					}
 																		
@@ -353,15 +355,15 @@ public abstract class EphemerisSystem {
 				    double Zv1 = velArray.get(2);
 					
 					/* Fill in the satellite position matrix */			
-//					SatellitePosition sp = new SatellitePosition(unixTime,satID, x1, y1, z1);
-//					sp.setSatelliteClockError(satelliteClockError);
+					SatellitePosition sp = new SatellitePosition(unixTime,satID, satType, x1, y1, z1);
+					sp.setSatelliteClockError(satelliteClockError);
 //		
 //					/* Apply the correction due to the Earth rotation during signal travel time */
-//					SimpleMatrix R = computeEarthRotationCorrection(unixTime, receiverClockError, tGPS);
-//					sp.setSMMultXYZ(R);
+					SimpleMatrix R = computeEarthRotationCorrection(unixTime, receiverClockError, tGPS);
+					sp.setSMMultXYZ(R);
 		
-//					return sp ;
-					return null ;
+					return sp ;
+//					return null ;
 		
 			
 		}
@@ -428,40 +430,6 @@ public abstract class EphemerisSystem {
 		return velDotArray;
 	}
 
-	private double[] satellite_motion_diff_eq(double[] pos, double[] vel,
-			double[] acc, long ellAGlo, double gmGlo, double j2Glo,
-			double omegaeDotGlo) {
-		// TODO Auto-generated method stub
-		
-		
-		/* renaming variables for better readability position */
-		double X = pos[0];
-		double Y = pos[1];
-		double Z = pos[2];
-		
-		/* velocity */
-		double Xv = vel[0];
-		double Yv = vel[1];
-		
-		/* acceleration (i.e. perturbation) */
-		double Xa = acc[1];
-		double Ya = acc[2];
-		double Za = acc[3];
-		
-		/* parameters */
-		double r = Math.sqrt(Math.pow(X,2) + Math.pow(Y,2) + Math.pow(Z,2));
-		double g = -gmGlo/Math.pow(r,3);
-		double h = j2Glo*1.5*Math.pow((ellAGlo/r),2);
-		double k = 5*Math.pow(Z,2)/Math.pow(r,2);
-		
-		/* differential velocity */
-		double[] vel_dot = new double[2] ;
-		vel_dot[0] = g*X*(1 - h*(k - 1)) + Xa + Math.pow(omegaeDotGlo,2)*X + 2*omegaeDotGlo*Yv;
-		vel_dot[1] = g*Y*(1 - h*(k - 1)) + Ya + Math.pow(omegaeDotGlo,2)*Y - 2*omegaeDotGlo*Xv;
-		vel_dot[2] = g*Z*(1 - h*(k - 3)) + Za;
-		
-		return vel_dot;
-	}
 
 	/**
 	 * @param time
