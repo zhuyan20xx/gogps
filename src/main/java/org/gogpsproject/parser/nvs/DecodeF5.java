@@ -60,8 +60,9 @@ public class DecodeF5 {
 		boolean[] temp1;
 		this.leng = leng;
 		
-		boolean qzsEnable = multiConstellation[0];
-		boolean gloEnable = multiConstellation[1];
+		boolean gpsEnable = multiConstellation[0];
+		boolean qzsEnable = multiConstellation[1];
+		boolean gloEnable = multiConstellation[2];
 		
 		int signInt;
 		String signStr; 
@@ -237,7 +238,7 @@ public class DecodeF5 {
 //				System.out.println("			");
 									
 									
-				if (satType == 2 && satID != 33 && pseudoRange > 0){  
+				if (satType == 2 && satID != 33 && gpsEnable == true && pseudoRange > 0){  
 				/* signalType 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
 					os.setSatID(satID);
 					os.setSatType('G');
