@@ -52,11 +52,12 @@ public class TestGoGPS {
 		double goodDopThreshold = 2.5;
 		int timeSampleDelaySec = 1;
 		
+		boolean gpsEnable = true;  // enable GPS data reading
 		boolean qzsEnable = true;  // enable QZSS data reading
-		boolean gloEnable = true;  // enable GLONASS data reading	
-//		boolean gloEnable = false;  // enable GLONASS data reading		
+//		boolean gloEnable = true;  // enable GLONASS data reading	
+		boolean gloEnable = false;  // enable GLONASS data reading		
 
-		Boolean[] multiConstellation = {qzsEnable, gloEnable};
+		Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable};
 				
 		try{
 			// Get current time
