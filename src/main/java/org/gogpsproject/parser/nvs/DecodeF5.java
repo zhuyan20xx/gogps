@@ -118,6 +118,7 @@ public class DecodeF5 {
 //		System.out.println("nsv: " + nsv );
 		
 		int gpsCounter = 0;
+		boolean anomalousValues = false;
 		for(int i=0; i< nsv ; i++){
 						
 				ObservationSet os = new ObservationSet();
@@ -132,7 +133,10 @@ public class DecodeF5 {
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
 				int satID = Bits.byteToInt(bytes);
-				
+				if (satID <= 0) {
+					anomalousValues = true;
+					break;
+				}
 				
 				/* A carrier Number for GLONASS, 1 bytes */
 				bytes = new byte[1];
@@ -201,6 +205,10 @@ public class DecodeF5 {
 				in.read(bytes, 0, bytes.length);
 				double pseudoRange = Bits.byteToIEEE754Double(bytes);
 		        pseudoRange = pseudoRange * Constants.SPEED_OF_LIGHT * 1e-3;   // velocity of light in the void [m/s]
+		        if (pseudoRange <= 1e7) {
+		        	anomalousValues = true;
+		        	break;
+		        }
 				
 				/*  Doppler Frequency(Hz), 8 bytes  */
 				bytes = new byte[8];
@@ -278,6 +286,9 @@ public class DecodeF5 {
 //		System.out.println("+-----------------  End of F5  -------------------+");
 
 		if (o.getGpsSize() == 0 && o.getGloSize() == 0 && o.getSbsSize() == 0) {
+			o = null;
+		}
+		if (anomalousValues) {
 			o = null;
 		}
 		return o;		
