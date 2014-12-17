@@ -53,9 +53,8 @@ public class TestGoGPS {
 		int timeSampleDelaySec = 1;
 		
 		boolean gpsEnable = true;  // enable GPS data reading
-		boolean qzsEnable = true;  // enable QZSS data reading
-//		boolean gloEnable = true;  // enable GLONASS data reading	
-		boolean gloEnable = false;  // enable GLONASS data reading		
+		boolean qzsEnable = false;  // enable QZSS data reading
+		boolean gloEnable = false;  // enable GLONASS data reading
 
 		Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable};
 				

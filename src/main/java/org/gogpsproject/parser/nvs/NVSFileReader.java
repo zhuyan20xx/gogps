@@ -72,10 +72,11 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
     private Thread t = null;
 	//private Boolean[] multiConstellation;
 	
-	boolean qzsEnable = true;  // enable QZSS data reading
-	boolean gloEnable = true;  // enable GLONASS data reading		
+    boolean gpsEnable = true;  // enable GPS data reading
+	boolean qzsEnable = false;  // enable QZSS data reading
+    boolean gloEnable = false;  // enable GLONASS data reading	
 
-	Boolean[] multiConstellation = {qzsEnable, gloEnable};
+	Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable};
 	
 	public NVSFileReader(File file) {
 		this.file = file;
@@ -172,11 +173,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}	
-		
-		
-		
-	    		
+		}	    		
 	}
 	
 	
