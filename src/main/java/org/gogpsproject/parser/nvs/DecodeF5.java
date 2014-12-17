@@ -246,7 +246,7 @@ public class DecodeF5 {
 //				System.out.println("			");
 									
 									
-				if (satType == 2 && satID != 33 && gpsEnable == true && pseudoRange > 0){  
+				if (satType == 2 && satID != 33 && gpsEnable == true && !anomalousValues){  
 				/* signalType 1:GLONASS, 2: GPS/QZSS, 4: SBAS, 8:Galileo */
 					os.setSatID(satID);
 					os.setSatType('G');
@@ -257,7 +257,7 @@ public class DecodeF5 {
 					o.setGps(gpsCounter, os);
 					gpsCounter ++ ;
 					
-				}else if(satType == 2 && satID == 33 && qzsEnable == true && pseudoRange > 0) {
+				}else if(satType == 2 && satID == 33 && qzsEnable == true && !anomalousValues) {
 				/* QZSS: satID 33 */				
 					satID = 1;
 					os.setSatID(satID);
@@ -269,7 +269,7 @@ public class DecodeF5 {
 					o.setGps(gpsCounter, os);
 					gpsCounter ++ ;				
 					
-				}else if(satType == 1 && gloEnable == true && pseudoRange > 0){
+				}else if(satType == 1 && gloEnable == true && !anomalousValues){
 				/* GLONASS */	
 					os.setSatID(satID);
 					os.setSatType('R');
@@ -288,9 +288,7 @@ public class DecodeF5 {
 		if (o.getGpsSize() == 0 && o.getGloSize() == 0 && o.getSbsSize() == 0) {
 			o = null;
 		}
-		if (anomalousValues) {
-			o = null;
-		}
+
 		return o;		
 		
 	}
