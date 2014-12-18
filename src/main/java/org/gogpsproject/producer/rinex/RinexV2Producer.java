@@ -320,14 +320,12 @@ public class RinexV2Producer implements StreamEventListener {
 		line += sp(dfX.format(gpsSize),3,1);
 		int cnt=0;
 		for(int i=0;i<o.getGpsSize();i++){
-			if(o.getGpsByIdx(i).getSatID()<=32){ // skip non GPS IDs
-				if(cnt==12){
-					writeLine(line, true);
-					line = "                                ";
-				}
-				line += "G"+dfXX.format(o.getGpsSatID(i));
-				cnt++;
+			if(cnt==12){
+				writeLine(line, true);
+				line = "                                ";
 			}
+			line += o.getGpsByIdx(i).getSatType()+dfXX.format(o.getGpsSatID(i));
+			cnt++;
 		}
 		writeLine(line, true);
 

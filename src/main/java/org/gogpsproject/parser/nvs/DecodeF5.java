@@ -63,6 +63,7 @@ public class DecodeF5 {
 		boolean gpsEnable = multiConstellation[0];
 		boolean qzsEnable = multiConstellation[1];
 		boolean gloEnable = multiConstellation[2];
+		boolean galEnable = multiConstellation[3];
 		
 		int signInt;
 		String signStr; 
@@ -135,7 +136,6 @@ public class DecodeF5 {
 				int satID = Bits.byteToInt(bytes);
 				if (satID <= 0) {
 					anomalousValues = true;
-					break;
 				}
 				
 				/* A carrier Number for GLONASS, 1 bytes */
@@ -205,9 +205,8 @@ public class DecodeF5 {
 				in.read(bytes, 0, bytes.length);
 				double pseudoRange = Bits.byteToIEEE754Double(bytes);
 		        pseudoRange = pseudoRange * Constants.SPEED_OF_LIGHT * 1e-3;   // velocity of light in the void [m/s]
-		        if (pseudoRange <= 1e7) {
+		        if (pseudoRange < 1e6 || pseudoRange > 6e7) {
 		        	anomalousValues = true;
-		        	break;
 		        }
 				
 				/*  Doppler Frequency(Hz), 8 bytes  */
@@ -279,9 +278,18 @@ public class DecodeF5 {
 					os.setDoppler(ObservationSet.L1, d1);
 					o.setGps(gpsCounter, os);
 					gpsCounter ++ ;				
+				}else if(satType == 8 && galEnable == true && !anomalousValues){
+				/* Galileo */	
+					os.setSatID(satID);
+					os.setSatType('E');
+					os.setCodeC(ObservationSet.L1, pseudoRange);
+			        os.setPhase(ObservationSet.L1, carrierPhase); 			
+					os.setSignalStrength(ObservationSet.L1, snr);
+					os.setDoppler(ObservationSet.L1, d1);
+					o.setGps(gpsCounter, os);
+					gpsCounter ++ ;				
 				}
-	
-
+				anomalousValues = false;
 		}
 //		System.out.println("+-----------------  End of F5  -------------------+");
 
