@@ -55,8 +55,9 @@ public class TestGoGPS {
 		boolean gpsEnable = true;  // enable GPS data reading
 		boolean qzsEnable = false;  // enable QZSS data reading
 		boolean gloEnable = false;  // enable GLONASS data reading
+		boolean galEnable = false;  // enable Galileo data reading
 
-		Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable};
+		Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable};
 				
 		try{
 			// Get current time
