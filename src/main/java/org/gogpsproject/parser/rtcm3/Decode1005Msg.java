@@ -21,6 +21,7 @@
 package org.gogpsproject.parser.rtcm3;
 
 import org.gogpsproject.Coordinates;
+import org.gogpsproject.Observations;
 import org.gogpsproject.util.Bits;
 
 public class Decode1005Msg implements Decode {
@@ -32,7 +33,7 @@ public class Decode1005Msg implements Decode {
 	}
 
 
-	public void decode(boolean[] bits, long referenceTS) {
+	public Coordinates decode(boolean[] bits, int referenceTS) {
 		int start = 12;
 		//System.out.println("Debug : Decode 1005");
 		StationaryAntenna stationaryantenne = new StationaryAntenna();
@@ -66,6 +67,7 @@ public class Decode1005Msg implements Decode {
 		client.setMasterPosition(c);
 		//System.out.println(stationaryantenne);
 		//System.out.println("Debug length: " + start);
+		return c;
 	}
 
 }

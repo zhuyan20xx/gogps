@@ -26,6 +26,6 @@ package org.gogpsproject.parser.rtcm3;
  */
 public interface Decode {
 
-	public abstract void decode(boolean[] bits, long referenceTS);
+	public abstract Object decode(boolean[] bits, int week);
 
 }

@@ -28,7 +28,7 @@ public class Decode1012Msg implements Decode {
 	public Decode1012Msg() {
 
 	}
-	public void decode(boolean[] bits, long referenceTS) {
+	public Object decode(boolean[] bits, int referenceTS) {
 		int start = 12;
 		GlonassHeader glonassh = new GlonassHeader();
 		GlonassSatellite satellite = new GlonassSatellite();
@@ -76,6 +76,7 @@ public class Decode1012Msg implements Decode {
 			satellite.setL2CNR((int)Bits.bitsToUInt(Bits.subset(bits, start, 8)));
 			start += 8;
 		}
+		return null;
 	}
 
 

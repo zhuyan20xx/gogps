@@ -32,7 +32,7 @@ public class Decode1006Msg implements Decode {
 	}
 
 
-	public void decode(boolean[] bits, long referenceTS) {
+	public Object decode(boolean[] bits, int referenceTS) {
 		int start = 12;
 		//System.out.println("Debug : Decode 1006");
 		StationaryAntenna stationaryantenne = new StationaryAntenna();
@@ -71,6 +71,7 @@ public class Decode1006Msg implements Decode {
 		client.setMasterPosition(c);
 		//System.out.println(stationaryantenne);
 		//System.out.println("Debug length: " + start);
+		return c;
 	}
 
 }
