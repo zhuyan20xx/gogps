@@ -44,14 +44,14 @@ public class Decode1004Msg implements Decode {
 	/* (non-Javadoc)
 	 * @see com.crysm.gogps.parser.tes#decode()
 	 */
-	public void decode(boolean[] bits, long referenceTS) {
+	public Observations decode(boolean[] bits, int week) {
 
 		int start = 12;
 		//header.setStationID(Bits.bitsToUInt(Bits.subset(bits, start, 12)));
 		int DF003 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 12));
 		start += 12;
 		//header.setEpochTime(Bits.bitsToUInt(Bits.subset(bits, start, 30)));
-		long DF004 = Bits.bitsToUInt(Bits.subset(bits, start, 30));
+		double DF004 = (double)Bits.bitsToUInt(Bits.subset(bits, start, 30));
 		start += 30;
 		//header.setGNSSFlag(Bits.bitsToUInt(Bits.subset(bits, start, 1)));
 		boolean DF005 = (Bits.bitsToUInt(Bits.subset(bits, start, 1))==1);
@@ -66,12 +66,8 @@ public class Decode1004Msg implements Decode {
 		int DF008 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 3));
 		start += 3;
 		//System.out.println(header);
-		long weekTS = getWeekTS(DF004, referenceTS);
-		Observations o = new Observations(new Time(weekTS+DF004),0);
 
-		//System.out.println(weekTS+"+"+DF004+"="+(weekTS+DF004)+" GPS time "+o.getRefTime().getGpsTime());
-		//System.out.println(sdf.format(new Date(weekTS+DF004))+"\n"+sdf.format(new Date(referenceTS)));
-
+		Observations o = new Observations(new Time(week,DF004/1000),0);
 
 		for (int i = 0; i < DF006 /*header.getNumberGPS()*/; i++) {
 			int DF009 = (int)Bits.bitsToUInt(Bits.subset(bits, start, 6));
@@ -101,6 +97,7 @@ public class Decode1004Msg implements Decode {
 
 			ObservationSet os = new ObservationSet();
 			os.setSatID(DF009);
+			os.setSatType('G');
 
 			double DF011d=DF011*0.02+DF014*299792.458;
 	        if (DF012 != 0x80000) {
@@ -150,6 +147,7 @@ public class Decode1004Msg implements Decode {
 		}
 
 		client.addObservation(o);
+		return o;
 	}
 
 

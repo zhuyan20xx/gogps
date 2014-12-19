@@ -29,7 +29,7 @@ public class Decode1007Msg implements Decode {
 		this.client = client;
 	}
 
-	public void decode(boolean[] bits, long referenceTS) {
+	public Object decode(boolean[] bits, int referenceTS) {
 		AntennaDescriptor antenna = new AntennaDescriptor();
 		int start = 12;
 		String desc = "";
@@ -49,6 +49,7 @@ public class Decode1007Msg implements Decode {
 		client.setAntennaDescriptor(antenna);
 		//System.out.println(antenna);
 		//System.out.println(start);
+		return antenna;
 	}
 
 

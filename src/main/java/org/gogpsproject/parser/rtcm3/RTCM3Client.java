@@ -44,6 +44,7 @@ import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.StreamResource;
+import org.gogpsproject.Time;
 import org.gogpsproject.util.Bits;
 import org.gogpsproject.util.InputStreamCounter;
 
@@ -98,6 +99,10 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	public final static int EXIT_NEVER = 0;
 	public final static int EXIT_ON_LAST_LISTENER_LEAVE = 1;
 	private int exitPolicy = EXIT_ON_LAST_LISTENER_LEAVE;
+	private boolean online = false;
+	private int week;
+	private double currentTime;
+	private double previousTime = -1;
 
 
 
@@ -175,6 +180,20 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		super();
 		running = false;
 		this.settings = settings;
+
+		decodeMap = new HashMap<Integer, Decode>();
+
+		decodeMap.put(new Integer(1004), new Decode1004Msg(this));
+		decodeMap.put(new Integer(1005), new Decode1005Msg(this));
+		decodeMap.put(new Integer(1006), new Decode1006Msg(this));
+		decodeMap.put(new Integer(1007), new Decode1007Msg(this));
+		decodeMap.put(new Integer(1008), new Decode1008Msg(this));
+		decodeMap.put(new Integer(1012), new Decode1012Msg());
+	}
+	
+	public RTCM3Client(int startWeek) {
+		this.week = startWeek;
+		running = false;
 
 		decodeMap = new HashMap<Integer, Decode>();
 
@@ -331,7 +350,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			// The input and output streams are created
 			out = new PrintWriter(sck.getOutputStream(), true);
 			in = sck.getInputStream();
-			// The data request containing the logon and password are send
+			// The data request containing the logon and password is sent
 			out.print("GET /" + settings.getSource() + " HTTP/1.1\r\n");
 			out.print("Host: " + settings.getHost() + "\r\n");
 			// out.print("Ntrip-Version: Ntrip/2.0\r\n");
@@ -663,17 +682,19 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	}
 
 	/**
-	 * reads data from an InputStream while go is true
+	 * reads data from an InputStream while running is true
 	 *
 	 * @param in
 	 *            input stream to read from
+	 * @return 
 	 */
+	
 	protected void readLoop(InputStream in,PrintWriter out) throws IOException {
 		int c;
-		int index;
 		long start = System.currentTimeMillis();
 		if(debug) System.out.print("Wait for header");
-		while (running) {
+		online = true;
+		while(running) {
 			c = in.read();
 
 			if (c < 0){
@@ -688,59 +709,77 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			if (header) {
 				//if(debug) System.out.println("Header : " + c);
 				if (c == 211) { // header
-					index = 0;
-					buffer = new int[2];
-					buffer[0] = in.read();
-					buffer[1] = in.read();
-					bits = new boolean[buffer.length * 8];
-					rollbits = new boolean[8];
-					for (int i = 0; i < buffer.length; i++) {
-						rollbits = Bits.rollByteToBits(buffer[i]);
-						for (int j = 0; j < rollbits.length; j++) {
-							bits[index] = rollbits[j];
-							index++;
-						}
-					}
-					messagelength = (int)Bits.bitsToUInt(Bits.subset(bits, 6, 10));
-					if(debug){
-						System.out.println();
-						System.out.println("Debug message length : " + messagelength);
-					}
-					header = false;
-					// downloadlength = true;
+					readMessage(in);
 				}
 			}
-
-			if (messagelength > 0) {
-				setBits(in, messagelength);
-				int msgtype = (int)Bits.bitsToUInt(Bits.subset(bits, 0, 12));
-
-				if(debug) System.out.println("message type : " + msgtype);
-				messagelength = 0;
-
-				Decode dec = decodeMap.get(new Integer(msgtype));
-				if(dec!=null){
-					dec.decode(bits, System.currentTimeMillis());
-					System.out.println("RTCM message "+msgtype+" received and decoded");
-				}else{
-					//System.err.println("missing RTCM message parser "+msgtype);
-					// missing message parser
-				}
-
-				// CRC
-				setBits(in, 3);
-
-				header = true;
-				// setBits(in,1);
-				//if(debug) System.out.println(" dati :" + Bits.bitsToStr(bits));
-			}
-
-			if(System.currentTimeMillis()-lastNtripGAAsent > ntripGAAsendDelay){
+			if(out!=null && System.currentTimeMillis()-lastNtripGAAsent > ntripGAAsendDelay){
 				out.print(ntripGAA+"\r\n");
 				lastNtripGAAsent = System.currentTimeMillis();
 				if(debug) System.out.println("refresh ntripGGA:" + ntripGAA);
 			}
 		}
+	}
+	
+	public Object readMessage(InputStream in) throws IOException {
+		int index;
+		Object o = null;
+		index = 0;
+		buffer = new int[2];
+		buffer[0] = in.read();
+		buffer[1] = in.read();
+		bits = new boolean[buffer.length * 8];
+		rollbits = new boolean[8];
+		for (int i = 0; i < buffer.length; i++) {
+			rollbits = Bits.rollByteToBits(buffer[i]);
+			for (int j = 0; j < rollbits.length; j++) {
+				bits[index] = rollbits[j];
+				index++;
+			}
+		}
+		messagelength = (int)Bits.bitsToUInt(Bits.subset(bits, 6, 10));
+		if(debug){
+			System.out.println();
+			System.out.println("Debug message length : " + messagelength);
+		}
+		header = false;
+
+		if (messagelength > 0) {
+			setBits(in, messagelength);
+			int msgtype = (int)Bits.bitsToUInt(Bits.subset(bits, 0, 12));
+
+			if(debug) System.out.println("message type : " + msgtype);
+			messagelength = 0;
+
+			Decode dec = decodeMap.get(new Integer(msgtype));
+			if(dec!=null){
+				if (online) {
+					Time currentTime = new Time(System.currentTimeMillis());
+					o = dec.decode(bits, currentTime.getGpsWeek());
+					System.out.println("RTCM message "+msgtype+" received and decoded");
+				} else {
+					o = dec.decode(bits, week);
+					if(o instanceof Observations){
+						currentTime = ((Observations) o).getRefTime().getGpsTime();
+						if (currentTime < previousTime) {
+							week++;
+							((Observations) o).setRefTime(new Time(week, currentTime));
+						}
+						previousTime = currentTime;
+					}
+				}
+			}else{
+				//System.err.println("missing RTCM message parser "+msgtype);
+				// missing message parser
+			}
+
+			// CRC
+			setBits(in, 3);
+
+			header = true;
+			// setBits(in,1);
+			//if(debug) System.out.println(" dati :" + Bits.bitsToStr(bits));
+		}
+		return o;
 	}
 
 	private void setBits(InputStream in, int bufferlength) throws IOException {
