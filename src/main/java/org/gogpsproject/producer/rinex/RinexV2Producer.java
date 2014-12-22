@@ -320,7 +320,7 @@ public class RinexV2Producer implements StreamEventListener {
 		line += sp(dfX.format(gpsSize),3,1);
 		int cnt=0;
 		for(int i=0;i<o.getGpsSize();i++){
-			if(cnt==12){
+			if(cnt >= 12 && cnt%12 == 0){
 				writeLine(line, true);
 				line = "                                ";
 			}
