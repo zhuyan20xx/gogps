@@ -20,65 +20,41 @@
 
 package org.gogpsproject.parser.ublox;
 
+import java.nio.ByteBuffer;
 import java.util.Vector;
-
 import org.gogpsproject.util.UnsignedOperation;
 
 
-public class MsgConfiguration {
+public class UBXRateConfiguration {
 
 	public final int uBloxPrefix1 = 0xB5;
 	public final  int uBloxPrefix2 = 0x62;
-	private int classid;
-	private int msgval;
-	private MessageType msgid;
 
 	//private int rate;
 	private int CK_A;
 	private int CK_B;
 	private Vector<Integer> msg;
 
-	public MsgConfiguration(int classtype, int msgtype, boolean enable) {
-		msgid = new MessageType(classtype, msgtype);
-		classid = msgid.getClassOut();
-		msgval = msgid.getIdOut();
-		// System.out.println("ID 1 >>:" + ID1 + "ID 2 >>:" + ID2);
+	public UBXRateConfiguration(int measRate, int navRate, int timeRef) {
+		byte[] measRateBytes = ByteBuffer.allocate(4).putInt(measRate).array();
+		byte[] navRateBytes = ByteBuffer.allocate(4).putInt(navRate).array();
+		byte[] timeRefBytes = ByteBuffer.allocate(4).putInt(timeRef).array();
 		msg = new Vector();
 		msg.addElement(new Integer(uBloxPrefix1));
 		msg.addElement(new Integer(uBloxPrefix2));
 		msg.addElement(new Integer(0x06)); // CFG
-		msg.addElement(new Integer(0x01)); // MSG
-		msg.addElement(new Integer(3)); // length low
+		msg.addElement(new Integer(0x08)); // RATE
+		msg.addElement(new Integer(6)); // length low
 		msg.addElement(new Integer(0)); // length hi
-		msg.addElement(new Integer(classid));
-		msg.addElement(new Integer(msgval));
-		msg.addElement(new Integer(enable?0x01:0x00));
+		msg.addElement(new Integer(measRateBytes[3]));
+		msg.addElement(new Integer(measRateBytes[2]));
+		msg.addElement(new Integer(navRateBytes[3]));
+		msg.addElement(new Integer(navRateBytes[2]));
+		msg.addElement(new Integer(timeRefBytes[3]));
+		msg.addElement(new Integer(timeRefBytes[2]));
 		checkSum();
 		msg.addElement(new Integer(CK_A));
 		msg.addElement(new Integer(CK_B));
-	}
-	public MsgConfiguration(int classtype, int msgtype, int smsg[]) {
-		msgid = new MessageType(classtype, msgtype);
-		classid = msgid.getClassOut();
-		msgval = msgid.getIdOut();
-		// System.out.println("ID 1 >>:" + ID1 + "ID 2 >>:" + ID2);
-
-		msg = new Vector();
-		msg.addElement(new Integer(uBloxPrefix1));
-		msg.addElement(new Integer(uBloxPrefix2));
-		msg.addElement(new Integer(classid));
-		msg.addElement(new Integer(msgval));
-		int length1 = (smsg.length)/0xff;
-		int length2 = (smsg.length)&0xff;
-		msg.addElement(new Integer(length2));
-		msg.addElement(new Integer(length1));
-		for(int i=0;i<smsg.length;i++){
-			msg.addElement(new Integer(smsg[i]));
-		}
-		checkSum();
-		msg.addElement(new Integer(CK_A));
-		msg.addElement(new Integer(CK_B));
-
 	}
 
 	private void checkSum() {
