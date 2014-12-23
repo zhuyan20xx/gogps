@@ -17,7 +17,7 @@
  * License along with goGPS.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package org.gogpsproject.parser.ublox;
+package org.gogpsproject.parser.nvs;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,13 +28,11 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Vector;
 
 import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
-import org.gogpsproject.Time;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 import org.gogpsproject.util.InputStreamCounter;
 
@@ -46,7 +44,7 @@ import org.gogpsproject.util.InputStreamCounter;
  * @author Lorenzo Patocchi cryms.com, Eugenio Realini
  */
 
-public class UBXSerialReader implements Runnable,StreamEventProducer {
+public class NVSSerialReader implements Runnable,StreamEventProducer {
 
 	private InputStreamCounter in;
 	private OutputStream out;
@@ -55,28 +53,25 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	private boolean stop = false;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 	//private StreamEventListener streamEventListener;
-	private UBXReader reader;
+	private NVSReader reader;
 	private String COMPort;
 	private int measRate = 1;
 	private boolean sysTimeLogEnabled = false;
-	private List<String> requestedNmeaMsgs = null;
 	private String dateFile;
 	private String outputDir = "./out";
-	private int msgAidEphRate = 0; //seconds
-	private int msgAidHuiRate = 0; //seconds
 	private RinexV2Producer rinexOut = null;
 	private boolean rinexObsOutputEnabled = false;
 	private boolean debugModeEnabled = false;
 	private int DOYold = 0;
 
-	public UBXSerialReader(InputStream in,OutputStream out, String COMPort) {
+	public NVSSerialReader(InputStream in,OutputStream out, String COMPort) {
 		this(in,out,COMPort,null);
 		this.COMPort = padCOMSpaces(COMPort);
 	}
 	
-	public UBXSerialReader(InputStream in,OutputStream out,String COMPort,StreamEventListener streamEventListener) {
+	public NVSSerialReader(InputStream in,OutputStream out,String COMPort,StreamEventListener streamEventListener) {
 		
-		FileOutputStream fos_ubx= null;
+		FileOutputStream fos_nvs= null;
 		COMPort = padCOMSpaces(COMPort);
 		String COMPortStr = prepareCOMStringForFilename(COMPort);
 
@@ -93,68 +88,33 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		SimpleDateFormat sdfFile = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 		dateFile = sdfFile.format(date);
 		try {
-			System.out.println(date1+" - "+COMPort+" - Logging UBX stream in "+outputDir+"/"+ COMPortStr+ "_" + dateFile + ".ubx");
-			fos_ubx = new FileOutputStream(outputDir+"/"+COMPortStr+ "_" + dateFile + ".ubx");
+			System.out.println(date1+" - "+COMPort+" - Logging NVS stream in "+outputDir+"/"+ COMPortStr+ "_" + dateFile + ".bin");
+			fos_nvs = new FileOutputStream(outputDir+"/"+COMPortStr+ "_" + dateFile + ".nvs");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		this.in = new InputStreamCounter(in,fos_ubx);
+		this.in = new InputStreamCounter(in,fos_nvs);
 		this.out = out;
-		this.reader = new UBXReader(this.in,streamEventListener);
+		this.reader = new NVSReader(this.in,streamEventListener);
 	}
 
 	public void start()  throws IOException{
 		t = new Thread(this);
-		t.setName("UBXSerialReader");
+		t.setName("NVSSerialReader");
 		t.start();
 		
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
+
+		System.out.println(date1+" - "+COMPort+" - raw data messages (F5h) enabled");
+		NVSProtocolConfiguration msgcfg = new NVSProtocolConfiguration();
+		out.write(msgcfg.getByte());
+		out.flush();
 		
 		System.out.println(date1+" - "+COMPort+" - Measurement rate set at "+measRate+" Hz");
-		UBXRateConfiguration ratecfg = new UBXRateConfiguration(1000/measRate, 1, 1);
+		NVSRateConfiguration ratecfg = new NVSRateConfiguration(measRate, 1, 1);
 		out.write(ratecfg.getByte());
-		out.flush();
-
-		int nmeaAll[] = { UBXMessageType.NMEA_GGA, UBXMessageType.NMEA_GLL, UBXMessageType.NMEA_GSA, UBXMessageType.NMEA_GSV, UBXMessageType.NMEA_RMC, UBXMessageType.NMEA_VTG, UBXMessageType.NMEA_GRS,
-				UBXMessageType.NMEA_GST, UBXMessageType.NMEA_ZDA, UBXMessageType.NMEA_GBS, UBXMessageType.NMEA_DTM };
-		for (int i = 0; i < nmeaAll.length; i++) {
-			UBXMsgConfiguration msgcfg = new UBXMsgConfiguration(UBXMessageType.CLASS_NMEA, nmeaAll[i], false);
-			out.write(msgcfg.getByte());
-			out.flush();
-		}
-
-		int nmeaRequested[];
-		try {
-			if (requestedNmeaMsgs.isEmpty()) {
-				System.out.println(date1+" - "+COMPort+" - NMEA messages disabled");
-			} else {
-				nmeaRequested = new int[requestedNmeaMsgs.size()];
-				for (int n = 0; n < requestedNmeaMsgs.size(); n++) {
-					UBXMessageType msgtyp = new UBXMessageType("NMEA", requestedNmeaMsgs.get(n));
-					nmeaRequested[n] = msgtyp.getIdOut();
-				}
-				for (int i = 0; i < nmeaRequested.length; i++) {
-					System.out.println(date1+" - "+COMPort+" - NMEA "+requestedNmeaMsgs.get(i)+" messages enabled");
-					UBXMsgConfiguration msgcfg = new UBXMsgConfiguration(UBXMessageType.CLASS_NMEA, nmeaRequested[i], true);
-					out.write(msgcfg.getByte());
-					out.flush();
-				}
-			}
-		} catch (NullPointerException e) {
-		}
-
-		int pubx[] = { UBXMessageType.PUBX_A, UBXMessageType.PUBX_B, UBXMessageType.PUBX_C, UBXMessageType.PUBX_D };
-		for (int i = 0; i < pubx.length; i++) {
-			UBXMsgConfiguration msgcfg = new UBXMsgConfiguration(UBXMessageType.CLASS_PUBX, pubx[i], false);
-			out.write(msgcfg.getByte());
-			out.flush();
-		}
-
-		System.out.println(date1+" - "+COMPort+" - RXM-RAW messages enabled");
-		UBXMsgConfiguration msgcfg = new UBXMsgConfiguration(UBXMessageType.CLASS_RXM, UBXMessageType.RXM_RAW, true);
-		out.write(msgcfg.getByte());
 		out.flush();
 
 		if (this.debugModeEnabled) {
@@ -174,14 +134,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	public void run() {
 
 		int data = 0;
-		long aidEphTS = System.currentTimeMillis();
-		long aidHuiTS = System.currentTimeMillis();
-		//long sysOutTS = System.currentTimeMillis();
-		UBXMsgConfiguration msgcfg = null;
 		FileOutputStream fos_tim = null;
-		FileOutputStream fos_nmea = null;
 		PrintStream psSystime = null;
-		PrintStream psNmea = null;
 
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -201,49 +155,21 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		} else {
 			System.out.println(date1+" - "+COMPort+" - System time logging disabled");
 		}
-		
-		if (!requestedNmeaMsgs.isEmpty()) {
-			try {
-				System.out.println(date1+" - "+COMPort+" - Logging NMEA sentences in "+outputDir+"/"+COMPortStr+ "_" + dateFile + "_NMEA.txt");
-				fos_nmea = new FileOutputStream(outputDir+"/"+COMPortStr+ "_" + dateFile + "_NMEA.txt");
-				psNmea = new PrintStream(fos_nmea);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
 
 		try {
-			int msg[] = {};
-			if (msgAidHuiRate > 0) {
-				System.out.println(date1+" - "+COMPort+" - AID-HUI message polling enabled (rate: "+msgAidHuiRate+"s)");
-				msgcfg = new UBXMsgConfiguration(UBXMessageType.CLASS_AID, UBXMessageType.AID_HUI, msg);
-				out.write(msgcfg.getByte());
-				out.flush();
-			}
-			if (msgAidEphRate > 0) {
-				System.out.println(date1+" - "+COMPort+" - AID-EPH message polling enabled (rate: "+msgAidEphRate+"s)");
-				msgcfg = new UBXMsgConfiguration(UBXMessageType.CLASS_AID, UBXMessageType.AID_EPH, msg);
-				out.write(msgcfg.getByte());
-				out.flush();
-			}
 
 			in.start();
 			sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 			String dateSys = null;
 			String dateGps = null;
-			boolean rxmRawMsgReceived = false;
-			boolean truncatedNmea = false;
+			boolean f5hMsgReceived = false;
 			reader.enableDebugMode(this.debugModeEnabled);
 			while (!stop) {
 				if(in.available()>0){
 					dateSys = sdf1.format(new Date());
-					if (!truncatedNmea) {
-						data = in.read();
-					}else{
-						truncatedNmea = false;
-					}
+					data = in.read();
 					try{
-						if(data == 0xB5){
+						if(data == 0x10){
 							Object o = reader.readMessage();
 							try {
 								if(o instanceof Observations){
@@ -252,7 +178,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 											Observations co = sel.getCurrentObservations();
 										    sel.pointToNextObservations();
 
-										    rxmRawMsgReceived = true;
+										    f5hMsgReceived = true;
 
 										    if (this.sysTimeLogEnabled) {
 										    	dateGps = sdf1.format(new Date(co.getRefTime().getMsec()));
@@ -269,7 +195,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 										    		}
 
 										    		String COMPortStrId = COMPortStr.length() >= 2 ? COMPortStr.substring(COMPortStr.length() - 2) : "0" + COMPortStr;
-										    		String marker = "UB" + COMPortStrId;
+										    		String marker = "NV" + COMPortStrId;
 										    		char session = 'a' - 1;
 										    		String outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
 										    		File f = new File(outFile);
@@ -294,41 +220,13 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 								}
 							} catch (NullPointerException e) {
 							}
-						}else if(data == 0x24){
-							if (!requestedNmeaMsgs.isEmpty()) {
-								String sentence = "" + (char) data;
-								data = in.read();
-								if(data == 0x47) {
-									sentence = sentence + (char) data;
-									data = in.read();
-									if(data == 0x50) {
-										sentence = sentence + (char) data;
-										data = in.read();
-										while (data != 0x0A && data != 0xB5) {
-											sentence = sentence + (char) data;
-											data = in.read();
-										}
-										sentence = sentence + (char) data;
-										psNmea.print(sentence);
-//										if (this.debugModeEnabled) {
-//											System.out.print(sentence);
-//										}
-										if (data == 0xB5) {
-											truncatedNmea = true;
-											if (this.debugModeEnabled) {
-												System.out.println("Warning: truncated NMEA message");
-											}
-										}
-									}
-								}
-							}
 						} else {
 							if (this.debugModeEnabled) {
 								System.out.println("Warning: wrong sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 							}
 						}
-					}catch(UBXException ubxe){
-						ubxe.printStackTrace();
+					}catch(NVSException nvse){
+						nvse.printStackTrace();
 					}
 				}else{
 					// no bytes to read, wait 1 msec
@@ -336,31 +234,15 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 						Thread.sleep(1);
 					} catch (InterruptedException e) {}
 				}
-				long curTS = System.currentTimeMillis();
-				
-				if(msgAidEphRate > 0 && curTS-aidEphTS >= msgAidEphRate*1000){
-					System.out.println(dateSys+" - "+COMPort+" - Polling AID-EPH message");
-					msgcfg = new UBXMsgConfiguration(UBXMessageType.CLASS_AID, UBXMessageType.AID_EPH, msg);
-					out.write(msgcfg.getByte());
-					out.flush();
-					aidEphTS = curTS;
-				}
-				if(msgAidHuiRate > 0 && curTS-aidHuiTS >= msgAidHuiRate*1000){
-					System.out.println(dateSys+" - "+COMPort+" - Polling AID-HUI message");
-					msgcfg = new UBXMsgConfiguration(UBXMessageType.CLASS_AID, UBXMessageType.AID_HUI, msg);
-					out.write(msgcfg.getByte());
-					out.flush();
-					aidHuiTS = curTS;
-				}
-				if (rxmRawMsgReceived/*curTS-sysOutTS >= 1*1000*/) {
+
+				if (f5hMsgReceived) {
 					int bps = in.getCurrentBps();
 					if (bps != 0) {
 						System.out.println(dateSys+" - "+COMPort+" - Logging at "+String.format("%4d", bps)+" Bps -- Total: "+in.getCounter()+" bytes");
 					} else {
 						System.out.println(dateSys+" - "+COMPort+" - Log starting...     -- Total: "+in.getCounter()+" bytes");
 					}
-					//sysOutTS = curTS;
-					rxmRawMsgReceived = false;
+					f5hMsgReceived = false;
 				}
 			}
 		} catch (IOException e) {
@@ -369,23 +251,7 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		for(StreamEventListener sel:streamEventListeners){
 			sel.streamClosed();
 		}
-		//if(streamEventListener!=null) streamEventListener.streamClosed();
 	}
-
-//	/**
-//	 * @return the streamEventListener
-//	 */
-//	public StreamEventListener getStreamEventListener() {
-//		return streamEventListener;
-//	}
-
-//	/**
-//	 * @param streamEventListener the streamEventListener to set
-//	 */
-//	public void setStreamEventListener(StreamEventListener streamEventListener) {
-//		this.streamEventListener = streamEventListener;
-//		if(this.reader!=null) this.reader.setStreamEventListener(streamEventListener);
-//	}
 
 	/**
 	 * @return the streamEventListener
@@ -422,20 +288,8 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 		this.measRate = measRate;
 	}
 	
-	public void enableAidEphMsg(Integer ephRate) {
-		this.msgAidEphRate = ephRate;
-	}
-	
-	public void enableAidHuiMsg(Integer ionRate) {
-		this.msgAidHuiRate = ionRate;
-	}
-	
 	public void enableSysTimeLog(Boolean enableTim) {
 		this.sysTimeLogEnabled = enableTim;
-	}
-	
-	public void enableNmeaMsg(List<String> nmeaList) {
-		this.requestedNmeaMsgs = nmeaList;
 	}
 	
 	public void enableRinexObsOutput(Boolean enableRnxObs) {
