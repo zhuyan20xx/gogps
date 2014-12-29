@@ -38,6 +38,7 @@ import java.io.OutputStreamWriter;
 
 
 
+
 import org.ejml.simple.SimpleMatrix;
 import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
@@ -68,6 +69,13 @@ public class NVSFileReader2  {
 	private static IonoGps iono = null;
 	// TODO support past times, now keep only last broadcast data
 	private static HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
+	
+	static boolean gpsEnable = true;  // enable GPS data reading
+	static boolean qzsEnable = true;  // enable QZSS data reading
+    static boolean gloEnable = true;  // enable GLONASS data reading	
+    static boolean galEnable = true;  // enable Galileo data reading	
+
+	static Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable};
 
 	
 	/* (non-Javadoc)
@@ -102,7 +110,7 @@ public class NVSFileReader2  {
 		
 		try{		
 //				
-			    NVSReader reader = new NVSReader(in, null);		
+			    NVSReader reader = new NVSReader(in, multiConstellation);		
 		 
 			int i = 0 ;
 			while(in.available()>0){
@@ -122,7 +130,7 @@ public class NVSFileReader2  {
 						}else{
 							in.reset();
 //							Object o = reader.readMessagge(in);
-							Object o = reader.readMessagge();
+							Object o = reader.readMessage();
 				
 						}
 							i++;
