@@ -131,7 +131,7 @@ public class RinexObservationParser implements ObservationsProducer{
 											+ fileObs.toString() + " header");
 							return ver = 0;
 							
-						} else if (line.substring(5, 9).equals("3.01")){							
+						} else if (line.substring(5, 7).equals("3.")){							
 							ver = 3;							
 						} else if (line.substring(5, 9).equals("2.12")){							
 							ver = 3;							
