@@ -284,7 +284,7 @@ public class DecodeF7 {
 //				System.out.println("+-----------------  End of F7  ----------------------+");
 						        
         
-		}else if (satType == 1 && gloEnable == true){  // GLONASS: 93 (-2) bytes
+		}else if (satType == 2 && gloEnable == true){  // GLONASS: 93 (-2) bytes
 
 				eph.setSatType('R');
 				eph.setSatID((int)satId);
