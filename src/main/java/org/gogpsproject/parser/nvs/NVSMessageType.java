@@ -18,9 +18,9 @@
  *
  */
 
-package org.gogpsproject.parser.ublox;
+package org.gogpsproject.parser.nvs;
 
-public class MessageType {
+public class NVSMessageType {
 	public final static int CLASS_NAV = 0;
 	public final static int CLASS_RXM = 1;
 	public final static int CLASS_INF = 2;
@@ -139,18 +139,18 @@ public class MessageType {
 	private static int idOut = 0;
 
 	private static void setClassOut(int classOut) {
-		MessageType.classOut = classOut;
+		NVSMessageType.classOut = classOut;
 	}
 
 	private static void setIdOut(int idOut) {
-		MessageType.idOut = idOut;
+		NVSMessageType.idOut = idOut;
 	}
 
-	public MessageType(int mclass, int msgtype) {
+	public NVSMessageType(int mclass, int msgtype) {
 		getMsg(mclass, msgtype);
 	}
 	
-	public MessageType(String mclass, String msgtype) {
+	public NVSMessageType(String mclass, String msgtype) {
 		getMsg(mclass, msgtype);
 	}
 

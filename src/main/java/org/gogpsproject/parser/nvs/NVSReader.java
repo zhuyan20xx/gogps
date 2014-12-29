@@ -37,9 +37,10 @@ import org.gogpsproject.StreamEventProducer;
  * @author Daisuke Yoshida (Osaka City University), Lorenzo Patocchi (cryms.com)
  */
 public class NVSReader implements StreamEventProducer {
-//	private InputStream in;
-	private BufferedInputStream in;
+	private InputStream is;
+	private BufferedInputStream bis;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
+	private Boolean debugModeEnabled = false;
 	private Boolean[] multiConstellation;
 //	private StreamEventListener streamEventListener;
 
@@ -51,30 +52,30 @@ public class NVSReader implements StreamEventProducer {
 		this(is,null, null);		
 	}
 	
-//	public NVSReader(InputStream is, StreamEventListener eventListener){
-//		this.in = is;
-////		this.in = (BufferedInputStream) is;
-//		addStreamEventListener(eventListener);
-//	}
+	public NVSReader(InputStream is, StreamEventListener eventListener){
+		this.is = is;
+//		this.in = (BufferedInputStream) is;
+		addStreamEventListener(eventListener);
+	}
 	
 	public NVSReader(BufferedInputStream is, Boolean[] multiConstellation, StreamEventListener eventListener){
-		this.in = is;
+		this.is = is;
 //		this.in = (BufferedInputStream) is;
 		this.multiConstellation = multiConstellation;
 		addStreamEventListener(eventListener);
 	}
 
-	public Object readMessagge() throws IOException, NVSException{
-//	public Object readMessagge(InputStream in) throws IOException, NVSException{
-//	public Object readMessagge(BufferedInputStream in) throws IOException, NVSException{
+	public Object readMessage() throws IOException, NVSException{
+//	public Object readMessage(InputStream in) throws IOException, NVSException{
+//	public Object readMessage(BufferedInputStream in) throws IOException, NVSException{
 
-			int data = in.read();
+			int data = is.read();
 			@SuppressWarnings("unused")
 			boolean parsed = false;
 			
 			if(data == 0xf7){ // F7
 
-				DecodeF7 decodeF7 = new DecodeF7(in, multiConstellation);
+				DecodeF7 decodeF7 = new DecodeF7(is, multiConstellation);
 				parsed = true;
 				
 				EphGps eph = decodeF7.decode();
@@ -89,19 +90,19 @@ public class NVSReader implements StreamEventProducer {
 			}else
 			if (data == 0xf5){  // F5
 				
-				 int leng1 = in.available();  // for Total data
+				 int leng1 = is.available();  // for Total data
 				 int leng2 = 0;	 			  // for <DLE><ETX><DLE> position
-				 in.mark(leng1); 			// To rewind in.read point 
+				 is.mark(leng1); 			// To rewind in.read point 
 				 
 				 	/* To calculate the number of satellites */
-				    while(in.available()>0){			
-						 data = in.read();
+				    while(is.available()>0){			
+						 data = is.read();
 						if(data == 0x10){  // <DLE>
-							data = in.read(); 
+							data = is.read(); 
 							if(data == 0x03){  // <ETX>
-								data = in.read();
+								data = is.read();
 								if(data == 0x10){  // <DLE>
-										leng2 = this.in.available();
+										leng2 = this.is.available();
 										leng2 = (leng1 - leng2 + 1 ) * 8 ;
 //										int nsv = (leng2 - 224) / 240;  
 										/* 28*8 bits = 224, 30*8 bits = 240 */
@@ -114,8 +115,8 @@ public class NVSReader implements StreamEventProducer {
 				  }	
 				    
 				if(leng2 != 0){
-						in.reset(); // To return to in.mark point  
-						DecodeF5 decodeF5 = new DecodeF5(in, multiConstellation);										
+						is.reset(); // To return to in.mark point  
+						DecodeF5 decodeF5 = new DecodeF5(is, multiConstellation);										
 						parsed = true;
 						
 						Observations o = decodeF5.decode(null, leng2);
@@ -134,7 +135,7 @@ public class NVSReader implements StreamEventProducer {
 				
 			}else
 			if (data == 0x4a){ // 4A
-				Decode4A decode4A = new Decode4A(in);
+				Decode4A decode4A = new Decode4A(is);
 				parsed = true;
 				
 				IonoGps iono = decode4A.decode();
@@ -186,5 +187,7 @@ public class NVSReader implements StreamEventProducer {
 		if(streamEventListeners.contains(streamEventListener))
 			this.streamEventListeners.remove(streamEventListener);
 	}
-
+	public void enableDebugMode(Boolean enableDebug) {
+		this.debugModeEnabled = enableDebug;
+	}
 }

@@ -191,7 +191,7 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 					int data = in.read();
 					
 					if(data == 0x10){
-						Object o = reader.readMessagge();
+						Object o = reader.readMessage();
 						
 						if(o instanceof Observations){
 							return (Observations)o;
