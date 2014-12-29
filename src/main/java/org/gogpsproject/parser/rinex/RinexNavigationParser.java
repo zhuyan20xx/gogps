@@ -202,7 +202,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 							System.err.println("Navigation file identifier is missing in file " + fileNav.toString() + " header");
 							return ver = 0;
 					
-						} else if (line.substring(5, 9).equals("3.01")){
+						} else if (line.substring(5, 7).equals("3.")){
 						
 //							System.out.println("Ver. 3.01");
 							ver = 3;
@@ -637,7 +637,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 				satType = (char)buffStreamNav.read();
 //				System.out.println(s);
 				
-				if (satType != 'R'){  // other than GLONASS data
+				if (satType != 'R' & satType != 'S'){  // other than GLONASS and SBAS data
 //						System.out.println(satType);
 								
 						// read 8 lines
@@ -648,7 +648,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 								cacheStreamWriter.write(line);
 								cacheStreamWriter.write(newline);
 							}
-		
+
 							try {
 								int len = line.length();
 		
@@ -771,8 +771,12 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 										eph.setWeek((int) week);
 		
 										sub = line.substring(61, len).replace('D', 'e');
-										double L2Flag = Double.parseDouble(sub.trim());
-										eph.setL2Flag((int) L2Flag);
+										if (!sub.trim().isEmpty()) {
+											double L2Flag = Double.parseDouble(sub.trim());
+											eph.setL2Flag((int) L2Flag);
+										} else {
+											eph.setL2Flag(0);
+										}
 		
 									} else if (i == 6) { // LINE 7
 		
@@ -796,7 +800,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 										sub = line.substring(4, 23).replace('D', 'e');
 										eph.setTom(Double.parseDouble(sub.trim()));
 		
-										if (len > 22) {
+										if (line.trim().length() > 22) {
 											sub = line.substring(23, 42).replace('D', 'e');
 											eph.setFitInt(Double.parseDouble(sub.trim()));
 		
@@ -818,7 +822,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 						}  // End of for
 				
 						
-				} else {   // In case of GLONASS data
+				} else if (satType == 'R') {   // In case of GLONASS data
 //						System.out.println("satType: " + satType);
 
 						for (int i = 0; i < 4; i++) {
@@ -987,7 +991,15 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 						
 						} // End of for
 							
-						
+				} else { //SBAS data
+					
+					for (int i = 0; i < 4; i++) {
+						String line = buffStreamNav.readLine();
+						if(cacheStreamWriter!=null){
+							cacheStreamWriter.write(line);
+							cacheStreamWriter.write(newline);
+						}
+					}
 
 					}  // End of GLO if
 								
