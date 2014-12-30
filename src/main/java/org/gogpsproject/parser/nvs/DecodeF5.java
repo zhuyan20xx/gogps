@@ -64,6 +64,7 @@ public class DecodeF5 {
 		boolean qzsEnable = multiConstellation[1];
 		boolean gloEnable = multiConstellation[2];
 		boolean galEnable = multiConstellation[3];
+		boolean bdsEnable = multiConstellation[4];
 		
 		int signInt;
 		String signStr; 
