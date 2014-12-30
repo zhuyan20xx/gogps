@@ -344,7 +344,7 @@ public abstract class EphemerisSystem {
 						
 					}
 																		
-					/* transformation from PZ-90.02 to WGS-84 (ITRF2000) */
+					/* transformation from PZ-90.02 to WGS-84 (G1150) */
 					double x1 = posArray.get(0) - 0.36;
 					double y1 = posArray.get(1) + 0.08;
 					double z1 = posArray.get(2) + 0.18;
