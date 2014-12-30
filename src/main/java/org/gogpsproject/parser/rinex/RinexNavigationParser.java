@@ -870,11 +870,11 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 //												System.out.println("toc: " + toc);																		
 												eph.setToc(toc);
 												
-												int tow = dtoc.getGpsWeek();
-//												System.out.println("tow: " + tow);																		
-												eph.setTow(tow);
+												int week = dtoc.getGpsWeek();
+//												System.out.println("week: " + week);																		
+												eph.setWeek(week);
 			
-												double toe = tow*7*86400 + toc;
+												double toe = toc;
 //												System.out.printf("%.3f\n", gTime);
 //												System.out.println("timeEph: " + toe);
 												eph.setToe(toe);

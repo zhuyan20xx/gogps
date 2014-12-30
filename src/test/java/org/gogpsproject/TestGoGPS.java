@@ -52,24 +52,28 @@ public class TestGoGPS {
 		double goodDopThreshold = 2.5;
 		int timeSampleDelaySec = 1;
 		
-		boolean gpsEnable = true;  // enable GPS data reading
+		boolean gpsEnable = false;  // enable GPS data reading
 		boolean qzsEnable = false;  // enable QZSS data reading
-		boolean gloEnable = false;  // enable GLONASS data reading
+		boolean gloEnable = true;  // enable GLONASS data reading
 		boolean galEnable = false;  // enable Galileo data reading
+		boolean bdsEnable = false;  // enable BeiDou data reading
 
-		Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable};
+		Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
 				
 		try{
 			// Get current time
 			long start = System.currentTimeMillis();
 			
+			/*  Jun 15th, 2013, GMSD (Multi-GNSS test) */
+//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/gmsd1660_cut.13o"), multiConstellation);
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm1660.13p"));
+			
 			/* Big data in Como, Italy */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/NVS_20140819_A_rover_000c.bin")); /* NVS */
 			
 			/*  Jan 27th, 2014, OCU (NVS test) */
-//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/140127_SciBLDG_BINR1_rover_000.bin")); /* NVS */
-//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/jvrs127.14o"));
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/jvrs127.14N"));	
+			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/140127_SciBLDG_BINR1_rover_000.bin"), multiConstellation); /* NVS */
+			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm0270.14p"));
 			
 			/*  Oct 21st, 2013, OCU (NVS test) */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover_00.bin"), multiConstellation); /* NVS Kinematic */
@@ -97,9 +101,9 @@ public class TestGoGPS {
 //			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/131021_1300_NVSANT_UBXREC_2NVSREC_BINR2_rover.13n"));
 			
 			/* Osaka, Japan (u-blox test) */
-			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/yamatogawa_rover.obs")); /* TOPCON front */
-			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/yamatogawa_master.obs"));
-			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/yamatogawa_rover.nav"));
+//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/yamatogawa_rover.obs")); /* TOPCON front */
+//			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/yamatogawa_master.obs"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/yamatogawa_rover.nav"));
 //			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.GARNER_NAVIGATION_AUTO);
 
 			/* Osaka, Japan (TOPCON test) */
@@ -125,7 +129,7 @@ public class TestGoGPS {
 			// 1st init
 			navigationIn.init();
 			roverIn.init();
- 			masterIn.init();
+// 			masterIn.init();
 
 			// Name output files name using Timestamp
 			Date date = new Date();
@@ -136,25 +140,25 @@ public class TestGoGPS {
 			TxtProducer txt = new TxtProducer(outPathTxt);
 			KmlProducer kml = new KmlProducer(outPathKml, goodDopThreshold, timeSampleDelaySec);
 
-			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
-//			GoGPS goGPS = new GoGPS(navigationIn, roverIn);
+//			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
+			GoGPS goGPS = new GoGPS(navigationIn, roverIn);
 			goGPS.addPositionConsumerListener(txt);
 			goGPS.addPositionConsumerListener(kml);
 			goGPS.setDynamicModel(dynamicModel);
-//			goGPS.runCodeStandalone();
+			goGPS.runCodeStandalone();
 //			goGPS.runCodeDoubleDifferences();
-			goGPS.runKalmanFilter();
+//			goGPS.runKalmanFilter();
 
 			try{
 				roverIn.release(true,10000);
 			}catch(InterruptedException ie){
 				ie.printStackTrace();
 			}
-			try{
-				masterIn.release(true,10000);
-			}catch(InterruptedException ie){
-				ie.printStackTrace();
-			}
+//			try{
+//				masterIn.release(true,10000);
+//			}catch(InterruptedException ie){
+//				ie.printStackTrace();
+//			}
 			try{
 				navigationIn.release(true,10000);
 			}catch(InterruptedException ie){

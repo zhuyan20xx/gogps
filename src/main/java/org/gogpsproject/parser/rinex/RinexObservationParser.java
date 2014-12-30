@@ -50,8 +50,8 @@ public class RinexObservationParser implements ObservationsProducer{
 	private InputStreamReader inStreamObs;
 	private BufferedReader buffStreamObs;
 
-	private int nTypes; /* Number of observation types */
-	private int[] typeOrder; /* Order of observation data */
+	private int nTypes, nTypesG, nTypesR, nTypesE, nTypesJ, nTypesC; /* Number of observation types */
+	private int[] typeOrder, typeOrderG, typeOrderR, typeOrderE, typeOrderJ, typeOrderC; /* Order of observation data */
 	private boolean hasS1Field = false; /* S1 field (SNR) is present */
 	private boolean hasS2Field = false; /* S2 field (SNR) is present */
 	private Time timeFirstObs; /* Time of first observation set */
@@ -70,10 +70,27 @@ public class RinexObservationParser implements ObservationsProducer{
 	private char[] sysOrder;
 	private int[] satOrder;
 	private int ver ;
+	
+	boolean gpsEnable = true;  // enable GPS data reading
+	boolean qzsEnable = true;  // enable QZSS data reading
+    boolean gloEnable = true;  // enable GLONASS data reading	
+    boolean galEnable = true;  // enable Galileo data reading	
+    boolean bdsEnable = true;  // enable BeiDou data reading	
 
+	Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
 
 	public RinexObservationParser(File fileObs) {
 		this.fileObs = fileObs;
+	}
+
+	public RinexObservationParser(File fileObs, Boolean[] multiConstellation) {
+		this.fileObs = fileObs;
+		this.gpsEnable = multiConstellation[0];
+		this.qzsEnable = multiConstellation[1];
+		this.gloEnable = multiConstellation[2];
+		this.galEnable = multiConstellation[3];
+		this.bdsEnable = multiConstellation[4];
+		this.multiConstellation = multiConstellation;
 	}
 
 	/**
@@ -174,10 +191,10 @@ public class RinexObservationParser implements ObservationsProducer{
 							String satType = line.substring(0,1);
 //							System.out.println("sys: " + sys);
 							
-							if(satType.equals("G")){
-								parseTypesV3(line);
+//							if(satType.equals("G")){
+								parseTypesV3(line, satType);
 								foundTypeObs = true;
-							}
+//							}
 							
 						}
 						else if (typeField.equals("TIME OF FIRST OBS")) {
@@ -469,7 +486,7 @@ public class RinexObservationParser implements ObservationsProducer{
 						int j = 0;
 						for (int k = 0; k < nTypes; k++) {
 
-							assignTypes(line, k, j, i);
+							assignTypes(line, k, j, i, os.getSatType());
 							j = j + 16;
 						}
 
@@ -480,7 +497,7 @@ public class RinexObservationParser implements ObservationsProducer{
 						int j = 0;
 						for (int k = 0; k < 5; k++) {
 
-							assignTypes(line, k, j, i);
+							assignTypes(line, k, j, i, os.getSatType());
 							j = j + 16;
 						}
 
@@ -492,7 +509,7 @@ public class RinexObservationParser implements ObservationsProducer{
 						j = 0;
 						for (int k = 5; k < nTypes; k++) {
 
-							assignTypes(line, k, j, i);
+							assignTypes(line, k, j, i, os.getSatType());
 							j = j + 16;
 						}
 					}
@@ -544,61 +561,86 @@ public class RinexObservationParser implements ObservationsProducer{
 				int satID = Integer.parseInt(satNum.trim());
 					
 				
-				if (satType.equals("G") || satType.equals("J")) {
-					
+				if (satType.equals("G") && gpsEnable) {
+
 					// Create observation object
 					ObservationSet os = new ObservationSet();
-					if (satType.equals("G")) os.setSatType('G');
-					if (satType.equals("J")) os.setSatType('J');
+					os.setSatType('G');
 					os.setSatID(satID);
 					obs.setGps(i, os);
-//					obs.gps[i] = os;// new ObservationSet();
-//					obs.gps[i].C = 0;
-//					obs.gps[i].P = new double[2];
-//					obs.gps[i].L = new double[2];
-//					obs.gps[i].S = new float[2];
-//					obs.gps[i].D = new float[2];
 
-					// Store satellite ID
-					//obs.gps[i].setSatID(satOrder[i]);
-//					obs.gpsSat.add(satOrder[i]);
-					
+					line = line.substring(3);
+					// Parse observation data according to typeOrder
+					int j = 0;
+					for (int k = 0; k < nTypesG; k++) {
+						assignTypes(line, k, j, i, os.getSatType());
+						j = j + 16;
+					}
 
-//					if (nTypes <= 5) { // If the number of observation
-						// types
-						// is <= 5, they are all on one line ...
+				} else if (satType.equals("R") && gloEnable){
 
-						line = line.substring(3);
-						// Parse observation data according to typeOrder
-						int j = 0;
-						for (int k = 0; k < nTypes; k++) {
-							assignTypes(line, k, j, i);
-							j = j + 16;
-						}
-						
-//				} else if (nTypes > 5){
-//					// Skip additional observation line for GLO and SBS
-//					line = buffStreamObs.readLine();
-				} else if (satType.equals("R")){
-				
 					// Create observation object
 					ObservationSet os = new ObservationSet();
 					os.setSatType('R');
 					os.setSatID(satID);
 					obs.setGps(i, os);
-					
-					
+
 					line = line.substring(3);
 					// Parse observation data according to typeOrder
 					int j = 0;
-					for (int k = 0; k < nTypes; k++) {
-						assignTypes(line, k, j, i);
+					for (int k = 0; k < nTypesR; k++) {
+						assignTypes(line, k, j, i, os.getSatType());
 						j = j + 16;
 					}
-								
-							
+
+				} else if (satType.equals("E") && galEnable){
+
+					// Create observation object
+					ObservationSet os = new ObservationSet();
+					os.setSatType('E');
+					os.setSatID(satID);
+					obs.setGps(i, os);
+
+					line = line.substring(3);
+					// Parse observation data according to typeOrder
+					int j = 0;
+					for (int k = 0; k < nTypesE; k++) {
+						assignTypes(line, k, j, i, os.getSatType());
+						j = j + 16;
+					}
+
+				} else if (satType.equals("J") && qzsEnable){
+
+					// Create observation object
+					ObservationSet os = new ObservationSet();
+					os.setSatType('J');
+					os.setSatID(satID);
+					obs.setGps(i, os);
+
+					line = line.substring(3);
+					// Parse observation data according to typeOrder
+					int j = 0;
+					for (int k = 0; k < nTypesJ; k++) {
+						assignTypes(line, k, j, i, os.getSatType());
+						j = j + 16;
+					}
+
+				} else if (satType.equals("C") && bdsEnable){
+
+					// Create observation object
+					ObservationSet os = new ObservationSet();
+					os.setSatType('C');
+					os.setSatID(satID);
+					obs.setGps(i, os);
+
+					line = line.substring(3);
+					// Parse observation data according to typeOrder
+					int j = 0;
+					for (int k = 0; k < nTypesC; k++) {
+						assignTypes(line, k, j, i, os.getSatType());
+						j = j + 16;
+					}
 				} // End of if
-				
 			}  // End of for
 
 		} catch (StringIndexOutOfBoundsException e) {
@@ -608,38 +650,25 @@ public class RinexObservationParser implements ObservationsProducer{
 			e.printStackTrace();
 		}
 	}
-	
-//	/**
-//	 * Skip one observation epoch
-//	 */
-//	public Observations skipDataObs() {
-//
-//		try {
-//			// Loop through observation lines
-//			for (int i = 0; i < nSat; i++) {
-//
-//				// Read line of observations
-//				buffStreamObs.readLine();
-//
-//				if (nTypes > 5) { // ... otherwise, they are on two lines
-//
-//					// Get second line
-//					buffStreamObs.readLine();
-//				}
-//			}
-//
-//		} catch (StringIndexOutOfBoundsException e) {
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		return obs;
-//	}
 
 	/**
 	 * Assign observation data according to type order
 	 */
-	private void assignTypes(String line, int k, int j, int i) {
+	private void assignTypes(String line, int k, int j, int i, char satType) {
+		
+		if (ver == 3) {
+			if (satType == 'G') {
+				typeOrder = typeOrderG;
+			} else if (satType == 'R') {
+				typeOrder = typeOrderR;
+			} else if (satType == 'E') {
+				typeOrder = typeOrderE;
+			} else if (satType == 'J') {
+				typeOrder = typeOrderJ;
+			} else if (satType == 'C') {
+				typeOrder = typeOrderC;
+			}
+		}
 
 		try {
 			ObservationSet o = obs.getGpsByIdx(i);
@@ -903,9 +932,10 @@ public class RinexObservationParser implements ObservationsProducer{
 	
 	/**
 	 * @param line
+	 * @param satType 
 	 * @throws IOException 
 	 */
-	private void parseTypesV3(String line) throws IOException {
+	private void parseTypesV3(String line, String satType) throws IOException {
 
 		// Extract number of available data types
 		nTypes = Integer.parseInt(line.substring(1, 6).trim());
@@ -915,181 +945,186 @@ public class RinexObservationParser implements ObservationsProducer{
 
 		if(nTypes > 13){  // In case of more than 13 Types, it will two lines
 							
-			/*
-			 * Parse data types and store order 
-			 * (internal order: C1C L1C D1C S1C C1W L1W S1W C2X L2X D2X S2X C2W L2W 
-             *   D2W S2W C5X L5X D5X S5X    // NEED to check this order !!
-			 *
-			 */
-			
 			for (int i = 0; i <= 12; i++) {
 				String type = line.substring(4 * (i + 3) -5 , 4 * (i + 3) -2);
-
-				if (type.equals("C1C")) {
-					typeOrder[i] = 0;
-				} else if (type.equals("C2C")) {
-					typeOrder[i] = 1;
-				} else if (type.equals("P1C")) {
-					typeOrder[i] = 2;
-				} else if (type.equals("P2C")) {
-					typeOrder[i] = 3;
-				} else if (type.equals("L1C")) {
-					typeOrder[i] = 4;
-				} else if (type.equals("L2C")) {
-					typeOrder[i] = 5;
-				} else if (type.equals("S1C")) {
-					typeOrder[i] = 6;
-					hasS1Field = true;
-				} else if (type.equals("S2C")) {
-					typeOrder[i] = 7;
-					hasS2Field = true;
-				} else if (type.equals("D1C")) {
-					typeOrder[i] = 8;
-				} else if (type.equals("D2C")) {
-					typeOrder[i] = 9;
-					
-				} else if (type.equals("C1W")) {
-					typeOrder[i] = 10;
-				} else if (type.equals("L1W")) {
-					typeOrder[i] = 11;
-				} else if (type.equals("S1W")) {
-					typeOrder[i] = 12;
-					
-				} else if (type.equals("C2X")) {
-					typeOrder[i] = 13;
-				} else if (type.equals("L2X")) {
-					typeOrder[i] = 14;			
-				} else if (type.equals("D2X")) {
-					typeOrder[i] = 15;
-				} else if (type.equals("S2X")) {
-					typeOrder[i] = 16;
-				
-				} else if (type.equals("C2W")) {
-					typeOrder[i] = 17;
-				} else if (type.equals("L2W")) {
-					typeOrder[i] = 18;			
-				} else if (type.equals("D2W")) {
-					typeOrder[i] = 19;
-				} else if (type.equals("S2W")) {
-					typeOrder[i] = 20;		
-				
-				} else if (type.equals("C5X")) {
-					typeOrder[i] = 21;
-				} else if (type.equals("L5X")) {
-					typeOrder[i] = 22;			
-				} else if (type.equals("D5X")) {
-					typeOrder[i] = 23;
-				} else if (type.equals("S5X")) {
-					typeOrder[i] = 24;			
-				}	
-				
-				}
+				checkTypeV3(type, i);
+			}
 			
 			line = buffStreamObs.readLine();   // read the second line
 			
-				int j = 0;
+			int j = 0;
 			for (int i = 13; i <= nTypes  ; i++) {
-				
 				String type = line.substring(4 * (j + 3) -5 , 4 * (j + 3) -2);
-
-				if (type.equals("C1C")) {
-					typeOrder[i] = 0;
-				} else if (type.equals("C2C")) {
-					typeOrder[i] = 1;
-				} else if (type.equals("P1C")) {
-					typeOrder[i] = 2;
-				} else if (type.equals("P2C")) {
-					typeOrder[i] = 3;
-				} else if (type.equals("L1C")) {
-					typeOrder[i] = 4;
-				} else if (type.equals("L2C")) {
-					typeOrder[i] = 5;
-				} else if (type.equals("S1C")) {
-					typeOrder[i] = 6;
-					hasS1Field = true;
-				} else if (type.equals("S2C")) {
-					typeOrder[i] = 7;
-					hasS2Field = true;
-				} else if (type.equals("D1C")) {
-					typeOrder[i] = 8;
-				} else if (type.equals("D2C")) {
-					typeOrder[i] = 9;
-					
-				} else if (type.equals("C1W")) {
-					typeOrder[i] = 10;
-				} else if (type.equals("L1W")) {
-					typeOrder[i] = 11;
-				} else if (type.equals("S1W")) {
-					typeOrder[i] = 12;
-					
-				} else if (type.equals("C2X")) {
-					typeOrder[i] = 13;
-				} else if (type.equals("L2X")) {
-					typeOrder[i] = 14;			
-				} else if (type.equals("D2X")) {
-					typeOrder[i] = 15;
-				} else if (type.equals("S2X")) {
-					typeOrder[i] = 16;
-				
-				} else if (type.equals("C2W")) {
-					typeOrder[i] = 17;
-				} else if (type.equals("L2W")) {
-					typeOrder[i] = 18;			
-				} else if (type.equals("D2W")) {
-					typeOrder[i] = 19;
-				} else if (type.equals("S2W")) {
-					typeOrder[i] = 20;		
-				
-				} else if (type.equals("C5X")) {
-					typeOrder[i] = 21;
-				} else if (type.equals("L5X")) {
-					typeOrder[i] = 22;			
-				} else if (type.equals("D5X")) {
-					typeOrder[i] = 23;
-				} else if (type.equals("S5X")) {
-					typeOrder[i] = 24;			
-				}
-				
+				checkTypeV3(type, i);
 				j++ ;
-				
 			}
 
-			
 		} else {  // less than 14 types, it will be one line.  
+
+			for (int i = 0; i < nTypes; i++) {
+				String type = line.substring(4 * (i + 3) -5 , 4 * (i + 3) -2);
+				checkTypeV3(type, i);
+			}
+		}
 		
-		/*
-		 * Parse data types and store order (internal order: C1 P1 P2 L1 L2 S1
-		 * S2 D1 D2)
-		 *  
-		 */
-				for (int i = 0; i < nTypes; i++) {
-					String type = line.substring(4 * (i + 3) -5 , 4 * (i + 3) -2);
+		if (satType.equals("G")) {
+			typeOrderG = typeOrder;
+			nTypesG = nTypes;
+		} else if (satType.equals("R")) {
+			typeOrderR = typeOrder;
+			nTypesR = nTypes;
+		} else if (satType.equals("E")) {
+			typeOrderE = typeOrder;
+			nTypesE = nTypes;
+		} else if (satType.equals("J")) {
+			typeOrderJ = typeOrder;
+			nTypesJ = nTypes;
+		} else if (satType.equals("C")) {
+			typeOrderC = typeOrder;
+			nTypesC = nTypes;
+		}
+	}
+
+	private void checkTypeV3(String type, int i) {
+		if (type.equals("C1C")) {
+			typeOrder[i] = 0;
+		} else if (type.equals("C2C")) {
+			typeOrder[i] = 1;
+		} else if (type.equals("P1C")) {
+			typeOrder[i] = 2;
+		} else if (type.equals("P2C")) {
+			typeOrder[i] = 3;
+		} else if (type.equals("L1C")) {
+			typeOrder[i] = 4;
+		} else if (type.equals("L2C")) {
+			typeOrder[i] = 5;
+		} else if (type.equals("S1C")) {
+			typeOrder[i] = 6;
+			hasS1Field = true;
+		} else if (type.equals("S2C")) {
+			typeOrder[i] = 7;
+			hasS2Field = true;
+		} else if (type.equals("D1C")) {
+			typeOrder[i] = 8;
+		} else if (type.equals("D2C")) {
+			typeOrder[i] = 9;
+			
+		} else if (type.equals("C1W")) {
+			typeOrder[i] = 10;
+		} else if (type.equals("L1W")) {
+			typeOrder[i] = 11;
+		} else if (type.equals("D1W")) {
+			typeOrder[i] = 12;
+		} else if (type.equals("S1W")) {
+			typeOrder[i] = 13;
 		
-					if (type.equals("C1C")) {
-						typeOrder[i] = 0;
-					} else if (type.equals("C2C")) {
-						typeOrder[i] = 1;
-					} else if (type.equals("P1C")) {
-						typeOrder[i] = 2;
-					} else if (type.equals("P2C")) {
-						typeOrder[i] = 3;
-					} else if (type.equals("L1C")) {
-						typeOrder[i] = 4;
-					} else if (type.equals("L2C")) {
-						typeOrder[i] = 5;
-					} else if (type.equals("S1C")) {
-						typeOrder[i] = 6;
-						hasS1Field = true;
-					} else if (type.equals("S2C")) {
-						typeOrder[i] = 7;
-						hasS2Field = true;
-					} else if (type.equals("D1C")) {
-						typeOrder[i] = 8;
-					} else if (type.equals("D2C")) {
-						typeOrder[i] = 9;
-					}
-				}
+		} else if (type.equals("C2W")) {
+			typeOrder[i] = 14;
+		} else if (type.equals("L2W")) {
+			typeOrder[i] = 15;			
+		} else if (type.equals("D2W")) {
+			typeOrder[i] = 16;
+		} else if (type.equals("S2W")) {
+			typeOrder[i] = 17;
 		
+		} else if (type.equals("C1X")) {
+			typeOrder[i] = 18;
+		} else if (type.equals("L1X")) {
+			typeOrder[i] = 19;			
+		} else if (type.equals("D1X")) {
+			typeOrder[i] = 20;
+		} else if (type.equals("S1X")) {
+			typeOrder[i] = 21;
+		
+		} else if (type.equals("C2X")) {
+			typeOrder[i] = 22;
+		} else if (type.equals("L2X")) {
+			typeOrder[i] = 23;			
+		} else if (type.equals("D2X")) {
+			typeOrder[i] = 24;
+		} else if (type.equals("S2X")) {
+			typeOrder[i] = 25;
+		
+		} else if (type.equals("C5X")) {
+			typeOrder[i] = 26;
+		} else if (type.equals("L5X")) {
+			typeOrder[i] = 27;			
+		} else if (type.equals("D5X")) {
+			typeOrder[i] = 28;
+		} else if (type.equals("S5X")) {
+			typeOrder[i] = 29;
+		
+		} else if (type.equals("C6X")) {
+			typeOrder[i] = 30;
+		} else if (type.equals("L6X")) {
+			typeOrder[i] = 31;			
+		} else if (type.equals("D6X")) {
+			typeOrder[i] = 32;
+		} else if (type.equals("S6X")) {
+			typeOrder[i] = 33;
+		
+		} else if (type.equals("C7X")) {
+			typeOrder[i] = 34;
+		} else if (type.equals("L7X")) {
+			typeOrder[i] = 35;			
+		} else if (type.equals("D7X")) {
+			typeOrder[i] = 36;
+		} else if (type.equals("S7X")) {
+			typeOrder[i] = 37;
+		
+		} else if (type.equals("C8X")) {
+			typeOrder[i] = 38;
+		} else if (type.equals("L8X")) {
+			typeOrder[i] = 39;			
+		} else if (type.equals("D8X")) {
+			typeOrder[i] = 40;
+		} else if (type.equals("S8X")) {
+			typeOrder[i] = 41;
+		
+		} else if (type.equals("C1P")) {
+			typeOrder[i] = 42;
+		} else if (type.equals("L1P")) {
+			typeOrder[i] = 43;
+		} else if (type.equals("D1P")) {
+			typeOrder[i] = 44;
+		} else if (type.equals("S1P")) {
+			typeOrder[i] = 45;
+			
+		} else if (type.equals("C2P")) {
+			typeOrder[i] = 46;
+		} else if (type.equals("L2P")) {
+			typeOrder[i] = 47;
+		} else if (type.equals("D2P")) {
+			typeOrder[i] = 48;
+		} else if (type.equals("S2P")) {
+			typeOrder[i] = 49;
+		
+		} else if (type.equals("C2I")) {
+			typeOrder[i] = 50;
+		} else if (type.equals("L2I")) {
+			typeOrder[i] = 51;
+		} else if (type.equals("D2I")) {
+			typeOrder[i] = 52;
+		} else if (type.equals("S2I")) {
+			typeOrder[i] = 53;
+		
+		} else if (type.equals("C6I")) {
+			typeOrder[i] = 54;
+		} else if (type.equals("L6I")) {
+			typeOrder[i] = 55;
+		} else if (type.equals("D6I")) {
+			typeOrder[i] = 56;
+		} else if (type.equals("S6I")) {
+			typeOrder[i] = 57;
+		
+		} else if (type.equals("C7I")) {
+			typeOrder[i] = 58;
+		} else if (type.equals("L7I")) {
+			typeOrder[i] = 59;
+		} else if (type.equals("D7I")) {
+			typeOrder[i] = 60;
+		} else if (type.equals("S7I")) {
+			typeOrder[i] = 61;
 		
 		}
 	}

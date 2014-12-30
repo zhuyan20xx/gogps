@@ -509,12 +509,6 @@ public class EphGps implements Streamable {
 	
 	/* for GLONASS data */
 	
-	public float getTow() {
-		return tow;
-	}
-	public void setTow(float tow) {
-		this.tow = tow;
-	}
 	public float getTauN() {
 		return tauN;
 	}

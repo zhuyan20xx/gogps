@@ -75,9 +75,10 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
     boolean gpsEnable = true;  // enable GPS data reading
 	boolean qzsEnable = true;  // enable QZSS data reading
     boolean gloEnable = true;  // enable GLONASS data reading	
-    boolean galEnable = true;  // enable Galileo data reading	
+    boolean galEnable = true;  // enable Galileo data reading
+    boolean bdsEnable = true;  // enable BeiDou data reading
 
-	Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable};
+	Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
 	
 	public NVSFileReader(File file) {
 		this.file = file;

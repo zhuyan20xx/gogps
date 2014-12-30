@@ -56,10 +56,13 @@ public class DecodeF7 {
 		
 		byte bytes[];
 		
-		boolean qzsEnable = multiConstellation[0];
-		boolean gloEnable = multiConstellation[1];
+		boolean gpsEnable = multiConstellation[0];
+		boolean qzsEnable = multiConstellation[1];
+		boolean gloEnable = multiConstellation[2];
+		boolean galEnable = multiConstellation[3];
+		boolean bdsEnable = multiConstellation[4];
 				
-		if (satType == 1){   // GPS: 138(-2) bytes	
+		if (satType == 1 && gpsEnable == true){   // GPS: 138(-2) bytes	
 		
 				eph.setSatType('G');
 				eph.setSatID((int)satId);

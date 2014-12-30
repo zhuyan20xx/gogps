@@ -192,16 +192,16 @@ public abstract class EphemerisSystem {
 				    
 					/* Compute clock corrected transmission time */
 					double tGPS = computeClockCorrectedTransmissionTime(unixTime, satelliteClockError, obsPseudorange);
-					tGPS = eph.getTow()*7*86400 + tGPS;
 //				    System.out.println("tGPS: " + tGPS);
 					
 				    /* Time from the ephemerides reference epoch */
-					double tk2 = checkGpsTime(tGPS - toe);
+					Time reftime = new Time(eph.getWeek(), tGPS);
+					double tk2 = checkGpsTime(tGPS - toe - reftime.getLeapSeconds());
 //					System.out.println("tk2: " + tk2);
 				    
 				    /* number of iterations on "full" steps */
 					int n = (int) Math.floor(Math.abs(tk2 / int_step));
-//					System.out.println("Number of interations: " + n);
+//					System.out.println("Number of iterations: " + n);
 					
 					/* array containing integration steps (same sign as tk) */
 					double[] array = new double[n];
@@ -346,7 +346,7 @@ public abstract class EphemerisSystem {
 																		
 					/* transformation from PZ-90.02 to WGS-84 (ITRF2000) */
 					double x1 = posArray.get(0) - 0.36;
-					double y1 = posArray.get(1) + 0.86;
+					double y1 = posArray.get(1) + 0.08;
 					double z1 = posArray.get(2) + 0.18;
 					
 					/* satellite velocity */
@@ -513,13 +513,6 @@ public abstract class EphemerisSystem {
 				// Remove signal travel time from observation time
 				double tRaw = (gpsTime - obsPseudorange /*this.range*/ / Constants.SPEED_OF_LIGHT);		
 //				System.out.println("tRaw: " + tRaw);
-				
-				tRaw = eph.getTow()*7*86400 + tRaw;
-//				double toe = tow*7*86400 + toc;
-//				System.out.println("tRaw2: " + tRaw);
-				
-				double toe = eph.getToe() ;
-//				System.out.println("toe: " + toe);
 				
 				// Clock error computation
 				double dt = checkGpsTime(tRaw - eph.getToe());

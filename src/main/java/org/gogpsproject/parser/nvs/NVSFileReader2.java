@@ -73,9 +73,10 @@ public class NVSFileReader2  {
 	static boolean gpsEnable = true;  // enable GPS data reading
 	static boolean qzsEnable = true;  // enable QZSS data reading
     static boolean gloEnable = true;  // enable GLONASS data reading	
-    static boolean galEnable = true;  // enable Galileo data reading	
+    static boolean galEnable = true;  // enable Galileo data reading
+    static boolean bdsEnable = true;  // enable BeiDou data reading
 
-	static Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable};
+	static Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
 
 	
 	/* (non-Javadoc)
