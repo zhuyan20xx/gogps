@@ -637,7 +637,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 				satType = (char)buffStreamNav.read();
 //				System.out.println(s);
 				
-				if (satType != 'R' & satType != 'S'){  // other than GLONASS and SBAS data
+				if (satType != 'R' && satType != 'S'){  // other than GLONASS and SBAS data
 //						System.out.println(satType);
 								
 						// read 8 lines
