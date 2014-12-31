@@ -35,8 +35,12 @@ public class ReceiverPosition extends Coordinates{
 	private int pivot; /* Index of the satellite with highest elevation in satAvail list */
 	private ArrayList<Integer> satAvail; /* List of satellites available for processing */
 	private ArrayList<Character> satTypeAvail; /* List of satellite Types available for processing */
+	private ArrayList<String> gnssAvail;  /* List of satellite Types & Id available for processing */
+	
 	private ArrayList<Integer> satAvailPhase; /* List of satellites available for processing */
 	private ArrayList<Character> satTypeAvailPhase; /* List of satellite Type available for processing */
+	private ArrayList<String> gnssAvailPhase;  /* List of satellite Types & Id available for processing */
+	
 	private SatellitePosition[] pos; /* Absolute position of all visible satellites (ECEF) */
 
 	// Fields related to the receiver position
@@ -298,7 +302,7 @@ public class ReceiverPosition extends Coordinates{
 	 */
 	public void codeStandalone(Observations roverObs, boolean estimateOnlyClock) {
 
-		// Number of GPS observations
+		// Number of GNSS observations without cutoff
 		int nObs = roverObs.getGpsSize();
 
 		// Number of unknown parameters
@@ -345,8 +349,9 @@ public class ReceiverPosition extends Coordinates{
 
 		// Vectors for troposphere and ionosphere corrections
 		tropoCorr = new SimpleMatrix(nObsAvail, 1);
-		ionoCorr = new SimpleMatrix(nObsAvail, 1);
 
+		ionoCorr = new SimpleMatrix(nObsAvail, 1);
+		
 		// Counter for available satellites
 		int k = 0;
 
@@ -355,16 +360,17 @@ public class ReceiverPosition extends Coordinates{
 
 		// Satellite ID
 		int id = 0;
-
+		
 		// Set up the least squares matrices
 		for (int i = 0; i < nObs; i++) {
 
 			id = roverObs.getGpsSatID(i);
 			char satType = roverObs.getGnssSatType(i);		
-//			if (satType == 'G' ){  // Temporary solution 
-//				System.out.println("####" + satType + id  + "####");
+			String checkAvailGnss = String.valueOf(satType) + String.valueOf(id);
 			
-			if (pos[i]!=null && satAvail.contains(id)  && satTypeAvail.contains(satType)) {
+			if (pos[i]!=null && gnssAvail.contains(checkAvailGnss)) {
+//			if (pos[i]!=null && satAvail.contains(id)  && satTypeAvail.contains(satType)) {
+//				System.out.println("####" + checkAvailGnss  + "####");
 
 				// Fill in one row in the design matrix
 				A.set(k, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]); /* X */
@@ -393,7 +399,6 @@ public class ReceiverPosition extends Coordinates{
 				k++;
 			}
 			
-//			}
 		}
 
 		// Apply troposphere and ionosphere correction
@@ -561,8 +566,10 @@ public class ReceiverPosition extends Coordinates{
 
 			id = roverObs.getGpsSatID(i);
 			char satType = roverObs.getGnssSatType(i);
+			String checkAvailGnss = String.valueOf(satType) + String.valueOf(id);
 
-			if (pos[i] !=null && satAvail.contains(id) && satTypeAvail.contains(satType) && i != pivot) {
+			if (pos[i] !=null && gnssAvail.contains(checkAvailGnss) && i != pivot) {
+//			if (pos[i] !=null && satAvail.contains(id) && satTypeAvail.contains(satType) && i != pivot) {
 
 				// Fill in one row in the design matrix
 				A.set(k, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]
@@ -601,7 +608,8 @@ public class ReceiverPosition extends Coordinates{
 			}
 
 			// Design matrix for DOP computation
-			if (pos[i] != null && satAvail.contains(id) && satTypeAvail.contains(satType)) {
+			if (pos[i] !=null && gnssAvail.contains(checkAvailGnss)) {
+//			if (pos[i] != null && satAvail.contains(id) && satTypeAvail.contains(satType)) {
 				// Fill in one row in the design matrix (complete one, for DOP)
 				Adop.set(d, 0, diffRoverSat[i].get(0) / roverSatAppRange[i]); /* X */
 				Adop.set(d, 1, diffRoverSat[i].get(1) / roverSatAppRange[i]); /* Y */
@@ -949,11 +957,13 @@ public class ReceiverPosition extends Coordinates{
 		// Create a list for available satellites after cutoff
 		satAvail = new ArrayList<Integer>(0);
 		satTypeAvail = new ArrayList<Character>(0);
+		gnssAvail = new ArrayList<String>(0);
 
 		// Create a list for available satellites with phase
 		satAvailPhase = new ArrayList<Integer>(0);
 		satTypeAvailPhase = new ArrayList<Character>(0);
-
+		gnssAvailPhase = new ArrayList<String>(0);
+		
 		// Allocate array of topocentric coordinates
 		roverTopo = new TopocentricCoordinates[nObs];
 
@@ -994,13 +1004,16 @@ public class ReceiverPosition extends Coordinates{
 //				System.out.println("getElevation: " + id + "::" + roverTopo[i].getElevation() ); 
 				// Check if satellite elevation is higher than cutoff
 				if (roverTopo[i].getElevation() > cutoff) {
+					
 					satAvail.add(id);
 					satTypeAvail.add(satType);
+					gnssAvail.add(String.valueOf(satType) + String.valueOf(id));
 
 					// Check if also phase is available
 					if (!Double.isNaN(roverObs.getGpsByID(id, satType).getPhase(goGPS.getFreq()))) {
 						satAvailPhase.add(id);
 						satTypeAvailPhase.add(satType);
+						gnssAvailPhase.add(String.valueOf(satType) + String.valueOf(id));				
 						
 					}
 				}else{
@@ -1048,10 +1061,12 @@ public class ReceiverPosition extends Coordinates{
 		// Create a list for available satellites
 		satAvail = new ArrayList<Integer>(0);
 		satTypeAvail = new ArrayList<Character>(0);
+		gnssAvail = new ArrayList<String>(0);
 
 		// Create a list for available satellites with phase
 		satAvailPhase = new ArrayList<Integer>(0);
 		satTypeAvailPhase = new ArrayList<Character>(0);
+		gnssAvailPhase = new ArrayList<String>(0);
 
 		// Allocate arrays of topocentric coordinates
 		roverTopo = new TopocentricCoordinates[nObs];
@@ -1129,6 +1144,7 @@ public class ReceiverPosition extends Coordinates{
 
 					satAvail.add(id);
 					satTypeAvail.add(satType);
+					gnssAvail.add(String.valueOf(satType) + String.valueOf(id));	
 
 					// Check if also phase is available for both rover and master
 					if (!Double.isNaN(roverObs.getGpsByID(id, satType).getPhase(goGPS.getFreq())) &&
@@ -1142,6 +1158,8 @@ public class ReceiverPosition extends Coordinates{
 
 						satAvailPhase.add(id);
 						satTypeAvailPhase.add(satType);
+						gnssAvailPhase.add(String.valueOf(satType) + String.valueOf(id));
+						
 					}
 				}
 			}

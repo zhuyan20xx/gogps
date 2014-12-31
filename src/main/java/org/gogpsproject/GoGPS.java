@@ -243,10 +243,11 @@ public class GoGPS implements Runnable{
 							// Select available satellites
 							roverPos.selectSatellitesStandalone(obsR);
 							
-//							System.out.println("&&&&&&&&& satNum: " + roverPos.getSatAvailNumber());
-							if (roverPos.getSatAvailNumber() >= 4)
+							if (roverPos.getSatAvailNumber() >= 4){
+								if(debug) System.out.println("# Num. of selected satllites: " + roverPos.getSatAvailNumber());
 								// Compute code stand-alone positioning (epoch-by-epoch solution)
 								roverPos.codeStandalone(obsR, false);
+							}
 							else
 								// Discard Bancroft positioning
 								roverPos.setXYZ(0, 0, 0);
