@@ -151,10 +151,8 @@ public class ReceiverPosition extends Coordinates{
 
 			id = obs.getGpsSatID(i);
 			satType = obs.getGnssSatType(i);
-
-//			if (satType == 'G' ){  // Temporary solution 
 			
-									// Create new satellite position object
+					// Create new satellite position object
 					//pos[i] = new SatellitePosition(obs.getRefTime().getGpsTime(), obs.getGpsSatID(i), obs.getGpsByID(id).getPseudorange(goGPS.getFreq()));
 		
 					// Compute clock-corrected satellite position
@@ -976,7 +974,6 @@ public class ReceiverPosition extends Coordinates{
 
 			id = roverObs.getGpsSatID(i);
 			satType = roverObs.getGnssSatType(i);
-//			if (satType == 'G' ){  // Temporary solution 
 
 			// Compute GPS satellite positions getGpsByIdx(idx).getSatType()
 			pos[i] = navigation.getGpsSatPosition(roverObs.getRefTime().getMsec(), id, satType, roverObs.getGpsByID(id, satType).getPseudorange(goGPS.getFreq()), this.getReceiverClockError());
@@ -1021,7 +1018,6 @@ public class ReceiverPosition extends Coordinates{
 				}
 			}
 			
-//			}
 		}
 	}
 
@@ -1277,8 +1273,9 @@ public class ReceiverPosition extends Coordinates{
 
 			id = roverObs.getGpsSatID(i);
 			satType = roverObs.getGnssSatType(i);
+			String checkAvailGnss = String.valueOf(satType) + String.valueOf(id);
 
-			if (pos[i]!=null && satAvail.contains(id) && satTypeAvail.contains(satType)
+			if (pos[i]!=null && gnssAvail.contains(checkAvailGnss)
 					&& i != pivot) {
 
 				// Compute parameters obtained from linearization of observation equations
@@ -1344,7 +1341,8 @@ public class ReceiverPosition extends Coordinates{
 						* goGPS.getStDevCode(masterObs.getGpsByID(id, satType), goGPS.getFreq())
 						* (roverSatWeight + masterSatWeight));
 
-				if (satAvailPhase.contains(id) && satTypeAvailPhase.contains(satType)) {
+				if (gnssAvail.contains(checkAvailGnss)){
+//				if (satAvailPhase.contains(id) && satTypeAvailPhase.contains(satType)) {
 
 					// Fill in one row in the design matrix (for phase)
 					H.set(nObsAvail + p, 0, alphaX);
@@ -1406,6 +1404,7 @@ public class ReceiverPosition extends Coordinates{
 		for (int i = 0; i < satOld.size(); i++) {
 
 			// Set ambiguity of lost satellites to zero
+//			if (!gnssAvailPhase.contains(satOld.get(i))) {
 			if (!satAvailPhase.contains(satOld.get(i)) && satTypeAvailPhase.contains(satOld.get(i))) {
 
 				if(debug) System.out.println("Lost satellite "+satOld.get(i));
@@ -1798,8 +1797,9 @@ public class ReceiverPosition extends Coordinates{
 
 				id = roverObs.getGpsSatID(i);
 				satType = roverObs.getGnssSatType(i);
-
-				if (pos[i] !=null && satAvail.contains(id) && satTypeAvail.contains(satType)
+				String checkAvailGnss = String.valueOf(satType) + String.valueOf(id);
+				
+				if (pos[i] !=null && gnssAvail.contains(checkAvailGnss)
 						&& i != pivotIndex) {
 
 					// Fill in one row in the design matrix
@@ -1843,8 +1843,9 @@ public class ReceiverPosition extends Coordinates{
 
 				id = roverObs.getGpsSatID(i);
 				satType = roverObs.getGnssSatType(i);
+				String checkAvailGnss = String.valueOf(satType) + String.valueOf(id);
 
-				if (pos[i] !=null && satAvailPhase.contains(id) && satTypeAvailPhase.contains(satType)
+				if (pos[i] !=null && gnssAvail.contains(checkAvailGnss)
 						&& i != pivotIndex) {
 
 					// Fill in one row in the design matrix
