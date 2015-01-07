@@ -52,8 +52,8 @@ public class TestGoGPS {
 		double goodDopThreshold = 2.5;
 		int timeSampleDelaySec = 1;
 		
-		boolean gpsEnable = false;  // enable GPS data reading
-		boolean qzsEnable = false;  // enable QZSS data reading
+		boolean gpsEnable = true;  // enable GPS data reading
+		boolean qzsEnable = true;  // enable QZSS data reading
 		boolean gloEnable = true;  // enable GLONASS data reading
 		boolean galEnable = false;  // enable Galileo data reading
 		boolean bdsEnable = false;  // enable BeiDou data reading
@@ -65,15 +65,15 @@ public class TestGoGPS {
 			long start = System.currentTimeMillis();
 			
 			/*  Jun 15th, 2013, GMSD (Multi-GNSS test) */
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/gmsd1660_cut.13o"), multiConstellation);
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm1660.13p"));
+			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/gmsd1660_cut.13o"), multiConstellation);
+			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm1660.13p"));
 			
 			/* Big data in Como, Italy */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/NVS_20140819_A_rover_000c.bin")); /* NVS */
 			
 			/*  Jan 27th, 2014, OCU (NVS test) */
-			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/140127_SciBLDG_BINR1_rover_000.bin"), multiConstellation); /* NVS */
-			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm0270.14p"));
+//			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/140127_SciBLDG_BINR1_rover_000.bin"), multiConstellation); /* NVS */
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm0270.14p"));
 			
 			/*  Oct 21st, 2013, OCU (NVS test) */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/131021_1430_NVSANT_UBXREC_2NVSREC_KIN_BINR3_rover_00.bin"), multiConstellation); /* NVS Kinematic */

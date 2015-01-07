@@ -20,6 +20,7 @@
  */
 package org.gogpsproject;
 import java.util.ArrayList;
+
 import org.ejml.simple.SimpleMatrix;
 
 /**
@@ -305,6 +306,10 @@ public class ReceiverPosition extends Coordinates{
 
 		// Number of unknown parameters
 		int nUnknowns = 4;
+		
+		// Add one unknown for each constellation in addition to the first (to estimate Inter-System Biases - ISBs)
+		String sys = getAvailGnssSystems().substring(1);
+		nUnknowns = nUnknowns + sys.length();
 
 		// Define least squares matrices
 		SimpleMatrix A;
@@ -358,7 +363,7 @@ public class ReceiverPosition extends Coordinates{
 
 		// Satellite ID
 		int id = 0;
-		
+
 		// Set up the least squares matrices
 		for (int i = 0; i < nObs; i++) {
 
@@ -375,6 +380,9 @@ public class ReceiverPosition extends Coordinates{
 				A.set(k, 1, diffRoverSat[i].get(1) / roverSatAppRange[i]); /* Y */
 				A.set(k, 2, diffRoverSat[i].get(2) / roverSatAppRange[i]); /* Z */
 				A.set(k, 3, 1); /* clock error */
+				for (int c = 0; c < sys.length(); c++) {
+					A.set(k, 4+c, sys.indexOf(satType)==c?1:0); /* inter-system bias */
+				}
 
 				// Add the approximate pseudorange value to b
 				b.set(k, 0, roverSatAppRange[i] - pos[i].getSatelliteClockError() * Constants.SPEED_OF_LIGHT);
@@ -2211,6 +2219,16 @@ public class ReceiverPosition extends Coordinates{
 	 */
 	public int getSatAvailPhaseNumber() {
 		return satAvailPhase.size();
+	}
+	
+	public String getAvailGnssSystems(){
+		if(satTypeAvail.isEmpty()) return "";
+		String GnssSys = "";
+		for(int i=0;i<satTypeAvail.size();i++) {
+			if (GnssSys.indexOf((satTypeAvail.get(i))) < 0)
+				GnssSys = GnssSys + satTypeAvail.get(i);
+		}
+		return GnssSys;
 	}
 
 	/**
