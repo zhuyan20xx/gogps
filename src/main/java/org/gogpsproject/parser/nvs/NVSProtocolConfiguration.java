@@ -38,11 +38,11 @@ public class NVSProtocolConfiguration {
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(0x0B)); // 0Bh
 		msg.addElement(new Integer(0x00)); // 00 --> "current port"
-		byte[] baudRateBytes = ByteBuffer.allocate(4).putInt(115200).array();
-		msg.addElement(new Integer(baudRateBytes[3]));
-		msg.addElement(new Integer(baudRateBytes[2]));
-		msg.addElement(new Integer(baudRateBytes[1]));
-		msg.addElement(new Integer(baudRateBytes[0]));
+		//byte[] baudRateBytes = ByteBuffer.allocate(4).putInt(115200).array();
+		msg.addElement(new Integer(0x00));
+		msg.addElement(new Integer(0xC2));
+		msg.addElement(new Integer(0x01));
+		msg.addElement(new Integer(0x00));
 		msg.addElement(new Integer(0x04)); // protocol --> BINR
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(nvsSuffix));

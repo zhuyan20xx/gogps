@@ -90,9 +90,10 @@ public class Decode4A {
 //        System.out.println("Reliable Sign: "+ reliable_sign); 
 //		System.out.println("+-----------------  End of 4A  -------------------+");
 						        
-         
+//        in.read(); // DLE
+//        in.read(); // ETX
 
-			return iono;
+		return iono;
 	}
 
 

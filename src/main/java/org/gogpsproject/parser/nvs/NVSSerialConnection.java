@@ -46,7 +46,7 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 	private String portName;
 	private int speed;
 	private int setMeasurementRate = 1;
-	private boolean enableTimetag = true;
+	private Boolean enableTimetag = true;
 	private Boolean enableDebug = true;
 	private Boolean enableRnxObs = true;
 
@@ -98,13 +98,33 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 				System.out.println("Error: Port is currently in use");
 			} else {
 				serialPort = (SerialPort) portIdentifier.open("Serial", 2000);
+				
+				boolean reply;
+				
+				//try with NMEA
 				serialPort.setSerialPortParams(speed, SerialPort.DATABITS_8,
-						SerialPort.STOPBITS_1, SerialPort.PARITY_ODD);
+						SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 
 				inputStream = serialPort.getInputStream();
 				outputStream = serialPort.getOutputStream();
 
 				nvsReader = new NVSSerialReader(inputStream,outputStream,portName);
+				nvsReader.enableDebugMode(this.enableDebug);
+				reply = nvsReader.setBinrProtocol();
+				
+				if (!reply) {
+					//try with BINR
+					serialPort.setSerialPortParams(speed, SerialPort.DATABITS_8,
+							SerialPort.STOPBITS_1, SerialPort.PARITY_ODD);
+
+					inputStream = serialPort.getInputStream();
+					outputStream = serialPort.getOutputStream();
+
+					nvsReader = new NVSSerialReader(inputStream,outputStream,portName);
+					nvsReader.enableDebugMode(this.enableDebug);
+					reply = nvsReader.setBinrProtocol();
+				}
+				
 				//nvsReader.setStreamEventListener(streamEventListener);
 				nvsReader.setRate(this.setMeasurementRate);
 				nvsReader.enableSysTimeLog(this.enableTimetag);

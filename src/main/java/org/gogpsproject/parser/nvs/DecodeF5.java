@@ -227,6 +227,9 @@ public class DecodeF5 {
 				/* Reserved, 1 byte*/
 				bytes = new byte[1];
 				in.read(bytes, 0, bytes.length);
+				
+//				in.read(); // DLE
+//		        in.read(); // ETX
 									
 //				if (os.getSatID() <= 32) {
 //					

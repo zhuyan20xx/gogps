@@ -62,11 +62,8 @@ public class DecodeF7 {
 		boolean galEnable = multiConstellation[3];
 		boolean bdsEnable = multiConstellation[4];
 				
-		if (satType == 1 && gpsEnable == true){   // GPS: 138(-2) bytes	
-		
-				eph.setSatType('G');
-				eph.setSatID((int)satId);
-		
+		if (satType == 1){   // GPS: 138(-2) bytes	
+
 				int signInt;
 				String signStr; 
 				int espInt;
@@ -74,115 +71,102 @@ public class DecodeF7 {
 				long mantInt;
 				String mantStr; 
 				double mantInt2;
-			
-			
+
 				/*  Crs, 4 bytes  */		
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);
-				float crs = Bits.byteToIEEE754Float(bytes);
-		        eph.setCrs(crs);		        
+				float crs = Bits.byteToIEEE754Float(bytes);		        
 		        
 		        /*  deltaN, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);
 				float deltaN = Bits.byteToIEEE754Float(bytes);
-		        eph.setDeltaN(deltaN);		        
-		        
+				deltaN = deltaN*1000;
+
 		        /*  M0, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double m0 = Bits.byteToIEEE754Double(bytes);
-				eph.setM0(m0);
-								
+
 		        /*  Cuc, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);
 				float cuc = Bits.byteToIEEE754Float(bytes);
-		        eph.setCuc(cuc);
-		        
+
 		        /*  E, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);	
 				double e = Bits.byteToIEEE754Double(bytes);
-				eph.setE(e);   
-							
+			
 		        /*  Cus, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);
 				float cus = Bits.byteToIEEE754Float(bytes);
-		        eph.setCus(cus);
-		        		        
+
 		        /*  SqrtA, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double rootA = Bits.byteToIEEE754Double(bytes);
-				eph.setRootA(rootA);
-					        
+
 		        /*  Toe, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double toe = Bits.byteToIEEE754Double(bytes);
-				eph.setToe(toe);
-				  	        
+				toe = toe/1000;
+
 		        /*  Cic, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);
 				float cic = Bits.byteToIEEE754Float(bytes);
-		        eph.setCic(cic);	        
-		        
+
 		        /*  Omega0, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double omega0 = Bits.byteToIEEE754Double(bytes);
-				eph.setOmega0(omega0);	        
-				
+
 				/*  Cis, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);
 				float cis = Bits.byteToIEEE754Float(bytes);
-		        eph.setCis(cis);	        
-		        
+
 		        /*  I0, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double i0 = Bits.byteToIEEE754Double(bytes);
-				eph.setI0(i0);
-				
+
 				/*  Crc, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);
 				float crc = Bits.byteToIEEE754Float(bytes);
-		        eph.setCrc(crc);	   
-		        
+
 		        /*  W, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double omega = Bits.byteToIEEE754Double(bytes);
-				eph.setOmega(omega);
-				
+
 				/*  OmegaR(OmegaDot), 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double omegaDot = Bits.byteToIEEE754Double(bytes);
-				eph.setOmegaDot(omegaDot);
-				
+				omegaDot = omegaDot*1000;
+
 				/*  IDOT, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double iDot = Bits.byteToIEEE754Double(bytes);
-				eph.setiDot(iDot);	
+				iDot = iDot*1000;
 				
 				/*  Tgd, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);
 				float tgd = Bits.byteToIEEE754Float(bytes);
-		        eph.setTgd(tgd);        
-		        
+				tgd = tgd/1000;
+
 		        /*  Toc, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double toc = Bits.byteToIEEE754Double(bytes);
-				eph.setToc(toc);
+				toc = toc/1000;
 		        			
 				/*  Af2, 4 bytes  */
 				bytes = new byte[4];
@@ -202,57 +186,82 @@ public class DecodeF7 {
 		        mantStr = binAf2.substring(9);
 		        mantInt = Integer.parseInt(mantStr, 2);
 		        mantInt2 = mantInt / Math.pow(2, 23);
-		        double af2 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 127)) * (1 + mantInt2));  //FP32   
-		        eph.setAf2(af2);
-				
-		        
+		        double af2 = (double) (Math.pow(-1, signInt) * Math.pow(2, (espInt - 127)) * (1 + mantInt2));  //FP32
+		        af2 = af2*1000;
+
 		        /*  Af1, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);			
 				float af1 = Bits.byteToIEEE754Float(bytes);
-		        eph.setAf1(af1);        
-		        
+
 		        /*  Af0, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);				
 				float af0 = Bits.byteToIEEE754Float(bytes);
-		        eph.setAf0(af0);
-		        	        
+				af0 = af0/1000;
+
 		        /*  URA(svaccur), 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
-				long svAccur = Bits.byteToLong(bytes);				
-				eph.setSvAccur((int)svAccur);			
-				
+				long svAccur = Bits.byteToLong(bytes);	
+
 				/*  IODE, 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
 				long iode = Bits.byteToLong(bytes);
-				eph.setIode((int)iode);			
 				
 				/*  IODC, 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
-				long iodc = Bits.byteToLong(bytes);			
-				eph.setIodc((int)iodc);			
-				
+				long iodc = Bits.byteToLong(bytes);		
+
 				/*  CodeL2, 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
-				long l2Code = Bits.byteToLong(bytes);				
-				eph.setL2Code((int)l2Code);
-				
+				long l2Code = Bits.byteToLong(bytes);
+
 				/*  L2_Pdata_flag, 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
-				long l2Flag = Bits.byteToLong(bytes);		
-				eph.setL2Flag((int)l2Flag);		
-				
+				long l2Flag = Bits.byteToLong(bytes);	
+
 				/*  WeekN, 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
-				long week = Bits.byteToLong(bytes);		
-				eph.setWeek((int)week);
+				long week = Bits.byteToLong(bytes);
+
+				if (gpsEnable == true) {
+					
+					eph.setSatType('G');
+					eph.setSatID((int)satId);
+			        eph.setCrs(crs);
+			        eph.setDeltaN(deltaN);
+					eph.setM0(m0);
+			        eph.setCuc(cuc);
+					eph.setE(e);
+			        eph.setCus(cus);
+					eph.setRootA(rootA);
+					eph.setToe(toe);
+			        eph.setCic(cic);
+					eph.setOmega0(omega0);
+			        eph.setCis(cis);
+					eph.setI0(i0);
+			        eph.setCrc(crc);
+					eph.setOmega(omega);
+					eph.setOmegaDot(omegaDot);
+					eph.setiDot(iDot);
+			        eph.setTgd(tgd);
+					eph.setToc(toc);
+			        eph.setAf2(af2);
+			        eph.setAf1(af1);
+			        eph.setAf0(af0);
+					eph.setSvAccur((int)svAccur);
+					eph.setIode((int)iode);
+					eph.setIodc((int)iodc);
+					eph.setL2Code((int)l2Code);
+					eph.setL2Flag((int)l2Flag);
+					eph.setWeek((int)week);
+				}
 			
 //				System.out.println("+----------------  Start of F7 (GPS) ------------------+");
 //				System.out.println("satType: " + satType);  
@@ -289,10 +298,6 @@ public class DecodeF7 {
         
 		}else if (satType == 2 && gloEnable == true){  // GLONASS: 93 (-2) bytes
 
-				eph.setSatType('R');
-				eph.setSatID((int)satId);
-//				System.out.println("satId: " + satId); 
-
 				/*  Carrier Number, 1 bytes  */
 				int carrierNum = in.read();
 				
@@ -301,93 +306,79 @@ public class DecodeF7 {
 				in.read(bytes, 0, bytes.length);
 				double X = Bits.byteToIEEE754Double(bytes);
 				X = X * 1e3;
-				eph.setX(X);
 	
 				/*  Y, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Y = Bits.byteToIEEE754Double(bytes);
 				Y = Y * 1e3;
-				eph.setY(Y);
 				
 				/*  Z, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Z = Bits.byteToIEEE754Double(bytes);
 				Z = Z * 1e3;
-				eph.setZ(Z);
-				
+
 				/*  Xv, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Xv = Bits.byteToIEEE754Double(bytes);
 				Xv = Xv * 1e3;
-				eph.setXv(Xv);
-				
+
 				/*  Yv, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Yv = Bits.byteToIEEE754Double(bytes);
 				Yv = Yv * 1e3;
-				eph.setYv(Yv);
-				
+
 				/*  Zv, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Zv = Bits.byteToIEEE754Double(bytes);
 				Zv = Zv * 1e3;
-				eph.setZv(Zv);
-				
+
 				/*  Xa, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Xa = Bits.byteToIEEE754Double(bytes);
 				Xa = Xa * 1e3;
-				eph.setXa(Xa);
-				
+
 				/*  Ya, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Ya = Bits.byteToIEEE754Double(bytes);
 				Ya = Ya * 1e3;
-				eph.setYa(Ya);
-				
+
 				/*  Za, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double Za = Bits.byteToIEEE754Double(bytes);
 				Za = Za * 1e3;
-				eph.setZa(Za);
-				
+
 				/*  tb, 8 bytes  */
 				bytes = new byte[8];
 				in.read(bytes, 0, bytes.length);
 				double tb = Bits.byteToIEEE754Double(bytes);
-				tb = tb * 1e-3 ;
-				eph.settb(tb);
-				
+				tb = tb * 1e-3;
+
 				/*  gammaN, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);				
 				float gammaN = Bits.byteToIEEE754Float(bytes);
-				eph.setGammaN(gammaN);
-				
+
 				 /*  tn, 4 bytes  */
 				bytes = new byte[4];
 				in.read(bytes, 0, bytes.length);				
 				float tn = Bits.byteToIEEE754Float(bytes);
-				eph.setTauN(tn);
-				
+
 				/*  En, 2 bytes  */
 				bytes = new byte[2];
 				in.read(bytes, 0, bytes.length);
-				long En = Bits.byteToLong(bytes);	
-				eph.setEn(En);
-				
+				long En = Bits.byteToLong(bytes);
+
 				/* tb is a time interval within the current day (UTC + 3 hours)*/
-				double tk = tb - 10800;		
-				eph.settk(tk);
-				
+				double tk = tb - 10800;
+
 //				System.out.println("+--------------  Start of F7 (GLONASS)  -------------+");
 //				System.out.println("satType: " + satType);  
 //				System.out.println("GLONASS PRN: " + satId);
@@ -410,10 +401,30 @@ public class DecodeF7 {
 //				System.out.println("En: "+ En);	
 //				System.out.println("+-----------------  End of F7  -----------------------+");
 			
-			
-		}        
+				if (gloEnable) {
+					eph.setSatType('R');
+					eph.setSatID((int)satId);
+					eph.setX(X);
+					eph.setY(Y);
+					eph.setZ(Z);
+					eph.setXv(Xv);
+					eph.setYv(Yv);
+					eph.setZv(Zv);
+					eph.setXa(Xa);
+					eph.setYa(Ya);
+					eph.setZa(Za);
+					eph.settb(tb);
+					eph.setGammaN(gammaN);
+					eph.setTauN(tn);
+					eph.setEn(En);
+					eph.settk(tk);
+				}
+		}
+		
+//		in.read(); // DLE
+//      in.read(); // ETX
 
-			return eph;
+		return eph;
 	}
 
 

@@ -65,7 +65,7 @@ public class LogNVS {
                 .action(Arguments.storeTrue())
                 .help("show warning messages for debugging purposes");
 		parser.addArgument("port").nargs("*")
-				.help("COM port(s) connected to u-blox receivers (e.g. COM3 COM10)");
+				.help("COM port(s) connected to NVS receivers (e.g. COM3 COM10)");
 		Namespace ns = null;
 		try {
 			ns = parser.parseArgs(args);
@@ -96,7 +96,7 @@ public class LogNVS {
 			for (String portId : ns.<String> getList("port")) {
 				
 				NVSSerialConnection nvsSerialConn = new NVSSerialConnection(portId, 115200);
-				
+
 				nvsSerialConn.setMeasurementRate((Integer) ns.get("rate"));
 				nvsSerialConn.enableTimetag(ns.getBoolean("timetag"));
 				nvsSerialConn.enableRinexObs(ns.getBoolean("rinexobs"));
