@@ -41,7 +41,14 @@ public class NVSReader implements StreamEventProducer {
 	private BufferedInputStream bis;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 	private Boolean debugModeEnabled = false;
-	private Boolean[] multiConstellation;
+	
+	boolean gpsEnable = true;  // enable GPS data reading
+	boolean qzsEnable = true;  // enable QZSS data reading
+    boolean gloEnable = true;  // enable GLONASS data reading	
+    boolean galEnable = true;  // enable Galileo data reading
+    boolean bdsEnable = true;  // enable BeiDou data reading
+
+    private Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
 //	private StreamEventListener streamEventListener;
 
 //	public NVSReader(InputStream is){
@@ -81,38 +88,38 @@ public class NVSReader implements StreamEventProducer {
 				EphGps eph = decodeF7.decode();
 				if(streamEventListeners!=null && eph!=null){
 					for(StreamEventListener sel:streamEventListeners){
-						sel.addEphemeris(eph);
+//						sel.addEphemeris(eph);
 					}
 				}
-//				System.out.println("F7h");
+
 				return eph;
 						
 			}else
 			if (data == 0xf5){  // F5
 				
-				 int leng1 = is.available();  // for Total data
-				 int leng2 = 0;	 			  // for <DLE><ETX><DLE> position
-				 is.mark(leng1); 			// To rewind in.read point 
-				 
-				 	/* To calculate the number of satellites */
-				    while(is.available()>0){			
-						 data = is.read();
-						if(data == 0x10){  // <DLE>
-							data = is.read(); 
-							if(data == 0x03){  // <ETX>
-								data = is.read();
-								if(data == 0x10){  // <DLE>
-										leng2 = this.is.available();
-										leng2 = (leng1 - leng2 + 1 ) * 8 ;
-//										int nsv = (leng2 - 224) / 240;  
-										/* 28*8 bits = 224, 30*8 bits = 240 */
-//										System.out.println("leng: " + leng );
-//										System.out.println("Num of Satellite: "+ nsv);
-										break;
-								}					
-							}							
-						}	
-				  }	
+				int leng1 = is.available();  // for Total data
+				int leng2 = 0;	 			  // for <DLE><ETX><DLE> position
+				is.mark(leng1); 			// To rewind in.read point 
+
+				/* To calculate the number of satellites */
+				while(is.available()>0){			
+					data = is.read();
+					if(data == 0x10){  // <DLE>
+						data = is.read(); 
+						if(data == 0x03){  // <ETX>
+							data = is.read();
+							if(data == 0x10){  // <DLE>
+								leng2 = this.is.available();
+								leng2 = (leng1 - leng2 + 1 ) * 8 ;
+								// int nsv = (leng2 - 224) / 240;  
+								/* 28*8 bits = 224, 30*8 bits = 240 */
+								// System.out.println("leng: " + leng );
+								// System.out.println("Num of Satellite: "+ nsv);
+								break;
+							}					
+						}							
+					}	
+				}
 				    
 				if(leng2 != 0){
 						is.reset(); // To return to in.mark point  
@@ -126,7 +133,7 @@ public class NVSReader implements StreamEventProducer {
 								sel.addObservations(oc);
 							}
 						}
-	//					System.out.println("F5h");
+
 						return o;
 				}else{
 						return null;
@@ -141,25 +148,60 @@ public class NVSReader implements StreamEventProducer {
 				IonoGps iono = decode4A.decode();
 				if(streamEventListeners!=null && iono!=null){
 					for(StreamEventListener sel:streamEventListeners){
-						sel.addIonospheric(iono);
+//						sel.addIonospheric(iono);
 					}
 				}
-//				System.out.println("4Ah");
+
 				return iono;
 
 				
 			}else
 			if (data == 0x62){
 				
-//				System.out.println("62h");
+				findMessageEnd();
 				
-			}else{
-//				System.out.println("else");
-				//System.out.println("Wrong Sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+			}else
+			if (data == 0x70){
+				
+				findMessageEnd();
+				
+			}else
+			if (data == 0x4b){
+				
+				findMessageEnd();
+					
+			}else
+			if (data == 0xF6){
+					
+				findMessageEnd();
+						
+			}
+			else
+			if (debugModeEnabled) {
+
+				System.out.println("Warning: wrong sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 			}
 
 			return null;
 	}
+	
+	private void findMessageEnd() {
+		int data = 0;
+		try {
+			while(is.available()>0){			
+				data = is.read();
+				if(data == 0x10){  // <DLE>
+					data = is.read(); 
+					if(data == 0x03){  // <ETX>
+						break;
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * @return the streamEventListener
 	 */

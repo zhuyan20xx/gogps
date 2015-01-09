@@ -19,6 +19,7 @@
  */
 package org.gogpsproject.parser.nvs;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -46,7 +47,7 @@ import org.gogpsproject.util.InputStreamCounter;
 
 public class NVSSerialReader implements Runnable,StreamEventProducer {
 
-	private InputStreamCounter in;
+	private BufferedInputStream in;
 	private OutputStream out;
 	//private boolean end = false;
 	private Thread t = null;
@@ -93,9 +94,63 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		this.in = new InputStreamCounter(in,fos_nvs);
+		this.in = new BufferedInputStream(in);
 		this.out = out;
 		this.reader = new NVSReader(this.in,streamEventListener);
+	}
+	
+	public boolean setBinrProtocol() throws IOException {
+		Date date = new Date();
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		String date1 = sdf1.format(date);
+		
+		NVSProtocolConfiguration msgcfg = new NVSProtocolConfiguration();
+		out.write(msgcfg.getByte());
+		in.skip(in.available());
+		out.flush();
+
+		int data = 0;
+		try { Thread.sleep(100); } catch (InterruptedException e) {}
+		if(in.available()>0){
+			data = in.read();
+			if(data == 0x10){
+				data = in.read();
+				if(data == 0x50 || data == 0xf5 || data == 0x0B){
+					in.skip(in.available());
+					System.out.println(date1+" - "+COMPort+" - raw data messages (F5h) enabled");
+					return true;
+				}
+			} else {
+				if (this.debugModeEnabled) {
+					System.out.println("Warning: wrong sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+				}
+			}
+		}
+		
+		String nmeacfg = "$PORZA,0,115200,3";
+		nmeacfg = nmeacfg+"*"+computeNMEACheckSum(nmeacfg)+"\r\n";
+		out.write(nmeacfg.getBytes());
+		in.skip(in.available());
+		out.flush();
+
+		try { Thread.sleep(100); } catch (InterruptedException e) {}
+		if(in.available()>0){
+			data = in.read();
+			if(data == 0x24){ // "$"
+				data = in.read();
+				if(data == 0x50){ // "P"
+					in.skip(in.available());
+					System.out.println(date1+" - "+COMPort+" - raw data messages (F5h) enabled");
+					return true;
+				}
+			} else {
+				if (this.debugModeEnabled) {
+					System.out.println("Warning: wrong sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+				}
+			}
+		}
+		
+		return false;
 	}
 
 	public void start()  throws IOException{
@@ -107,11 +162,6 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
 
-		System.out.println(date1+" - "+COMPort+" - raw data messages (F5h) enabled");
-		NVSProtocolConfiguration msgcfg = new NVSProtocolConfiguration();
-		out.write(msgcfg.getByte());
-		out.flush();
-		
 		System.out.println(date1+" - "+COMPort+" - Measurement rate set at "+measRate+" Hz");
 		NVSRateConfiguration ratecfg = new NVSRateConfiguration(measRate, 1, 1);
 		out.write(ratecfg.getByte());
@@ -157,8 +207,6 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		}
 
 		try {
-
-			in.start();
 			sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 			String dateSys = null;
 			String dateGps = null;
@@ -179,7 +227,8 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 										    sel.pointToNextObservations();
 
 										    f5hMsgReceived = true;
-
+										    System.out.println("f5hMsgReceived");
+										    
 										    if (this.sysTimeLogEnabled) {
 										    	dateGps = sdf1.format(new Date(co.getRefTime().getMsec()));
 										    	psSystime.println(dateGps +"       "+dateSys);
@@ -236,12 +285,7 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 				}
 
 				if (f5hMsgReceived) {
-					int bps = in.getCurrentBps();
-					if (bps != 0) {
-						System.out.println(dateSys+" - "+COMPort+" - Logging at "+String.format("%4d", bps)+" Bps -- Total: "+in.getCounter()+" bytes");
-					} else {
-						System.out.println(dateSys+" - "+COMPort+" - Log starting...     -- Total: "+in.getCounter()+" bytes");
-					}
+					System.out.println(dateSys+" - "+COMPort+" - Logging ...");
 					f5hMsgReceived = false;
 				}
 			}
@@ -313,5 +357,21 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 			COMPort = tokens[tokens.length-1].trim();	//for UNIX /dev/tty* ports
 		}
 		return COMPort;
+	}
+	
+	private static String computeNMEACheckSum(String msg){
+		// perform NMEA checksum calculation
+		int chk = 0;
+
+		for (int i = 1; i < msg.length(); i++){
+			chk ^= msg.charAt(i);
+		}
+		String chk_s = Integer.toHexString(chk).toUpperCase();
+		// checksum must be 2 characters!
+		while (chk_s.length() < 2){
+			chk_s = "0" + chk_s;
+		}
+		return chk_s;
+
 	}
 }
