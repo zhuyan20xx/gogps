@@ -225,6 +225,7 @@ public class Observations implements Streamable {
 		dos.writeUTF(MESSAGE_OBSERVATIONS); // 5
 		dos.writeInt(STREAM_V); // 4
 		dos.writeLong(refTime==null?-1:refTime.getMsec()); // 13
+		dos.writeDouble(refTime==null?-1:refTime.getFraction());
 		dos.write(eventFlag); // 14
 		dos.write(gps==null?0:gps.size()); // 15
 		int size=19;
@@ -266,7 +267,7 @@ public class Observations implements Streamable {
 		if(!oldVersion) v=dai.readInt();
 
 		if(v==1){
-			refTime = new Time(dai.readLong());
+			refTime = new Time(dai.readLong(), dai.readDouble());
 			eventFlag = dai.read();
 			int size = dai.read();
 			gps = new ArrayList<ObservationSet>(size);
