@@ -267,20 +267,19 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 										    			rinexOut.streamClosed();
 										    			rinexOut = null;
 										    		}
-
-										    		String COMPortStrId = COMPortStr.length() >= 2 ? COMPortStr.substring(COMPortStr.length() - 2) : "0" + COMPortStr;
+										    		String COMPortStrMarker = prepareCOMStringForMarker(COMPortStr);
+										    		String COMPortStrId = COMPortStrMarker.length() >= 2 ? COMPortStrMarker.substring(COMPortStr.length() - 2) : "0" + COMPortStrMarker;
 										    		String marker = "UB" + COMPortStrId;
-										    		char session = 'a' - 1;
-										    		String outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
+										    		String outFile = "";
+										    		char session = '0';
+
+										    		outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
 										    		File f = new File(outFile);
-										    		if(f.exists()){
-										    			String prev = "";
-										    			if (session <= 'y') {
-										    				session++;
-										    			} else {
-										    				prev.concat("z");
-										    			}
-										    			outFile = outputDir + "/" + marker + String.format("%03d", DOY) + prev + session + "." + co.getRefTime().getYear2c() + "o";
+										    		
+										    		while (f.exists()){
+										    			session++;
+										    			outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
+										    			f = new File(outFile);
 										    		}
 										    		System.out.println(date1+" - "+COMPort+" - Started writing RINEX file "+outFile);
 										    		rinexOut = new RinexV2Producer(outFile, false, true);
@@ -456,7 +455,14 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 	private String prepareCOMStringForFilename(String COMPort) {
 		String [] tokens = COMPort.split("/");
 		if (tokens.length > 0) {
-			COMPort = tokens[tokens.length-1].trim();	//for UNIX /dev/tty* ports
+			COMPort = tokens[tokens.length-1].trim();          //for UNIX /dev/tty* ports
+		}
+		return COMPort;
+	}
+	
+	private String prepareCOMStringForMarker(String COMPort) {
+		if (COMPort.substring(0, 3).equals("COM")) {
+			COMPort = COMPort.substring(3, COMPort.length());  //for Windows COM* ports
 		}
 		return COMPort;
 	}

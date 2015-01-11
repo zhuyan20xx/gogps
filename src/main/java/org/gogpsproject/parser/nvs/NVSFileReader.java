@@ -20,22 +20,12 @@
 package org.gogpsproject.parser.nvs;
 
 
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
-import java.io.OutputStreamWriter;
 
-import org.ejml.simple.SimpleMatrix;
-import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
 import org.gogpsproject.EphemerisSystem;
@@ -44,7 +34,6 @@ import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.SatellitePosition;
-import org.gogpsproject.StreamResource;
 
 /**
  * <p>
@@ -54,10 +43,8 @@ import org.gogpsproject.StreamResource;
  * @author Daisuke Yoshida OCU
  */
 
-public class NVSFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer, Runnable {
-	
+public class NVSFileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
 
-//	private InputStream in;
 	private BufferedInputStream in;
 	private File file;
 	private Observations obs = null;
@@ -65,12 +52,6 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	private IonoGps iono = null;
 	// TODO support past times, now keep only last broadcast data
 	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
-//	private BufferedInputStream in0;
-
-    String tmpfile = "./data/data.txt";  // for storing processed data after removing double <DLE>
-
-    private Thread t = null;
-	//private Boolean[] multiConstellation;
 	
     boolean gpsEnable = true;  // enable GPS data reading
 	boolean qzsEnable = true;  // enable QZSS data reading
@@ -122,63 +103,12 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	 * @see org.gogpsproject.ObservationsProducer#init()
 	 */
 	@Override
-	public void run() {
-		
-		/* read original data file */
-		FileInputStream inf = null;
-		try {
-			inf = new FileInputStream(file);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		BufferedInputStream in0 = new BufferedInputStream(inf);
-		
-		/* write processed data */
-	    FileOutputStream outf = null;
-		try {
-			outf = new FileOutputStream(tmpfile);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		BufferedOutputStream out = new BufferedOutputStream(outf);	
-		
-		System.out.println("Removing double <DLE> (10h) bytes from NVS binary data...");
-		
-		/*  remove double <DLE> into single  */
-		try {
-			while(in0.available()>0){   
-				int contents = in0.read();
-			    out.write(contents);
-			    
-				if(contents == 0x10){
-					contents = in0.read();
-					if(contents == 0x10){
-						continue;	
-					}else{
-						out.write(contents);								
-					}										
-				}	
-				
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}								
-		
-		try {
-			out.close();
-			outf.close();
-			in0.close();
-			inf.close();	
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	    		
+	public void init() throws Exception {
+		FileInputStream ins = new FileInputStream(file);
+		this.in = new BufferedInputStream(ins);
+		this.reader = new NVSReader(in, multiConstellation, null);
 	}
-	
-	
+
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#init()
 	 */
@@ -218,8 +148,6 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 			}
 			
 			in.close();
-			File file = new File(tmpfile);		
-			file.delete();
 			
 		}catch(IOException e){
 			e.printStackTrace();
@@ -265,30 +193,6 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 	public IonoGps getIono(long unixTime) {
 		return iono;
 	}
-
-	@Override
-	public void init() throws Exception {
-		// TODO Auto-generated method stub
-		
-		t = new Thread(this);
-		t.start();	
-
-		Thread.sleep(1000);
-		/* read processed data file */
-		FileInputStream ins = null;
-		try {
-			ins = new FileInputStream(tmpfile);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	    this.in = new BufferedInputStream(ins);	    		
-		this.reader = new NVSReader(in, multiConstellation, null);
-		
-	}
-
-	
 }	
 
 

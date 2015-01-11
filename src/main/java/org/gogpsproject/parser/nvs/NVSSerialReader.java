@@ -19,7 +19,6 @@
  */
 package org.gogpsproject.parser.nvs;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -31,11 +30,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
+import org.gogpsproject.EphGps;
 import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
-import org.gogpsproject.util.InputStreamCounter;
+import org.gogpsproject.util.BufferedInputStreamCounter;
 
 /**
  * <p>
@@ -47,7 +47,7 @@ import org.gogpsproject.util.InputStreamCounter;
 
 public class NVSSerialReader implements Runnable,StreamEventProducer {
 
-	private BufferedInputStream in;
+	private BufferedInputStreamCounter in;
 	private OutputStream out;
 	//private boolean end = false;
 	private Thread t = null;
@@ -71,11 +71,10 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 	}
 	
 	public NVSSerialReader(InputStream in,OutputStream out,String COMPort,StreamEventListener streamEventListener) {
-		
 		FileOutputStream fos_nvs= null;
 		COMPort = padCOMSpaces(COMPort);
 		String COMPortStr = prepareCOMStringForFilename(COMPort);
-
+		
 		File file = new File(outputDir);
 		if(!file.exists() || !file.isDirectory()){
 		    boolean wasDirectoryMade = file.mkdirs();
@@ -88,13 +87,15 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		String date1 = sdf1.format(date);
 		SimpleDateFormat sdfFile = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 		dateFile = sdfFile.format(date);
+		
 		try {
 			System.out.println(date1+" - "+COMPort+" - Logging NVS stream in "+outputDir+"/"+ COMPortStr+ "_" + dateFile + ".bin");
 			fos_nvs = new FileOutputStream(outputDir+"/"+COMPortStr+ "_" + dateFile + ".nvs");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		this.in = new BufferedInputStream(in);
+		
+		this.in = new BufferedInputStreamCounter(in, fos_nvs);
 		this.out = out;
 		this.reader = new NVSReader(this.in,streamEventListener);
 	}
@@ -186,11 +187,14 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		int data = 0;
 		FileOutputStream fos_tim = null;
 		PrintStream psSystime = null;
+		COMPort = padCOMSpaces(COMPort);
+		String COMPortStr = prepareCOMStringForFilename(COMPort);
 
 		Date date = new Date();
 		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		String date1 = sdf1.format(date);
-		String COMPortStr = prepareCOMStringForFilename(COMPort);
+		SimpleDateFormat sdfFile = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		dateFile = sdfFile.format(date);
 		
 		if (sysTimeLogEnabled) {
 			System.out.println(date1+" - "+COMPort+" - System time logging enabled");
@@ -211,13 +215,22 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 			String dateSys = null;
 			String dateGps = null;
 			boolean f5hMsgReceived = false;
+			boolean f7hMsgReceived = false;
 			reader.enableDebugMode(this.debugModeEnabled);
 			while (!stop) {
 				if(in.available()>0){
 					dateSys = sdf1.format(new Date());
-					data = in.read();
+					data = in.readWrite();
 					try{
 						if(data == 0x10){
+							int leng = in.available();  // available data
+							in.mark(leng); 			    // To rewind in.read point
+							data = in.readWrite();
+							if(data == 0x10){
+								continue;
+							} else {
+								in.reset();             // Rewind in.read point
+							}
 							Object o = reader.readMessage();
 							try {
 								if(o instanceof Observations){
@@ -227,7 +240,6 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 										    sel.pointToNextObservations();
 
 										    f5hMsgReceived = true;
-										    System.out.println("f5hMsgReceived");
 										    
 										    if (this.sysTimeLogEnabled) {
 										    	dateGps = sdf1.format(new Date(co.getRefTime().getMsec()));
@@ -242,20 +254,19 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 										    			rinexOut.streamClosed();
 										    			rinexOut = null;
 										    		}
-
-										    		String COMPortStrId = COMPortStr.length() >= 2 ? COMPortStr.substring(COMPortStr.length() - 2) : "0" + COMPortStr;
+										    		String COMPortStrMarker = prepareCOMStringForMarker(COMPortStr);
+										    		String COMPortStrId = COMPortStrMarker.length() >= 2 ? COMPortStrMarker.substring(COMPortStr.length() - 2) : "0" + COMPortStrMarker;
 										    		String marker = "NV" + COMPortStrId;
-										    		char session = 'a' - 1;
-										    		String outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
+										    		String outFile = "";
+										    		char session = '0';
+
+										    		outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
 										    		File f = new File(outFile);
-										    		if(f.exists()){
-										    			String prev = "";
-										    			if (session <= 'y') {
-										    				session++;
-										    			} else {
-										    				prev.concat("z");
-										    			}
-										    			outFile = outputDir + "/" + marker + String.format("%03d", DOY) + prev + session + "." + co.getRefTime().getYear2c() + "o";
+										    		
+										    		while (f.exists()){
+										    			session++;
+										    			outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
+										    			f = new File(outFile);
 										    		}
 										    		System.out.println(date1+" - "+COMPort+" - Started writing RINEX file "+outFile);
 										    		rinexOut = new RinexV2Producer(outFile, false, true);
@@ -266,6 +277,8 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 										    }
 										}
 									}
+								} else if (o instanceof EphGps) {
+									f7hMsgReceived = true;
 								}
 							} catch (NullPointerException e) {
 							}
@@ -278,15 +291,19 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 						nvse.printStackTrace();
 					}
 				}else{
-					// no bytes to read, wait 1 msec
+					// no bytes to read, wait 1 sec
 					try {
-						Thread.sleep(1);
+						Thread.sleep(1000);
 					} catch (InterruptedException e) {}
 				}
 
 				if (f5hMsgReceived) {
-					System.out.println(dateSys+" - "+COMPort+" - Logging ...");
+					System.out.println(dateSys+" - "+COMPort+" - f5h message received (...logging raw data)");
 					f5hMsgReceived = false;
+				}
+				if (f7hMsgReceived) {
+					System.out.println(dateSys+" - "+COMPort+" - f7h message received");
+					f7hMsgReceived = false;
 				}
 			}
 		} catch (IOException e) {
@@ -354,7 +371,14 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 	private String prepareCOMStringForFilename(String COMPort) {
 		String [] tokens = COMPort.split("/");
 		if (tokens.length > 0) {
-			COMPort = tokens[tokens.length-1].trim();	//for UNIX /dev/tty* ports
+			COMPort = tokens[tokens.length-1].trim();          //for UNIX /dev/tty* ports
+		}
+		return COMPort;
+	}
+	
+	private String prepareCOMStringForMarker(String COMPort) {
+		if (COMPort.substring(0, 3).equals("COM")) {
+			COMPort = COMPort.substring(3, COMPort.length());  //for Windows COM* ports
 		}
 		return COMPort;
 	}

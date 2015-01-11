@@ -20,8 +20,12 @@
 package org.gogpsproject.parser.nvs;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
 
 import org.gogpsproject.EphGps;
@@ -29,6 +33,7 @@ import org.gogpsproject.IonoGps;
 import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
+import org.gogpsproject.util.BufferedInputStreamCounter;
 /**
  * <p>
  * Read and parse NVS messages
@@ -37,16 +42,16 @@ import org.gogpsproject.StreamEventProducer;
  * @author Daisuke Yoshida (Osaka City University), Lorenzo Patocchi (cryms.com)
  */
 public class NVSReader implements StreamEventProducer {
-	private InputStream is;
-	private BufferedInputStream bis;
+	private InputStream is = null;
+	private BufferedInputStreamCounter bisc = null;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 	private Boolean debugModeEnabled = false;
 	
 	boolean gpsEnable = true;  // enable GPS data reading
-	boolean qzsEnable = true;  // enable QZSS data reading
+	boolean qzsEnable = false;  // enable QZSS data reading
     boolean gloEnable = true;  // enable GLONASS data reading	
-    boolean galEnable = true;  // enable Galileo data reading
-    boolean bdsEnable = true;  // enable BeiDou data reading
+    boolean galEnable = false;  // enable Galileo data reading
+    boolean bdsEnable = false;  // enable BeiDou data reading
 
     private Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
 //	private StreamEventListener streamEventListener;
@@ -59,9 +64,9 @@ public class NVSReader implements StreamEventProducer {
 		this(is,null, null);		
 	}
 	
-	public NVSReader(InputStream is, StreamEventListener eventListener){
+	public NVSReader(BufferedInputStreamCounter is, StreamEventListener eventListener){
 		this.is = is;
-//		this.in = (BufferedInputStream) is;
+		this.bisc = is;
 		addStreamEventListener(eventListener);
 	}
 	
@@ -77,12 +82,13 @@ public class NVSReader implements StreamEventProducer {
 //	public Object readMessage(BufferedInputStream in) throws IOException, NVSException{
 
 			int data = is.read();
-			@SuppressWarnings("unused")
 			boolean parsed = false;
 			
 			if(data == 0xf7){ // F7
+				
+				ByteArrayInputStream msg = new ByteArrayInputStream(removeDouble0x10(findMessageEnd()));
 
-				DecodeF7 decodeF7 = new DecodeF7(is, multiConstellation);
+				DecodeF7 decodeF7 = new DecodeF7(msg, multiConstellation);
 				parsed = true;
 				
 				EphGps eph = decodeF7.decode();
@@ -97,36 +103,39 @@ public class NVSReader implements StreamEventProducer {
 			}else
 			if (data == 0xf5){  // F5
 				
-				int leng1 = is.available();  // for Total data
-				int leng2 = 0;	 			  // for <DLE><ETX><DLE> position
-				is.mark(leng1); 			// To rewind in.read point 
-
-				/* To calculate the number of satellites */
-				while(is.available()>0){			
-					data = is.read();
-					if(data == 0x10){  // <DLE>
-						data = is.read(); 
-						if(data == 0x03){  // <ETX>
-							data = is.read();
-							if(data == 0x10){  // <DLE>
-								leng2 = this.is.available();
-								leng2 = (leng1 - leng2 + 1 ) * 8 ;
-								// int nsv = (leng2 - 224) / 240;  
-								/* 28*8 bits = 224, 30*8 bits = 240 */
-								// System.out.println("leng: " + leng );
-								// System.out.println("Num of Satellite: "+ nsv);
-								break;
-							}					
-						}							
-					}	
-				}
-				    
-				if(leng2 != 0){
-						is.reset(); // To return to in.mark point  
-						DecodeF5 decodeF5 = new DecodeF5(is, multiConstellation);										
+				byte[] byteArray = removeDouble0x10(findMessageEnd());
+				ByteArrayInputStream msg = new ByteArrayInputStream(byteArray);
+				
+//				int leng1 = is.available();  // for Total data
+//				int leng2 = 0;	 			  // for <DLE><ETX><DLE> position
+//				is.mark(leng1); 			// To rewind in.read point 
+//
+//				/* To calculate the number of satellites */
+//				while(is.available()>0){			
+//					data = is.read();
+//					if(data == 0x10){  // <DLE>
+//						data = is.read(); 
+//						if(data == 0x03){  // <ETX>
+//							data = is.read();
+//							if(data == 0x10){  // <DLE>
+//								leng2 = this.is.available();
+//								leng2 = (leng1 - leng2 + 1 ) * 8 ;
+//								// int nsv = (leng2 - 224) / 240;  
+//								/* 28*8 bits = 224, 30*8 bits = 240 */
+//								// System.out.println("leng: " + leng );
+//								// System.out.println("Num of Satellite: "+ nsv);
+//								break;
+//							}					
+//						}							
+//					}	
+//				}
+//				    
+//				if(leng2 != 0){
+//						is.reset(); // To return to in.mark point  
+						DecodeF5 decodeF5 = new DecodeF5(msg, multiConstellation);										
 						parsed = true;
 						
-						Observations o = decodeF5.decode(null, leng2);
+						Observations o = decodeF5.decode(null, byteArray.length*8);
 						if(streamEventListeners!=null && o!=null){
 							for(StreamEventListener sel:streamEventListeners){
 								Observations oc = (Observations)o.clone();
@@ -135,14 +144,17 @@ public class NVSReader implements StreamEventProducer {
 						}
 
 						return o;
-				}else{
-						return null;
-				}
+//				}else{
+//						return null;
+//				}
 				
 				
 			}else
 			if (data == 0x4a){ // 4A
-				Decode4A decode4A = new Decode4A(is);
+				
+				ByteArrayInputStream msg = new ByteArrayInputStream(removeDouble0x10(findMessageEnd()));
+				
+				Decode4A decode4A = new Decode4A(msg);
 				parsed = true;
 				
 				IonoGps iono = decode4A.decode();
@@ -154,7 +166,6 @@ public class NVSReader implements StreamEventProducer {
 
 				return iono;
 
-				
 			}else
 			if (data == 0x62){
 				
@@ -177,6 +188,12 @@ public class NVSReader implements StreamEventProducer {
 						
 			}
 			else
+			if (data == 0xe7){
+					
+				findMessageEnd();
+							
+			}
+			else
 			if (debugModeEnabled) {
 
 				System.out.println("Warning: wrong sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
@@ -185,14 +202,25 @@ public class NVSReader implements StreamEventProducer {
 			return null;
 	}
 	
-	private void findMessageEnd() {
-		int data = 0;
+	private Byte[] findMessageEnd() {
+		List<Byte> data = new ArrayList<Byte>();
 		try {
-			while(is.available()>0){			
-				data = is.read();
-				if(data == 0x10){  // <DLE>
-					data = is.read(); 
-					if(data == 0x03){  // <ETX>
+			while(is.available()>0){
+				byte value;
+				if (bisc != null) {
+					value = (byte) bisc.readWrite();
+				} else {
+					value = (byte) is.read();
+				}
+				data.add(value);
+				if(value == 0x10){  // <DLE>
+					if (bisc != null) {
+						value = (byte) bisc.readWrite();
+					} else {
+						value = (byte) is.read();
+					}
+					data.add(value);
+					if(value == 0x03){  // <ETX>
 						break;
 					}
 				}
@@ -200,6 +228,19 @@ public class NVSReader implements StreamEventProducer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return data.toArray(new Byte[data.size()]);
+	}
+
+	private byte[] removeDouble0x10(Byte[] in) {
+		byte[] out = new byte[in.length];
+		int i, k;
+		for(i = 0, k = 0; i < in.length; i++, k++) {
+			out[k] = in[i];
+			if (in[i] == 0x10 && in[i+1] == 0x10) {
+				i++;
+			}
+		}
+		return Arrays.copyOfRange(out,0,in.length-(i-k));
 	}
 
 	/**

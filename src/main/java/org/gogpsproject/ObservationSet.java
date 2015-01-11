@@ -247,6 +247,7 @@ public class ObservationSet implements Streamable {
 
 		dos.writeInt(STREAM_V); size +=4;
 		dos.write(satID);size +=1;		// 1
+		dos.write(satType);size +=1;		// 1
 		// L1 data
 		dos.write((byte)qualityInd[L1]);	size+=1;
 		dos.write((byte)lossLockInd[L1]);	size+=1;
@@ -285,6 +286,7 @@ public class ObservationSet implements Streamable {
 
 		if(v==1){
 			satID = dai.read();
+			satType = (char) dai.read();
 
 			// L1 data
 			qualityInd[L1] = (int)dai.read();
