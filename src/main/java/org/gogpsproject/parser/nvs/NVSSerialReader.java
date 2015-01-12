@@ -220,19 +220,9 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 			while (!stop) {
 				if(in.available()>0){
 					dateSys = sdf1.format(new Date());
-					data = in.readWrite();
+					data = in.read();
 					try{
 						if(data == 0x10){
-							int leng = in.available();  // available data
-							in.mark(leng); 			    // to rewind in.read pointer
-							data = in.readWrite();
-							if(data == 0x10){           // double <DLE>
-								continue;
-							} else {
-								in.reset();             // rewind in.read point
-							}
-							if(data == 0x03)            // message end, not beginning
-								continue;
 							Object o = reader.readMessage();
 							try {
 								if(o instanceof Observations){
