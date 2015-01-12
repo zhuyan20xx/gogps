@@ -31,18 +31,18 @@ public class NVSRateConfiguration {
 
 	private Vector<Integer> msg;
 
-	public NVSRateConfiguration(int measRate, int navRate, int timeRef) {
+	public NVSRateConfiguration(int rate) {
 		msg = new Vector();
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(0xD7)); // D7h
 		msg.addElement(new Integer(0x02)); // 02 --> navigation rate
-		msg.addElement(new Integer(navRate));
+		msg.addElement(new Integer(rate));
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(nvsSuffix));
 		
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(0xF4)); // F4h
-		msg.addElement(new Integer((int) ((1/(double) measRate)/0.1)));
+		msg.addElement(new Integer((int) ((1/(double) rate)/0.1)));
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(nvsSuffix));
 	}
