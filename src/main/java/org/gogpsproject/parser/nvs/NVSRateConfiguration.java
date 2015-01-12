@@ -42,7 +42,7 @@ public class NVSRateConfiguration {
 		
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(0xF4)); // F4h
-		msg.addElement(new Integer((int) ((1/measRate)/0.1)));
+		msg.addElement(new Integer((int) ((1/(double) measRate)/0.1)));
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(nvsSuffix));
 	}
