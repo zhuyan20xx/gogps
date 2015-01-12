@@ -224,13 +224,15 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 					try{
 						if(data == 0x10){
 							int leng = in.available();  // available data
-							in.mark(leng); 			    // To rewind in.read point
+							in.mark(leng); 			    // to rewind in.read pointer
 							data = in.readWrite();
-							if(data == 0x10){
+							if(data == 0x10){           // double <DLE>
 								continue;
 							} else {
-								in.reset();             // Rewind in.read point
+								in.reset();             // rewind in.read point
 							}
+							if(data == 0x03)            // message end, not beginning
+								continue;
 							Object o = reader.readMessage();
 							try {
 								if(o instanceof Observations){
@@ -279,21 +281,29 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 									}
 								} else if (o instanceof EphGps) {
 									f7hMsgReceived = true;
+								} else if (o instanceof Integer) {
+									if (this.debugModeEnabled) {
+										System.out.println("Unsupported message");
+									}
+								} else if (o == null) {
+									if (this.debugModeEnabled) {
+										System.out.println("Decoding error");
+									}
 								}
 							} catch (NullPointerException e) {
 							}
 						} else {
 							if (this.debugModeEnabled) {
-								System.out.println("Warning: wrong sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
+								//System.out.println("Warning: wrong sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 							}
 						}
 					}catch(NVSException nvse){
 						nvse.printStackTrace();
 					}
 				}else{
-					// no bytes to read, wait 1 sec
+					// no bytes to read, wait 1 msec
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(1);
 					} catch (InterruptedException e) {}
 				}
 
