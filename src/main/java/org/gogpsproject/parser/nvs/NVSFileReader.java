@@ -127,23 +127,17 @@ public class NVSFileReader extends EphemerisSystem implements ObservationsProduc
 						if(o instanceof Observations){
 							return (Observations)o;
 						}else
-							if(o instanceof IonoGps){
-								iono = (IonoGps)o;
-							}
+						if(o instanceof IonoGps){
+							iono = (IonoGps)o;
+						}else
 						if(o instanceof EphGps){
 
 							EphGps e = (EphGps)o;
 							ephs.put(new Integer(e.getSatID()), e);
 						}
-						
-						
-//					}else{
-						//no warning, may be NMEA
-						//System.out.println("Wrong Sync char 1 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 					}
 				}catch(NVSException nvse){
 					System.err.println(nvse);
-//					ubxe.printStackTrace();
 				}
 			}
 			
