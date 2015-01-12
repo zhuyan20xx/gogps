@@ -42,6 +42,7 @@ public class NVSRateConfiguration {
 		
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(0xF4)); // F4h
+		rate = 1; //to be further checked...
 		msg.addElement(new Integer((int) ((1/(double) rate)/0.1)));
 		msg.addElement(new Integer(nvsPrefix));
 		msg.addElement(new Integer(nvsSuffix));
