@@ -211,6 +211,7 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		}
 
 		try {
+			in.start();
 			sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 			String dateSys = null;
 			String dateGps = null;
@@ -298,11 +299,21 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 				}
 
 				if (f5hMsgReceived) {
-					System.out.println(dateSys+" - "+COMPort+" - f5h message received (...logging raw data)");
+					int bps = in.getCurrentBps();
+					if (bps != 0) {
+						System.out.println(dateSys+" - "+COMPort+" - logging at "+String.format("%4d", bps)+" Bps -- total: "+in.getCounter()+" bytes");
+					} else {
+						System.out.println(dateSys+" - "+COMPort+" - log starting...     -- total: "+in.getCounter()+" bytes");
+					}
 					f5hMsgReceived = false;
 				}
 				if (f7hMsgReceived) {
-					System.out.println(dateSys+" - "+COMPort+" - f7h message received");
+					int bps = in.getCurrentBps();
+					if (bps != 0) {
+						System.out.println(dateSys+" - "+COMPort+" - logging at "+String.format("%4d", bps)+" Bps -- total: "+in.getCounter()+" bytes");
+					} else {
+						System.out.println(dateSys+" - "+COMPort+" - log starting...     -- total: "+in.getCounter()+" bytes");
+					}
 					f7hMsgReceived = false;
 				}
 			}
