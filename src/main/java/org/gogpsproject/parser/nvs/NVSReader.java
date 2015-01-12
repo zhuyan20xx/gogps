@@ -33,7 +33,6 @@ import org.gogpsproject.IonoGps;
 import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
-import org.gogpsproject.util.BufferedInputStreamCounter;
 /**
  * <p>
  * Read and parse NVS messages
@@ -43,14 +42,13 @@ import org.gogpsproject.util.BufferedInputStreamCounter;
  */
 public class NVSReader implements StreamEventProducer {
 	private InputStream is = null;
-	private BufferedInputStreamCounter bisc = null;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 	private Boolean debugModeEnabled = false;
 	
 	boolean gpsEnable = true;  // enable GPS data reading
 	boolean qzsEnable = false;  // enable QZSS data reading
     boolean gloEnable = true;  // enable GLONASS data reading	
-    boolean galEnable = false;  // enable Galileo data reading
+    boolean galEnable = true;  // enable Galileo data reading
     boolean bdsEnable = false;  // enable BeiDou data reading
 
     private Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
@@ -60,9 +58,8 @@ public class NVSReader implements StreamEventProducer {
 		this(is,null, null);		
 	}
 	
-	public NVSReader(BufferedInputStreamCounter is, StreamEventListener eventListener){
+	public NVSReader(BufferedInputStream is, StreamEventListener eventListener){
 		this.is = is;
-		this.bisc = is;
 		addStreamEventListener(eventListener);
 	}
 	
@@ -162,18 +159,10 @@ public class NVSReader implements StreamEventProducer {
 			while (!stop) {
 				if(is.available()>0){
 					byte value;
-					if (bisc != null) {
-						value = (byte) bisc.readWrite();
-					} else {
-						value = (byte) is.read();
-					}
+					value = (byte) is.read();
 					data.add(value);
-					if(value == 0x10){  // <DLE>
-						if (bisc != null) {
-							value = (byte) bisc.readWrite();
-						} else {
-							value = (byte) is.read();
-						}
+					if(value == 0x10){  // <dle>
+						value = (byte) is.read();
 						data.add(value);
 						if(value == 0x03){  // <ETX>
 							stop = true;

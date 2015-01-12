@@ -57,16 +57,6 @@ public class BufferedInputStreamCounter extends BufferedInputStream{
 		int c = is.read();
 		//if(c>=0){
 			//System.out.println("*");
-//			counter++;
-		//}
-//		if(os!=null && c>=0) os.write(c);
-		return c;
-	}
-	
-	public int readWrite() throws IOException {
-		int c = is.read();
-		//if(c>=0){
-			//System.out.println("*");
 			counter++;
 		//}
 		if(os!=null && c>=0) os.write(c);
