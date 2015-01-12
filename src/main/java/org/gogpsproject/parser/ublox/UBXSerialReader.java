@@ -354,9 +354,9 @@ public class UBXSerialReader implements Runnable,StreamEventProducer {
 				if (rxmRawMsgReceived/*curTS-sysOutTS >= 1*1000*/) {
 					int bps = in.getCurrentBps();
 					if (bps != 0) {
-						System.out.println(dateSys+" - "+COMPort+" - Logging at "+String.format("%4d", bps)+" Bps -- Total: "+in.getCounter()+" bytes");
+						System.out.println(dateSys+" - "+COMPort+" - logging at "+String.format("%4d", bps)+" Bps -- total: "+in.getCounter()+" bytes");
 					} else {
-						System.out.println(dateSys+" - "+COMPort+" - Log starting...     -- Total: "+in.getCounter()+" bytes");
+						System.out.println(dateSys+" - "+COMPort+" - log starting...     -- total: "+in.getCounter()+" bytes");
 					}
 					//sysOutTS = curTS;
 					rxmRawMsgReceived = false;
