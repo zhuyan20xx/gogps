@@ -111,12 +111,13 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 				nvsReader = new NVSSerialReader(inputStream,outputStream,portName);
 				nvsReader.enableDebugMode(this.enableDebug);
 				reply = nvsReader.setBinrProtocol();
+
+				Thread.sleep(100);
+				serialPort.setSerialPortParams(speed, SerialPort.DATABITS_8,
+						SerialPort.STOPBITS_1, SerialPort.PARITY_ODD);
 				
 				if (!reply) {
 					//try with BINR
-					serialPort.setSerialPortParams(speed, SerialPort.DATABITS_8,
-							SerialPort.STOPBITS_1, SerialPort.PARITY_ODD);
-
 					inputStream = serialPort.getInputStream();
 					outputStream = serialPort.getOutputStream();
 
@@ -125,15 +126,15 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 					reply = nvsReader.setBinrProtocol();
 				}
 				
+				connected = true;
+				System.out.println("Connection on " + portName + " established");
+				
 				//nvsReader.setStreamEventListener(streamEventListener);
 				nvsReader.setRate(this.setMeasurementRate);
 				nvsReader.enableSysTimeLog(this.enableTimetag);
 				nvsReader.enableRinexObsOutput(this.enableRnxObs);
 				nvsReader.enableDebugMode(this.enableDebug);
 				nvsReader.start();
-
-				connected = true;
-				System.out.println("Connection on " + portName + " established");
 			}
 	}
 
