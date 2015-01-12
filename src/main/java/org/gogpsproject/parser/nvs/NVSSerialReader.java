@@ -164,7 +164,7 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		String date1 = sdf1.format(date);
 
 		System.out.println(date1+" - "+COMPort+" - Measurement rate set at "+measRate+" Hz");
-		NVSRateConfiguration ratecfg = new NVSRateConfiguration(measRate, 1, 1);
+		NVSRateConfiguration ratecfg = new NVSRateConfiguration(measRate);
 		out.write(ratecfg.getByte());
 		out.flush();
 
