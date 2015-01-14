@@ -72,6 +72,17 @@ public class Coordinates implements Streamable{
 		return c;
 	}
 
+	public static Coordinates globalGeodInstance( double lat, double lon, double alt ){
+		Coordinates c = new Coordinates();
+		//c.ecef = new SimpleMatrix(3, 1);
+		c.setGeod( lat, lon, alt);
+		c.computeECEF();
+
+		if( !c.isValidXYZ() )
+			throw new RuntimeException("Invalid ECEF: " + c);
+		return c;
+	}
+
 	public SimpleMatrix minusXYZ(Coordinates coord){
 		return this.ecef.minus(coord.ecef);
 	}
@@ -109,6 +120,51 @@ public class Coordinates implements Streamable{
 		this.geod.set(0, 0, Math.toDegrees(lamGeod));
 		this.geod.set(1, 0, Math.toDegrees(phiGeod));
 		this.geod.set(2, 0, h);
+	}
+
+	/*
+	 function [X,Y,Z] = frgeod( a, finv, dphi, dlambda, h )
+	     %FRGEOD  Subroutine to calculate Cartesian coordinates X,Y,Z
+	     %       given geodetic coordinates latitude, longitude (east),
+	     %       and height above reference ellipsoid along with
+	     %       reference ellipsoid values semi-major axis (a) and
+	     %       the inverse of flattening (finv)
+
+	     % The units of linear parameters h,a must agree (m,km,mi,..etc).
+	     % The input units of angular quantities must be in decimal degrees.
+	     % The output units of X,Y,Z will be the same as the units of h and a.
+	     % Copyright (C) 1987 C. Goad, Columbus, Ohio
+	     % Reprinted with permission of author, 1996
+	     % Original Fortran code rewritten into MATLAB
+	     % Kai Borre 03-03-96
+	 */
+	public void computeECEF() {
+		final long a = 6378137;
+		final double finv = 298.257223563d;
+
+		double dphi = this.geod.get(1);
+		double dlambda = this.geod.get(0);
+		double h = this.geod.get(2);
+
+		// compute degree-to-radian factor
+		double dtr = Math.PI/180;
+
+		// compute square of eccentricity
+		double esq = (2-1/finv)/finv;
+		double sinphi = Math.sin(dphi*dtr);
+		// compute radius of curvature in prime vertical
+		double N_phi = a/Math.sqrt(1-esq*sinphi*sinphi);
+
+		// compute P and Z
+		// P is distance from Z axis
+		double P = (N_phi + h)*Math.cos(dphi*dtr);
+		double Z = (N_phi*(1-esq) + h) * sinphi;
+		double X = P*Math.cos(dlambda*dtr);
+		double Y = P*Math.sin(dlambda*dtr);
+
+		this.ecef.set(0, 0, X );
+		this.ecef.set(1, 0, Y );
+		this.ecef.set(2, 0, Z );
 	}
 
 	/**
@@ -167,6 +223,12 @@ public class Coordinates implements Streamable{
 		this.ecef.set(0, 0, x);
 		this.ecef.set(1, 0, y);
 		this.ecef.set(2, 0, z);
+	}
+	public void setGeod( double lat, double lon, double alt ){
+		//if(this.ecef==null) this.ecef = new SimpleMatrix(3, 1);
+		this.geod.set(1, 0, lat);
+		this.geod.set(0, 0, lon);
+		this.geod.set(2, 0, alt);
 	}
 	public void setPlusXYZ(SimpleMatrix sm){
 		this.ecef.set(ecef.plus(sm));
