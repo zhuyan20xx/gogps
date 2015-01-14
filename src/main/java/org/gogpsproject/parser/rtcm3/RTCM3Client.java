@@ -21,6 +21,7 @@
 package org.gogpsproject.parser.rtcm3;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -45,6 +46,7 @@ import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.StreamResource;
 import org.gogpsproject.Time;
+import org.gogpsproject.producer.rinex.RinexV2Producer;
 import org.gogpsproject.util.Bits;
 import org.gogpsproject.util.InputStreamCounter;
 
@@ -103,8 +105,11 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	private int week;
 	private double currentTime;
 	private double previousTime = -1;
-
-
+	private RinexV2Producer rinexOut = null;
+	private int DOYold = 0;
+	private String outputDir = "./out";
+	private String markerName = "MMMM";
+	private boolean rinexObsOutputEnabled = false;
 
 	/**
 	 * @return the exitPolicy
@@ -309,9 +314,25 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	public void run() {
 		Socket sck = null;
 		PrintWriter out = null;
+		
+		File file = new File(outputDir);
+		if(!file.exists() || !file.isDirectory()){
+		    boolean wasDirectoryMade = file.mkdirs();
+		    if(wasDirectoryMade)System.out.println("Directory "+outputDir+" created");
+		    else System.out.println("Could not create directory "+outputDir);
+		}
+		
+		Date date = new Date();
+		SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		String date1 = sdf1.format(date);
+		SimpleDateFormat sdfFile = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+		String dateFile = sdfFile.format(date);
+
+		System.out.println(date1 + " - Logging NVS stream in "+outputDir+"/" + markerName + "_" + dateFile + ".rtcm");
+		setStreamFileLogger(outputDir+"/" + markerName + "_" + dateFile + ".rtcm");
 
 		try {
-			// Socket for reciving data are created
+			// Socket for receiving data are created
 
 			try {
 				Proxy proxy = Proxy.NO_PROXY;
@@ -694,6 +715,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		long start = System.currentTimeMillis();
 		if(debug) System.out.print("Wait for header");
 		online = true;
+
 		while(running) {
 			c = in.read();
 
@@ -706,12 +728,51 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				}
 				if(debug) System.out.print(".");
 			}
+			Object o = null;
 			if (header) {
 				//if(debug) System.out.println("Header : " + c);
 				if (c == 211) { // header
-					readMessage(in);
+					o = readMessage(in);
 				}
 			}
+			
+			if(o instanceof Observations){
+				if(streamEventListeners!=null && o!=null){
+					for(StreamEventListener sel:streamEventListeners){
+						Observations co = sel.getCurrentObservations();
+					    sel.pointToNextObservations();
+					    
+					    if (this.rinexObsOutputEnabled) {
+					    	//check if the day changes; if yes, a new daily RINEX file must be started
+					    	int DOY = co.getRefTime().getDayOfYear();
+
+					    	if (DOY != this.DOYold) {
+					    		if (rinexOut != null) {
+					    			rinexOut.streamClosed();
+					    			rinexOut = null;
+					    		}
+					    		String outFile = "";
+					    		char session = '0';
+
+					    		outFile = outputDir + "/" + markerName + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
+					    		File f = new File(outFile);
+					    		
+					    		while (f.exists()){
+					    			session++;
+					    			outFile = outputDir + "/" + markerName + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
+					    			f = new File(outFile);
+					    		}
+					    		System.out.println("Started writing RINEX file "+outFile);
+					    		rinexOut = new RinexV2Producer(outFile, false, true);
+
+					    		this.DOYold = DOY;
+					    	}
+					    	rinexOut.addObservations(co);
+					    }
+					}
+				}
+			}
+			
 			if(out!=null && System.currentTimeMillis()-lastNtripGAAsent > ntripGAAsendDelay){
 				out.print(ntripGAA+"\r\n");
 				lastNtripGAAsent = System.currentTimeMillis();
@@ -749,13 +810,17 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 			if(debug) System.out.println("message type : " + msgtype);
 			messagelength = 0;
+			
+			Date date = new Date();
+			SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+			String date1 = sdf1.format(date);
 
 			Decode dec = decodeMap.get(new Integer(msgtype));
 			if(dec!=null){
 				if (online) {
 					Time currentTime = new Time(System.currentTimeMillis());
 					o = dec.decode(bits, currentTime.getGpsWeek());
-					System.out.println("RTCM message "+msgtype+" received and decoded");
+					System.out.println(date1 + " - RTCM message "+msgtype+" received and decoded");
 				} else {
 					o = dec.decode(bits, week);
 					if(o instanceof Observations){
@@ -1017,4 +1082,11 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		return virtualReferenceStationPosition;
 	}
 
+	public void setMarkerName(String markerName) {
+		this.markerName = markerName;
+	}
+
+	public void enableRinexObs(Boolean enableRnxObs) {
+			this.rinexObsOutputEnabled = enableRnxObs;
+	}
 }
