@@ -176,7 +176,7 @@ public class Coordinates implements Streamable{
 	}
 
 	public boolean isValidXYZ(){
-		return (this.ecef != null & this.ecef.elementSum() != 0 & !Double.isNaN(this.ecef.get(0)) & !Double.isNaN(this.ecef.get(1)) & !Double.isNaN(this.ecef.get(2)));
+		return (this.ecef != null && this.ecef.elementSum() != 0 && !Double.isNaN(this.ecef.get(0)) && !Double.isNaN(this.ecef.get(1)) && !Double.isNaN(this.ecef.get(2)));
 	}
 
 	public Object clone(){
