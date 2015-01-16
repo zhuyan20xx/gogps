@@ -19,13 +19,11 @@
  *
  */
 package org.gogpsproject.apps;
-import java.util.List;
 import java.util.Locale;
 
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
-import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
