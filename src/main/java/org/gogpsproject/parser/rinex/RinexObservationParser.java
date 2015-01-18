@@ -36,6 +36,8 @@ import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.StreamResource;
 import org.gogpsproject.Time;
 
+import java.math.BigDecimal;
+
 /**
  * <p>
  * Class for parsing RINEX observation files
@@ -65,6 +67,7 @@ public class RinexObservationParser implements ObservationsProducer{
 	// data parsing
 	private int nGps;
 	private int nGlo;
+	private int nQzs;
 	private int nSbs;
 	private int nSat;
 	private char[] sysOrder;
@@ -79,6 +82,8 @@ public class RinexObservationParser implements ObservationsProducer{
 
 	Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
 
+//	String line;
+	
 	public RinexObservationParser(File fileObs) {
 		this.fileObs = fileObs;
 	}
@@ -151,17 +156,44 @@ public class RinexObservationParser implements ObservationsProducer{
 						} else if (line.substring(5, 7).equals("3.")){							
 							ver = 3;							
 						} else if (line.substring(5, 9).equals("2.12")){							
-							ver = 3;							
+							ver = 212;							
 						} else {							
 							ver = 2;							
 						}						
 				}
 				
 				switch (ver){ 	
-				/* In case of RINEX ver. 2 */
+				/* In case of RINEX ver. 2.11 */
 				case 2: 
 						if (typeField.equals("# / TYPES OF OBSERV")) {
-							parseTypes(line);
+							parseTypesV2(line);
+							foundTypeObs = true;
+						}		
+						else if (typeField.equals("TIME OF FIRST OBS")) {
+							parseTimeFirstObs(line);
+						}		
+						else if (typeField.equals("APPROX POSITION XYZ")) {
+							parseApproxPos(line);
+						}		
+						else if (typeField.equals("ANTENNA: DELTA H/E/N")) {
+							parseAntDelta(line);
+						}		
+						else if (typeField.equals("END OF HEADER")) {
+							if (!foundTypeObs) {
+								// Display an error if TIME OF FIRST OBS was not found
+								System.err.println("Critical information"
+										+ "(TYPES OF OBSERV) is missing in file "
+										+ fileObs.toString() + " header");
+							}
+							return ver;
+						}		
+				break;
+				
+				/* In case of RINEX ver. 2.12 */
+				case 212: 
+//						System.out.println("RINEX version : 2.12");
+						if (typeField.equals("# / TYPES OF OBSERV")) {
+							parseTypesV212(line);
 							foundTypeObs = true;
 						}		
 						else if (typeField.equals("TIME OF FIRST OBS")) {
@@ -243,9 +275,11 @@ public class RinexObservationParser implements ObservationsProducer{
 	 */
 	public Observations getNextObservations() {
 
+		
+		
 		try {
 			
-			/* In case of RINEX ver. 2 */
+			/* In case of RINEX ver. 2.11 */
 			if (ver == 2){ 	
 
 					if(!hasMoreObservations()) return null;
@@ -362,11 +396,149 @@ public class RinexObservationParser implements ObservationsProducer{
 					// Store event flag
 					//obs.eventFlag = eventFlag;
 		
-					parseDataObs();
+					parseDataObsV2();
 		
 					obs.cleanObservations();
 		
 					return obs;
+					
+			
+			 /* In case of RINEX ver. 2.12 */
+			}else if (ver == 212){ 	
+
+							if(!hasMoreObservations()) return null;
+							String line = buffStreamObs.readLine();
+							int len = line.length();
+				
+							// Parse date and time
+							String dateStr = "20" + line.substring(1, 22);
+							
+							// Parse event flag
+							String eFlag = line.substring(28, 30).trim();
+							int eventFlag = Integer.parseInt(eFlag);
+				
+							// Parse available satellites string
+							String satAvail = line.substring(30, len);
+				
+							// Parse number of available satellites
+							String numOfSat = satAvail.substring(0, 2).trim();
+							nSat = Integer.parseInt(numOfSat);
+				
+							// Arrays to store satellite order
+							satOrder = new int[nSat];
+							sysOrder = new char[nSat];
+				
+							nGps = 0;
+							nGlo = 0;
+							nSbs = 0;
+							nQzs = 0;
+				
+							// If number of satellites <= 12, read only one line...
+							if (nSat <= 12) {
+				
+								// Parse satellite IDs
+								int j = 2;
+								for (int i = 0; i < nSat; i++) {
+				
+									String satType = satAvail.substring(j, j + 1);
+									String satID = satAvail.substring(j + 1, j + 3);
+									if (satType.equals("G") || satType.equals(" ")) {
+										sysOrder[i] = 'G';
+										satOrder[i] = Integer.parseInt(satID.trim());
+										nGps++;
+									} else if (satType.equals("R")) {
+										sysOrder[i] = 'R';
+										satOrder[i] = Integer.parseInt(satID.trim());
+										nGlo++;
+									} else if (satType.equals("S")) {
+										sysOrder[i] = 'S';
+										satOrder[i] = Integer.parseInt(satID.trim());
+										nSbs++;
+									} else if (satType.equals("J")) {
+										sysOrder[i] = 'J';
+										satOrder[i] = Integer.parseInt(satID.trim());
+										nQzs++;
+									}
+									
+									j = j + 3;
+								}
+							} else { // ... otherwise, read two lines
+				
+								// Parse satellite IDs
+								int j = 2;
+								for (int i = 0; i < 12; i++) {
+				
+									String satType = satAvail.substring(j, j + 1);
+									String satID = satAvail.substring(j + 1, j + 3);
+									if (satType.equals("G") || satType.equals(" ")) {
+										sysOrder[i] = 'G';
+										satOrder[i] = Integer.parseInt(satID.trim());
+										nGps++;
+									} else if (satType.equals("R")) {
+										sysOrder[i] = 'R';
+										satOrder[i] = Integer.parseInt(satID.trim());
+										nGlo++;
+									} else if (satType.equals("S")) {
+										sysOrder[i] = 'S';
+										satOrder[i] = Integer.parseInt(satID.trim());
+										nSbs++;
+									} else if (satType.equals("J")) {
+										sysOrder[i] = 'J';
+										satOrder[i] = Integer.parseInt(satID.trim());
+										nQzs++;
+									}
+									j = j + 3;
+								}
+								// Get second line
+								satAvail = buffStreamObs.readLine().trim();
+				
+								// Number of remaining satellites
+								int num = nSat - 12;
+				
+								// Parse satellite IDs
+								int k = 0;
+								for (int i = 0; i < num; i++) {
+				
+									String satType = satAvail.substring(k, k + 1);
+									String satID = satAvail.substring(k + 1, k + 3);
+									if (satType.equals("G") || satType.equals(" ")) {
+										sysOrder[i + 12] = 'G';
+										satOrder[i + 12] = Integer.parseInt(satID.trim());
+										nGps++;
+									} else if (satType.equals("R")) {
+										sysOrder[i + 12] = 'R';
+										satOrder[i + 12] = Integer.parseInt(satID.trim());
+										nGlo++;
+									} else if (satType.equals("S")) {
+										sysOrder[i + 12] = 'S';
+										satOrder[i + 12] = Integer.parseInt(satID.trim());
+										nSbs++;
+									} else if (satType.equals("J")) {
+										sysOrder[i + 12] = 'J';
+										satOrder[i + 12] = Integer.parseInt(satID.trim());
+										nQzs++;
+									}
+									k = k + 3;
+								}
+							}
+				
+							obs = new Observations(new Time(dateStr), eventFlag);
+				
+							// Convert date string to standard UNIX time in milliseconds
+							//long time = Time.dateStringToTime(dateStr);
+				
+							// Store time
+							//obs.refTime = new Time(dateStr);
+							//obs.refTime.msec = time;
+				
+							// Store event flag
+							//obs.eventFlag = eventFlag;
+				
+							parseDataObsV2();
+				
+							obs.cleanObservations();
+				
+							return obs;
 					
 					
 			/* In case of RINEX ver. 3 */
@@ -397,6 +569,7 @@ public class RinexObservationParser implements ObservationsProducer{
 				nGps = 0;
 				nGlo = 0;
 				nSbs = 0;
+				nQzs = 0;
 				
 				obs = new Observations(new Time(dateStr), eventFlag);
 	
@@ -436,7 +609,7 @@ public class RinexObservationParser implements ObservationsProducer{
 	/**
 	 * Parse one observation epoch
 	 */
-	private void parseDataObs() {
+	private void parseDataObsV2() {
 
 		try {
 
@@ -454,14 +627,20 @@ public class RinexObservationParser implements ObservationsProducer{
 //				obs.glo = new ObservationSet[nGlo];
 //			if (nSbs > 0)
 //				obs.sbs = new ObservationSet[nSbs];
-
+			
 			// Loop through observation lines
 			for (int i = 0; i < nSat; i++) {
-
+				
 				// Read line of observations
 				String line = buffStreamObs.readLine();
 
-				if (sysOrder[i] == 'G') {
+				float nLinesToRead0 = (float) nTypes / 5;
+				BigDecimal bd0 = new BigDecimal(nLinesToRead0);
+				BigDecimal bd = bd0.setScale(0, BigDecimal.ROUND_UP);  
+				int nLinesToRead = (int) bd.doubleValue();			
+
+				if (sysOrder[i] == 'G' && gpsEnable) {
+
 					// Create observation object
 					ObservationSet os = new ObservationSet();
 					os.setSatType('G');
@@ -478,47 +657,149 @@ public class RinexObservationParser implements ObservationsProducer{
 					//obs.gps[i].setSatID(satOrder[i]);
 //					obs.gpsSat.add(satOrder[i]);
 
-					if (nTypes <= 5) { // If the number of observation
-						// types
-						// is <= 5, they are all on one line ...
+					if (nLinesToRead == 1) { 
 
 						// Parse observation data according to typeOrder
 						int j = 0;
 						for (int k = 0; k < nTypes; k++) {
-
 							assignTypes(line, k, j, i, os.getSatType());
 							j = j + 16;
 						}
 
-					} else { // ... otherwise, they are on two lines
-
-						// Parse observation data according to typeOrder
-						// (first line <-> 5 observation columns)
-						int j = 0;
-						for (int k = 0; k < 5; k++) {
-
-							assignTypes(line, k, j, i, os.getSatType());
-							j = j + 16;
-						}
-
-						// Get second line
-						line = buffStreamObs.readLine();
-
-						// Parse observation data according to typeOrder
-						// (second line)
-						j = 0;
-						for (int k = 5; k < nTypes; k++) {
-
-							assignTypes(line, k, j, i, os.getSatType());
-							j = j + 16;
-						}
+					} else { // ... otherwise, they are more than one lines
+						
+						int k = 0;
+						for (int l = 0; l < nLinesToRead; l++){
+		
+							int remTypes = nTypes -  5 * l ; // To calculate remaining Types 
+							
+							if (remTypes > 5){  // 5 types is in one line 
+								int j = 0;					
+								for (int m = 0; m < 5; m++ ) {	
+									assignTypes(line, k, j, i, os.getSatType());
+									j = j + 16;
+									k++;
+								}
+								line = buffStreamObs.readLine();										
+							
+							} else if (remTypes < 5 && remTypes > 0) {  // the number of types in the last line 
+								int j = 0;				
+								for (int m = 0; m < remTypes; m++ ) {	
+									assignTypes(line, k, j, i, os.getSatType());
+									j = j + 16;
+									k++;
+								}							
+							}	// end of if 			
+						} // end of for
 					}
-				} else if (nTypes > 5){
-					// Skip additional observation line for GLO and SBS
-					line = buffStreamObs.readLine();
-				}
-			}
+					// end of GPS
+					
+			} else if (sysOrder[i] == 'R' && gloEnable) {
+							
+				ObservationSet os = new ObservationSet();
+				os.setSatType('R');
+				os.setSatID(satOrder[i]);
+				obs.setGps(i, os);
+				
+				if (nLinesToRead == 1) { 
 
+					// Parse observation data according to typeOrder
+					int j = 0;
+					for (int k = 0; k < nTypes; k++) {
+						assignTypes(line, k, j, i, os.getSatType());
+						j = j + 16;
+					}
+
+				} else { // ... otherwise, they are more than one lines
+					
+					int k = 0;
+					for (int l = 0; l < nLinesToRead; l++){
+	
+						int remTypes = nTypes -  5 * l ; // To calculate remaining Types 
+						
+						if (remTypes > 5){  // 5 types is in one line 
+							int j = 0;					
+							for (int m = 0; m < 5; m++ ) {	
+								assignTypes(line, k, j, i, os.getSatType());
+								j = j + 16;
+								k++;
+							}
+							// Get next line
+							line = buffStreamObs.readLine();
+						
+						} else if (remTypes < 5 && remTypes > 0) {  // the number of types in the last line 
+							int j = 0;				
+							for (int m = 0; m < remTypes; m++ ) {	
+								assignTypes(line, k, j, i, os.getSatType());
+								j = j + 16;
+								k++;
+							}							
+						}	// end of if 																		
+					} // end of for
+				} 
+				// end of GLONASS
+				
+			} else if (sysOrder[i] == 'J' && qzsEnable) {
+				
+				ObservationSet os = new ObservationSet();
+				os.setSatType('J');
+				os.setSatID(satOrder[i]);
+				obs.setGps(i, os);
+				
+				if (nLinesToRead == 1) { 
+
+					// Parse observation data according to typeOrder
+					int j = 0;
+					for (int k = 0; k < nTypes; k++) {
+						assignTypes(line, k, j, i, os.getSatType());
+						j = j + 16;
+					}
+
+				} else { // ... otherwise, they are more than one lines
+
+						int k = 0;
+						for (int l = 0; l < nLinesToRead; l++){
+		
+							int remTypes = nTypes -  5 * l ; // To calculate remaining Types 
+							
+							if (remTypes > 5){  // 5 types is in one line 
+								int j = 0;					
+								for (int m = 0; m < 5; m++ ) {	
+									assignTypes(line, k, j, i, os.getSatType());
+									j = j + 16;
+									k++;
+								}
+								// Get next line
+								line = buffStreamObs.readLine();	
+							
+							} else if (remTypes < 5 && remTypes > 0) {  // the number of types in the last line 
+								int j = 0;				
+								for (int m = 0; m < remTypes; m++ ) {	
+									assignTypes(line, k, j, i, os.getSatType());
+									j = j + 16;
+									k++;
+								}							
+							}	// end of if 																
+						} // end of for
+				}
+				// end of GZSS 
+				
+			} else {  // skip unselected observations
+				
+				if (nLinesToRead > 1) { // If the number of observation
+					
+					for (int l = 0; l < nLinesToRead; l++){
+						int remTypes = nTypes -  5 * l ; // To calculate remaining Types 
+						
+						if (remTypes > 5){  // 5 types in one line 
+							line = buffStreamObs.readLine();										
+						}	// end of if 			
+					} // end of for 			
+				} // end of if 
+			} // end of if
+		} 
+
+			
 		} catch (StringIndexOutOfBoundsException e) {
 			e.printStackTrace();
 			// Skip over blank lines
@@ -889,7 +1170,7 @@ public class RinexObservationParser implements ObservationsProducer{
 	/**
 	 * @param line
 	 */
-	private void parseTypes(String line) {
+	private void parseTypesV2(String line) {
 
 		// Extract number of available data types
 		nTypes = Integer.parseInt(line.substring(0, 6).trim());
@@ -929,6 +1210,70 @@ public class RinexObservationParser implements ObservationsProducer{
 		}
 	}
 	
+	/**
+	 * @param line
+	 * @param satType 
+	 * @throws IOException 
+	 */
+	private void parseTypesV212(String line) throws IOException {
+
+		// Extract number of available data types
+		nTypes = Integer.parseInt(line.substring(1, 6).trim());
+
+		// Allocate the array that stores data type order
+		typeOrder = new int[nTypes];
+
+		if(nTypes >= 19 ){  // In case of more than 18 Types, it will three lines 
+
+			int i = 0;
+			for (int j = 0; j <= 8; j++) {
+				String type = line.substring(6 * (j + 2) - 2, 6 * (j + 2));
+				checkTypeV212(type, i);
+				i++;
+			}
+			
+			line = buffStreamObs.readLine();   // read the second line, from type 10 - 18 
+	
+			for (int j = 0; j <= 8  ; j++) {
+				String type = line.substring(6 * (j + 2) - 2, 6 * (j + 2));
+				checkTypeV212(type, i);
+				i++;
+			}
+			
+			line = buffStreamObs.readLine();   // read the third line, from type 19 - 
+			
+			for (int j = 0; j < nTypes-18 ; j++) {  
+				String type = line.substring(6 * (j + 2) - 2, 6 * (j + 2));
+				checkTypeV212(type, i);
+				i++;
+			}
+		
+		} else if (nTypes > 9 && nTypes < 19){  // In case of 10 - 18 Types, it will two lines
+						
+			int i = 0;
+			for (int j = 0; j <= 8; j++) {
+				String type = line.substring(6 * (j + 2) - 2, 6 * (j + 2));
+				checkTypeV212(type, i);
+				i++;
+			}
+			
+			line = buffStreamObs.readLine();   // read the second line, from type 10 
+			
+			for (int j = 0; j < nTypes-9  ; j++) {
+				String type = line.substring(6 * (j + 2) - 2, 6 * (j + 2));
+				checkTypeV212(type, i);
+				i++ ;
+			}	
+			
+		} else {  // less than 10 types, it will be one line.  
+
+			for (int i = 0; i < nTypes; i++) {
+				String type = line.substring(6 * (i + 2) - 2, 6 * (i + 2));
+				checkTypeV212(type, i);
+			}
+		}
+		
+	}
 	
 	/**
 	 * @param line
@@ -984,6 +1329,33 @@ public class RinexObservationParser implements ObservationsProducer{
 			nTypesC = nTypes;
 		}
 	}
+	
+	private void checkTypeV212(String type, int i) {
+		if (type.equals("C1") || type.equals("CA")) {
+			typeOrder[i] = 0;
+		} else if (type.equals("C2")) {
+			typeOrder[i] = 1;
+		} else if (type.equals("P1")) {
+			typeOrder[i] = 2;
+		} else if (type.equals("P2") || type.equals("CC")) {
+			typeOrder[i] = 3;
+		} else if (type.equals("L1") || type.equals("LA")) {
+			typeOrder[i] = 4;
+		} else if (type.equals("L2") || type.equals("LC")) {
+			typeOrder[i] = 5;
+		} else if (type.equals("S1") || type.equals("SA")) {
+			typeOrder[i] = 6;
+			hasS1Field = true;
+		} else if (type.equals("S2") || type.equals("SC")) {
+			typeOrder[i] = 7;
+			hasS2Field = true;
+		} else if (type.equals("D1") || type.equals("DA")) {
+			typeOrder[i] = 8;
+		} else if (type.equals("D2") || type.equals("DC")) {
+			typeOrder[i] = 9;
+		}				
+	}
+	
 
 	private void checkTypeV3(String type, int i) {
 		if (type.equals("C1C")) {
