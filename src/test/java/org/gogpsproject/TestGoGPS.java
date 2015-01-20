@@ -66,7 +66,8 @@ public class TestGoGPS {
 			
 			/*  Jun 15th, 2013, GMSD (Multi-GNSS test) */
 			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/gmsd1660_cut.13o"), multiConstellation);
-			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm1660.13p"));
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm1660.13p"));
+			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.IGN_MULTI_NAVIGATION_DAILY);
 			
 			/* Big data in Como, Italy */
 //			ObservationsProducer roverIn =  new NVSFileReader(new File("./data/NVS_20140819_A_rover_000c.bin")); /* NVS */
