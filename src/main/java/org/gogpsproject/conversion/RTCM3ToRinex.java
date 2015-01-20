@@ -47,6 +47,8 @@ public class RTCM3ToRinex {
 		
 		//force dot as decimal separator
 		Locale.setDefault(new Locale("en", "US"));
+		
+		boolean singleFreq = false;
 
 		if(args.length<2){
 			System.out.println("RTCM3ToRinex <RTCM3 file> <marker name> <starting GPS week>");
@@ -79,8 +81,9 @@ public class RTCM3ToRinex {
 		String outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
         
 		System.out.println("Started writing RINEX file "+outFile);
-//		RinexV3Producer rp = new RinexV3Producer(outFile, false, true);
-		RinexV2Producer rp = new RinexV2Producer(outFile, false, true);
+
+//		RinexV3Producer rp = new RinexV3Producer(outFile, false, singleFreq);
+		RinexV2Producer rp = new RinexV2Producer(outFile, false, singleFreq);
 		rp.setDefinedPosition(masterIn.getDefinedPosition());
 
 		int DOYold = DOY;
@@ -101,8 +104,8 @@ public class RTCM3ToRinex {
 					outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
 
 					System.out.println("Started writing RINEX file "+outFile);
-//					rp = new RinexV3Producer(outFile, false, true);
-					rp = new RinexV2Producer(outFile, false, true);
+//					rp = new RinexV3Producer(outFile, false, singleFreq);
+					rp = new RinexV2Producer(outFile, false, singleFreq);
 					rp.setDefinedPosition(masterIn.getDefinedPosition());
 
 					DOYold = DOY;
