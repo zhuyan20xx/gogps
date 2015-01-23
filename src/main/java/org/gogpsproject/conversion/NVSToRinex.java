@@ -20,17 +20,10 @@
 package org.gogpsproject.conversion;
 
 import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Locale;
 
-import org.gogpsproject.Observations;
-import org.gogpsproject.ObservationsProducer;
-import org.gogpsproject.Time;
 import org.gogpsproject.parser.nvs.NVSFileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
-import org.gogpsproject.producer.rinex.RinexV3Producer;
 
 /**
  * @author Lorenzo Patocchi, cryms.com
@@ -59,58 +52,26 @@ public class NVSToRinex {
 		//String outFile = inFile.indexOf(".bin")>0?inFile.substring(0, inFile.indexOf(".bin"))+".obs":inFile+".obs";
 
 		System.out.println("in :"+inFile);
+		
+		RinexV2Producer rp = new RinexV2Producer(false, true, marker);
 
-		ObservationsProducer roverIn = new NVSFileReader(new File(inFile));
+		NVSFileReader roverIn = new NVSFileReader(new File(inFile));
 		try {
 			roverIn.init();
+			roverIn.addStreamEventListener(rp);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		Observations o = roverIn.getNextObservations();
-		while(o==null){
-			o = roverIn.getNextObservations();
+		roverIn.getNextObservations();
+		while(roverIn.getCurrentObservations()==null){
+			roverIn.getNextObservations();
+		}
+		while(roverIn.getCurrentObservations()!=null){
+			roverIn.getNextObservations();
 		}
 		
-		//First daily RINEX file
-		Time epoch = o.getRefTime();
-		int DOY = epoch.getDayOfYear();
-		int year = epoch.getYear2c();
-		String outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
-        
-		System.out.println("Started writing RINEX file "+outFile);
-//		RinexV3Producer rp = new RinexV3Producer(outFile, false, true);
-		RinexV2Producer rp = new RinexV2Producer(outFile, false, true);
-		rp.setDefinedPosition(roverIn.getDefinedPosition());
-
-		int DOYold = DOY;
-		
-		while(o!=null){
-			rp.addObservations(o);
-			o = roverIn.getNextObservations();
-			
-			if (o!=null) {
-				//check if the day changes; if yes, a new daily RINEX file must be started
-				epoch = o.getRefTime();
-				DOY = epoch.getDayOfYear();
-
-				if (DOY != DOYold) {
-					rp.streamClosed();
-
-					year = epoch.getYear2c();
-					outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
-
-					System.out.println("Started writing RINEX file "+outFile);
-//					rp = new RinexV3Producer(outFile, false, true);
-					rp = new RinexV2Producer(outFile, false, true);
-					rp.setDefinedPosition(roverIn.getDefinedPosition());
-
-					DOYold = DOY;
-				}
-			}
-		}
 		rp.streamClosed();
-		
 		System.out.println("END");
 	}
 }
