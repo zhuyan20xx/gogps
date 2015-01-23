@@ -22,8 +22,8 @@ package org.gogpsproject.apps;
 import java.util.Locale;
 import java.util.Vector;
 
-import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.ublox.UBXSerialConnection;
+import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -50,11 +50,11 @@ public class LogUBX {
 				.description("Log binary streams from one or more u-blox receivers connected to COM ports.");
 		parser.addArgument("-s", "--showCOMports")
 				.action(Arguments.storeTrue())
-				.help("display available COM ports");
+				.help("display available COM ports.");
 		parser.addArgument("-r", "--rate")
 				.choices(1, 2, 5, 10).setDefault(1)
 				.type(Integer.class)
-				.help("set the measurement rate (in Hz)");
+				.help("set the measurement rate (in Hz).");
 		parser.addArgument("-e", "--ephemeris")
 				.setDefault(10)
 				.type(Integer.class)
@@ -69,18 +69,24 @@ public class LogUBX {
 				.choices("GGA", "GSV", "RMC", "GSA", "GLL", "GST", "GRS", "GBS", "DTM", "VTG", "ZDA").setDefault()
 				.metavar("NMEA_ID")
 				.nargs("+")
-				.help("enable and log NMEA sentences. NMEA_ID must be replaced by an existing 3-letter NMEA sentence code (for example: -n GGA GSV RMC)");
+				.help("enable and log NMEA sentences. NMEA_ID must be replaced by an existing 3-letter NMEA sentence code (for example: -n GGA GSV RMC).");
 		parser.addArgument("-t", "--timetag")
 				.action(Arguments.storeTrue())
-				.help("log the system time when RXM-RAW messages are received");
+				.help("log the system time when RXM-RAW messages are received.");
 		parser.addArgument("-xo", "--rinexobs")
 		        .action(Arguments.storeTrue())
 		        .help("write a RINEX observation file while logging");
+		parser.addArgument("-m", "--marker")
+		        .setDefault("")
+		        .help("specify a marker name for the RINEX file [4 characters] (e.g. UBX0).");
+		parser.addArgument("-o", "--outdir")
+                .setDefault("./out")
+                .help("specify a directory for the output files.");
 		parser.addArgument("-d", "--debug")
                 .action(Arguments.storeTrue())
-                .help("show warning messages for debugging purposes");
+                .help("show warning messages for debugging purposes.");
 		parser.addArgument("port").nargs("*")
-				.help("COM port(s) connected to u-blox receivers (e.g. COM3 COM10)");
+				.help("COM port(s) connected to u-blox receivers (e.g. COM3 COM10).");
 		Namespace ns = null;
 		try {
 			ns = parser.parseArgs(args);
@@ -123,11 +129,26 @@ public class LogUBX {
 				}
 				ubxSerialConn.enableTimetag(ns.getBoolean("timetag"));
 				ubxSerialConn.enableNmeaSentences(ns.<String> getList("nmea"));
-				ubxSerialConn.enableRinexObs(ns.getBoolean("rinexobs"));
+				ubxSerialConn.setOutputDir(ns.getString("outdir"));
 				ubxSerialConn.enableDebug(ns.getBoolean("debug"));
 				ubxSerialConn.init();
 				
-				new ObservationsBuffer(ubxSerialConn, null);
+				if (ns.getBoolean("rinexobs")) {
+					boolean singleFreq = true;
+					boolean needApproxPos = false;
+					RinexV2Producer rp = null;
+					String marker = ns.getString("marker");
+					if (marker.length() == 0) {
+						String portStrMarker = preparePortStringForMarker(portId);
+			    		String portStrId = portStrMarker.length() >= 2 ? portStrMarker.substring(portId.length() - 2) : "0" + portStrMarker;
+			    		marker = "UB" + portStrId;
+					}
+					rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
+					rp.setOutputDir(ns.getString("outdir"));
+					ubxSerialConn.addStreamEventListener(rp);
+				}
+				
+				//new ObservationsBuffer(ubxSerialConn, null);
 				
 				r++;
 			}
@@ -135,5 +156,12 @@ public class LogUBX {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+	}
+	
+	private static String preparePortStringForMarker(String COMPort) {
+		if (COMPort.substring(0, 3).equals("COM")) {
+			COMPort = COMPort.substring(3, COMPort.length());  //for Windows COM* ports
+		}
+		return COMPort;
 	}
 }

@@ -42,7 +42,6 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	private SerialPort serialPort;
 
 	private UBXSerialReader ubxReader;
-	//private StreamEventListener streamEventListener;
 
 	private String portName;
 	private int speed;
@@ -51,8 +50,9 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 	private int setIonosphereRate = 60;
 	private boolean enableTimetag = true;
 	private Boolean enableDebug = true;
-	private Boolean enableRnxObs = true;
+	//private Boolean enableRnxObs = true;
 	private List<String> enableNmeaList;
+	private String outputDir = "./test";
 
 	public UBXSerialConnection(String portName, int speed) {
 		this.portName = portName;
@@ -108,13 +108,11 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 				inputStream = serialPort.getInputStream();
 				outputStream = serialPort.getOutputStream();
 
-				ubxReader = new UBXSerialReader(inputStream,outputStream,portName);
-				//ubxReader.setStreamEventListener(streamEventListener);
+				ubxReader = new UBXSerialReader(inputStream,outputStream,portName,outputDir);
 				ubxReader.setRate(this.setMeasurementRate);
 				ubxReader.enableAidEphMsg(this.setEphemerisRate);
 				ubxReader.enableAidHuiMsg(this.setIonosphereRate);
 				ubxReader.enableSysTimeLog(this.enableTimetag);
-				ubxReader.enableRinexObsOutput(this.enableRnxObs);
 				ubxReader.enableDebugMode(this.enableDebug);
 				ubxReader.enableNmeaMsg(this.enableNmeaList);
 				ubxReader.start();
@@ -235,20 +233,20 @@ public class UBXSerialConnection  implements StreamResource, StreamEventProducer
 			this.enableTimetag = enableTim;
 		}
 	}
-
-	public void enableRinexObs(Boolean enableRnxObs) {
-		if(ubxReader!=null){
-			ubxReader.enableRinexObsOutput(enableRnxObs);
-		} else {
-			this.enableRnxObs = enableRnxObs;
-		}
-	}
 	
 	public void enableDebug(Boolean enableDebug) {
 		if(ubxReader!=null){
 			ubxReader.enableDebugMode(enableDebug);
 		} else {
 			this.enableDebug = enableDebug;
+		}
+	}
+
+	public void setOutputDir(String outDir) {
+		if(ubxReader!=null){
+			ubxReader.setOutputDir(outDir);
+		} else {
+			this.outputDir = outDir;
 		}
 	}
 }

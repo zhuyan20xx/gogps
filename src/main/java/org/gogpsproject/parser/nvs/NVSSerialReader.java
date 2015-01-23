@@ -34,7 +34,6 @@ import org.gogpsproject.EphGps;
 import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
-import org.gogpsproject.producer.rinex.RinexV2Producer;
 import org.gogpsproject.util.BufferedInputStreamCounter;
 
 /**
@@ -59,18 +58,15 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 	private int measRate = 1;
 	private boolean sysTimeLogEnabled = false;
 	private String dateFile;
-	private String outputDir = "./out";
-	private RinexV2Producer rinexOut = null;
-	private boolean rinexObsOutputEnabled = false;
+	private String outputDir = "./test";
 	private boolean debugModeEnabled = false;
-	private int DOYold = 0;
 
-	public NVSSerialReader(InputStream in,OutputStream out, String COMPort) {
-		this(in,out,COMPort,null);
+	public NVSSerialReader(InputStream in,OutputStream out, String COMPort, String outputDir) {
+		this(in,out,COMPort,outputDir,null);
 		this.COMPort = padCOMSpaces(COMPort);
 	}
 	
-	public NVSSerialReader(InputStream in,OutputStream out,String COMPort,StreamEventListener streamEventListener) {
+	public NVSSerialReader(InputStream in,OutputStream out,String COMPort,String outputDir,StreamEventListener streamEventListener) {
 		FileOutputStream fos_nvs= null;
 		COMPort = padCOMSpaces(COMPort);
 		String COMPortStr = prepareCOMStringForFilename(COMPort);
@@ -238,36 +234,6 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 										    	dateGps = sdf1.format(new Date(co.getRefTime().getMsec()));
 										    	psSystime.println(dateGps +"       "+dateSys);
 										    }
-										    if (this.rinexObsOutputEnabled) {
-										    	//check if the day changes; if yes, a new daily RINEX file must be started
-										    	int DOY = co.getRefTime().getDayOfYear();
-
-										    	if (DOY != this.DOYold) {
-										    		if (rinexOut != null) {
-										    			rinexOut.streamClosed();
-										    			rinexOut = null;
-										    		}
-										    		String COMPortStrMarker = prepareCOMStringForMarker(COMPortStr);
-										    		String COMPortStrId = COMPortStrMarker.length() >= 2 ? COMPortStrMarker.substring(COMPortStr.length() - 2) : "0" + COMPortStrMarker;
-										    		String marker = "NV" + COMPortStrId;
-										    		String outFile = "";
-										    		char session = '0';
-
-										    		outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
-										    		File f = new File(outFile);
-										    		
-										    		while (f.exists()){
-										    			session++;
-										    			outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
-										    			f = new File(outFile);
-										    		}
-										    		System.out.println(date1+" - "+COMPort+" - Started writing RINEX file "+outFile);
-										    		rinexOut = new RinexV2Producer(outFile, false, true);
-
-										    		this.DOYold = DOY;
-										    	}
-										    	rinexOut.addObservations(co);
-										    }
 										}
 									}
 								} else if (o instanceof EphGps) {
@@ -364,10 +330,6 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		this.sysTimeLogEnabled = enableTim;
 	}
 	
-	public void enableRinexObsOutput(Boolean enableRnxObs) {
-		this.rinexObsOutputEnabled = enableRnxObs;
-	}
-	
 	public void enableDebugMode(Boolean enableDebug) {
 		this.debugModeEnabled = enableDebug;
 	}
@@ -387,13 +349,6 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		return COMPort;
 	}
 	
-	private String prepareCOMStringForMarker(String COMPort) {
-		if (COMPort.substring(0, 3).equals("COM")) {
-			COMPort = COMPort.substring(3, COMPort.length());  //for Windows COM* ports
-		}
-		return COMPort;
-	}
-	
 	private static String computeNMEACheckSum(String msg){
 		// perform NMEA checksum calculation
 		int chk = 0;
@@ -408,5 +363,9 @@ public class NVSSerialReader implements Runnable,StreamEventProducer {
 		}
 		return chk_s;
 
+	}
+	
+	public void setOutputDir(String outDir) {
+		this.outputDir = outDir;
 	}
 }

@@ -19,6 +19,7 @@
  */
 package org.gogpsproject.producer.rinex;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -75,6 +76,7 @@ public class RinexV2Producer implements StreamEventListener {
 	private DecimalFormat dfX4 = new DecimalFormat("0.0000");
 	private String marker;
 	private int DOYold = -1;
+	private String outputDir = "./test";
 
 	private final static TimeZone TZ = TimeZone.getTimeZone("GMT");
 
@@ -101,17 +103,9 @@ public class RinexV2Producer implements StreamEventListener {
 
 	}
 	
-	public RinexV2Producer(String outFilename, boolean needApproxPos, boolean singleFreq){
+	public RinexV2Producer(boolean needApproxPos, boolean singleFreq){
 		this(needApproxPos, singleFreq, null);
-		this.outFilename = outFilename;
 		this.standardFilename=false;
-		
-		try {
-			fos = new FileOutputStream(outFilename, false);
-			ps = new PrintStream(fos);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
 	}
 
 	/* (non-Javadoc)
@@ -141,8 +135,16 @@ public class RinexV2Producer implements StreamEventListener {
 			if (this.standardFilename && (this.outFilename == null || this.DOYold != DOY)) {
 					streamClosed();
 
+					char session = '0';
 					int year = epoch.getYear2c();
-					String outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
+					String outFile = outputDir + "/" + marker + String.format("%03d", DOY) + session + "." + year + "o";
+					File f = new File(outFile);
+					
+					while (f.exists()){
+		    			session++;
+		    			outFile = outputDir + "/" +  marker + String.format("%03d", DOY) + session + "." + year + "o";
+		    			f = new File(outFile);
+		    		}
 
 					System.out.println("Started writing RINEX file "+outFile);
 					setFilename(outFile);
@@ -475,5 +477,9 @@ public class RinexV2Producer implements StreamEventListener {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void setOutputDir(String outDir) {
+		this.outputDir = outDir;
 	}
 }

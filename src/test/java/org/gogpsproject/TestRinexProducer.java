@@ -100,7 +100,8 @@ public class TestRinexProducer {
 		System.out.println("RINEX");
 		System.out.println("RINEX");
 		System.out.println("RINEX");
-		RinexV2Producer rp = new RinexV2Producer("./test/20111003-004754-master.obs", true, false);
+		RinexV2Producer rp = new RinexV2Producer(true, false);
+		rp.setFilename("./test/20111003-004754-master.obs");
 		rp.setDefinedPosition(masterIn.getDefinedPosition());
 
 		Observations o = masterIn.getNextObservations();

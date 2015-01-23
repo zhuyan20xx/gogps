@@ -66,11 +66,7 @@ public class RTCM3ToRinex {
 			e.printStackTrace();
 		}
 		
-		masterIn.getNextObservations();
-		while(masterIn.getCurrentObservations()==null){
-			masterIn.getNextObservations();
-		}		
-		while(masterIn.getCurrentObservations()!=null){
+		while(masterIn.hasMoreObservations()){
 			masterIn.getNextObservations();
 		}
 		

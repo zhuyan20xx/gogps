@@ -46,7 +46,6 @@ import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.StreamResource;
 import org.gogpsproject.Time;
-import org.gogpsproject.producer.rinex.RinexV2Producer;
 import org.gogpsproject.util.Bits;
 import org.gogpsproject.util.InputStreamCounter;
 
@@ -105,11 +104,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	private int week;
 	private double currentTime;
 	private double previousTime = -1;
-	private RinexV2Producer rinexOut = null;
-	private int DOYold = 0;
-	private String outputDir = "./out";
+	private String outputDir = "./test";
 	private String markerName = "MMMM";
-	private boolean rinexObsOutputEnabled = false;
 
 	/**
 	 * @return the exitPolicy
@@ -213,6 +209,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	public ArrayList<String> getSources() throws IOException {
 
 		//System.out.println("Open Socket "+settings.getHost()+" port "+ settings.getPort());
+		@SuppressWarnings("resource")
 		Socket sck = new Socket(settings.getHost(), settings.getPort());
 
 		//System.out.println("Open streams");
@@ -737,38 +734,13 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			}
 			
 			if(o instanceof Observations){
-				if(streamEventListeners!=null && o!=null){
+				Observations oo = (Observations)o;
+				if(streamEventListeners!=null && oo!=null){
 					for(StreamEventListener sel:streamEventListeners){
-						Observations co = sel.getCurrentObservations();
-					    sel.pointToNextObservations();
-					    
-					    if (this.rinexObsOutputEnabled) {
-					    	//check if the day changes; if yes, a new daily RINEX file must be started
-					    	int DOY = co.getRefTime().getDayOfYear();
-
-					    	if (DOY != this.DOYold) {
-					    		if (rinexOut != null) {
-					    			rinexOut.streamClosed();
-					    			rinexOut = null;
-					    		}
-					    		String outFile = "";
-					    		char session = '0';
-
-					    		outFile = outputDir + "/" + markerName + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
-					    		File f = new File(outFile);
-					    		
-					    		while (f.exists()){
-					    			session++;
-					    			outFile = outputDir + "/" + markerName + String.format("%03d", DOY) + session + "." + co.getRefTime().getYear2c() + "o";
-					    			f = new File(outFile);
-					    		}
-					    		System.out.println("Started writing RINEX file "+outFile);
-					    		rinexOut = new RinexV2Producer(outFile, false, true);
-
-					    		this.DOYold = DOY;
-					    	}
-					    	rinexOut.addObservations(co);
-					    }
+						//Observations co = sel.getCurrentObservations();
+					    //sel.pointToNextObservations();
+						Observations oc = (Observations) oo.clone();
+					    sel.addObservations(oc);
 					}
 				}
 			}
@@ -824,6 +796,10 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				} else {
 					o = dec.decode(bits, week);
 					if(o instanceof Observations){
+						if (((Observations) o).getRefTime().getDayOfYear() == 11) {
+							week++;
+							week--;
+						}
 						currentTime = ((Observations) o).getRefTime().getGpsTime();
 						if (currentTime < previousTime) {
 							week++;
@@ -831,6 +807,9 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 						}
 						previousTime = currentTime;
 					}
+				}
+				if(o instanceof Observations){
+					addObservation((Observations) o);
 				}
 			}else{
 				//System.err.println("missing RTCM message parser "+msgtype);
@@ -1085,8 +1064,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	public void setMarkerName(String markerName) {
 		this.markerName = markerName;
 	}
-
-	public void enableRinexObs(Boolean enableRnxObs) {
-			this.rinexObsOutputEnabled = enableRnxObs;
+	
+	public void setOutputDir(String outDir) {
+		this.outputDir = outDir;
 	}
 }
