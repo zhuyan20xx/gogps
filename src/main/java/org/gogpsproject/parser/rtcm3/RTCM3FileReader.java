@@ -24,9 +24,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Vector;
 
-import org.ejml.simple.SimpleMatrix;
-import org.gogpsproject.Constants;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
 import org.gogpsproject.EphemerisSystem;
@@ -35,6 +34,8 @@ import org.gogpsproject.NavigationProducer;
 import org.gogpsproject.Observations;
 import org.gogpsproject.ObservationsProducer;
 import org.gogpsproject.SatellitePosition;
+import org.gogpsproject.StreamEventListener;
+import org.gogpsproject.StreamEventProducer;
 import org.gogpsproject.StreamResource;
 
 /**
@@ -45,7 +46,7 @@ import org.gogpsproject.StreamResource;
  * @author Eugenio Realini GReD srl
  */
 
-public class RTCM3FileReader extends EphemerisSystem implements ObservationsProducer,NavigationProducer {
+public class RTCM3FileReader extends EphemerisSystem implements ObservationsProducer, NavigationProducer, StreamResource, StreamEventProducer {
 
 	private InputStream in;
 	private RTCM3Client reader;
@@ -55,6 +56,8 @@ public class RTCM3FileReader extends EphemerisSystem implements ObservationsProd
 	// TODO support past times, now keep only last broadcast data
 	private HashMap<Integer,EphGps> ephs = new HashMap<Integer,EphGps>();
 	private int week;
+	
+	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 
 	public RTCM3FileReader(File file, int week) {
 		this.file = file;
@@ -156,6 +159,37 @@ public class RTCM3FileReader extends EphemerisSystem implements ObservationsProd
 	public IonoGps getIono(long unixTime) {
 		return iono;
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#addStreamEventListener(org.gogpsproject.StreamEventListener)
+	 */
+	@Override
+	public void addStreamEventListener(StreamEventListener streamEventListener) {
+		if(streamEventListener==null) return;
+		if(!streamEventListeners.contains(streamEventListener))
+			this.streamEventListeners.add(streamEventListener);
+		if(this.reader!=null)
+			this.reader.addStreamEventListener(streamEventListener);
+	}
 
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#getStreamEventListeners()
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public Vector<StreamEventListener> getStreamEventListeners() {
+		return (Vector<StreamEventListener>) streamEventListeners.clone();
+	}
 
+	/* (non-Javadoc)
+	 * @see org.gogpsproject.StreamEventProducer#removeStreamEventListener(org.gogpsproject.StreamEventListener)
+	 */
+	@Override
+	public void removeStreamEventListener(
+			StreamEventListener streamEventListener) {
+		if(streamEventListener==null) return;
+		if(streamEventListeners.contains(streamEventListener))
+			this.streamEventListeners.remove(streamEventListener);
+		this.reader.removeStreamEventListener(streamEventListener);
+	}
 }

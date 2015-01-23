@@ -20,17 +20,10 @@
 package org.gogpsproject.conversion;
 
 import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Locale;
 
-import org.gogpsproject.Observations;
-import org.gogpsproject.ObservationsProducer;
-import org.gogpsproject.Time;
 import org.gogpsproject.parser.rtcm3.RTCM3FileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
-import org.gogpsproject.producer.rinex.RinexV3Producer;
 
 /**
  * @author Lorenzo Patocchi, cryms.com
@@ -49,6 +42,7 @@ public class RTCM3ToRinex {
 		Locale.setDefault(new Locale("en", "US"));
 		
 		boolean singleFreq = false;
+		boolean needApproxPos = true;
 
 		if(args.length<2){
 			System.out.println("RTCM3ToRinex <RTCM3 file> <marker name> <starting GPS week>");
@@ -61,59 +55,26 @@ public class RTCM3ToRinex {
 		int week =Integer.parseInt(args[p++]);
 
 		System.out.println("in :"+inFile);
+		
+		RinexV2Producer rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
 
-		ObservationsProducer masterIn = new RTCM3FileReader(new File(inFile), week);
+		RTCM3FileReader masterIn = new RTCM3FileReader(new File(inFile), week);
 		try {
 			masterIn.init();
+			masterIn.addStreamEventListener(rp);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		Observations o = masterIn.getNextObservations();
-		while(o==null){
-			o = masterIn.getNextObservations();
+		masterIn.getNextObservations();
+		while(masterIn.getCurrentObservations()==null){
+			masterIn.getNextObservations();
+		}		
+		while(masterIn.getCurrentObservations()!=null){
+			masterIn.getNextObservations();
 		}
 		
-		//First daily RINEX file
-		Time epoch = o.getRefTime();
-		int DOY = epoch.getDayOfYear();
-		int year = epoch.getYear2c();
-		String outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
-        
-		System.out.println("Started writing RINEX file "+outFile);
-
-//		RinexV3Producer rp = new RinexV3Producer(outFile, false, singleFreq);
-		RinexV2Producer rp = new RinexV2Producer(outFile, false, singleFreq);
-		rp.setDefinedPosition(masterIn.getDefinedPosition());
-
-		int DOYold = DOY;
-		
-		while(o!=null){
-			rp.addObservations(o);
-			o = masterIn.getNextObservations();
-			
-			if (o!=null) {
-				//check if the day changes; if yes, a new daily RINEX file must be started
-				epoch = o.getRefTime();
-				DOY = epoch.getDayOfYear();
-
-				if (DOY != DOYold) {
-					rp.streamClosed();
-
-					year = epoch.getYear2c();
-					outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
-
-					System.out.println("Started writing RINEX file "+outFile);
-//					rp = new RinexV3Producer(outFile, false, singleFreq);
-					rp = new RinexV2Producer(outFile, false, singleFreq);
-					rp.setDefinedPosition(masterIn.getDefinedPosition());
-
-					DOYold = DOY;
-				}
-			}
-		}
 		rp.streamClosed();
-		
 		System.out.println("END");
 	}
 }
