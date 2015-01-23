@@ -20,14 +20,8 @@
 package org.gogpsproject.conversion;
 
 import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Locale;
 
-import org.gogpsproject.Observations;
-import org.gogpsproject.ObservationsProducer;
-import org.gogpsproject.Time;
 import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 
