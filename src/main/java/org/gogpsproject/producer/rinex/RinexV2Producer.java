@@ -43,6 +43,7 @@ import org.gogpsproject.StreamEventListener;
  *
  * @author Lorenzo Patocchi cryms.com
  */
+import org.gogpsproject.Time;
 
 /**
  * @author Lorenzo
@@ -59,6 +60,7 @@ public class RinexV2Producer implements StreamEventListener {
 
 	private boolean needApproxPos=false;
 	private boolean singleFreq=false;
+	private boolean standardFilename=true;
 
 	private FileOutputStream fos = null;
 	private PrintStream ps = null;
@@ -71,20 +73,16 @@ public class RinexV2Producer implements StreamEventListener {
 	private DecimalFormat dfX = new DecimalFormat("0");
 	private DecimalFormat dfXX = new DecimalFormat("00");
 	private DecimalFormat dfX4 = new DecimalFormat("0.0000");
+	private String marker;
+	private int DOYold = -1;
 
 	private final static TimeZone TZ = TimeZone.getTimeZone("GMT");
 
-	public RinexV2Producer(String outFilename, boolean needApproxPos, boolean singleFreq){
-		this.outFilename = outFilename;
+	public RinexV2Producer(boolean needApproxPos, boolean singleFreq, String marker){
+		
 		this.needApproxPos = needApproxPos;
 		this.singleFreq = singleFreq;
-
-		try {
-			fos = new FileOutputStream(outFilename, false);
-			ps = new PrintStream(fos);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
+		this.marker = marker;
 
 		// set observation type config
 		typeConfig.add(new Type(Type.C,1));
@@ -101,6 +99,19 @@ public class RinexV2Producer implements StreamEventListener {
 			typeConfig.add(new Type(Type.S,2));
 		}
 
+	}
+	
+	public RinexV2Producer(String outFilename, boolean needApproxPos, boolean singleFreq){
+		this(needApproxPos, singleFreq, null);
+		this.outFilename = outFilename;
+		this.standardFilename=false;
+		
+		try {
+			fos = new FileOutputStream(outFilename, false);
+			ps = new PrintStream(fos);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -125,6 +136,21 @@ public class RinexV2Producer implements StreamEventListener {
 	@Override
 	public void addObservations(Observations o) {
 		synchronized (this) {
+			Time epoch = o.getRefTime();
+			int DOY = epoch.getDayOfYear();
+			if (this.standardFilename && (this.outFilename == null || this.DOYold != DOY)) {
+					streamClosed();
+
+					int year = epoch.getYear2c();
+					String outFile = "./test/" + marker + String.format("%03d", DOY) + "0." + year + "o";
+
+					System.out.println("Started writing RINEX file "+outFile);
+					setFilename(outFile);
+
+					DOYold = DOY;
+					
+					headerWritten = false;
+			}
 			if(!headerWritten){
 				observations.add(o);
 				if(needApproxPos && approxPosition==null){
@@ -438,5 +464,15 @@ public class RinexV2Producer implements StreamEventListener {
 	public void pointToNextObservations() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public void setFilename(String outFilename) {
+		this.outFilename = outFilename;
+		try {
+			fos = new FileOutputStream(outFilename, false);
+			ps = new PrintStream(fos);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 }
