@@ -286,6 +286,7 @@ public class RinexV2Producer implements StreamEventListener {
 /**
 	 * @return the typeConfig
 	 */
+	@SuppressWarnings("unchecked")
 	public ArrayList<Type> getTypeConfig() {
 		return (ArrayList<Type>)typeConfig.clone();
 	}

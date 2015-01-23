@@ -26,7 +26,7 @@ import org.gogpsproject.parser.nvs.NVSFileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 /**
- * @author Lorenzo Patocchi, cryms.com
+ * @author Lorenzo Patocchi, cryms.com; Eugenio Realini, GReD srl
  *
  * Converts NVS binary file to RINEX
  *
@@ -40,6 +40,9 @@ public class NVSToRinex {
 		
 		//force dot as decimal separator
 		Locale.setDefault(new Locale("en", "US"));
+		
+		boolean singleFreq = true;
+		boolean needApproxPos = false;
 
 		if(args.length<2){
 			System.out.println("NVSToRinex <nvs file> <marker name>");
@@ -53,7 +56,7 @@ public class NVSToRinex {
 
 		System.out.println("in :"+inFile);
 		
-		RinexV2Producer rp = new RinexV2Producer(false, true, marker);
+		RinexV2Producer rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
 
 		NVSFileReader roverIn = new NVSFileReader(new File(inFile));
 		try {

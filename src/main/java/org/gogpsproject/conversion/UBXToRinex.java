@@ -26,7 +26,7 @@ import org.gogpsproject.parser.ublox.UBXFileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 /**
- * @author Lorenzo Patocchi, cryms.com
+ * @author Lorenzo Patocchi, cryms.com; Eugenio Realini, GReD srl
  *
  * Converts UBX binary file to RINEX
  *
@@ -40,6 +40,9 @@ public class UBXToRinex {
 		
 		//force dot as decimal separator
 		Locale.setDefault(new Locale("en", "US"));
+		
+		boolean singleFreq = true;
+		boolean needApproxPos = false;
 
 		if(args.length<2){
 			System.out.println("UBXToRinex <ubx file> <marker name>");
@@ -53,7 +56,7 @@ public class UBXToRinex {
 
 		System.out.println("in :"+inFile);
 		
-		RinexV2Producer rp = new RinexV2Producer(false, true, marker);
+		RinexV2Producer rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
 
 		UBXFileReader roverIn = new UBXFileReader(new File(inFile));
 		try {
