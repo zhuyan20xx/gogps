@@ -57,7 +57,8 @@ public class ObservationsBufferLogToRinex {
 		}
 
 		System.out.println("RINEX");
-		RinexV2Producer rp = new RinexV2Producer(outFile, args!=null&&args.length>=p+1&&args[p++].startsWith("y"), false);
+		RinexV2Producer rp = new RinexV2Producer(args!=null&&args.length>=p+1&&args[p++].startsWith("y"), false);
+		rp.setFilename(outFile);
 		rp.setDefinedPosition(masterIn.getDefinedPosition());
 
 		Observations o = masterIn.getNextObservations();

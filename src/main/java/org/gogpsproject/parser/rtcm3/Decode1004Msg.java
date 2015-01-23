@@ -146,7 +146,7 @@ public class Decode1004Msg implements Decode {
 			o.setGps(i, os);
 		}
 
-		client.addObservation(o);
+		//client.addObservation(o);
 		return o;
 	}
 

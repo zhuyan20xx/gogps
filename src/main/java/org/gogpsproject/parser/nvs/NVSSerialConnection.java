@@ -48,7 +48,7 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 	private int setMeasurementRate = 1;
 	private Boolean enableTimetag = true;
 	private Boolean enableDebug = true;
-	private Boolean enableRnxObs = true;
+	private String outputDir = "./test";
 
 	public NVSSerialConnection(String portName, int speed) {
 		this.portName = portName;
@@ -108,7 +108,7 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 				inputStream = serialPort.getInputStream();
 				outputStream = serialPort.getOutputStream();
 
-				nvsReader = new NVSSerialReader(inputStream,outputStream,portName);
+				nvsReader = new NVSSerialReader(inputStream,outputStream,portName,outputDir);
 				nvsReader.enableDebugMode(this.enableDebug);
 				reply = nvsReader.setBinrProtocol();
 
@@ -121,7 +121,7 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 					inputStream = serialPort.getInputStream();
 					outputStream = serialPort.getOutputStream();
 
-					nvsReader = new NVSSerialReader(inputStream,outputStream,portName);
+					nvsReader = new NVSSerialReader(inputStream,outputStream,portName,outputDir);
 					nvsReader.enableDebugMode(this.enableDebug);
 					reply = nvsReader.setBinrProtocol();
 				}
@@ -132,7 +132,6 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 				//nvsReader.setStreamEventListener(streamEventListener);
 				nvsReader.setRate(this.setMeasurementRate);
 				nvsReader.enableSysTimeLog(this.enableTimetag);
-				nvsReader.enableRinexObsOutput(this.enableRnxObs);
 				nvsReader.enableDebugMode(this.enableDebug);
 				nvsReader.start();
 			}
@@ -208,20 +207,20 @@ public class NVSSerialConnection  implements StreamResource, StreamEventProducer
 			this.enableTimetag = enableTim;
 		}
 	}
-
-	public void enableRinexObs(Boolean enableRnxObs) {
-		if(nvsReader!=null){
-			nvsReader.enableRinexObsOutput(enableRnxObs);
-		} else {
-			this.enableRnxObs = enableRnxObs;
-		}
-	}
 	
 	public void enableDebug(Boolean enableDebug) {
 		if(nvsReader!=null){
 			nvsReader.enableDebugMode(enableDebug);
 		} else {
 			this.enableDebug = enableDebug;
+		}
+	}
+	
+	public void setOutputDir(String outDir) {
+		if(nvsReader!=null){
+			nvsReader.setOutputDir(outDir);
+		} else {
+			this.outputDir = outDir;
 		}
 	}
 }

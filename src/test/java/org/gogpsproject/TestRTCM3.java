@@ -19,21 +19,12 @@
  */
 
 package org.gogpsproject;
-import gnu.io.CommPort;
-import gnu.io.CommPortIdentifier;
-import gnu.io.PortInUseException;
-
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Locale;
-import java.util.Vector;
 
 import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
-import org.gogpsproject.parser.ublox.UBXSerialConnection;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 
-@SuppressWarnings("restriction")
 public class TestRTCM3 {
 
 	/**
@@ -66,7 +57,8 @@ public class TestRTCM3 {
 			rtcm.init();
 
 			// log rinex format
-			RinexV2Producer rinexOut = new RinexV2Producer("./test/test-rinex.obs",true,false);
+			RinexV2Producer rinexOut = new RinexV2Producer(true,false);
+			rinexOut.setFilename("./test/test-rinex.obs");
 			rtcm.addStreamEventListener(rinexOut);
 
 			ObservationsBuffer ob = new ObservationsBuffer(rtcm,"./test/test-rtcm.dat");

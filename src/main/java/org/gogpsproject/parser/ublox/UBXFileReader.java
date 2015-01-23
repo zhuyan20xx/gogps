@@ -85,8 +85,14 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.ObservationsProducer#hasMoreObservations()
 	 */
-	public boolean hasMoreObservations() throws IOException {
-		return in.available()>0;
+	public boolean hasMoreObservations() {
+		boolean moreObs = false;
+		try {
+			moreObs = in.available()>0;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return moreObs;
 	}
 
 	/* (non-Javadoc)

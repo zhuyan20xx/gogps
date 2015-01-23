@@ -22,8 +22,8 @@ package org.gogpsproject.apps;
 import java.util.Locale;
 import java.util.Vector;
 
-import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.nvs.NVSSerialConnection;
+import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -61,6 +61,12 @@ public class LogNVS {
 		parser.addArgument("-xo", "--rinexobs")
 		        .action(Arguments.storeTrue())
 		        .help("write a RINEX observation file while logging");
+		parser.addArgument("-m", "--marker")
+                .setDefault("")
+                .help("specify a marker name for the RINEX file [4 characters] (e.g. NVS0).");
+		parser.addArgument("-o", "--outdir")
+                .setDefault("./out")
+                .help("specify a directory for the output files.");
 		parser.addArgument("-d", "--debug")
                 .action(Arguments.storeTrue())
                 .help("show warning messages for debugging purposes");
@@ -99,15 +105,35 @@ public class LogNVS {
 
 				nvsSerialConn.setMeasurementRate((Integer) ns.get("rate"));
 				nvsSerialConn.enableTimetag(ns.getBoolean("timetag"));
-				nvsSerialConn.enableRinexObs(ns.getBoolean("rinexobs"));
+				nvsSerialConn.setOutputDir(ns.getString("outdir"));
 				nvsSerialConn.enableDebug(ns.getBoolean("debug"));
 				nvsSerialConn.init();
 				
-				new ObservationsBuffer(nvsSerialConn, null);
+				if (ns.getBoolean("rinexobs")) {
+					boolean singleFreq = true;
+					boolean needApproxPos = false;
+					RinexV2Producer rp = null;
+					String marker = ns.getString("marker");
+					if (marker.length() == 0) {
+						String portStrMarker = preparePortStringForMarker(portId);
+			    		String portStrId = portStrMarker.length() >= 2 ? portStrMarker.substring(portId.length() - 2) : "0" + portStrMarker;
+			    		marker = "UB" + portStrId;
+					}
+					rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
+					rp.setOutputDir(ns.getString("outdir"));
+					nvsSerialConn.addStreamEventListener(rp);
+				}
 			}
 
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+	}
+	
+	private static String preparePortStringForMarker(String COMPort) {
+		if (COMPort.substring(0, 3).equals("COM")) {
+			COMPort = COMPort.substring(3, COMPort.length());  //for Windows COM* ports
+		}
+		return COMPort;
 	}
 }

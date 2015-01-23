@@ -80,11 +80,11 @@ public class NVSReader implements StreamEventProducer {
 				DecodeF7 decodeF7 = new DecodeF7(msg, multiConstellation);
 				
 				EphGps eph = decodeF7.decode();
-				if(streamEventListeners!=null && eph!=null){
-					for(StreamEventListener sel:streamEventListeners){
+				//if(streamEventListeners!=null && eph!=null){
+					//for(StreamEventListener sel:streamEventListeners){
 						//sel.addEphemeris(eph);
-					}
-				}
+					//}
+				//}
 
 				return eph;
 						
@@ -114,11 +114,11 @@ public class NVSReader implements StreamEventProducer {
 				Decode4A decode4A = new Decode4A(msg);
 				
 				IonoGps iono = decode4A.decode();
-				if(streamEventListeners!=null && iono!=null){
-					for(StreamEventListener sel:streamEventListeners){
+				//if(streamEventListeners!=null && iono!=null){
+					//for(StreamEventListener sel:streamEventListeners){
 						//sel.addIonospheric(iono);
-					}
-				}
+					//}
+				//}
 
 				return iono;
 

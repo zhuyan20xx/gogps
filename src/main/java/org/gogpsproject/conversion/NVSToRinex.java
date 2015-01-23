@@ -66,11 +66,7 @@ public class NVSToRinex {
 			e.printStackTrace();
 		}
 		
-		roverIn.getNextObservations();
-		while(roverIn.getCurrentObservations()==null){
-			roverIn.getNextObservations();
-		}
-		while(roverIn.getCurrentObservations()!=null){
+		while(roverIn.hasMoreObservations()){
 			roverIn.getNextObservations();
 		}
 		

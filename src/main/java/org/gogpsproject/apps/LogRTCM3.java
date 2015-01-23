@@ -22,8 +22,8 @@ package org.gogpsproject.apps;
 import java.util.Locale;
 
 import org.gogpsproject.Coordinates;
-import org.gogpsproject.ObservationsBuffer;
 import org.gogpsproject.parser.rtcm3.RTCM3Client;
+import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -76,6 +76,9 @@ public class LogRTCM3 {
 				.help("Ellipsoidal height [m]");
 		parser.addArgument("marker").nargs(1)
 				.help("Marker name [4 characters] (e.g. VRS0)");
+		parser.addArgument("-o", "--outdir")
+        		.setDefault("./out")
+        		.help("specify a directory for the output files.");
 		Namespace ns = null;
 		try {
 			ns = parser.parseArgs(args);
@@ -87,7 +90,7 @@ public class LogRTCM3 {
 		String NTRIPurl = ns.<String> getList("url").get(0);
 		int NTRIPport = ns.getInt("port");
 		String NTRIPuser = ns.getString("username");
-		String NTRIPpass = ns.getString("password");;
+		String NTRIPpass = ns.getString("password");
 		String NTRIPmountpoint = ns.<String> getList("mountpoint").get(0);
 		String markerName = ns.<String> getList("marker").get(0);
 
@@ -97,13 +100,20 @@ public class LogRTCM3 {
 			Coordinates coordinates = Coordinates.globalGeodInstance(ns.<Double> getList("latitude").get(0),ns.<Double> getList("longitude").get(0),ns.<Double> getList("height").get(0));
 			rtcm.setVirtualReferenceStationPosition(coordinates);
 			rtcm.setMarkerName(markerName);
-			rtcm.enableRinexObs(ns.getBoolean("rinexobs"));
+			rtcm.setOutputDir(ns.getString("outdir"));
 			rtcm.setReconnectionPolicy(RTCM3Client.CONNECTION_POLICY_RECONNECT);
 			rtcm.setExitPolicy(RTCM3Client.EXIT_ON_LAST_LISTENER_LEAVE);
 			rtcm.setDebug(false);
 			rtcm.init();
 			
-			new ObservationsBuffer(rtcm,null);
+			if (ns.getBoolean("rinexobs")) {
+				boolean singleFreq = false;
+				boolean needApproxPos = true;
+				RinexV2Producer rp = null;
+				rp = new RinexV2Producer(needApproxPos, singleFreq, markerName);
+				rp.setOutputDir(ns.getString("outdir"));
+				rtcm.addStreamEventListener(rp);
+			}
 
 		} catch (Exception e1) {
 			e1.printStackTrace();
