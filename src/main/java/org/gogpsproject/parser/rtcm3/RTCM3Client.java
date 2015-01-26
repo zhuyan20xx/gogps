@@ -325,7 +325,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		SimpleDateFormat sdfFile = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
 		String dateFile = sdfFile.format(date);
 
-		System.out.println(date1 + " - Logging NVS stream in "+outputDir+"/" + markerName + "_" + dateFile + ".rtcm");
+		System.out.println(date1 + " - Logging RTCM3 stream in "+outputDir+"/" + markerName + "_" + dateFile + ".rtcm");
 		setStreamFileLogger(outputDir+"/" + markerName + "_" + dateFile + ".rtcm");
 
 		try {
@@ -725,25 +725,25 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				}
 				if(debug) System.out.print(".");
 			}
-			Object o = null;
+//			Object o = null;
 			if (header) {
 				//if(debug) System.out.println("Header : " + c);
 				if (c == 211) { // header
-					o = readMessage(in);
+					readMessage(in);
 				}
 			}
 			
-			if(o instanceof Observations){
-				Observations oo = (Observations)o;
-				if(streamEventListeners!=null && oo!=null){
-					for(StreamEventListener sel:streamEventListeners){
-						//Observations co = sel.getCurrentObservations();
-					    //sel.pointToNextObservations();
-						Observations oc = (Observations) oo.clone();
-					    sel.addObservations(oc);
-					}
-				}
-			}
+//			if(o instanceof Observations){
+//				Observations oo = (Observations)o;
+//				if(streamEventListeners!=null && oo!=null){
+//					for(StreamEventListener sel:streamEventListeners){
+//						//Observations co = sel.getCurrentObservations();
+//					    //sel.pointToNextObservations();
+//						Observations oc = (Observations) oo.clone();
+//					    sel.addObservations(oc);
+//					}
+//				}
+//			}
 			
 			if(out!=null && System.currentTimeMillis()-lastNtripGAAsent > ntripGAAsendDelay){
 				out.print(ntripGAA+"\r\n");

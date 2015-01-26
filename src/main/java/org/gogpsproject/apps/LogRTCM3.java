@@ -102,7 +102,7 @@ public class LogRTCM3 {
 			rtcm.setMarkerName(markerName);
 			rtcm.setOutputDir(ns.getString("outdir"));
 			rtcm.setReconnectionPolicy(RTCM3Client.CONNECTION_POLICY_RECONNECT);
-			rtcm.setExitPolicy(RTCM3Client.EXIT_ON_LAST_LISTENER_LEAVE);
+			rtcm.setExitPolicy(RTCM3Client.EXIT_NEVER);
 			rtcm.setDebug(false);
 			rtcm.init();
 			
