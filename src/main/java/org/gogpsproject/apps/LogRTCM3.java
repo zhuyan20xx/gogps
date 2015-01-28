@@ -79,6 +79,12 @@ public class LogRTCM3 {
 		parser.addArgument("-o", "--outdir")
         		.setDefault("./out")
         		.help("specify a directory for the output files.");
+		parser.addArgument("-rp", "--policy")
+				.choices("WAIT", "RECONNECT", "LEAVE").setDefault("WAIT")
+				.help("reconnection policy when data reception stops (WAIT = wait indefinitely for new data; RECONNECT = close current connection and try to reconnect to NTRIP caster; LEAVE = stop logging and quit).");
+		parser.addArgument("-d", "--debug")
+        		.action(Arguments.storeTrue())
+        		.help("show warning messages for debugging purposes.");
 		Namespace ns = null;
 		try {
 			ns = parser.parseArgs(args);
@@ -93,6 +99,13 @@ public class LogRTCM3 {
 		String NTRIPpass = ns.getString("password");
 		String NTRIPmountpoint = ns.<String> getList("mountpoint").get(0);
 		String markerName = ns.<String> getList("marker").get(0);
+		String reconnectionPolicy = ns.getString("policy");
+		int chosenReconnectionPolicy = RTCM3Client.CONNECTION_POLICY_WAIT;
+		if (reconnectionPolicy.equals("RECONNECT")) {
+			chosenReconnectionPolicy = RTCM3Client.CONNECTION_POLICY_RECONNECT;
+		} else if (reconnectionPolicy.equals("LEAVE")) {
+			chosenReconnectionPolicy = RTCM3Client.CONNECTION_POLICY_LEAVE;
+		}
 
 		try {
 			RTCM3Client rtcm = RTCM3Client.getInstance(NTRIPurl.trim(), NTRIPport, NTRIPuser.trim(), NTRIPpass.trim(), NTRIPmountpoint.trim());
@@ -101,9 +114,10 @@ public class LogRTCM3 {
 			rtcm.setVirtualReferenceStationPosition(coordinates);
 			rtcm.setMarkerName(markerName);
 			rtcm.setOutputDir(ns.getString("outdir"));
-			rtcm.setReconnectionPolicy(RTCM3Client.CONNECTION_POLICY_RECONNECT);
+			
+			rtcm.setReconnectionPolicy(chosenReconnectionPolicy);
 			rtcm.setExitPolicy(RTCM3Client.EXIT_NEVER);
-			rtcm.setDebug(false);
+			rtcm.setDebug(ns.getBoolean("debug"));
 			rtcm.init();
 			
 			if (ns.getBoolean("rinexobs")) {
