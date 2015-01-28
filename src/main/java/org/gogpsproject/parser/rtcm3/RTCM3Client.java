@@ -68,7 +68,6 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	private HashMap<Integer, Decode> decodeMap;
 
 	/** Optional message handler for showing error messages. */
-	private boolean header = true;
 	private int messagelength = 0;
 	private int[] buffer;
 	private boolean[] bits;
@@ -95,7 +94,9 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 	public final static int CONNECTION_POLICY_LEAVE = 0;
 	public final static int CONNECTION_POLICY_RECONNECT = 1;
+	public final static int CONNECTION_POLICY_WAIT = 2;
 	private int reconnectionPolicy = CONNECTION_POLICY_RECONNECT;
+	private long reconnectionWaitingTime = 30*1000; // 30 sec
 
 	public final static int EXIT_NEVER = 0;
 	public final static int EXIT_ON_LAST_LISTENER_LEAVE = 1;
@@ -354,8 +355,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				// }
 				if (!askForStop
 						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
-					if (debug) System.out.println("Sleep 10s before retry");
-					Thread.sleep(10 * 1000);
+					if (debug) System.out.println("Sleep " + reconnectionWaitingTime/1000 + " s before retry");
+					Thread.sleep(reconnectionWaitingTime);
 					start();
 				} else {
 					for (StreamEventListener sel : streamEventListeners) {
@@ -426,18 +427,18 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			// Reading the data
 
 			// /First we read the HTTP header using a small state machine
-			// The end of the header is recived when a double end line
+			// The end of the header is received when a double end line
 			// consisting
-			// of a "new line" and a "carrige return" charecter has been recived
+			// of a "new line" and a "carriage return" character has been received
 			int state = 0;
 			// First the HTTP header type is read. It should be "ICY 200 OK"
-			// But Since we recive integers not charecters the correct header is
+			// But Since we receive integers not characters the correct header is
 			// numeric: 73 = 'I', 67 = 'C' and so on.
 
 			int[] header = new int[11];
 			int[] correctHeader = { 73, 67, 89, 32, 50, 48, 48, 32, 79, 75, 13 };
 			int hindex = 0;
-			// when go is changed to false the loop is stopped
+			// when 'running' is changed to false the loop is stopped
 
 			while (running && state == 0) {
 				int c = in.read();
@@ -450,7 +451,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				// tester.write(c);
 				state = transition(state, c);
 				if (hindex > 10) {
-					// The header should only be 11 charecters long
+					// The header should only be 11 characters long
 					running = false;
 				} else {
 					header[hindex] = c;
@@ -462,6 +463,10 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				if (header[i] != correctHeader[i]) {
 					running = false;
 				}
+			}
+			if (header[0] == 0) {
+				if (debug) System.out.println("Waiting for connection acknowledgment message (\"ICY 200 OK\")...");
+				running = true;
 			}
 			if (!running) {
 				for (int i = 0; i < header.length; i++)
@@ -484,8 +489,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 				if (!askForStop
 						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
-					System.out.println("Sleep 10s before retry");
-					Thread.sleep(10 * 1000);
+					System.out.println("Sleep " + reconnectionWaitingTime/1000 + " s before retry");
+					Thread.sleep(reconnectionWaitingTime);
 					start();
 				} else {
 					for (StreamEventListener sel : streamEventListeners) {
@@ -523,8 +528,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 					System.out.println(settings.getSource() + " not connected");
 				if (!askForStop
 						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
-					if (debug)System.out.println("Sleep 10s before retry");
-					Thread.sleep(10 * 1000);
+					if (debug) System.out.println("Sleep " + reconnectionWaitingTime/1000 + " s before retry");
+					Thread.sleep(reconnectionWaitingTime);
 					start();
 				} else {
 					for (StreamEventListener sel : streamEventListeners) {
@@ -559,15 +564,15 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			ex.printStackTrace();
 
 		} finally {
-			// Connection was either terminated or an IOError accured
+			// Connection was either terminated or an IOError occurred
 
 			if (running) {
 				if (debug)System.out.println(settings.getSource()
-						+ " Connection Error: Data is empty");
+						+ " connection error: the data stream stopped");
 			} else {
 				if (debug)
 					System.out.println(settings.getSource()
-							+ " Connection closed by client");
+							+ " connection closed by client");
 			}
 
 			running = false;
@@ -593,10 +598,11 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			// reconnect if needed
 			if (!askForStop
 					&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
-				if (debug)System.out.println("Sleep 10s before retry");
+				if (debug) System.out.println("Sleep " + reconnectionWaitingTime/1000 + " s before retry");
 				try {
-					Thread.sleep(10 * 1000);
+					Thread.sleep(reconnectionWaitingTime);
 				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 				start();
 			} else {
@@ -710,14 +716,14 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	protected void readLoop(InputStream in,PrintWriter out) throws IOException {
 		int c;
 		long start = System.currentTimeMillis();
-		if(debug) System.out.print("Wait for header");
+		if(debug) System.out.print("Waiting for header");
 		online = true;
 
 		while(running) {
 			c = in.read();
 
 			if (c < 0){
-				if(!header || System.currentTimeMillis()-start >10*1000) break;
+				if(reconnectionPolicy != CONNECTION_POLICY_WAIT && System.currentTimeMillis()-start >10*1000) break;
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -726,12 +732,12 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				if(debug) System.out.print(".");
 			}
 //			Object o = null;
-			if (header) {
+//			if (header) {
 				//if(debug) System.out.println("Header : " + c);
 				if (c == 211) { // header
 					readMessage(in);
 				}
-			}
+//			}
 			
 //			if(o instanceof Observations){
 //				Observations oo = (Observations)o;
@@ -774,7 +780,6 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			System.out.println();
 			System.out.println("Debug message length : " + messagelength);
 		}
-		header = false;
 
 		if (messagelength > 0) {
 			setBits(in, messagelength);
@@ -819,7 +824,6 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			// CRC
 			setBits(in, 3);
 
-			header = true;
 			// setBits(in,1);
 			//if(debug) System.out.println(" dati :" + Bits.bitsToStr(bits));
 		}
