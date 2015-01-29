@@ -81,7 +81,12 @@ public class LogRTCM3 {
         		.help("specify a directory for the output files.");
 		parser.addArgument("-rp", "--policy")
 				.choices("WAIT", "RECONNECT", "LEAVE").setDefault("WAIT")
-				.help("reconnection policy when data reception stops (WAIT = wait indefinitely for new data; RECONNECT = close current connection and try to reconnect to NTRIP caster; LEAVE = stop logging and quit).");
+				.help("reconnection policy when data reception stops (WAIT = wait indefinitely for new data; RECONNECT = close current connection and try to reconnect to NTRIP caster after WTIME seconds; LEAVE = stop logging and quit).");
+		parser.addArgument("-wt", "--waitingtime")
+				.setDefault(60)
+				.type(Integer.class)
+				.metavar("WTIME")
+				.help("waiting time in seconds before attempting to reconnect (used only with the RECONNECT policy).");
 		parser.addArgument("-d", "--debug")
         		.action(Arguments.storeTrue())
         		.help("show warning messages for debugging purposes.");
@@ -117,6 +122,7 @@ public class LogRTCM3 {
 			
 			rtcm.setReconnectionPolicy(chosenReconnectionPolicy);
 			rtcm.setExitPolicy(RTCM3Client.EXIT_NEVER);
+			rtcm.setReconnectionWaitingTime((Integer) ns.get("waitingtime"));
 			rtcm.setDebug(ns.getBoolean("debug"));
 			rtcm.init();
 			

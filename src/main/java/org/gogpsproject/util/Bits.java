@@ -245,26 +245,25 @@ public class Bits {
 	 * copies a subset from a bit array into a new bit array
 	 *
 	 * @param b
-	 *            bit arrray to copy from
+	 *            bit array to copy from
 	 * @param start
 	 *            the index to start from
 	 * @param length
 	 *            the length of the subset
 	 *
 	 * @throws ArrayIndexOutOfBoundsException
-	 *             if subset succseeds the original arrays length (not
-	 *             decleraed)
+	 *             if subset exceeds the original arrays length (not
+	 *             declared)
 	 */
 	public static boolean[] subset(boolean[] b, int start, int length) {
 		boolean[] result;
 
 		if (start >= b.length || start + length > b.length) {
-			// Exception is thrown if the index starts before 0, or succseeds
-			// the
-			// length of the original array
+			// Exception is thrown if the index starts before 0, or exceeds
+			// the length of the original array
 			result = null;
 			throw new ArrayIndexOutOfBoundsException(
-					"Invalid subset: Succseeds length of " + b.length
+					"Invalid subset: exceeds length of " + b.length
 							+ ":\nstart of subset: " + start
 							+ ", length of subset: " + length);
 		} else {
