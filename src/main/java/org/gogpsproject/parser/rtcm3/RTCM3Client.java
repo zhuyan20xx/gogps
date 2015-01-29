@@ -74,6 +74,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	private boolean[] rollbits;
 
 	private InputStream in = null;
+	private Socket sck = null;
+	private PrintWriter out = null;
 
 	private boolean debug=false;
 
@@ -310,9 +312,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 
 	@Override
 	public void run() {
-		Socket sck = null;
-		PrintWriter out = null;
-		
+
 		File file = new File(outputDir);
 		if(!file.exists() || !file.isDirectory()){
 		    boolean wasDirectoryMade = file.mkdirs();
@@ -353,8 +353,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				// } else {
 				// messages.showErrorMessage(settings.getSource(), msg);
 				// }
-				if (!askForStop
-						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
+				closeAll();
+				if (!askForStop && reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
 					if (debug) System.out.println("Sleep " + reconnectionWaitingTime/1000 + " s before retry");
 					Thread.sleep(reconnectionWaitingTime);
 					start();
@@ -394,8 +394,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				String latn = (new DecimalFormat("0000.000")).format(lat_nmea);
 				ntripGAA = "$GPGGA," + hhmmss + "," + latn + ","
 						+ (lat < 0 ? "S" : "N") + "," + lonn + ","
-						+ (lon < 0 ? "W" : "E") + ",4,10,1," + (h < 0 ? 0 : h)
-						+ ",M,1,M,3,0";
+						+ (lon < 0 ? "W" : "E") + ",1,10,1.00," + (h < 0 ? 0 : h)
+						+ ",M,1,M,,,,";
 				// String ntripGAA =
 				// "$GPGGA,"+hhmmss+".00,"+latn+","+(lat<0?"S":"N")+","+lonn+","+(lon<0?"W":"E")+",1,10,1.00,"+(h<0?0:h)+",M,37.3,M,,";
 				// ntripGAA =
@@ -487,8 +487,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				if (debug)
 					System.out.println(settings.getSource() + " invalid header");
 
-				if (!askForStop
-						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
+				closeAll();
+				if (!askForStop && reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
 					System.out.println("Sleep " + reconnectionWaitingTime/1000 + " s before retry");
 					Thread.sleep(reconnectionWaitingTime);
 					start();
@@ -526,8 +526,8 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 				// showErrorMessage(settings.getSource(), "Error");
 				if (debug)
 					System.out.println(settings.getSource() + " not connected");
-				if (!askForStop
-						&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
+				closeAll();
+				if (!askForStop && reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
 					if (debug) System.out.println("Sleep " + reconnectionWaitingTime/1000 + " s before retry");
 					Thread.sleep(reconnectionWaitingTime);
 					start();
@@ -576,28 +576,11 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			}
 
 			running = false;
-
-			// All connections are closed
-
-			if (out != null)
-				try {
-					out.close();
-				} catch (Exception ex) {
-				}
-			if (in != null)
-				try {
-					in.close();
-				} catch (Exception ex) {
-				}
-			if (sck != null)
-				try {
-					sck.close();
-				} catch (Exception ex) {
-				}
+			
+			closeAll();
 
 			// reconnect if needed
-			if (!askForStop
-					&& reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
+			if (!askForStop && reconnectionPolicy == CONNECTION_POLICY_RECONNECT) {
 				if (debug) System.out.println("Sleep " + reconnectionWaitingTime/1000 + " s before retry");
 				try {
 					Thread.sleep(reconnectionWaitingTime);
@@ -610,9 +593,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 					sel.streamClosed();
 				}
 			}
-
 		}
-
 	}
 
 	private static String computeNMEACheckSum(String msg){
@@ -636,6 +617,13 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 		dataThread = new Thread(this);
 		dataThread.setName("RTCM3Client "+settings.getHost()+" "+settings.getSource());
 		dataThread.start();
+	}
+	
+	private void closeAll() {
+		// All connections are closed
+		if (out != null) try {out.close();} catch (Exception ex) {}
+		if (in  != null) try { in.close();} catch (Exception ex) {}
+		if (sck != null) try {sck.close();} catch (Exception ex) {}
 	}
 
 	/** stops the execution of this thread
@@ -781,7 +769,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 			System.out.println("Debug message length : " + messagelength);
 		}
 
-		if (messagelength > 0) {
+		if (messagelength >= 12) {
 			setBits(in, messagelength);
 			int msgtype = (int)Bits.bitsToUInt(Bits.subset(bits, 0, 12));
 
@@ -1071,5 +1059,9 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	
 	public void setOutputDir(String outDir) {
 		this.outputDir = outDir;
+	}
+
+	public void setReconnectionWaitingTime(Integer waitingTime) {
+		this.reconnectionWaitingTime = waitingTime * 1000;
 	}
 }
