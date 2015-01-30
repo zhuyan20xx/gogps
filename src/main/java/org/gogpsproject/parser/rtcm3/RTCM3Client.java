@@ -98,7 +98,7 @@ public class RTCM3Client implements Runnable, StreamResource, StreamEventProduce
 	public final static int CONNECTION_POLICY_RECONNECT = 1;
 	public final static int CONNECTION_POLICY_WAIT = 2;
 	private int reconnectionPolicy = CONNECTION_POLICY_RECONNECT;
-	private long reconnectionWaitingTime = 30*1000; // 30 sec
+	private long reconnectionWaitingTime = 300*1000; // 5 minutes
 
 	public final static int EXIT_NEVER = 0;
 	public final static int EXIT_ON_LAST_LISTENER_LEAVE = 1;

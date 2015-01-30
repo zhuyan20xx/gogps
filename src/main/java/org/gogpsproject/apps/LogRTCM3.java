@@ -83,7 +83,7 @@ public class LogRTCM3 {
 				.choices("WAIT", "RECONNECT", "LEAVE").setDefault("WAIT")
 				.help("reconnection policy when data reception stops (WAIT = wait indefinitely for new data; RECONNECT = close current connection and try to reconnect to NTRIP caster after WTIME seconds; LEAVE = stop logging and quit).");
 		parser.addArgument("-wt", "--waitingtime")
-				.setDefault(60)
+				.setDefault(300)
 				.type(Integer.class)
 				.metavar("WTIME")
 				.help("waiting time in seconds before attempting to reconnect (used only with the RECONNECT policy).");
