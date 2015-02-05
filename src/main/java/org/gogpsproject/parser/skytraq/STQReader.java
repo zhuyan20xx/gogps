@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.Vector;
 
 import org.gogpsproject.EphGps;
-import org.gogpsproject.IonoGps;
 import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
@@ -49,7 +48,7 @@ public class STQReader implements StreamEventProducer {
 		addStreamEventListener(eventListener);
 	}
 
-	public Object readMessage() throws IOException, STQException{
+	public Object readMessage(Observations o) throws IOException, STQException{
 
 	//	int data = in.read();
 	//	if(data == 0xA0){
@@ -68,15 +67,15 @@ public class STQReader implements StreamEventProducer {
 				throw new STQException("Zero-length SkyTraq message");
 			}
 
-			data = in.read(); // Class
+			data = in.read(); // message type
 			boolean parsed = false;
 			if (data == 0xDD) { //RAW-MEAS
 				data = in.read();
 				// RAW-MEAS
-				DecodeRAWMEAS decodegps = new DecodeRAWMEAS(in);
+				DecodeRAWMEAS decodegps = new DecodeRAWMEAS(in, o);
 				parsed = true;
 
-				Observations o = decodegps.decode(len);
+				o = decodegps.decode(len);
 				if (o!=null && this.debugModeEnabled) {
 					System.out.println("Decoded observations");
 				}
@@ -86,7 +85,6 @@ public class STQReader implements StreamEventProducer {
 						sel.addObservations(oc);
 					}
 				}
-				return o;
 			}else
 			if (data == 0xDC) { //MEAS-TIME
 				data = in.read();
@@ -94,16 +92,11 @@ public class STQReader implements StreamEventProducer {
 				DecodeMEASTIME decodegps = new DecodeMEASTIME(in);
 				parsed = true;
 
-				Observations time = decodegps.decode(len);
-				if (time!=null && this.debugModeEnabled) {
+				o = decodegps.decode(len);
+				if (o!=null && this.debugModeEnabled) {
 					System.out.println("Decoded time message");
 				}
-				if(streamEventListeners!=null && time!=null){
-					for(StreamEventListener sel:streamEventListeners){
-						sel.addObservations(time);
-					}
-				}
-				return time;
+				return o;
 			}else
 			if (data == 0x31) {
 				// GPS-EPH (ephemerides)
