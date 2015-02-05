@@ -111,19 +111,13 @@ public class STQFileReader extends EphemerisSystem implements ObservationsProduc
 	@Override
 	public Observations getNextObservations() {
 		try{
+			Object o = null;
 			while(in.available()>0){
 				try{
 					int data = in.read();
 					if(data == 0xA0){
-						Object o = reader.readMessage();
-						if(o instanceof Observations){
-							return (Observations)o;
-						}else
-							if(o instanceof IonoGps){
-								iono = (IonoGps)o;
-							}
+						o = reader.readMessage((Observations) o);
 						if(o instanceof EphGps){
-
 							EphGps e = (EphGps)o;
 							ephs.put(new Integer(e.getSatID()), e);
 						}

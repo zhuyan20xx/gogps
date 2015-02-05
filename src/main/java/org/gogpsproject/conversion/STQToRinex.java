@@ -22,7 +22,7 @@ package org.gogpsproject.conversion;
 import java.io.File;
 import java.util.Locale;
 
-import org.gogpsproject.parser.ublox.UBXFileReader;
+import org.gogpsproject.parser.skytraq.STQFileReader;
 import org.gogpsproject.producer.rinex.RinexV2Producer;
 
 /**
@@ -58,7 +58,7 @@ public class STQToRinex {
 		
 		RinexV2Producer rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
 
-		UBXFileReader roverIn = new UBXFileReader(new File(inFile));
+		STQFileReader roverIn = new STQFileReader(new File(inFile));
 		try {
 			roverIn.init();
 			roverIn.addStreamEventListener(rp);
