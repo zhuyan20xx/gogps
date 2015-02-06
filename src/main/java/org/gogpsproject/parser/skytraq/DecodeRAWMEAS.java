@@ -22,22 +22,15 @@ package org.gogpsproject.parser.skytraq;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Calendar;
-import java.util.TimeZone;
 
 import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
-import org.gogpsproject.Time;
 import org.gogpsproject.util.Bits;
-import org.gogpsproject.util.UnsignedOperation;
 
 
 public class DecodeRAWMEAS {
 	private InputStream in;
 	private Observations o;
-//	private int[] fdata;
-//	private int[] fbits;
-//	private boolean end = true;
 
 	public DecodeRAWMEAS(InputStream in, Observations o) {
 		this.in = in;
@@ -46,155 +39,71 @@ public class DecodeRAWMEAS {
 
 	public Observations decode(int len) throws IOException, STQException {
 
-		boolean[] bits = new boolean[8];
-		int index = 0;
-		boolean[] temp1 = Bits.intToBits(in.read(), 8);
-		for (int i = 0; i < 8; i++) {
-			bits[index] = temp1[i];
-			index++;
-		}
+		byte bytes[];
+		
+		/* IOD, 1 byte */				
+		bytes = new byte[1];
+		in.read(bytes, 0, bytes.length);
+		int IOD = Bits.byteToIntBigEndian(bytes);
 
-		int IOD = (int)Bits.bitsToUInt(bits);
-		//System.out.println("IOD :  " + IOD + " S ");
-
-		bits = new boolean[8];
-		index = 0;
-		temp1 = Bits.intToBits(in.read(), 8);
-		for (int i = 0; i < 8; i++) {
-			bits[index] = temp1[i];
-			index++;
-		}
-
-		int NMEAS = (int)Bits.bitsToUInt(bits);
-		//System.out.println("NMEAS :  " + NMEAS + "  ");
-
-		int[] data = new int[len - 8];
-
-		for (int i = 0; i < len - 8; i++) {
-			data[i] = in.read();
-			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
-		}
-		//System.out.println();
+		bytes = new byte[1];
+		in.read(bytes, 0, bytes.length);
+		int NMEAS = Bits.byteToIntBigEndian(bytes);
 
 		int gpsCounter = 0;
-
-		for (int k = 0; k < (len - 8) / 24; k++) {
-//			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%" + k
-//					+ "%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+		boolean anomalousValues = false;
+		for (int k = 0; k < NMEAS; k++) {
 
 			ObservationSet os = new ObservationSet();
 
-			int offset = k * 24;
-			bits = new boolean[8 * 8]; // R8
-			index = 0;
-			for (int j = offset + 7; j >= 0 + offset; j--) {
-				temp1 = Bits.intToBits(data[j], 8);
-				for (int i = 0; i < 8; i++) {
-					bits[index] = temp1[i];
-					index++;
-				}
-			}
-			os.setPhase(ObservationSet.L1, UnsignedOperation.toDouble(Bits.tobytes(bits)));
-//			System.out.print(k+"\tPhase: "
-//					+ os.getPhase(ObservationSet.L1) + "  ");
-			bits = new boolean[8 * 8]; // R8
-			index = 0;
-			for (int j = offset + 7 + 8; j >= 8 + offset; j--) {
-				temp1 = Bits.intToBits(data[j], 8);
-				for (int i = 0; i < 8; i++) {
-					bits[index] = temp1[i];
-					index++;
-				}
-			}
-			os.setCodeC(ObservationSet.L1, UnsignedOperation.toDouble(Bits.tobytes(bits)));
-//			System.out.print(" Code: "
-//					+ os.getCodeC(ObservationSet.L1) + "  ");
-			bits = new boolean[8 * 4]; // R8
-			index = 0;
-			for (int j = offset + 7 + 8 + 4; j >= 8 + 8 + offset; j--) {
-				temp1 = Bits.intToBits(data[j], 8);
-				for (int i = 0; i < 8; i++) {
-					bits[index] = temp1[i];
-					index++;
-				}
-			}
-			os.setDoppler(ObservationSet.L1, UnsignedOperation.toFloat(Bits.tobytes(bits)));
-//			System.out.print(" Doppler: "
-//					+ os.getDoppler(ObservationSet.L1) + "  ");
-			bits = new boolean[8];
-			index = 0;
-			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[index] = temp1[i];
-				index++;
-			}
-			os.setSatID((int)Bits.bitsToUInt(bits));
-//			System.out.print (" SatID: "
-//					+ os.getSatID() + "  ");
+			/* Satellite Number, 1 byte */				
+			bytes = new byte[1];
+			in.read(bytes, 0, bytes.length);
+			int satID = Bits.byteToIntBigEndian(bytes);
+			os.setSatID(satID);
 
+			/* signal-to-noise ratio, 1 byte */				
+			bytes = new byte[1];
+			in.read(bytes, 0, bytes.length);
+			int CN0 = Bits.byteToIntBigEndian(bytes);
 
-			bits = new boolean[8];
-			index = 0;
-			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[index] = temp1[i];
-				index++;
-			}
-//			System.out.print("Nav Measurements Quality Ind.: "
-//					+ Bits.bitsTwoComplement(bits) + "  ");
-//			System.out.print(" QI: "
-//					+ Bits.bitsToInt(bits) + "  ");
-			bits = new boolean[8];
-			index = 0;
-			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1 + 1], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[index] = temp1[i];
-				index++;
-			}
+			/* C/A Pseudorange (m), 8 bytes  */
+			bytes = new byte[8];
+			in.read(bytes, 0, bytes.length);
+			double pseudoRange = Bits.byteToIEEE754DoubleBigEndian(bytes);
+			if (pseudoRange < 1e6 || pseudoRange > 6e7) {
+	        	anomalousValues = true;
+	        }
 
-			os.setSignalStrength(ObservationSet.L1, Bits.bitsTwoComplement(bits));
-//			System.out.print(" SNR: " // Signal strength C/No. (dbHz)
-//					+ os.getSignalStrength(ObservationSet.L1) + "  ");
-			bits = new boolean[8];
-			index = 0;
-			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1 + 1 + 1], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[index] = temp1[i];
-				index++;
-			}
-//			System.out.println(" Lock: "//Loss of lock indicator (RINEX definition)
-//					+ Bits.bitsToInt(bits) + "  ");
-			int total = offset + 7 + 8 + 4 + 1 + 1 + 1 + 1;
-			//System.out.println("Offset " + total);
+			/* Carrier phase (cycles), 8 bytes  */
+			bytes = new byte[8];
+			in.read(bytes, 0, bytes.length);
+			double carrierPhase = Bits.byteToIEEE754DoubleBigEndian(bytes);
 
-			if (os.getSatID() <= 32) {
+			/*  Doppler Frequency(Hz), 4 bytes  */
+			bytes = new byte[4];
+			in.read(bytes, 0, bytes.length);
+			float doppler = Bits.byteToIEEE754FloatBigEndian(bytes);
+			
+			/* channel indicator, 1 byte */				
+			bytes = new byte[1];
+			in.read(bytes, 0, bytes.length);
+			
+			if (anomalousValues) {
+				return null;
+			}
+			
+			if (o.getIssueOfData() == IOD && os.getSatID() <= 32) {
 				os.setSatType('G');
+				os.setSignalStrength(ObservationSet.L1, CN0);
+				os.setCodeC(ObservationSet.L1, pseudoRange);
+				os.setPhase(ObservationSet.L1, carrierPhase);
+				os.setDoppler(ObservationSet.L1, doppler);
 				o.setGps(gpsCounter, os);
 				gpsCounter++;
 			}
 		}
 
 		return o;
-	}
-
-	private long getGMTTS(long tow, long week) {
-		Calendar c = Calendar.getInstance();
-		c.setTimeZone(TimeZone.getTimeZone("GMT Time"));
-		c.set(Calendar.YEAR, 1980);
-		c.set(Calendar.MONTH, Calendar.JANUARY);
-		c.set(Calendar.DAY_OF_MONTH, 6);
-		c.set(Calendar.HOUR_OF_DAY, 0);
-		c.set(Calendar.MINUTE, 0);
-		c.set(Calendar.SECOND, 0);
-		c.set(Calendar.MILLISECOND, 0);
-
-//		c.add(Calendar.DATE, week*7);
-//		c.add(Calendar.MILLISECOND, tow/1000*1000);
-
-		//SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
-		//System.out.println(sdf.format(c.getTime()));
-		//ubx.log( (c.getTime().getTime())+" "+c.getTime()+" "+week+" "+tow+"\n\r");
-
-		return c.getTimeInMillis() + week*7*24*3600*1000 + tow;
 	}
 }

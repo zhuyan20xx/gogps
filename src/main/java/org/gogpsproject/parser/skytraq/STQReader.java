@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
 
-import org.gogpsproject.EphGps;
 import org.gogpsproject.Observations;
 import org.gogpsproject.StreamEventListener;
 import org.gogpsproject.StreamEventProducer;
@@ -37,7 +36,7 @@ import org.gogpsproject.StreamEventProducer;
 public class STQReader implements StreamEventProducer {
 	private InputStream in;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
-	private Boolean debugModeEnabled = false;
+	private Boolean debugModeEnabled = true;
 	//	private StreamEventListener streamEventListener;
 
 	public STQReader(InputStream is){
@@ -55,7 +54,7 @@ public class STQReader implements StreamEventProducer {
 		int data = in.read();
 		if(data == 0xA1){
 
-			// parse big Endian data
+			// parse big endian data
 			int[] length = new int[2];
 
 			length[0] = in.read();
@@ -69,8 +68,7 @@ public class STQReader implements StreamEventProducer {
 
 			data = in.read(); // message type
 			boolean parsed = false;
-			if (data == 0xDD) { //RAW-MEAS
-				data = in.read();
+			if (data == 0xDD && o!=null) { //RAW-MEAS
 				// RAW-MEAS
 				DecodeRAWMEAS decodegps = new DecodeRAWMEAS(in, o);
 				parsed = true;
@@ -87,7 +85,6 @@ public class STQReader implements StreamEventProducer {
 				}
 			}else
 			if (data == 0xDC) { //MEAS-TIME
-				data = in.read();
 				// MEAS-TIME (measurement time)
 				DecodeMEASTIME decodegps = new DecodeMEASTIME(in);
 				parsed = true;
@@ -97,24 +94,22 @@ public class STQReader implements StreamEventProducer {
 					System.out.println("Decoded time message");
 				}
 				return o;
-			}else
-			if (data == 0x31) {
-				// GPS-EPH (ephemerides)
-				DecodeGPSEPH decodegps = new DecodeGPSEPH(in);
-				parsed = true;
-
-				EphGps eph = decodegps.decode();
-				if (eph!=null && this.debugModeEnabled) {
-					System.out.println("Decoded ephemeris for satellite " + eph.getSatID());
-				}
-				if(streamEventListeners!=null && eph!=null){
-					for(StreamEventListener sel:streamEventListeners){
-						sel.addEphemeris(eph);
-					}
-				}
-				return eph;
-			}else{
-				in.read(); // ID
+//			}else
+//			if (data == 0xB1) {
+//				// GPS-EPH (ephemerides)
+//				DecodeGPSEPH decodegps = new DecodeGPSEPH(in);
+//				parsed = true;
+//
+//				EphGps eph = decodegps.decode();
+//				if (eph!=null && this.debugModeEnabled) {
+//					System.out.println("Decoded ephemeris for satellite " + eph.getSatID());
+//				}
+//				if(streamEventListeners!=null && eph!=null){
+//					for(StreamEventListener sel:streamEventListeners){
+//						sel.addEphemeris(eph);
+//					}
+//				}
+//				return eph;
 			}
 			if(!parsed){
 

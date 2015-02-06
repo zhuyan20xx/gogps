@@ -22,25 +22,16 @@ package org.gogpsproject.parser.skytraq;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.TimeZone;
 
-import org.gogpsproject.ObservationSet;
 import org.gogpsproject.Observations;
 import org.gogpsproject.Time;
 import org.gogpsproject.util.Bits;
-import org.gogpsproject.util.UnsignedOperation;
 
 
 public class DecodeMEASTIME {
 	private InputStream in;
-
-//	private int[] fdata;
-//	private int[] fbits;
-//	private boolean end = true;
 
 	public DecodeMEASTIME(InputStream in) {
 		this.in = in;
@@ -48,172 +39,30 @@ public class DecodeMEASTIME {
 
 	public Observations decode(int len) throws IOException, STQException {
 
-		//System.out.println("Length : " + len);
-		int[] data = new int[8];
-		//System.out.print("\n Header ");
-		for (int i = 0; i < 8; i++) {
-			data[i] = in.read();
-			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
-		}
-		//System.out.println();
-		boolean[] bits = new boolean[8 * 4];
-		int indice = 0;
-		for (int j = 3; j >= 0; j--) {
-			boolean[] temp1 = Bits.intToBits(data[j], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[indice] = temp1[i];
-				indice++;
-			}
-		}
-		long tow = Bits.bitsTwoComplement(bits);
-		//System.out.println("Gps TOW " + tow + " ms");
-
-		bits = new boolean[8 * 2];
-		indice = 0;
-		for (int j = 5; j >= 4; j--) {
-			boolean[] temp1 = Bits.intToBits(data[j], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[indice] = temp1[i];
-				indice++;
-			}
-		}
-		int week = (int)Bits.bitsTwoComplement(bits);
-		//System.out.println("Week :  " + week );
-
-		bits = new boolean[8];
-		indice = 0;
-		boolean[] temp1 = Bits.intToBits(data[6], 8);
-		for (int i = 0; i < 8; i++) {
-			bits[indice] = temp1[i];
-			indice++;
-		}
-
-		int numSV = (int)Bits.bitsToUInt(bits);
-		//System.out.println("NumSV :  " + numSV + " S ");
-
-		bits = new boolean[8];
-		indice = 0;
-		temp1 = Bits.intToBits(data[7], 8);
-		for (int i = 0; i < 8; i++) {
-			bits[indice] = temp1[i];
-			indice++;
-		}
-
-		//System.out.println("Res :  " + Bits.bitsToInt(bits) + "  ");
-
-		data = new int[len - 8];
-
-		for (int i = 0; i < len - 8; i++) {
-			data[i] = in.read();
-			//System.out.print("0x" + Integer.toHexString(data[i]) + " ");
-		}
-		//System.out.println();
+		byte bytes[];
+		
+		/* IOD, 1 byte */				
+		bytes = new byte[1];
+		in.read(bytes, 0, bytes.length);
+		int IOD = Bits.byteToIntBigEndian(bytes);
+		
+		/* GPS week, 2 bytes */
+		bytes = new byte[2];
+		in.read(bytes, 0, bytes.length);
+		int week = Bits.byteToIntBigEndian(bytes);
+		
+		/* GPS time-of-week, 4 bytes */
+		bytes = new byte[4];
+		in.read(bytes, 0, bytes.length);
+		long tow = Bits.byteToLongBigEndian(bytes);
+		
+		/* Measurement period, 2 bytes */
+		bytes = new byte[2];
+		in.read(bytes, 0, bytes.length);
 
 		long gmtTS = getGMTTS(tow, week);
 		Observations o = new Observations(new Time(gmtTS),0);
-//		Time refTime = new Time((int)week, tow/1000);
-//		Observations o = new Observations(refTime,0);
-
-		//System.out.println(gmtTS+" GPS time "+o.getRefTime().getGpsTime());
-		//ubx.log( o.getRefTime().getGpsTime()+" "+tow+"\n\r");
-
-		int gpsCounter = 0;
-
-		for (int k = 0; k < (len - 8) / 24; k++) {
-//			System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%" + k
-//					+ "%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-
-			ObservationSet os = new ObservationSet();
-
-			int offset = k * 24;
-			bits = new boolean[8 * 8]; // R8
-			indice = 0;
-			for (int j = offset + 7; j >= 0 + offset; j--) {
-				temp1 = Bits.intToBits(data[j], 8);
-				for (int i = 0; i < 8; i++) {
-					bits[indice] = temp1[i];
-					indice++;
-				}
-			}
-			os.setPhase(ObservationSet.L1, UnsignedOperation.toDouble(Bits.tobytes(bits)));
-//			System.out.print(k+"\tPhase: "
-//					+ os.getPhase(ObservationSet.L1) + "  ");
-			bits = new boolean[8 * 8]; // R8
-			indice = 0;
-			for (int j = offset + 7 + 8; j >= 8 + offset; j--) {
-				temp1 = Bits.intToBits(data[j], 8);
-				for (int i = 0; i < 8; i++) {
-					bits[indice] = temp1[i];
-					indice++;
-				}
-			}
-			os.setCodeC(ObservationSet.L1, UnsignedOperation.toDouble(Bits.tobytes(bits)));
-//			System.out.print(" Code: "
-//					+ os.getCodeC(ObservationSet.L1) + "  ");
-			bits = new boolean[8 * 4]; // R8
-			indice = 0;
-			for (int j = offset + 7 + 8 + 4; j >= 8 + 8 + offset; j--) {
-				temp1 = Bits.intToBits(data[j], 8);
-				for (int i = 0; i < 8; i++) {
-					bits[indice] = temp1[i];
-					indice++;
-				}
-			}
-			os.setDoppler(ObservationSet.L1, UnsignedOperation.toFloat(Bits.tobytes(bits)));
-//			System.out.print(" Doppler: "
-//					+ os.getDoppler(ObservationSet.L1) + "  ");
-			bits = new boolean[8];
-			indice = 0;
-			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[indice] = temp1[i];
-				indice++;
-			}
-			os.setSatID((int)Bits.bitsToUInt(bits));
-//			System.out.print (" SatID: "
-//					+ os.getSatID() + "  ");
-
-
-			bits = new boolean[8];
-			indice = 0;
-			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[indice] = temp1[i];
-				indice++;
-			}
-//			System.out.print("Nav Measurements Quality Ind.: "
-//					+ Bits.bitsTwoComplement(bits) + "  ");
-//			System.out.print(" QI: "
-//					+ Bits.bitsToInt(bits) + "  ");
-			bits = new boolean[8];
-			indice = 0;
-			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1 + 1], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[indice] = temp1[i];
-				indice++;
-			}
-
-			os.setSignalStrength(ObservationSet.L1, Bits.bitsTwoComplement(bits));
-//			System.out.print(" SNR: " // Signal strength C/No. (dbHz)
-//					+ os.getSignalStrength(ObservationSet.L1) + "  ");
-			bits = new boolean[8];
-			indice = 0;
-			temp1 = Bits.intToBits(data[offset + 7 + 8 + 4 + 1 + 1 + 1 + 1], 8);
-			for (int i = 0; i < 8; i++) {
-				bits[indice] = temp1[i];
-				indice++;
-			}
-//			System.out.println(" Lock: "//Loss of lock indicator (RINEX definition)
-//					+ Bits.bitsToInt(bits) + "  ");
-			int total = offset + 7 + 8 + 4 + 1 + 1 + 1 + 1;
-			//System.out.println("Offset " + total);
-
-			if (os.getSatID() <= 32) {
-				os.setSatType('G');
-				o.setGps(gpsCounter, os);
-				gpsCounter++;
-			}
-		}
+		o.setIssueOfData(IOD);
 
 		return o;
 	}
@@ -228,13 +77,6 @@ public class DecodeMEASTIME {
 		c.set(Calendar.MINUTE, 0);
 		c.set(Calendar.SECOND, 0);
 		c.set(Calendar.MILLISECOND, 0);
-
-//		c.add(Calendar.DATE, week*7);
-//		c.add(Calendar.MILLISECOND, tow/1000*1000);
-
-		//SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH mm ss.SSS");
-		//System.out.println(sdf.format(c.getTime()));
-		//ubx.log( (c.getTime().getTime())+" "+c.getTime()+" "+week+" "+tow+"\n\r");
 
 		return c.getTimeInMillis() + week*7*24*3600*1000 + tow;
 	}
