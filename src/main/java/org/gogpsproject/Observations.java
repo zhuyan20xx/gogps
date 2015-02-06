@@ -54,6 +54,7 @@ public class Observations implements Streamable {
 	private ArrayList<ObservationSet> gps; /* GPS observations */
 	private ArrayList<ObservationSet> glo; /* GLONASS observations */
 	private ArrayList<ObservationSet> sbs; /* SBAS observations */
+	private int issueOfData = -1;
 
 	public Object clone(){
 		try{
@@ -282,4 +283,11 @@ public class Observations implements Streamable {
 		}
 	}
 
+	public void setIssueOfData(int iOD) {
+		this.issueOfData = iOD;
+	}
+
+	public int getIssueOfData() {
+		return this.issueOfData;
+	}
 }

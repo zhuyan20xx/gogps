@@ -351,6 +351,42 @@ public class Bits {
 
 		return bits;
 	}
+	public static double byteToIEEE754DoubleBigEndian(byte l[]){
+		
+		long bits = 0;
+		for(int i=0;i<l.length;i++){
+			bits = bits << 8;
+			 bits = bits | getUInt(l[i]);
+		}
+		
+		return Double.longBitsToDouble(bits);
+	}
+	public static float byteToIEEE754FloatBigEndian(byte l[]){
+		int bits = 0;
+		for(int i=0;i<l.length;i++){
+			bits = bits << 8;
+			bits = bits | getUInt(l[i]);
+		}
+		return Float.intBitsToFloat(bits);
+	}
+	public static long byteToLongBigEndian(byte l[]){
+		int bits = 0;
+		for(int i=0;i<l.length;i++){
+			bits = bits << 8;
+			bits = bits | getUInt(l[i]);
+		}
+
+		return bits;
+	}
+	public static int byteToIntBigEndian(byte l[]){
+		int bits = 0;
+		for(int i=0;i<l.length;i++){
+			bits = bits << 8;
+			bits = bits | getUInt(l[i]);
+		}
+
+		return bits;
+	}
 
 	/**
      * Convert a specified number of bytes from a byte array into a readable hex string.

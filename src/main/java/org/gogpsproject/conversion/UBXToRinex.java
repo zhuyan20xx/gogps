@@ -52,7 +52,6 @@ public class UBXToRinex {
 		int p=0;
 		String inFile = args[p++];
 		String marker = args[p++];
-		//String outFile = inFile.indexOf(".ubx")>0?inFile.substring(0, inFile.indexOf(".ubx"))+".obs":inFile+".obs";
 
 		System.out.println("in :"+inFile);
 		
@@ -66,11 +65,7 @@ public class UBXToRinex {
 			e.printStackTrace();
 		}
 		
-		roverIn.getNextObservations();
-		while(roverIn.getCurrentObservations()==null){
-			roverIn.getNextObservations();
-		}
-		while(roverIn.getCurrentObservations()!=null){
+		while(roverIn.hasMoreObservations()){
 			roverIn.getNextObservations();
 		}
 		

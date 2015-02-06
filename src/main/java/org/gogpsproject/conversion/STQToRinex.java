@@ -52,7 +52,6 @@ public class STQToRinex {
 		int p=0;
 		String inFile = args[p++];
 		String marker = args[p++];
-		//String outFile = inFile.indexOf(".stq")>0?inFile.substring(0, inFile.indexOf(".stq"))+".obs":inFile+".obs";
 
 		System.out.println("in :"+inFile);
 		
@@ -66,11 +65,7 @@ public class STQToRinex {
 			e.printStackTrace();
 		}
 		
-		roverIn.getNextObservations();
-		while(roverIn.getCurrentObservations()==null){
-			roverIn.getNextObservations();
-		}
-		while(roverIn.getCurrentObservations()!=null){
+		while(roverIn.hasMoreObservations()){
 			roverIn.getNextObservations();
 		}
 		
