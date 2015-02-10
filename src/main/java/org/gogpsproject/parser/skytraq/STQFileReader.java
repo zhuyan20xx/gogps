@@ -128,7 +128,6 @@ public class STQFileReader extends EphemerisSystem implements ObservationsProduc
 					}
 				}catch(STQException stqe){
 					System.err.println(stqe);
-					//					ubxe.printStackTrace();
 				}
 			}
 		}catch(IOException e){

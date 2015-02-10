@@ -36,7 +36,7 @@ import org.gogpsproject.StreamEventProducer;
 public class STQReader implements StreamEventProducer {
 	private InputStream in;
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
-	private Boolean debugModeEnabled = true;
+	private Boolean debugModeEnabled = false;
 	//	private StreamEventListener streamEventListener;
 
 	public STQReader(InputStream is){
@@ -124,6 +124,7 @@ public class STQReader implements StreamEventProducer {
 			if (this.debugModeEnabled) {
 				System.out.println("Warning: wrong sync char 2 "+data+" "+Integer.toHexString(data)+" ["+((char)data)+"]");
 			}
+			return o;
 		}
 	//	}else{
 	//		//no warning, may be NMEA
