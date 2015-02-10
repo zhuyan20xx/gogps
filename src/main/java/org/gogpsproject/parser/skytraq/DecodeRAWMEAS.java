@@ -71,9 +71,9 @@ public class DecodeRAWMEAS {
 			bytes = new byte[8];
 			in.read(bytes, 0, bytes.length);
 			double pseudoRange = Bits.byteToIEEE754DoubleBigEndian(bytes);
-			if (pseudoRange < 1e6 || pseudoRange > 6e7) {
-	        	anomalousValues = true;
-	        }
+//			if (pseudoRange < 1e6 || pseudoRange > 6e7) {
+//	        	anomalousValues = true;
+//	        }
 
 			/* Carrier phase (cycles), 8 bytes  */
 			bytes = new byte[8];
@@ -89,11 +89,7 @@ public class DecodeRAWMEAS {
 			bytes = new byte[1];
 			in.read(bytes, 0, bytes.length);
 			
-			if (anomalousValues) {
-				return null;
-			}
-			
-			if (o.getIssueOfData() == IOD && os.getSatID() <= 32) {
+			if (o.getIssueOfData() == IOD && os.getSatID() <= 32 && !anomalousValues) {
 				os.setSatType('G');
 				os.setSignalStrength(ObservationSet.L1, CN0);
 				os.setCodeC(ObservationSet.L1, pseudoRange);
@@ -104,6 +100,10 @@ public class DecodeRAWMEAS {
 			}
 		}
 
+		if (o.getGpsSize() == 0 && o.getGloSize() == 0 && o.getSbsSize() == 0) {
+			o = null;
+		}
+		
 		return o;
 	}
 }
