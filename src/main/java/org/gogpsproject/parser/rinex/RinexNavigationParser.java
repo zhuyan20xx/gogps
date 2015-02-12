@@ -104,7 +104,12 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 			if (ver == 2){
 				
 //				System.out.println("Ver. 2.x");
-				parseDataNav();
+				parseDataNavV2();
+				
+			} else if (ver == 212){
+				
+//				System.out.println("Ver. 2.12");
+				parseDataNavV2();
 				
 			} else if (ver == 3){
 				
@@ -210,7 +215,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 						} else if (line.substring(5, 9).equals("2.12")){
 							
 //							System.out.println("Ver. 2.12");
-							ver = 3;
+							ver = 212;
 						
 						} else {
 						
@@ -221,6 +226,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 					}
 						
 					switch (ver){ 	
+					/* RINEX ver. 2.x */
 					case 2:
 
 							if (typeField.equals("ION ALPHA")) {
@@ -307,11 +313,74 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 							}
 					break;
 					
-					case 3: 
-//						System.out.println("RINEX Ver.3 parsing here");
+					
+					/* RINEX ver. 2.12 */
+					case 212:
+
+							System.out.println("Ver. 2.12");
 						
-						String typeField2 = line.substring(0, 4);
-						typeField2 = typeField2.trim();
+							String typeField2 = line.substring(0, 4);
+							typeField2 = typeField2.trim();
+							
+							if (typeField2.equals("GPSA")) {
+		
+								float a[] = new float[4];
+								sub = line.substring(6, 17).replace('D', 'e');
+								//Navigation.iono[0] = Double.parseDouble(sub.trim());
+								a[0] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(18, 29).replace('D', 'e');
+								//Navigation.iono[1] = Double.parseDouble(sub.trim());
+								a[1] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(30, 41).replace('D', 'e');
+								//Navigation.iono[2] = Double.parseDouble(sub.trim());
+								a[2] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(42, 53).replace('D', 'e');
+								//Navigation.iono[3] = Double.parseDouble(sub.trim());
+								a[3] = Float.parseFloat(sub.trim());
+		
+								if(iono==null) iono = new IonoGps();
+								iono.setAlpha(a);
+		
+							} else if (typeField2.equals("GPSB")) {
+		
+								float b[] = new float[4];
+		
+								sub = line.substring(6, 17).replace('D', 'e');
+								//Navigation.iono[4] = Double.parseDouble(sub.trim());
+								//setIono(4, Double.parseDouble(sub.trim()));
+								b[0] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(18, 29).replace('D', 'e');
+								//Navigation.iono[5] = Double.parseDouble(sub.trim());
+								//setIono(5, Double.parseDouble(sub.trim()));
+								b[1] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(30, 41).replace('D', 'e');
+								//Navigation.iono[6] = Double.parseDouble(sub.trim());
+								//setIono(6, Double.parseDouble(sub.trim()));
+								b[2] = Float.parseFloat(sub.trim());
+		
+								sub = line.substring(42, 53).replace('D', 'e');
+								//Navigation.iono[7] = Double.parseDouble(sub.trim());
+								//setIono(7, Double.parseDouble(sub.trim()));
+								b[3] = Float.parseFloat(sub.trim());
+		
+								if(iono==null) iono = new IonoGps();
+								iono.setBeta(b);
+		
+							} else if (typeField.equals("END OF HEADER")) {	
+								return ver;
+							}
+					break;
+					
+					/* RINEX ver. 3.01 */
+					case 3: 
+						
+						String typeField3 = line.substring(0, 4);
+						typeField3 = typeField3.trim();
 						
 //						String typeField3 = line.substring(60, line.length());
 //						typeField3 = typeField3.trim();
@@ -319,7 +388,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 //						System.out.println(typeField2);
 
 						
-						if (typeField2.equals("GPSA")) {
+						if (typeField3.equals("GPSA")) {
 							
 //							System.out.println("GPSA");
 
@@ -342,14 +411,14 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	
 							if(iono==null) iono = new IonoGps();
 							iono.setAlpha(a);
-							
+//							
 //							System.out.println(a[0]);
 //							System.out.println(a[1]);
 //							System.out.println(a[2]);
 //							System.out.println(a[3]);
 
 	
-						} else if (typeField2.equals("GPSB")) {
+						} else if (typeField3.equals("GPSB")) {
 							
 //							System.out.println("GPSB");
 							
@@ -413,7 +482,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	/**
 	 * Read all navigation data
 	 */
-	public void parseDataNav() {
+	public void parseDataNavV2() {
 		try {
 
 			// Resizable array
