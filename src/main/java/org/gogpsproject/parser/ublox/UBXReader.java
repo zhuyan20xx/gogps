@@ -19,6 +19,7 @@
  */
 package org.gogpsproject.parser.ublox;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
@@ -41,11 +42,25 @@ public class UBXReader implements StreamEventProducer {
 	private Boolean debugModeEnabled = false;
 	//	private StreamEventListener streamEventListener;
 
+	boolean gpsEnable = true;  // enable GPS data reading
+	boolean qzsEnable = false;  // enable QZSS data reading
+    boolean gloEnable = true;  // enable GLONASS data reading	
+    boolean galEnable = true;  // enable Galileo data reading
+    boolean bdsEnable = false;  // enable BeiDou data reading
+
+    private Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
+	
 	public UBXReader(InputStream is){
 		this(is,null);
 	}
 	public UBXReader(InputStream is, StreamEventListener eventListener){
 		this.in = is;
+		addStreamEventListener(eventListener);
+	}
+	
+	public UBXReader(BufferedInputStream is, Boolean[] multiConstellation, StreamEventListener eventListener){
+		this.in = is;
+		this.multiConstellation = multiConstellation;
 		addStreamEventListener(eventListener);
 	}
 
@@ -76,7 +91,27 @@ public class UBXReader implements StreamEventProducer {
 						}
 					}
 					return o;
+					
+				}else if(data == 0x15){ //RAWX
+					// RMX-RAWX
+					DecodeRXMRAWX decodegnss = new DecodeRXMRAWX(in);
+					parsed = true;
+
+					Observations o = decodegnss.decode(null);
+					if (o!=null && this.debugModeEnabled) {
+						System.out.println("Decoded observations");
+					}
+					if(streamEventListeners!=null && o!=null){
+						for(StreamEventListener sel:streamEventListeners){
+							Observations oc = (Observations)o.clone();
+							sel.addObservations(oc);
+						}
+					}
+					return o;
+									
+					
 				}
+				
 			}else
 				if (data == 0x0B) { // AID
 					data = in.read(); // ID
