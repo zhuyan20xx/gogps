@@ -58,8 +58,21 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 	
 	private Vector<StreamEventListener> streamEventListeners = new Vector<StreamEventListener>();
 
+	boolean gpsEnable = true;  // enable GPS data reading
+	boolean qzsEnable = true;  // enable QZSS data reading
+    boolean gloEnable = true;  // enable GLONASS data reading	
+    boolean galEnable = true;  // enable Galileo data reading
+    boolean bdsEnable = true;  // enable BeiDou data reading
+	
+	Boolean[] multiConstellation = {gpsEnable, qzsEnable, gloEnable, galEnable, bdsEnable};
+	
 	public UBXFileReader(File file) {
 		this.file = file;
+	}
+	
+	public UBXFileReader(File file, Boolean[] multiConstellation) {
+		this.file = file;
+		this.multiConstellation = multiConstellation;		
 	}
 
 	/* (non-Javadoc)
@@ -103,6 +116,7 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 		this.in = new FileInputStream(file);
 
 		this.reader = new UBXReader(in, null);
+//		this.reader = new UBXReader(in, multiConstellation, null);
 	}
 
 	/* (non-Javadoc)
