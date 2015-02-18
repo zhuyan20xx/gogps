@@ -94,7 +94,7 @@ public class UBXReader implements StreamEventProducer {
 					
 				}else if(data == 0x15){ //RAWX
 					// RMX-RAWX
-					DecodeRXMRAWX decodegnss = new DecodeRXMRAWX(in);
+					DecodeRXMRAWX decodegnss = new DecodeRXMRAWX(in, multiConstellation);
 					parsed = true;
 
 					Observations o = decodegnss.decode(null);
