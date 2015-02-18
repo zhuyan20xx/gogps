@@ -102,8 +102,8 @@ public class DecodeRXMRAWX {
 			}
 		}
 //		System.out.println("tow :  " + UnsignedOperation.toDouble(Bits.tobytes(bits)) );
-		long tow = (long)UnsignedOperation.toDouble(Bits.tobytes(bits));
-		tow = tow * 1000; // convert to mili-seconds 
+		double tow = UnsignedOperation.toDouble(Bits.tobytes(bits));
+//		tow = tow * 1000; // convert to milliseconds 
 //		System.out.println("tow :  " + tow );
 
 				
@@ -128,7 +128,7 @@ public class DecodeRXMRAWX {
 			indice++;
 		}			
 		long leapS = Bits.bitsTwoComplement(bits);
-		leapS = leapS * 1000; // convert to mili-second 
+		leapS = leapS * 1000; // convert to milliseconds 
 //		tow = tow - leapS ;
 //		System.out.println("leapS :  " + leapS );
 		
@@ -191,9 +191,10 @@ public class DecodeRXMRAWX {
 		}
 		//System.out.println();
 
-		long gmtTS = getGMTTS(tow, week);
+//		long gmtTS = getGMTTS((long) tow, week);
 //		gmtTS = gmtTS - leapS ;
-		Observations o = new Observations(new Time(gmtTS),0);
+//		Observations o = new Observations(new Time(gmtTS),0);
+		Observations o = new Observations(new Time(week, tow),0);
 //		Time refTime = new Time((int)week, tow/1000);
 //		Observations o = new Observations(refTime,0);
 
