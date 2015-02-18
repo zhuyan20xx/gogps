@@ -25,6 +25,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.gogpsproject.PositionConsumer;
 import org.gogpsproject.RoverPosition;
@@ -66,11 +67,15 @@ public class KmlProducer implements PositionConsumer, Runnable {
 	private Thread t = null;
 
 	private ArrayList<RoverPosition> positions = new ArrayList<RoverPosition>();
+	
+	private final static TimeZone TZ = TimeZone.getTimeZone("GMT");
 
 	public KmlProducer(String filename, double goodDopTreshold, int timeSampleDelaySec) throws IOException{
 		this.filename = filename;
 		this.goodDopThreshold = goodDopTreshold;
 		this.timeSampleDelaySec = timeSampleDelaySec;
+		
+		timeKML.setTimeZone(TZ);
 
 		goodDop = false;
 		FileWriter out = startOfTrack();
