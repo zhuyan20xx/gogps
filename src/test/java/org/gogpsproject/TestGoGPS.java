@@ -46,14 +46,14 @@ public class TestGoGPS {
 		//force dot as decimal separator
 		Locale.setDefault(new Locale("en", "US"));
 		
-		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
-//		int dynamicModel = GoGPS.DYN_MODEL_STATIC;
+//		int dynamicModel = GoGPS.DYN_MODEL_CONST_SPEED;
+		int dynamicModel = GoGPS.DYN_MODEL_STATIC;
 
 		double goodDopThreshold = 2.5;
 		int timeSampleDelaySec = 1;
 		
-		boolean gpsEnable = true;  // enable GPS data reading
-		boolean qzsEnable = true;  // enable QZSS data reading
+		boolean gpsEnable = false;  // enable GPS data reading
+		boolean qzsEnable = false;  // enable QZSS data reading
 		boolean gloEnable = true;  // enable GLONASS data reading
 		boolean galEnable = false;  // enable Galileo data reading
 		boolean bdsEnable = false;  // enable BeiDou data reading

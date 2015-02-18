@@ -58,7 +58,7 @@ public class UBXReader implements StreamEventProducer {
 		addStreamEventListener(eventListener);
 	}
 	
-	public UBXReader(BufferedInputStream is, Boolean[] multiConstellation, StreamEventListener eventListener){
+	public UBXReader(InputStream is, Boolean[] multiConstellation, StreamEventListener eventListener){
 		this.in = is;
 		this.multiConstellation = multiConstellation;
 		addStreamEventListener(eventListener);
