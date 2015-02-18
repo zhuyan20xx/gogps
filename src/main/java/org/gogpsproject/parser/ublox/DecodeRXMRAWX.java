@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Eugenio Realini, Mirko Reguzzoni, Cryms sagl - Switzerland. All Rights Reserved.
+ * Copyright (c) 2010 Eugenio Realini, Mirko Reguzzoni, Cryms sagl, Daisuke Yoshida. All Rights Reserved.
  *
  * This file is part of goGPS Project (goGPS).
  *
@@ -101,7 +101,9 @@ public class DecodeRXMRAWX {
 				indice++;
 			}
 		}
+//		System.out.println("tow :  " + UnsignedOperation.toDouble(Bits.tobytes(bits)) );
 		long tow = (long)UnsignedOperation.toDouble(Bits.tobytes(bits));
+		tow = tow * 1000; // convert to mili-seconds 
 //		System.out.println("tow :  " + tow );
 
 				
@@ -125,8 +127,9 @@ public class DecodeRXMRAWX {
 			bits[indice] = temp1[i];
 			indice++;
 		}			
-//		int leapS = (int)Bits.bitsToUInt(bits);
-		int leapS = (int)Bits.bitsTwoComplement(bits);
+		long leapS = Bits.bitsTwoComplement(bits);
+		leapS = leapS * 1000; // convert to mili-second 
+//		tow = tow - leapS ;
 //		System.out.println("leapS :  " + leapS );
 		
 		
@@ -138,7 +141,6 @@ public class DecodeRXMRAWX {
 			indice++;
 		}		
 		int numMeas = (int)Bits.bitsToUInt(bits);
-//		int numSV = (int)Bits.bitsToUInt(bits);
 //		System.out.println("numMeas :  " + numMeas + " S ");
 
 		
@@ -190,6 +192,7 @@ public class DecodeRXMRAWX {
 		//System.out.println();
 
 		long gmtTS = getGMTTS(tow, week);
+//		gmtTS = gmtTS - leapS ;
 		Observations o = new Observations(new Time(gmtTS),0);
 //		Time refTime = new Time((int)week, tow/1000);
 //		Observations o = new Observations(refTime,0);
@@ -216,10 +219,12 @@ public class DecodeRXMRAWX {
 					indice++;
 				}
 			}
-			double carrierPhase = UnsignedOperation.toDouble(Bits.tobytes(bits));
+			double pseudoRange = UnsignedOperation.toDouble(Bits.tobytes(bits));
+			if (pseudoRange < 1e6 || pseudoRange > 6e7) {
+				anomalousValues = true;
+			}
 //			System.out.print("SV" + k +"\tPhase: "
 //					+ carrierPhase + "  ");
-	
 			
 			bits = new boolean[8 * 8]; // cpMes (R8)
 			indice = 0;
@@ -230,13 +235,10 @@ public class DecodeRXMRAWX {
 					indice++;
 				}
 			}
-			double pseudoRange = UnsignedOperation.toDouble(Bits.tobytes(bits));
-//			if (pseudoRange < 1e6 || pseudoRange > 6e7) {
-//	        	anomalousValues = true;
-//	        }
+			double carrierPhase = UnsignedOperation.toDouble(Bits.tobytes(bits));
 //			System.out.print(" Code: "
 //					+ pseudoRange + "  ");
-			
+
 			
 			bits = new boolean[8 * 4]; // doMes (R4)
 			indice = 0;
@@ -375,7 +377,8 @@ public class DecodeRXMRAWX {
 //			System.out.println();
 			
 			
-			if (satType == 0 && satID != 33 && gpsEnable == true && !anomalousValues){ // GPS
+			if (satType == 0 && gpsEnable == true && !anomalousValues){ 
+				/* GPS */
 				os.setSatType('G');
 				os.setSatID(satID);
 				os.setCodeC(ObservationSet.L1, pseudoRange);
@@ -401,7 +404,8 @@ public class DecodeRXMRAWX {
 //				os.setSatType('I');
 //				os.setSatID(satId);
 				
-			} else if (satType == 5 && satID != 33 && qzsEnable == true && !anomalousValues) { // QZSS
+			} else if (satType == 5 && qzsEnable == true && !anomalousValues) { 
+				/* QZSS*/
 				os.setSatType('J');
 				os.setSatID(satID);
 				os.setCodeC(ObservationSet.L1, pseudoRange);
@@ -411,7 +415,8 @@ public class DecodeRXMRAWX {
 				o.setGps(gpsCounter, os);
 				gpsCounter++;
 						
-			} else if (satType == 6 && satID != 33 && gloEnable == true && !anomalousValues) { // GLONASS
+			} else if (satType == 6 && gloEnable == true && !anomalousValues) { 
+				/* GLONASS */
 				os.setSatType('R');
 				os.setSatID(satID);
 				os.setCodeC(ObservationSet.L1, pseudoRange);
@@ -422,8 +427,8 @@ public class DecodeRXMRAWX {
 				gpsCounter++;
 				
 			}
-
-
+			anomalousValues = false;
+			
 		}
 		// / Checksum
 		CH_A = CH_A & 0xFF;
@@ -437,6 +442,10 @@ public class DecodeRXMRAWX {
 
 //		if(CH_A != c1 || CH_B!=c2)
 //			throw new UBXException("Wrong message checksum");
+		if (o.getGpsSize() == 0 && o.getGloSize() == 0 && o.getSbsSize() == 0) {
+			o = null;
+		}
+		
 		return o;
 	}
 
@@ -458,6 +467,6 @@ public class DecodeRXMRAWX {
 		//System.out.println(sdf.format(c.getTime()));
 		//ubx.log( (c.getTime().getTime())+" "+c.getTime()+" "+week+" "+tow+"\n\r");
 
-		return c.getTimeInMillis() + week*7*24*3600*1000 + tow;
+		return c.getTimeInMillis() + week*7*24*3600*1000 + tow ;
 	}
 }

@@ -114,9 +114,7 @@ public class UBXFileReader extends EphemerisSystem implements ObservationsProduc
 	@Override
 	public void init() throws Exception {
 		this.in = new FileInputStream(file);
-
-		this.reader = new UBXReader(in, null);
-//		this.reader = new UBXReader(in, multiConstellation, null);
+		this.reader = new UBXReader(in, multiConstellation, null);
 	}
 
 	/* (non-Javadoc)
