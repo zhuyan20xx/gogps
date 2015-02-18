@@ -26,6 +26,8 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.TimeZone;
+
 import org.gogpsproject.PositionConsumer;
 import org.gogpsproject.RoverPosition;
 /**
@@ -50,11 +52,16 @@ public class TxtProducer implements PositionConsumer, Runnable {
 	private Thread t = null;
 
 	private ArrayList<RoverPosition> positions = new ArrayList<RoverPosition>();
+	
+	private final static TimeZone TZ = TimeZone.getTimeZone("GMT");
 
 	public TxtProducer(String filename) throws IOException{
 		this.filename = filename;
 
 		writeHeader();
+		
+		dateTXT.setTimeZone(TZ);
+		timeTXT.setTimeZone(TZ);
 
 		t = new Thread(this);
 		t.start();
