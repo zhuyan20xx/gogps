@@ -317,7 +317,7 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 					/* RINEX ver. 2.12 */
 					case 212:
 
-							System.out.println("Ver. 2.12");
+//							System.out.println("Ver. 2.12");
 						
 							String typeField2 = line.substring(0, 4);
 							typeField2 = typeField2.trim();

@@ -52,9 +52,9 @@ public class TestGoGPS {
 		double goodDopThreshold = 2.5;
 		int timeSampleDelaySec = 1;
 		
-		boolean gpsEnable = false;  // enable GPS data reading
+		boolean gpsEnable = true;  // enable GPS data reading
 		boolean qzsEnable = false;  // enable QZSS data reading
-		boolean gloEnable = true;  // enable GLONASS data reading
+		boolean gloEnable = false;  // enable GLONASS data reading
 		boolean galEnable = false;  // enable Galileo data reading
 		boolean bdsEnable = false;  // enable BeiDou data reading
 
@@ -65,7 +65,8 @@ public class TestGoGPS {
 			long start = System.currentTimeMillis();
 
 			/* for UBX8T development */
-			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/COM5_150216_085758.ubx"), multiConstellation); /* ublox 8T */
+			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/UBX8T20150219s.ubx"), multiConstellation); /* ublox 8T */
+//			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/COM5_150216_085758.ubx"), multiConstellation); /* ublox 8T */
 			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.IGN_MULTI_NAVIGATION_DAILY);
 			
 			/*  Jun 15th, 2013, GMSD (Multi-GNSS test) */
