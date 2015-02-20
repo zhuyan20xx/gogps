@@ -230,8 +230,8 @@ public class GoGPS implements Runnable{
 
 				//try{
 					// If there are at least four satellites
-					if (obsR.getGpsSize() >= 4) { // gps.length
-						if(debug) System.out.println("OK "+obsR.getGpsSize()+" satellites");
+					if (obsR.getNumSat() >= 4) { // gps.length
+						if(debug) System.out.println("OK "+obsR.getNumSat()+" satellites");
 
 						// Compute approximate positioning by Bancroft algorithm
 						roverPos.bancroft(obsR);
@@ -318,7 +318,7 @@ public class GoGPS implements Runnable{
 
 				// If there are at least four satellites
 				if (obsM!=null && obsR!=null){
-					if(obsR.getGpsSize() >= 4) {
+					if(obsR.getNumSat() >= 4) {
 
 						// Compute approximate positioning by Bancroft algorithm
 						roverPos.bancroft(obsR);
@@ -443,7 +443,7 @@ public class GoGPS implements Runnable{
 					// If Kalman filter was not initialized and if there are at
 					// least four satellites
 					boolean valid = true;
-					if (!kalmanInitialized && obsR.getGpsSize() >= 4) {
+					if (!kalmanInitialized && obsR.getNumSat() >= 4) {
 
 						if(debug)System.out.print("Try to init with bancroft ");
 

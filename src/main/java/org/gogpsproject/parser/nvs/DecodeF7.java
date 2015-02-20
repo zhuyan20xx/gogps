@@ -414,6 +414,7 @@ public class DecodeF7 {
 					eph.setYa(Ya);
 					eph.setZa(Za);
 					eph.settb(tb);
+					eph.setfreq_num(carrierNum);
 					eph.setGammaN(gammaN);
 					eph.setTauN(tn);
 					eph.setEn(En);

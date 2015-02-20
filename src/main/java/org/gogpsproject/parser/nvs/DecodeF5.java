@@ -254,7 +254,7 @@ public class DecodeF5 {
 					os.setSatID(satID);
 					os.setSatType('G');
 					os.setCodeC(ObservationSet.L1, pseudoRange);
-			        os.setPhase(ObservationSet.L1, carrierPhase); 			
+			        os.setPhaseCycles(ObservationSet.L1, carrierPhase); 			
 					os.setSignalStrength(ObservationSet.L1, snr);
 					os.setDoppler(ObservationSet.L1, d1);
 					o.setGps(gpsCounter, os);
@@ -266,7 +266,7 @@ public class DecodeF5 {
 					os.setSatID(satID);
 					os.setSatType('J');
 					os.setCodeC(ObservationSet.L1, pseudoRange);
-			        os.setPhase(ObservationSet.L1, carrierPhase); 			
+			        os.setPhaseCycles(ObservationSet.L1, carrierPhase); 			
 					os.setSignalStrength(ObservationSet.L1, snr);
 					os.setDoppler(ObservationSet.L1, d1);
 					o.setGps(gpsCounter, os);
@@ -277,7 +277,7 @@ public class DecodeF5 {
 					os.setSatID(satID);
 					os.setSatType('R');
 					os.setCodeC(ObservationSet.L1, pseudoRange);
-			        os.setPhase(ObservationSet.L1, carrierPhase); 			
+			        os.setPhaseCycles(ObservationSet.L1, carrierPhase); 			
 					os.setSignalStrength(ObservationSet.L1, snr);
 					os.setDoppler(ObservationSet.L1, d1);
 					o.setGps(gpsCounter, os);
@@ -287,7 +287,7 @@ public class DecodeF5 {
 					os.setSatID(satID);
 					os.setSatType('E');
 					os.setCodeC(ObservationSet.L1, pseudoRange);
-			        os.setPhase(ObservationSet.L1, carrierPhase); 			
+			        os.setPhaseCycles(ObservationSet.L1, carrierPhase); 			
 					os.setSignalStrength(ObservationSet.L1, snr);
 					os.setDoppler(ObservationSet.L1, d1);
 					o.setGps(gpsCounter, os);
@@ -297,7 +297,7 @@ public class DecodeF5 {
 		}
 //		System.out.println("+-----------------  End of F5  -------------------+");
 
-		if (o.getGpsSize() == 0 && o.getGloSize() == 0 && o.getSbsSize() == 0) {
+		if (o.getNumSat() == 0) {
 			o = null;
 		}
 

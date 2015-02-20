@@ -93,7 +93,7 @@ public class EphGps implements Streamable {
 	private double Y;
 	private double Yv;
 	private double Ya;
-	private double freq_num;
+	private int freq_num;
 	private double tb;
 
 	private double Z;
@@ -579,10 +579,10 @@ public class EphGps implements Streamable {
 		this.Ya = Ya;
 	}
 	
-	public double getfreq_num() {
+	public int getfreq_num() {
 		return freq_num;
 	}
-	public void setfreq_num(double freq_num) {
+	public void setfreq_num(int freq_num) {
 		this.freq_num = freq_num;
 	}
 	
