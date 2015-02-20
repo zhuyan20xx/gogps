@@ -66,7 +66,7 @@ public class TestGoGPS {
 
 			/* for UBX8T development */
 //			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/UBX8T20150219s.ubx"), multiConstellation); /* ublox 8T */
-//			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/COM5_150216_085758.ubx"), multiConstellation); /* ublox 8T */
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm0500.15p"));
 //			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.IGN_MULTI_NAVIGATION_DAILY);
 			
 			/*  Jun 15th, 2013, GMSD (Multi-GNSS test) */
