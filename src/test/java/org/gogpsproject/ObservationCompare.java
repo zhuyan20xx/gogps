@@ -96,9 +96,9 @@ public class ObservationCompare {
 				// compare
 				System.out.println("Compare: "+o1.getRefTime().getGpsTime()+" "+o2.getRefTime().getGpsTime());
 
-				for(int i=0;i<o1.getGpsSize();i++){
-					ObservationSet os1 = o1.getGpsByIdx(i);
-					ObservationSet os2 = o2.getGpsByID(os1.getSatID());
+				for(int i=0;i<o1.getNumSat();i++){
+					ObservationSet os1 = o1.getSatByIdx(i);
+					ObservationSet os2 = o2.getSatByID(os1.getSatID());
 					if(os2!=null){
 						System.out.println("Sat ID:"+os1.getSatID());
 						compareObservationSet(os1.getSatID(),os1, os2);
@@ -106,9 +106,9 @@ public class ObservationCompare {
 						System.out.println("Missing o2 Sat ID:"+os1.getSatID());
 					}
 				}
-				for(int i=0;i<o2.getGpsSize();i++){
-					ObservationSet os2 = o2.getGpsByIdx(i);
-					ObservationSet os1 = o1.getGpsByID(os2.getSatID());
+				for(int i=0;i<o2.getNumSat();i++){
+					ObservationSet os2 = o2.getSatByIdx(i);
+					ObservationSet os1 = o1.getSatByID(os2.getSatID());
 					if(os1!=null){
 
 					}else{
@@ -135,7 +135,7 @@ public class ObservationCompare {
 			ok=false;
 			System.out.print("codeP ");
 		}
-		if(!equalDouble(os1.getPhase(0),os2.getPhase(0))){
+		if(!equalDouble(os1.getPhaseCycles(0),os2.getPhaseCycles(0))){
 			ok=false;
 			System.out.print("phase ");
 		}

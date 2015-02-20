@@ -39,6 +39,7 @@ import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
+import org.gogpsproject.Observations;
 import org.gogpsproject.StreamResource;
 import org.gogpsproject.Time;
 import org.gogpsproject.SatellitePosition;
@@ -95,7 +96,8 @@ public class RinexNavigation implements NavigationProducer {
 		RinexNavigation rn = new RinexNavigation(IGN_NAVIGATION_HOURLY_ZIM2);
 		rn.init();
 //		SatellitePosition sp = rn.getGpsSatPosition(c.getTimeInMillis(), 2, 0, 0);
-		SatellitePosition sp = rn.getGpsSatPosition(c.getTimeInMillis(), 2, 'G', 0, 0);
+		Observations obs = new Observations(new Time(c.getTimeInMillis()),0);
+		SatellitePosition sp = rn.getGpsSatPosition(obs, 2, 'G', 0);
 
 		if(sp!=null){
 			System.out.println("found "+(new Date(sp.getUtcTime()))+" "+(sp.isPredicted()?" predicted":""));
@@ -123,12 +125,15 @@ public class RinexNavigation implements NavigationProducer {
 	/* (non-Javadoc)
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(Observations obs, int satID, char satType, double receiverClockError) {
 
+		long unixTime = obs.getRefTime().getMsec();
+		double range = obs.getSatByIDType(satID, satType).getPseudorange(0);
+		
 		RinexNavigationParser rnp = getRNPByTimestamp(unixTime);
 		if(rnp!=null){
 			if(rnp.isTimestampInEpocsRange(unixTime)){
-				return rnp.getGpsSatPosition(unixTime, satID, satType, range, receiverClockError);
+				return rnp.getGpsSatPosition(obs, satID, satType, receiverClockError);
 			}else{
 				return null;
 			}

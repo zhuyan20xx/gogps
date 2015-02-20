@@ -93,14 +93,14 @@ public class DecodeRAWMEAS {
 				os.setSatType('G');
 				os.setSignalStrength(ObservationSet.L1, CN0);
 				os.setCodeC(ObservationSet.L1, pseudoRange);
-				os.setPhase(ObservationSet.L1, carrierPhase);
+				os.setPhaseCycles(ObservationSet.L1, carrierPhase);
 				os.setDoppler(ObservationSet.L1, doppler);
 				o.setGps(gpsCounter, os);
 				gpsCounter++;
 			}
 		}
 
-		if (o.getGpsSize() == 0 && o.getGloSize() == 0 && o.getSbsSize() == 0) {
+		if (o.getNumSat() == 0) {
 			o = null;
 		}
 		

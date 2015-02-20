@@ -38,6 +38,7 @@ import org.gogpsproject.EphGps;
 import org.gogpsproject.EphemerisSystem;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
+import org.gogpsproject.Observations;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.StreamResource;
 import org.gogpsproject.Time;
@@ -1020,10 +1021,10 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 //										System.out.println(sub);
 										eph.setYa(Double.parseDouble(sub.trim())*1e3);
 		
-										/* freq_num, tb?  */
+										/* freq_num */
 										sub = line.substring(61, len).replace('D', 'e');
 //										System.out.println(sub);
-										eph.settb(Double.parseDouble(sub.trim()));
+										eph.setfreq_num((int) Double.parseDouble(sub.trim()));
 		
 									} else if (i == 3) { // LINE 4
 		
@@ -1224,14 +1225,17 @@ public class RinexNavigationParser extends EphemerisSystem implements Navigation
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(Observations obs, int satID, char satType, double receiverClockError) {
+		long unixTime = obs.getRefTime().getMsec();
+		double range = obs.getSatByIDType(satID, satType).getPseudorange(0);
+		
 		EphGps eph = findEph(unixTime, satID, satType);
 		
 		if (eph != null) {
 			
 //			char satType = eph.getSatType();
 			
-			SatellitePosition sp = computePositionGps(unixTime, satID, satType, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(obs, satID, satType, eph, receiverClockError);
 //			SatellitePosition sp = computePositionGps(unixTime, satType, satID, eph, range, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, unixTime, satID, range);

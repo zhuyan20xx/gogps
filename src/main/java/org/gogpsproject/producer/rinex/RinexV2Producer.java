@@ -341,26 +341,26 @@ public class RinexV2Producer implements StreamEventListener {
 		line += sp(dfX7.format(c.get(Calendar.SECOND)+c.get(Calendar.MILLISECOND)/1000.0+o.getRefTime().getFraction()/1000),11,1);
 		line += sp(dfX.format(o.getEventFlag()),3,1);
 		int gpsSize = 0;
-		for(int i=0;i<o.getGpsSize();i++){
-			if(o.getGpsByIdx(i).getSatID()<=32){
+		for(int i=0;i<o.getNumSat();i++){
+			if(o.getSatByIdx(i).getSatID()<=32){
 				gpsSize++;
 			}
 		}
 		line += sp(dfX.format(gpsSize),3,1);
 		int cnt=0;
-		for(int i=0;i<o.getGpsSize();i++){
+		for(int i=0;i<o.getNumSat();i++){
 			if(cnt >= 12 && cnt%12 == 0){
 				writeLine(line, true);
 				line = "                                ";
 			}
-			line += o.getGpsByIdx(i).getSatType()+dfXX.format(o.getGpsSatID(i));
+			line += o.getSatByIdx(i).getSatType()+dfXX.format(o.getSatID(i));
 			cnt++;
 		}
 		writeLine(line, true);
 
-		for(int i=0;i<o.getGpsSize();i++){
-			if(o.getGpsByIdx(i).getSatID()<=32){ // skip non GPS IDs
-				ObservationSet os = o.getGpsByIdx(i);
+		for(int i=0;i<o.getNumSat();i++){
+			if(o.getSatByIdx(i).getSatID()<=32){ // skip non GPS IDs
+				ObservationSet os = o.getSatByIdx(i);
 				line = "";
 				cnt=0;
 				for(Type t:typeConfig){
@@ -374,8 +374,8 @@ public class RinexV2Producer implements StreamEventListener {
 						line += Double.isNaN(os.getCodeP(t.getFrequency()-1))?sf("",16):sp(dfX3.format(os.getCodeP(t.getFrequency()-1)),14,1)+"  ";
 						break;
 					case Type.L:
-						if (os.getPhase(t.getFrequency()-1) == 0) os.setPhase(t.getFrequency()-1, Double.NaN);
-						line += Double.isNaN(os.getPhase(t.getFrequency()-1))?sf("",14):sp(dfX3.format(os.getPhase(t.getFrequency()-1)),14,1); // L
+						if (os.getPhaseCycles(t.getFrequency()-1) == 0) os.setPhaseCycles(t.getFrequency()-1, Double.NaN);
+						line += Double.isNaN(os.getPhaseCycles(t.getFrequency()-1))?sf("",14):sp(dfX3.format(os.getPhaseCycles(t.getFrequency()-1)),14,1); // L
 						line += os.getLossLockInd(t.getFrequency()-1)<0?" ":dfX.format(os.getLossLockInd(t.getFrequency()-1)); // L1 Loss of Lock Indicator
 						line += Float.isNaN(os.getSignalStrength(t.getFrequency()-1))?" ":dfX.format(Math.floor(os.getSignalStrength(t.getFrequency()-1)/6)); // L1 Signal Strength Indicator
 						break;

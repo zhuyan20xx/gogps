@@ -46,14 +46,8 @@ public class Observations implements Streamable {
 
 	private Time refTime; /* Reference time of the dataset */
 	private int eventFlag; /* Event flag */
-//	private ArrayList<Integer> gpsSat; /* Ordered list of visible GPS satellites IDs */
-//	private ArrayList<Integer> gloSat; /* Ordered list of visible GLONASS satellites IDs */
-//	private ArrayList<Integer> sbsSat; /* Ordered list of visible SBAS satellites IDs */
 
-	// TODO
-	private ArrayList<ObservationSet> gps; /* GPS observations */
-	private ArrayList<ObservationSet> glo; /* GLONASS observations */
-	private ArrayList<ObservationSet> sbs; /* SBAS observations */
+	private ArrayList<ObservationSet> obsSet; /* sets of observations */
 	private int issueOfData = -1;
 
 	public Object clone(){
@@ -78,78 +72,56 @@ public class Observations implements Streamable {
 		read(dai, oldVersion);
 	}
 	public void cleanObservations(){
-		if(gps != null)
-			for (int i=gps.size()-1;i>=0;i--)
-				if(gps.get(i)==null || Double.isNaN(gps.get(i).getPseudorange(0)))
-					gps.remove(i);
-		if(glo != null)
-			for (int i=glo.size()-1;i>=0;i--)
-				if(glo.get(i)==null || Double.isNaN(glo.get(i).getPseudorange(0)))
-					glo.remove(i);
-		if(sbs != null)
-			for (int i=sbs.size()-1;i>=0;i--)
-				if(sbs.get(i)==null || Double.isNaN(sbs.get(i).getPseudorange(0)))
-					sbs.remove(i);
+		if(obsSet != null)
+			for (int i=obsSet.size()-1;i>=0;i--)
+				if(obsSet.get(i)==null || Double.isNaN(obsSet.get(i).getPseudorange(0)))
+					obsSet.remove(i);
 	}
-	public int getGpsSize(){
-		if(gps == null) return 0;
+	public int getNumSat(){
+		if(obsSet == null) return 0;
 		int nsat = 0;
-		for(int i=0;i<gps.size();i++)
-			if(gps.get(i)!=null) nsat++;
-		return gps==null?-1:nsat;
+		for(int i=0;i<obsSet.size();i++)
+			if(obsSet.get(i)!=null) nsat++;
+		return obsSet==null?-1:nsat;
 	}
-	public int getGloSize(){
-		if(glo == null) return 0;
-		int nsat = 0;
-		for(int i=0;i<glo.size();i++)
-			if(glo.get(i)!=null) nsat++;
-		return glo==null?-1:nsat;
+	public ObservationSet getSatByIdx(int idx){
+		return obsSet.get(idx);
 	}
-	public int getSbsSize(){
-		if(sbs == null) return 0;
-		int nsat = 0;
-		for(int i=0;i<sbs.size();i++)
-			if(sbs.get(i)!=null) nsat++;
-		return sbs==null?-1:nsat;
-	}
-	public ObservationSet getGpsByIdx(int idx){
-		return gps.get(idx);
-	}
-	public ObservationSet getGpsByID(Integer satID){
-		if(gps == null || satID==null) return null;
-		for(int i=0;i<gps.size();i++)
-			if(gps.get(i)!=null && gps.get(i).getSatID()==satID.intValue()) return gps.get(i);
+	public ObservationSet getSatByID(Integer satID){
+		if(obsSet == null || satID==null) return null;
+		for(int i=0;i<obsSet.size();i++)
+			if(obsSet.get(i)!=null && obsSet.get(i).getSatID()==satID.intValue()) return obsSet.get(i);
 		return null;
 	}
-	public ObservationSet getGpsByID(Integer satID, char satType){
-		if(gps == null || satID==null) return null;
-		for(int i=0;i<gps.size();i++)
-			if(gps.get(i)!=null && gps.get(i).getSatID()==satID.intValue() && gps.get(i).getSatType()==satType) return gps.get(i);
+	public ObservationSet getSatByIDType(Integer satID, char satType){
+		if(obsSet == null || satID==null) return null;
+		for(int i=0;i<obsSet.size();i++)
+			if(obsSet.get(i)!=null && obsSet.get(i).getSatID()==satID.intValue() && obsSet.get(i).getSatType()==satType) return obsSet.get(i);
 		return null;
 	}
-	public ObservationSet getGpsByID(char satGnss){
-		String sub = String.valueOf(satGnss); 
-		String str = sub.substring(0, 1);  
-		char satType = str.charAt(0);
-		sub = sub.substring(1, 3);  
-		Integer satID = Integer.parseInt(sub);
-		
-		if(gps == null || satID==null) return null;
-		for(int i=0;i<gps.size();i++)
-			if(gps.get(i)!=null && gps.get(i).getSatID()==satID.intValue() && gps.get(i).getSatType()==satType) return gps.get(i);
-		return null;
+//	public ObservationSet getGpsByID(char satGnss){
+//		String sub = String.valueOf(satGnss); 
+//		String str = sub.substring(0, 1);  
+//		char satType = str.charAt(0);
+//		sub = sub.substring(1, 3);  
+//		Integer satID = Integer.parseInt(sub);
+//		
+//		if(gps == null || satID==null) return null;
+//		for(int i=0;i<gps.size();i++)
+//			if(gps.get(i)!=null && gps.get(i).getSatID()==satID.intValue() && gps.get(i).getSatType()==satType) return gps.get(i);
+//		return null;
+//	}
+	public Integer getSatID(int idx){
+		return getSatByIdx(idx).getSatID();
 	}
-	public Integer getGpsSatID(int idx){
-		return getGpsByIdx(idx).getSatID();
+	public char getGnssType(int idx){
+		return getSatByIdx(idx).getSatType();
 	}
-	public char getGnssSatType(int idx){
-		return getGpsByIdx(idx).getSatType();
+	public boolean containsSatID(Integer id){
+		return getSatByID(id) != null;
 	}
-	public boolean containsGpsSatID(Integer id){
-		return getGpsByID(id) != null;
-	}
-	public boolean containsGnssSat(Integer id, Character satType){
-		return getGpsByID(id, satType) != null;
+	public boolean containsSatIDType(Integer id, Character satType){
+		return getSatByIDType(id, satType) != null;
 	}
 	
 	/**
@@ -210,13 +182,13 @@ public class Observations implements Streamable {
 //	}
 
 	public void setGps(int i, ObservationSet os ){
-		if(gps==null) gps = new ArrayList<ObservationSet>(i+1);
-		if(i==gps.size()){
-			gps.add(os);
+		if(obsSet==null) obsSet = new ArrayList<ObservationSet>(i+1);
+		if(i==obsSet.size()){
+			obsSet.add(os);
 		}else{
-			int c=gps.size();
-			while(c++<=i) gps.add(null);
-			gps.set(i,os);
+			int c=obsSet.size();
+			while(c++<=i) obsSet.add(null);
+			obsSet.set(i,os);
 		}
 		//gps[i] = os;
 		//gpsSat.add(os.getSatID());
@@ -228,11 +200,11 @@ public class Observations implements Streamable {
 		dos.writeLong(refTime==null?-1:refTime.getMsec()); // 13
 		dos.writeDouble(refTime==null?-1:refTime.getFraction());
 		dos.write(eventFlag); // 14
-		dos.write(gps==null?0:gps.size()); // 15
+		dos.write(obsSet==null?0:obsSet.size()); // 15
 		int size=19;
-		if(gps!=null){
-			for(int i=0;i<gps.size();i++){
-				size += ((ObservationSet)gps.get(i)).write(dos);
+		if(obsSet!=null){
+			for(int i=0;i<obsSet.size();i++){
+				size += ((ObservationSet)obsSet.get(i)).write(dos);
 			}
 		}
 		return size;
@@ -242,11 +214,11 @@ public class Observations implements Streamable {
 		String lineBreak = System.getProperty("line.separator");
 
 		String out= " GPS Time:"+getRefTime().getGpsTime()+" "+sdfHeader.format(new Date(getRefTime().getMsec()))+" evt:"+eventFlag+lineBreak;
-		for(int i=0;i<getGpsSize();i++){
-			ObservationSet os = getGpsByIdx(i);
+		for(int i=0;i<getNumSat();i++){
+			ObservationSet os = getSatByIdx(i);
 			out+="satType:"+ os.getSatType() +"  satID:"+os.getSatID()+"\tC:"+fd(os.getCodeC(0))
 				+" cP:"+fd(os.getCodeP(0))
-				+" Ph:"+fd(os.getPhase(0))
+				+" Ph:"+fd(os.getPhaseCycles(0))
 				+" Dp:"+fd(os.getDoppler(0))
 				+" Ss:"+fd(os.getSignalStrength(0))
 				+" LL:"+fd(os.getLossLockInd(0))
@@ -271,12 +243,12 @@ public class Observations implements Streamable {
 			refTime = new Time(dai.readLong(), dai.readDouble());
 			eventFlag = dai.read();
 			int size = dai.read();
-			gps = new ArrayList<ObservationSet>(size);
+			obsSet = new ArrayList<ObservationSet>(size);
 
 			for(int i=0;i<size;i++){
 				if(!oldVersion) dai.readUTF();
 				ObservationSet os = new ObservationSet(dai, oldVersion);
-				gps.add(os);
+				obsSet.add(os);
 			}
 		}else{
 			throw new IOException("Unknown format version:"+v);
