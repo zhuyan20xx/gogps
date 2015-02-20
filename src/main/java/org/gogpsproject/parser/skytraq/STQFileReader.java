@@ -152,14 +152,14 @@ public class STQFileReader extends EphemerisSystem implements ObservationsProduc
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(Observations obs, int satID, char satType, double receiverClockError) {
 		EphGps eph = ephs.get(new Integer(satID));
 
 		if (eph != null) {
 			
 //			char satType = eph.getSatType();
 			
-			SatellitePosition sp = computePositionGps(unixTime, satID, satType, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(obs, satID, satType, eph, receiverClockError);
 			return sp;
 		}
 		return null ;

@@ -48,6 +48,7 @@ import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
+import org.gogpsproject.Observations;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.Time;
 
@@ -372,7 +373,9 @@ public class SP3Parser implements NavigationProducer{
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double obsPseudorange, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(Observations obs, int satID, char satType, double receiverClockError) {
+		long unixTime = obs.getRefTime().getMsec();
+		double obsPseudorange = obs.getSatByIDType(satID, satType).getPseudorange(0);
 		if(isTimestampInEpocsRange(unixTime)){
 			for(int i=0;i<epocTimestamps.size();i++){
 				if(epocTimestamps.get(i).getMsec()<=unixTime && unixTime < epocTimestamps.get(i).getMsec()+epochInterval){

@@ -159,7 +159,7 @@ public class DecodeRXMRAW {
 					indice++;
 				}
 			}
-			os.setPhase(ObservationSet.L1, UnsignedOperation.toDouble(Bits.tobytes(bits)));
+			os.setPhaseCycles(ObservationSet.L1, UnsignedOperation.toDouble(Bits.tobytes(bits)));
 //			System.out.print(k+"\tPhase: "
 //					+ os.getPhase(ObservationSet.L1) + "  ");
 			bits = new boolean[8 * 8]; // R8

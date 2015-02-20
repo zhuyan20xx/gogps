@@ -71,6 +71,8 @@ public class ObservationSet implements Streamable {
 	 */
 	private int[] signalStrengthInd = {-1,-1};
 
+	private int freqNum;
+
 	public ObservationSet(){
 	}
 
@@ -106,9 +108,27 @@ public class ObservationSet implements Streamable {
 		this.satType = satType;
 	}
 	
+	/**
+	 * @return the phase range (in meters)
+	 */
+	public double getPhaserange(int i) {
+		return phase[i] * getWavelength(i);
+	}
+
+	public double getWavelength(int i) {
+		double frequency = 0;
+		switch (this.satType) {
+		case 'G': frequency = (i==0)?Constants.FL1:Constants.FL2;
+		case 'R': frequency = (i==0)?freqNum*Constants.FR1_delta+Constants.FR1_base:freqNum*Constants.FR2_delta+Constants.FR2_base;
+		case 'E': frequency = (i==0)?Constants.FE1:Constants.FE5a;
+		case 'C': frequency = (i==0)?Constants.FC2:Constants.FC5b;
+		case 'J': frequency = (i==0)?Constants.FJ1:Constants.FJ2;
+		}
+		return Constants.SPEED_OF_LIGHT/frequency;
+	}
 	
 	/**
-	 * @return the pseudorange
+	 * @return the pseudorange (in meters)
 	 */
 	public double getPseudorange(int i) {
 		return Double.isNaN(codeP[i])?codeC[i]:codeP[i];
@@ -149,14 +169,14 @@ public class ObservationSet implements Streamable {
 	/**
 	 * @return the l
 	 */
-	public double getPhase(int i) {
+	public double getPhaseCycles(int i) {
 		return phase[i];
 	}
 
 	/**
 	 * @param l the l to set
 	 */
-	public void setPhase(int i, double l) {
+	public void setPhaseCycles(int i, double l) {
 		phase[i] = l;
 	}
 
@@ -327,6 +347,20 @@ public class ObservationSet implements Streamable {
 	 */
 	public int getSignalStrengthInd(int i) {
 		return signalStrengthInd[i];
+	}
+	
+	/**
+	 * @param signalStrengthInd the signalStrengthInd to set
+	 */
+	public void setFreqNum(int freqNum) {
+		this.freqNum = freqNum;
+	}
+
+	/**
+	 * @return the signalStrengthInd
+	 */
+	public int getFreqNum(int i) {
+		return freqNum;
 	}
 
 }

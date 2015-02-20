@@ -65,12 +65,14 @@ public class TestGoGPS {
 			long start = System.currentTimeMillis();
 
 			/* for UBX8T development */
-			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/COM5_150216_085758.ubx"), multiConstellation); /* ublox 8T */
-			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.IGN_MULTI_NAVIGATION_DAILY);
+//			ObservationsProducer roverIn =  new UBXFileReader(new File("./data/UBX8T20150219s.ubx"), multiConstellation); /* ublox 8T */
+//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm0500.15p"));
+//			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.IGN_MULTI_NAVIGATION_DAILY);
 			
 			/*  Jun 15th, 2013, GMSD (Multi-GNSS test) */
-//			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/gmsd1660_cut.13o"), multiConstellation);
-//			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm1660.13p"));
+			ObservationsProducer roverIn = new RinexObservationParser(new File("./data/gmsd1660.13o"), multiConstellation);
+			ObservationsProducer masterIn = new RinexObservationParser(new File("./data/04921660.13o"));
+			NavigationProducer navigationIn = new RinexNavigationParser(new File("./data/brdm1660.13p"));
 //			NavigationProducer navigationIn = new RinexNavigation(RinexNavigation.IGN_MULTI_NAVIGATION_DAILY);
 			
 			/* Big data in Como, Italy */
@@ -134,7 +136,7 @@ public class TestGoGPS {
 			// 1st init
 			navigationIn.init();
 			roverIn.init();
-// 			masterIn.init();
+ 			masterIn.init();
 
 			// Name output files name using Timestamp
 			Date date = new Date();
@@ -145,14 +147,14 @@ public class TestGoGPS {
 			TxtProducer txt = new TxtProducer(outPathTxt);
 			KmlProducer kml = new KmlProducer(outPathKml, goodDopThreshold, timeSampleDelaySec);
 
-//			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
-			GoGPS goGPS = new GoGPS(navigationIn, roverIn);
+			GoGPS goGPS = new GoGPS(navigationIn, roverIn, masterIn);
+//			GoGPS goGPS = new GoGPS(navigationIn, roverIn);
 			goGPS.addPositionConsumerListener(txt);
 			goGPS.addPositionConsumerListener(kml);
 			goGPS.setDynamicModel(dynamicModel);
-			goGPS.runCodeStandalone();
+//			goGPS.runCodeStandalone();
 //			goGPS.runCodeDoubleDifferences();
-//			goGPS.runKalmanFilter();
+			goGPS.runKalmanFilter();
 
 			try{
 				roverIn.release(true,10000);

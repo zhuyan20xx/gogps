@@ -49,8 +49,11 @@ public abstract class EphemerisSystem {
 	
 	
 	
-	protected SatellitePosition computePositionGps(long unixTime, int satID, char satType, EphGps eph, double obsPseudorange, double receiverClockError) {
+	protected SatellitePosition computePositionGps(Observations obs, int satID, char satType, EphGps eph, double receiverClockError) {
 
+		long unixTime = obs.getRefTime().getMsec();
+		double obsPseudorange = obs.getSatByIDType(satID, satType).getPseudorange(0);
+		
 //		char satType2 = eph.getSatType() ;
 		if(satType != 'R'){  // other than GLONASS
 			
@@ -133,6 +136,9 @@ public abstract class EphemerisSystem {
 					double En = eph.getEn();
 					double toc = eph.getToc();
 					double toe = eph.getToe();
+					int freqNum = eph.getfreq_num();
+					
+					obs.getSatByIDType(satID, satType).setFreqNum(freqNum);
 					
 					/*
 					String refTime = eph.getRefTime().toString();

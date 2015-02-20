@@ -952,7 +952,7 @@ public class RinexObservationParser implements ObservationsProducer{
 		}
 
 		try {
-			ObservationSet o = obs.getGpsByIdx(i);
+			ObservationSet o = obs.getSatByIdx(i);
 			
 			if (typeOrder[k] == 0) { // ** C1 code
 
@@ -984,7 +984,7 @@ public class RinexObservationParser implements ObservationsProducer{
 				phaseL = phaseL.trim();
 				try {
 					if (phaseL.length() != 0) {
-						o.setPhase(0,Double.parseDouble(phaseL));
+						o.setPhaseCycles(0,Double.parseDouble(phaseL));
 						try{
 							// Loss of Lock
 							int lli = Integer.parseInt(line.substring(j+14, j + 15));
@@ -1005,7 +1005,7 @@ public class RinexObservationParser implements ObservationsProducer{
 				String phaseL = line.substring(j, j + 14).trim();
 				try {
 					if (phaseL.length() != 0) {
-						o.setPhase(1,Double.parseDouble(phaseL));
+						o.setPhaseCycles(1,Double.parseDouble(phaseL));
 
 						try{
 							// Loss of Lock

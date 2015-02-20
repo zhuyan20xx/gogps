@@ -37,6 +37,7 @@ import org.apache.commons.net.ftp.FTPReply;
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
+import org.gogpsproject.Observations;
 import org.gogpsproject.StreamResource;
 import org.gogpsproject.Time;
 import org.gogpsproject.SatellitePosition;
@@ -110,7 +111,9 @@ public class SP3Navigation implements NavigationProducer {
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(Observations obs, int satID, char satType, double receiverClockError) {
+		
+		long unixTime = obs.getRefTime().getMsec();
 
 		SP3Parser sp3p = null;
 		long reqTime = unixTime;
@@ -146,7 +149,7 @@ public class SP3Navigation implements NavigationProducer {
 						pool.put(url, sp3p);
 						// file exist, look for epoch
 						if(sp3p.isTimestampInEpocsRange(unixTime)){
-							return sp3p.getGpsSatPosition(unixTime, satID, satType, range, receiverClockError);
+							return sp3p.getGpsSatPosition(obs, satID, satType, receiverClockError);
 						}else{
 							return null;
 						}

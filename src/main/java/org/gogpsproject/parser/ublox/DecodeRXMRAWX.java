@@ -383,7 +383,7 @@ public class DecodeRXMRAWX {
 				os.setSatType('G');
 				os.setSatID(satID);
 				os.setCodeC(ObservationSet.L1, pseudoRange);
-				os.setPhase(ObservationSet.L1, carrierPhase);
+				os.setPhaseCycles(ObservationSet.L1, carrierPhase);
 				os.setDoppler(ObservationSet.L1, d1);
 				os.setSignalStrength(ObservationSet.L1, snr);
 				o.setGps(gpsCounter, os);
@@ -410,7 +410,7 @@ public class DecodeRXMRAWX {
 				os.setSatType('J');
 				os.setSatID(satID);
 				os.setCodeC(ObservationSet.L1, pseudoRange);
-				os.setPhase(ObservationSet.L1, carrierPhase);
+				os.setPhaseCycles(ObservationSet.L1, carrierPhase);
 				os.setDoppler(ObservationSet.L1, d1);
 				os.setSignalStrength(ObservationSet.L1, snr);
 				o.setGps(gpsCounter, os);
@@ -421,7 +421,7 @@ public class DecodeRXMRAWX {
 				os.setSatType('R');
 				os.setSatID(satID);
 				os.setCodeC(ObservationSet.L1, pseudoRange);
-				os.setPhase(ObservationSet.L1, carrierPhase);
+				os.setPhaseCycles(ObservationSet.L1, carrierPhase);
 				os.setDoppler(ObservationSet.L1, d1);
 				os.setSignalStrength(ObservationSet.L1, snr);
 				o.setGps(gpsCounter, os);
@@ -443,7 +443,7 @@ public class DecodeRXMRAWX {
 
 //		if(CH_A != c1 || CH_B!=c2)
 //			throw new UBXException("Wrong message checksum");
-		if (o.getGpsSize() == 0 && o.getGloSize() == 0 && o.getSbsSize() == 0) {
+		if (o.getNumSat() == 0) {
 			o = null;
 		}
 		

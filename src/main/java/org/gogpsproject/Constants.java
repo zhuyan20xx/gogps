@@ -58,10 +58,6 @@ public class Constants {
 	public static final double STANDARD_PRESSURE = 1013.25;
 	public static final double STANDARD_TEMPERATURE = 291.15;
 
-	// GPS L1 and L2 wavelengths
-	public static final double LAMBDA_1 = SPEED_OF_LIGHT / 1575420000;
-	public static final double LAMBDA_2 = SPEED_OF_LIGHT / 1227600000;
-
 	// Parameters to weigh observations by signal-to-noise ratio
 	public static final float SNR_a = 30;
 	public static final float SNR_A = 30;
@@ -79,7 +75,34 @@ public class Constants {
      *_BDS --> CSG2000 (BeiDou-ICD 1.0)
      *_QZS --> WGS-84  (IS-QZSS 1.5D)
     */
-    
+	
+	//GNSS frequencies
+	public static final double FL1 = 1575.420e6; // GPS
+	public static final double FL2 = 1227.600e6;
+	public static final double FL5 = 1176.450e6;
+	
+	public static final double FR1_base = 1602.000e6; // GLONASS
+	public static final double FR2_base = 1246.000e6;
+	public static final double FR1_delta = 0.5625;
+	public static final double FR2_delta = 0.4375;
+	
+	public static final double FE1  = FL1; // Galileo
+	public static final double FE5a = FL5;
+	public static final double FE5b = 1207.140e6;
+	public static final double FE5  = 1191.795e6;
+	public static final double FE6  = 1278.750e6;
+	
+	public static final double FC1  = 1589.740e6; // BeiDou
+	public static final double FC2  = 1561.098e6;
+	public static final double FC5b = FE5b;
+	public static final double FC6  = 1268.520e6;
+	
+	public static final double FJ1  = FL1; // QZSS
+	public static final double FJ2  = FL2;
+	public static final double FJ5  = FL5;
+	public static final double FJ6  = FE6;
+
+	// other GNSS parameters
 	public static final long ELL_A_GPS = 6378137;                          // GPS (WGS-84)     Ellipsoid semi-major axis [m]
 	public static final long ELL_A_GLO = 6378136;                          // GLONASS (PZ-90)  Ellipsoid semi-major axis [m]
 	public static final long ELL_A_GAL = 6378137;                          // Galileo (GTRF)   Ellipsoid semi-major axis [m]
@@ -113,8 +136,5 @@ public class Constants {
 	public static final double J2_GLO = 1.0826257e-3;                        // GLONASS second zonal harmonic of the geopotential
     
 	public static final double PI_ORBIT = 3.1415926535898;                   // pi value used for orbit computation
-	public static final double CIRCLE_RAD = 2 * PI_ORBIT;               // 2 pi
-	
-	
-
+	public static final double CIRCLE_RAD = 2 * PI_ORBIT;                    // 2 pi
 }
