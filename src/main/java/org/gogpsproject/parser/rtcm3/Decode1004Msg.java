@@ -106,7 +106,7 @@ public class Decode1004Msg implements Decode {
 	        	}else{
 	        		os.setCodeC(ObservationSet.L1, DF011d);
 	        	}
-	        	double cp1 = DF012*0.0005/Constants.LAMBDA_1;
+	        	double cp1 = DF012*0.0005/(Constants.SPEED_OF_LIGHT/Constants.FL1);
 //	            cp1=adjcp(rtcm,sat,0,DF012*0.0005/lam[0]);
 //	            static double adjcp(rtcm_t *rtcm, int sat, int freq, double cp)
 //	        	{
@@ -118,7 +118,7 @@ public class Decode1004Msg implements Decode {
 //	        	}
 //	        	rtcm->obs.data[index].L[0]=DF011/lam[0]+cp1;
 
-	        	os.setPhase(ObservationSet.L1, DF011d/Constants.LAMBDA_1+cp1);
+	        	os.setPhaseCycles(ObservationSet.L1, DF011d/(Constants.SPEED_OF_LIGHT/Constants.FL1)+cp1);
 	        }
 
 			//os.setCoarseAcquisition((DF011 * 0.02) + (DF014 * 299792.458));
@@ -131,9 +131,9 @@ public class Decode1004Msg implements Decode {
 	            os.setCodeP(ObservationSet.L2, DF011d+DF017*0.02);
 	        }
 	        if (DF018!=0x80000) {
-	            double cp2=DF018*0.0005/Constants.LAMBDA_2;
+	            double cp2=DF018*0.0005/(Constants.SPEED_OF_LIGHT/Constants.FL2);
 
-	            os.setPhase(ObservationSet.L2,DF011d/Constants.LAMBDA_2+cp2);
+	            os.setPhaseCycles(ObservationSet.L2,DF011d/(Constants.SPEED_OF_LIGHT/Constants.FL2)+cp2);
 
 	        }
 

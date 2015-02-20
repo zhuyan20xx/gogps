@@ -177,7 +177,7 @@ public class ObservationsBuffer
     @Override
     public void addObservations(Observations o) {
     	if(debug){
-    		System.out.println("obs "+o.getGpsSize()+" time "+o.getRefTime().getMsec());
+    		System.out.println("obs "+o.getNumSat()+" time "+o.getRefTime().getMsec());
     		System.out.println(o);
     	}
         // TODO test if ref time observations is not already present
@@ -323,7 +323,9 @@ public class ObservationsBuffer
      * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double)
      */
     @Override
-    public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType, double range, double receiverClockError) {
+    public SatellitePosition getGpsSatPosition(Observations obs, int satID, char satType, double receiverClockError) {
+    	long unixTime = obs.getRefTime().getMsec();
+    	double range = obs.getSatByIDType(satID, satType).getPseudorange(0);
     	if(timeOrderedEphs.size()==0 ||
                 unixTime < timeOrderedEphs.elementAt(0).refTime.getMsec()
                 ){
@@ -354,7 +356,7 @@ public class ObservationsBuffer
         if(closer !=null){
         	EphGps eph = closer.ephs.get(ID);
         	
-        	SatellitePosition sp = computePositionGps(unixTime, satID, satType, eph, range, receiverClockError);
+        	SatellitePosition sp = computePositionGps(obs, satID, satType, eph, receiverClockError);
         	//System.out.println("\tR: < sat pos "+ID);
 			return sp;
         }

@@ -35,6 +35,7 @@ import org.gogpsproject.EphGps;
 import org.gogpsproject.EphemerisSystem;
 import org.gogpsproject.IonoGps;
 import org.gogpsproject.NavigationProducer;
+import org.gogpsproject.Observations;
 import org.gogpsproject.SatellitePosition;
 import org.gogpsproject.StreamResource;
 
@@ -283,15 +284,16 @@ public class UBXAssistNow extends EphemerisSystem implements NavigationProducer,
 	 * @see org.gogpsproject.NavigationProducer#getGpsSatPosition(long, int, double, double)
 	 */
 	@Override
-	public SatellitePosition getGpsSatPosition(long unixTime, int satID, char satType,
-			double range, double receiverClockError) {
+	public SatellitePosition getGpsSatPosition(Observations obs, int satID, char satType, double receiverClockError) {
+		long unixTime = obs.getRefTime().getMsec();
+		
 		EphGps eph = findEph(unixTime, satID);
 
 		if (eph != null) {
 			
 //			char satType = eph.getSatType();
 			
-			SatellitePosition sp = computePositionGps(unixTime, satID, satType, eph, range, receiverClockError);
+			SatellitePosition sp = computePositionGps(obs, satID, satType, eph, receiverClockError);
 			//if(receiverPosition!=null) earthRotationCorrection(receiverPosition, sp);
 			return sp;// new SatellitePosition(eph, unixTime, satID, range);
 		}
