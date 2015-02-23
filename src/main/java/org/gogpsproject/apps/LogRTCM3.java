@@ -61,6 +61,9 @@ public class LogRTCM3 {
 		parser.addArgument("-xo", "--rinexobs")
         		.action(Arguments.storeTrue())
         		.help("write a RINEX observation file while logging");
+		parser.addArgument("-c", "--compress")
+        		.action(Arguments.storeTrue())
+        		.help("if RINEX output is enabled, compress (zip) the RINEX files as they are completed.");
 		parser.addArgument("url").nargs(1)
 				.help("NTRIP caster URL (e.g. 111.20.31.4)");
 		parser.addArgument("mountpoint").nargs(1)
@@ -131,6 +134,7 @@ public class LogRTCM3 {
 				boolean needApproxPos = true;
 				RinexV2Producer rp = null;
 				rp = new RinexV2Producer(needApproxPos, singleFreq, markerName);
+				rp.enableCompression(ns.getBoolean("compress"));
 				rp.setOutputDir(ns.getString("outdir"));
 				rtcm.addStreamEventListener(rp);
 			}
