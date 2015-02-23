@@ -20,6 +20,7 @@
 package org.gogpsproject.producer.rinex;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,6 +31,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.Vector;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.gogpsproject.Coordinates;
 import org.gogpsproject.EphGps;
@@ -77,6 +80,7 @@ public class RinexV2Producer implements StreamEventListener {
 	private String marker;
 	private int DOYold = -1;
 	private String outputDir = "./test";
+	private boolean enableZip = false;
 
 	private final static TimeZone TZ = TimeZone.getTimeZone("GMT");
 
@@ -134,6 +138,42 @@ public class RinexV2Producer implements StreamEventListener {
 			int DOY = epoch.getDayOfYear();
 			if (this.standardFilename && (this.outFilename == null || this.DOYold != DOY)) {
 					streamClosed();
+					
+					if (this.enableZip && this.outFilename != null) {
+						byte[] buffer = new byte[1024];
+						 
+				    	try{
+				 
+				    		String zn = this.outFilename + ".zip";
+				    		FileOutputStream fos = new FileOutputStream(zn);
+				    		ZipOutputStream zos = new ZipOutputStream(fos);
+				    		String [] tokens = this.outFilename.split("/|\\\\");
+				    		String fn = "";
+				    		if (tokens.length > 0) {
+				    			fn = tokens[tokens.length-1].trim();
+				    		}
+				    		ZipEntry ze= new ZipEntry(fn);
+				    		zos.putNextEntry(ze);
+				    		FileInputStream in = new FileInputStream(this.outFilename);
+				 
+				    		int len;
+				    		while ((len = in.read(buffer)) > 0) {
+				    			zos.write(buffer, 0, len);
+				    		}
+				 
+				    		in.close();
+				    		zos.closeEntry();
+				    		zos.close();
+				    		
+				    		File file = new File(this.outFilename);
+				    		file.delete();
+				    		
+				    		System.out.println("--RINEX file compressed as "+zn);
+				 
+				    	}catch(IOException ex){
+				    	   ex.printStackTrace();
+				    	}
+					}
 
 					char session = '0';
 					int year = epoch.getYear2c();
@@ -487,5 +527,9 @@ public class RinexV2Producer implements StreamEventListener {
 	
 	public void setOutputDir(String outDir) {
 		this.outputDir = outDir;
+	}
+	
+	public void enableCompression(boolean enableZip) {
+		this.enableZip = enableZip;
 	}
 }

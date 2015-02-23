@@ -61,6 +61,9 @@ public class LogNVS {
 		parser.addArgument("-xo", "--rinexobs")
 		        .action(Arguments.storeTrue())
 		        .help("write a RINEX observation file while logging");
+		parser.addArgument("-c", "--compress")
+		        .action(Arguments.storeTrue())
+		        .help("if RINEX output is enabled, compress (zip) the RINEX files as they are completed.");
 		parser.addArgument("-m", "--marker")
                 .setDefault("")
                 .help("specify a marker name for the RINEX file [4 characters] (e.g. NVS0).");
@@ -120,6 +123,7 @@ public class LogNVS {
 			    		marker = "UB" + portStrId;
 					}
 					rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
+					rp.enableCompression(ns.getBoolean("compress"));
 					rp.setOutputDir(ns.getString("outdir"));
 					nvsSerialConn.addStreamEventListener(rp);
 				}

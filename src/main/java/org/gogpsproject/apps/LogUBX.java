@@ -75,7 +75,10 @@ public class LogUBX {
 				.help("log the system time when RXM-RAW messages are received.");
 		parser.addArgument("-xo", "--rinexobs")
 		        .action(Arguments.storeTrue())
-		        .help("write a RINEX observation file while logging");
+		        .help("write a RINEX observation file while logging.");
+		parser.addArgument("-c", "--compress")
+                .action(Arguments.storeTrue())
+                .help("if RINEX output is enabled, compress (zip) the RINEX files as they are completed.");
 		parser.addArgument("-m", "--marker")
 		        .setDefault("")
 		        .help("specify a marker name for the RINEX file [4 characters] (e.g. UBX0).");
@@ -144,11 +147,10 @@ public class LogUBX {
 			    		marker = "UB" + portStrId;
 					}
 					rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
+					rp.enableCompression(ns.getBoolean("compress"));
 					rp.setOutputDir(ns.getString("outdir"));
 					ubxSerialConn.addStreamEventListener(rp);
 				}
-				
-				//new ObservationsBuffer(ubxSerialConn, null);
 				
 				r++;
 			}
