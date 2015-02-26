@@ -174,6 +174,13 @@ public class RinexV2Producer implements StreamEventListener {
 				    	   ex.printStackTrace();
 				    	}
 					}
+					
+					File file = new File(outputDir);
+					if(!file.exists() || !file.isDirectory()){
+					    boolean wasDirectoryMade = file.mkdirs();
+					    if(wasDirectoryMade)System.out.println("Directory "+outputDir+" created");
+					    else System.out.println("Could not create directory "+outputDir);
+					}
 
 					char session = '0';
 					int year = epoch.getYear2c();

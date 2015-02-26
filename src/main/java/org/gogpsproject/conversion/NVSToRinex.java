@@ -45,18 +45,20 @@ public class NVSToRinex {
 		boolean needApproxPos = false;
 
 		if(args.length<2){
-			System.out.println("NVSToRinex <nvs file> <marker name>");
+			System.out.println("NVSToRinex <nvs file> <output directory> <marker name>");
 			return;
 		}
 
 		int p=0;
 		String inFile = args[p++];
+		String outDir = args[p++];
 		String marker = args[p++];
 		//String outFile = inFile.indexOf(".bin")>0?inFile.substring(0, inFile.indexOf(".bin"))+".obs":inFile+".obs";
 
 		System.out.println("in :"+inFile);
 		
 		RinexV2Producer rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
+		rp.setOutputDir(outDir);
 
 		NVSFileReader roverIn = new NVSFileReader(new File(inFile));
 		try {

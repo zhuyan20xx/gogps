@@ -45,17 +45,19 @@ public class UBXToRinex {
 		boolean needApproxPos = false;
 
 		if(args.length<2){
-			System.out.println("UBXToRinex <ubx file> <marker name>");
+			System.out.println("UBXToRinex <ubx file> <output directory> <marker name>");
 			return;
 		}
 
 		int p=0;
 		String inFile = args[p++];
+		String outDir = args[p++];
 		String marker = args[p++];
-
+		
 		System.out.println("in :"+inFile);
 		
 		RinexV2Producer rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
+		rp.setOutputDir(outDir);
 
 		UBXFileReader roverIn = new UBXFileReader(new File(inFile));
 		try {
