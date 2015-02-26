@@ -45,17 +45,19 @@ public class STQToRinex {
 		boolean needApproxPos = false;
 
 		if(args.length<2){
-			System.out.println("STQToRinex <skytraq binary file> <marker name>");
+			System.out.println("STQToRinex <skytraq binary file> <output directory> <marker name>");
 			return;
 		}
 
 		int p=0;
 		String inFile = args[p++];
+		String outDir = args[p++];
 		String marker = args[p++];
-
+		
 		System.out.println("in :"+inFile);
 		
 		RinexV2Producer rp = new RinexV2Producer(needApproxPos, singleFreq, marker);
+		rp.setOutputDir(outDir);
 
 		STQFileReader roverIn = new STQFileReader(new File(inFile));
 		try {
