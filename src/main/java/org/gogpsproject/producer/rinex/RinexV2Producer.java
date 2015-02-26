@@ -278,6 +278,8 @@ public class RinexV2Producer implements StreamEventListener {
 		appendLine(sf("",20*3)+se("MARKER NAME",20));
 		appendLine(sf("",20*3)+se("MARKER NUMBER",20));
 		appendLine(sf("",20*3)+se("OBSERVER / AGENCY",20));
+		appendLine(sf("",20*3)+se("REC # / TYPE / VERS",20));
+		appendLine(sf("",20*3)+se("ANT # / TYPE",20));
 		if(approxPosition != null){
 			appendLine(sp(dfX4.format(approxPosition.getX()),14,1)+sp(dfX4.format(approxPosition.getY()),14,1)+sp(dfX4.format(approxPosition.getZ()),14,1)+sf("",18)+se("APPROX POSITION XYZ",20));
 		}else{
